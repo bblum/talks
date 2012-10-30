@@ -1,0 +1,110 @@
+\documentclass[xcolor=dvipsnames]{beamer}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+
+\usepackage{manfnt}
+\usepackage{wasysym}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{ulem}
+\usepackage{marvosym}
+\usepackage{proof}
+\usepackage{array}
+\setbeamertemplate{navigation symbols}{}
+
+\title[Demystifying Debugging]{{\bf Demystifying Debugging}}
+\subtitle[]{{\em because you can't get it right the first time every time}}
+\author[Ben Blum]{Ben Blum \texttt{(bblum@andrew.cmu.edu)}}
+
+\institute[98-172]{Great Practical Ideas for Computer Scientists}
+\date[]{2012, November 1}
+
+\setbeamertemplate{footline}{\hspace*{.5cm}\scriptsize{\insertauthor\hspace*{50pt} \hfill\insertframenumber\hspace*{.5cm}}} 
+
+\usecolortheme{seahorse}
+\usecolortheme{rose}
+\useoutertheme{infolines}
+
+\usecolortheme[named=RoyalBlue]{structure}
+
+\newcommand\noob{\mathsf{noob}}
+\newcommand\gibs{\mathsf{gibs}}
+\newcommand\dps{\mathsf{dps}}
+\newcommand\squig\rightsquigarrow
+\newcommand\Coloneqq{\mathrel{\mathop{::}}=}
+\newcommand\dmg{\text{\Laserbeam}}
+\newcommand\delter\delta
+\newcommand\alpher\alpha
+\newcommand\defnor{\text{ }|\text{ }}
+
+\newcommand\pimp{\mathop{\supset}}
+\newcommand\pand{\mathop{\wedge}}
+\newcommand\por{\mathop{\vee}}
+\newcommand\ptrue{\top}
+\newcommand\pfalse{\bot}
+
+
+\begin{document}
+% \renewcommand{\inserttotalframenumber}{28} % If you want to hide bonus slides
+\normalem
+\begin{frame}
+	\titlepage
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand\linegap{\vspace{0.2in}}
+\newcommand\breakslide[1]{\begin{frame}{} \begin{center} \Large #1 \end{center} \end{frame}}
+\newcommand\related[1]{\textsuperscript{\em [#1]}}
+\newcommand\hilight[2]{\color{#1}#2\color{black}}
+
+\begin{frame}{Outline}
+	\textbf{Why teach debugging?}
+	\linegap
+
+	\textbf{``Tell Me a Story''}
+	\begin{itemize}
+		\item The good debugger's attitude
+		\item Binary Search
+	\end{itemize}
+	\linegap
+
+	{\bf Two Main Approaches}
+	\begin{itemize}
+		\item Time Travel
+		\item Space Travel
+	\end{itemize}
+	\linegap
+
+	{\bf Assorted Tricks}
+	\begin{itemize}
+		\item Question assumptions
+		\item Collect data
+	\end{itemize}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Storytelling}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Main Approach}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Travelling Through Time}
+
+\breakslide{When things go wrong\dots}
+
+\begin{frame}{foo}
+\end{frame}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% vim: foldmethod=indent
