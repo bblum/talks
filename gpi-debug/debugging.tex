@@ -20,9 +20,9 @@
 \author[Ben Blum]{Ben Blum \texttt{(bblum@andrew.cmu.edu)}}
 
 \institute[98-172]{Great Practical Ideas for Computer Scientists}
-\date[]{2012, November 1}
+\date[]{2012, November 8}
 
-\setbeamertemplate{footline}{\hspace*{.5cm}\scriptsize{\insertauthor\hspace*{50pt} \hfill\insertframenumber\hspace*{.5cm}}} 
+\setbeamertemplate{footline}{\hspace*{.5cm}\scriptsize{\insertauthor\hspace*{50pt} \hfill\insertframenumber\hspace*{.5cm}}}
 
 \usecolortheme{seahorse}
 \usecolortheme{rose}
@@ -171,7 +171,7 @@
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{Asking for Help}
+\begin{frame}{Aside: Asking for Help}
 	This DOESN'T mean...
 	\begin{itemize}
 		\item That TAs can't help you without a detailed story
@@ -228,17 +228,24 @@
 	\textbf{Broken \texttt{insert\_sorted}}
 
 	\linegap
-	Here is a bad test case. How can we improve it?
+	Consider this test case:
 
 	\linegap
-		\texttt{~~~~test\_insert\_sorted()~\{} \\
-		\texttt{~~~~~~~~input~=~\hilight{brickred}{[99,~42,~3,~100,~87,~56,~22]};} \\
-		\texttt{~~~~~~~~output~=~\hilight{brickred}{[]};} \\
-		\texttt{~~~~~~~~\hilight{brown}{foreach}~element~\hilight{brown}{in}~input~\{} \\
-		\texttt{~~~~~~~~~~~~insert\_sorted(output,~element);} \\
-		\texttt{~~~~~~~~\}} \\
-		\texttt{~~~~~~~~\hilight{brown}{return}~is\_sorted(output);} \\
+		\texttt{~~~~input~=~\hilight{brickred}{[99,~42,~3,~100,~87,~56,~22]};} \\
+		\texttt{~~~~output~=~\hilight{brickred}{[]};} \\
+		\texttt{~~~~\hilight{brown}{foreach}~element~\hilight{brown}{in}~input~\{} \\
+		\texttt{~~~~~~~~insert\_sorted(output,~element);} \\
 		\texttt{~~~~\}} \\
+		\texttt{~~~~\hilight{brown}{return}~is\_sorted(output);~\hilight{darkcyan}{//~returns~false~:(}} \\
+	\linegap
+
+	\pause
+	\begin{itemize}
+		\item Says there is a bug
+		\item Doesn't say where
+	\end{itemize}
+	\pause
+	{\bf How can we improve it?}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -253,17 +260,82 @@
 	Remember, two stories: Expected outcome vs Actual outcome
 
 	\linegap
-	What does this mean 
-	% Text: "First I ... then I ... but then it ...!"
+	{\em Time-wise}, this means ``It did X, then should have done Y but did Z''
+	\begin{itemize}
+		\item Are X,Y,Z in enough detail?
+		\item Did something important happen in between?
+	\end{itemize}
 \end{frame}
 
-\begin{frame}{Print debugging}
-	% Insert some code: the test case with print statements inserted in it
-	% Insert a picture: the time-cloud with some printed-out things in it
-	Should usually be the first thing you try!
+\begin{frame}{Telling a Story of Time}
+	Our test case tells this story:
+
+	\linegap
+	\includegraphics[width=\textwidth]{time0.png}
+\end{frame}
+
+\begin{frame}{Print Debugging}
+	Make your program print its state during the big pink ``???''.
+	\begin{itemize}
+		\item Reduce how much of the story the ``???'' obscures.
+		\begin{itemize}
+			\item Find the {\em last} print {\em before} the bug
+			\item Find the {\em first} print {\em after} the bug
+		\end{itemize}
+	\end{itemize}
+	\pause
+
+	\linegap
+		\texttt{~~~~\hilight{brown}{foreach}~element~\hilight{brown}{in}~input~\{} \\
+		\texttt{~~~~~~~~\hilight{olivegreen}{print(output);}} \\
+		\texttt{~~~~~~~~insert\_sorted(output,~element);} \\
+		\texttt{~~~~\}} \\
+\end{frame}
+
+\begin{frame}{Print Debugging}
+	New story:
+
+	\linegap
+	\includegraphics[width=\textwidth]{time1.png}
 \end{frame}
 
 \begin{frame}{Asserts: Stealthier, more concealable prints}
+\end{frame}
+
+\begin{frame}{Aside: 15-213 ``malloc lab''}
+	At the end of 15-213, you will implement \texttt{malloc()}.
+	\begin{itemize}
+		\item Complex, low-level systems code
+		\item Very easy to end up with difficult, subtle bugs
+		\begin{itemize}
+			\item Your data winds up in the wrong place, gets clobbered by client code
+			\item Stale pointers that point to nonsense memory
+		\end{itemize}
+		\item Your code won't even misbehave immediately, only ``later''.
+	\end{itemize}
+	\pause
+	\linegap
+
+	The assignment will ask you to write a {\bf heap checker}.
+	\begin{itemize}
+		\item In essence, a very powerful \texttt{assert} for your code.
+		\item Debugging and asserts are friends!
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Aside: 15-213 ``malloc lab''}
+	Many students think: ``I just want to write \texttt{malloc()}. I can do the heap checker later.''
+	\pause
+	\begin{itemize}
+		\item Think of it like a C0 contract that must hold forever.
+		\item \textbf{Write the heap checker simultaneously!}
+			\pause
+			\begin{itemize}
+				\item Save time/effort debugging everything else
+				\item Your debugging skill will level up
+				\item Ben jumps up and down for emphasis
+			\end{itemize}
+	\end{itemize}
 \end{frame}
 
 \subsection{Space Travel}
