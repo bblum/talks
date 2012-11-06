@@ -62,6 +62,13 @@
 \newcommand\breakslide[1]{\begin{frame}{} \begin{center} \Large #1 \end{center} \end{frame}}
 \newcommand\related[1]{\textsuperscript{\em [#1]}}
 \newcommand\hilight[2]{\color{#1}#2\color{black}}
+\definecolor{grey}{RGB}{127,127,127}
+\definecolor{darkcyan}{RGB}{0,127,127}
+\definecolor{olivegreen}{RGB}{0,127,0}
+\definecolor{violet}{RGB}{127,0,127}
+\definecolor{brickred}{RGB}{127,0,0}
+\definecolor{brown}{RGB}{127,63,0}
+
 
 \begin{frame}{Outline}
 	\textbf{Why teach debugging?}
@@ -131,6 +138,7 @@
 	...is {\bf telling a good story.}
 	\pause
 	\linegap
+
 	Two stories, actually:
 	\begin{itemize}
 		\item What you wanted to happen
@@ -182,11 +190,59 @@
 \end{frame}
 
 \begin{frame}{Running Example}
-	% TODO
+	\textbf{Broken \texttt{insert\_sorted}}
+
+	\linegap
+	Sorts OK into the middle and front of list:
+	\begin{itemize}
+		\item \texttt{insert\_sorted} $\quad \hilight{olivegreen}{10} \quad  [20,30] \quad \Rightarrow \quad [\hilight{olivegreen}{10},20,30]$
+		\item \texttt{insert\_sorted} $\quad \hilight{olivegreen}{32} \quad  [16,64] \quad \Rightarrow \quad [16,\hilight{olivegreen}{32},64]$
+	\end{itemize}
+
+	\linegap
+	But not so great at the end:
+	\begin{itemize}
+	\item \texttt{insert\_sorted} $\quad \hilight{red}{100}  \quad [97,98,99] \quad \Rightarrow \quad [97,98,\hilight{red}{100},99]$
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Running Example}
+	\textbf{Broken \texttt{insert\_sorted}}
+
+	\linegap
+	In case you're curious, here's the bug:
+
+	\linegap
+		\texttt{~~~~insert\_sorted(list,~element)~\{} \\
+			\texttt{~~~~~~~~\hilight{olivegreen}{int}~i~=~\hilight{brickred}{0};} \\
+		\texttt{~~~~~~~~\hilight{brown}{while}~(i~<~length(list))~\{~\hilight{darkcyan}{//~Should~be~"<="!}} \\
+		\texttt{~~~~~~~~~~~~\hilight{brown}{if}~(element~<~list[i])~\{} \\
+		\texttt{~~~~~~~~~~~~~~~~\hilight{brown}{break};} \\
+		\texttt{~~~~~~~~~~~~\}} \\
+		\texttt{~~~~~~~~\}} \\
+		\texttt{~~~~~~~~insert\_at\_index(list,~element);} \\
+		\texttt{~~~~\}} \\
+\end{frame}
+
+\begin{frame}{Running Example}
+	\textbf{Broken \texttt{insert\_sorted}}
+
+	\linegap
+	Here is a bad test case. How can we improve it?
+
+	\linegap
+		\texttt{~~~~test\_insert\_sorted()~\{} \\
+		\texttt{~~~~~~~~input~=~\hilight{brickred}{[99,~42,~3,~100,~87,~56,~22]};} \\
+		\texttt{~~~~~~~~output~=~\hilight{brickred}{[]};} \\
+		\texttt{~~~~~~~~\hilight{brown}{foreach}~element~\hilight{brown}{in}~input~\{} \\
+		\texttt{~~~~~~~~~~~~insert\_sorted(output,~element);} \\
+		\texttt{~~~~~~~~\}} \\
+		\texttt{~~~~~~~~\hilight{brown}{return}~is\_sorted(output);} \\
+		\texttt{~~~~\}} \\
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Main Approach}
+\section{Strategies}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Time Travel}
@@ -195,6 +251,7 @@
 
 \begin{frame}{Telling a Story of Time}
 	Remember, two stories: Expected outcome vs Actual outcome
+
 	\linegap
 	What does this mean 
 	% Text: "First I ... then I ... but then it ...!"
@@ -215,8 +272,13 @@
 
 \begin{frame}{Telling a Story of Space}
 	Remember, two stories: Expected outcome vs Actual outcome
+
 	\linegap
 \end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Main Approach}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
