@@ -16,7 +16,7 @@
 \setbeamertemplate{navigation symbols}{}
 
 \title[Demystifying Debugging]{{\bf Demystifying Debugging}}
-\subtitle[]{{\em because you can't get it right the first time every time}}
+\subtitle[]{{\em when getting it right the first time every time fails}}
 \author[Ben Blum]{Ben Blum \texttt{(bblum@andrew.cmu.edu)}}
 
 \institute[98-172]{Great Practical Ideas for Computer Scientists}
@@ -65,11 +65,14 @@
 
 \begin{frame}{Outline}
 	\textbf{Why teach debugging?}
+		% brief motivation
+		% toolbox
 	\linegap
 
 	\textbf{``Tell Me a Story''}
 	\begin{itemize}
 		\item The good debugger's attitude
+			% "get more operators"
 		\item Binary Search
 	\end{itemize}
 	\linegap
@@ -77,7 +80,10 @@
 	{\bf Two Main Approaches}
 	\begin{itemize}
 		\item Time Travel
+			% small test cases / minimize the test case
 		\item Space Travel
+			% printf debugging
+			% invariant checkers and asserts
 	\end{itemize}
 	\linegap
 
@@ -89,22 +95,129 @@
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Motivation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}{``The Universal Backup Plan''}
+	\textbf{15-112, 15-122, 15-150, ...}
+	\begin{itemize}
+		\item What do these classes all have in common?
+		\pause
+		\item How to write code that {\em works}
+	\end{itemize}
+	\pause
+	{\bf 98-172}
+	\begin{itemize}
+		\item What to do with code that {\em doesn't}
+	\end{itemize}
+	% TODO: a picture goes here -- blank slate vs equipped/prepared technician
+\end{frame}
+
+\begin{frame}{Take-away}
+	\textbf{Debugging toolbox}
+	\begin{itemize}
+		\item Two major {\em strategies} for approaching bugs
+		\item Assorted {\em tactics} for applying to broken programs
+	\end{itemize}
+	% Say: "It's not, e.g., a checklist of bugs that you can just run down and test one-by-one; it's more abstract than that. You have to use your brain to figure out how to apply each tool. But the hope is that you won't feel lost staring at a blank slate of possible approaches.
+\end{frame}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Storytelling}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\begin{frame}{The Essence of Debugging}
+	...is {\bf telling a good story.}
+	\pause
+	\linegap
+	Two stories, actually:
+	\begin{itemize}
+		\item What you wanted to happen
+		\item What the computer actually did
+	\end{itemize}
+	\pause
+	Your bug: The point where the stories diverge
+	\begin{itemize}
+		\item Can you describe that point in as much detail as possible?
+	\end{itemize}
+\end{frame}
 
+\begin{frame}{The Essence of Debugging}
+	Because you will write unique bugs, you will be telling a story nobody else knows.
+
+	\linegap
+	``Plot summaries'' are often not enough: My program crashes...
+	\pause
+	\begin{itemize}
+		\item with a segmentation fault...
+		\pause
+		\begin{itemize}
+			\item in \texttt{take\_final\_exam()}...
+			\pause
+			\begin{itemize}
+				\item because \texttt{study\_for\_final()} passed \texttt{NULL} to it.
+				\item There we go!
+			\end{itemize}
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Asking for Help}
+	This DOESN'T mean...
+	\begin{itemize}
+		\item That TAs can't help you without a detailed story
+		\item (That you shouldn't seek help until you've already found your bug?!)
+	\end{itemize}
+	\pause
+	This does mean...
+	\begin{itemize}
+		\item You need a detailed story to understand your bug.
+		\item If the TA doesn't know the story, how can they help?
+		\pause
+		\begin{itemize}
+			\item They know what you should do to make your story better.
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Running Example}
+	% TODO
+\end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Main Approach}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Travelling Through Time}
+\subsection{Time Travel}
 
-\breakslide{When things go wrong\dots}
+\breakslide{{\bf When} things go wrong\dots}
 
-\begin{frame}{foo}
+\begin{frame}{Telling a Story of Time}
+	Remember, two stories: Expected outcome vs Actual outcome
+	\linegap
+	What does this mean 
+	% Text: "First I ... then I ... but then it ...!"
 \end{frame}
 
+\begin{frame}{Print debugging}
+	% Insert some code: the test case with print statements inserted in it
+	% Insert a picture: the time-cloud with some printed-out things in it
+	Should usually be the first thing you try!
+\end{frame}
 
+\begin{frame}{Asserts: Stealthier, more concealable prints}
+\end{frame}
+
+\subsection{Space Travel}
+
+\breakslide{{\bf Where} things go wrong\dots}
+
+\begin{frame}{Telling a Story of Space}
+	Remember, two stories: Expected outcome vs Actual outcome
+	\linegap
+\end{frame}
+
+\end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % vim: foldmethod=indent

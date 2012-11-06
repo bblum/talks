@@ -1,0 +1,23 @@
+Two major possible strategies:
+(1) Where did it go wrong CODE-WISE? (What did you try to do in the code
+    that was wrong?)
+     - Minimize the test case. Cut out everything you can while the bug
+       is still there.
+     - Coming from the other direction, write small examples. Make a
+       small program that *does* work that matches something you were
+       trying to do in the buggy program (so you know that component is
+       correct).
+
+(2) Where did it go wrong TIME-WISE? (When did the machine state step to
+    something unexpected?)
+     - Insert printfs and/or asserts and/or breakpoints to demarcate the
+       window of time that contains the unexpected step.
+     - diff output files (analyse programmatically)
+     - write invariant checkers & asserts
+
+Collecting information before starting in with code and debuggers:
+(a) {rubber,cardboard}{duck,dog}: ask "Well why?" of all assumptions
+(b) Figure out which data (variables, data structures) are relevant.
+(c) Draw pictures.
+(d) Figure out what you can measure and what is easy to measure
+
