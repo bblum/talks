@@ -71,6 +71,9 @@
 
 
 \begin{frame}{Outline}
+	\begin{columns}[l]
+	\column{0.05\textwidth}
+	\column{0.5\textwidth}
 	\textbf{Why teach debugging?}
 		% brief motivation
 		% toolbox
@@ -99,6 +102,11 @@
 		\item Question assumptions
 		\item Collect data
 	\end{itemize}
+	\column{0.45\textwidth}
+	%\begin{center}
+	%	\includegraphics[width=0.9\textwidth]{vip1066720.jpg}
+	%\end{center}
+	\end{columns}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -254,7 +262,7 @@
 
 \subsection{Time Travel}
 
-\breakslide{{\bf When} things go wrong\dots}
+\breakslide{``Time Travel'': {\bf When} things go wrong\dots}
 
 \begin{frame}{Telling a Story of Time}
 	Remember, two stories: Expected outcome vs Actual outcome
@@ -270,7 +278,6 @@
 \begin{frame}{Telling a Story of Time}
 	Our test case tells this story:
 
-	\linegap
 	\includegraphics[width=\textwidth]{time0.png}
 \end{frame}
 
@@ -290,16 +297,32 @@
 		\texttt{~~~~~~~~\hilight{olivegreen}{print(output);}} \\
 		\texttt{~~~~~~~~insert\_sorted(output,~element);} \\
 		\texttt{~~~~\}} \\
+	\pause
+	\linegap
+
+	Creating {\em bounds} on when the problem happened
+	\begin{itemize}
+		\item Adding more prints = making bounds smaller
+		\item (Lots and lots of time? Binary search!)
+	\end{itemize}
 \end{frame}
 
 \begin{frame}{Print Debugging}
 	New story:
 
-	\linegap
 	\includegraphics[width=\textwidth]{time1.png}
 \end{frame}
 
 \begin{frame}{Asserts: Stealthier, more concealable prints}
+	Adding print statements everywhere is very verbose
+	\begin{itemize}
+		\item Pro: Get to see everything
+		\item Con: Have to look at everything
+	\end{itemize}
+	\pause
+	\linegap
+
+	% TODO
 \end{frame}
 
 \begin{frame}{Aside: 15-213 ``malloc lab''}
@@ -340,17 +363,102 @@
 
 \subsection{Space Travel}
 
-\breakslide{{\bf Where} things go wrong\dots}
+\breakslide{``Space Travel'': {\bf Where} things go wrong\dots}
 
 \begin{frame}{Telling a Story of Space}
 	Remember, two stories: Expected outcome vs Actual outcome
 
 	\linegap
+	{\em Space-wise}, this means ``It supports doing X and Y operations, but operation Z is broken.''
+	\begin{itemize}
+		\item Now you can ignore X and Y
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Minimizing the Test Case}
+	Our test case tells this story:
+
+	\begin{center}
+	\includegraphics[width=0.65\textwidth]{space0.png}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Minimizing the Test Case}
+	Which parts of your code are right?
+	\begin{itemize}
+		\item Write {\bf small tests that pass}
+	\end{itemize}
+	\linegap
+
+	Which parts of your code are wrong?
+	\begin{itemize}
+		\item {\bf Minimize the failing test}
+		\begin{itemize}
+			\item Make it as small as possible, such that it still fails
+		\end{itemize}
+	\end{itemize}
+	\pause
+	\linegap
+
+	\texttt{~~~~input~=~\hilight{brickred}{[99]};~~~~~\hilight{darkcyan}{//~OK}} \\
+	\texttt{~~~~input~=~\hilight{brickred}{[100,99]};~\hilight{darkcyan}{//~OK}} \\
+	\pause
+	\texttt{~~~~input~=~\hilight{brickred}{[99,100]};~\hilight{darkcyan}{//~Fails}} \\
+\end{frame}
+
+\begin{frame}{Minimizing the Test Case}
+	New story:
+
+	\begin{center}
+	\includegraphics[width=0.65\textwidth]{space1.png}
+	\end{center}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Main Approach}
+\section{Assorted Tricks}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\breakslide{Assorted Tricks \\ {\normalsize (Useful stuff that isn't really about ``space'' or ``time'')}}
+
+% TODO
+%\begin{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusion}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\breakslide{What's in this ``toolbox'', again? \\ {\normalsize (Conclusion)}}
+
+\begin{frame}{The Toolbox}
+	\begin{columns}[l]
+	\column{0.05\textwidth}
+	\column{0.5\textwidth}
+	\textbf{``Tell Me a Story''}
+	\begin{itemize}
+		\item Get more detail
+		\item Rinse \& repeat
+		\pause
+		\item {\bf Tell a Story of Time}
+		\begin{itemize}
+			\item Print debugging
+			\item Asserts
+		\end{itemize}
+		\pause
+		\item {\bf Tell a Story of Space}
+		\begin{itemize}
+			\item Minimize the failing test case
+			\item Make small tests that work
+		\end{itemize}
+		\pause
+		\item Draw pictures, collect data, question assumptions
+	\end{itemize}
+	\column{0.45\textwidth}
+	\pause
+	\begin{center}
+		\includegraphics[width=0.9\textwidth]{vip1066720.jpg}
+	\end{center}
+	\end{columns}
+\end{frame}
 
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
