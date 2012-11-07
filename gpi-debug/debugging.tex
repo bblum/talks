@@ -121,6 +121,8 @@
 		\item How to write code that {\em works}
 	\end{itemize}
 	\pause
+	\linegap
+
 	{\bf 98-172}
 	\begin{itemize}
 		\item What to do with code that {\em doesn't}
@@ -129,6 +131,9 @@
 \end{frame}
 
 \begin{frame}{Take-away}
+	This lecture's goal: To give you a {\em framework} for thinking when faced with buggy code.
+	\linegap
+
 	\textbf{Debugging toolbox}
 	\begin{itemize}
 		\item Two major {\em strategies} for approaching bugs
@@ -186,6 +191,8 @@
 		\item (That you shouldn't seek help until you've already found your bug?!)
 	\end{itemize}
 	\pause
+	\linegap
+
 	This does mean...
 	\begin{itemize}
 		\item You need a detailed story to understand your bug.
@@ -308,6 +315,11 @@
 \end{frame}
 
 \begin{frame}{Print Debugging}
+	Old story:
+
+	\includegraphics[width=\textwidth]{time0.png}
+\end{frame}
+\begin{frame}{Print Debugging}
 	New story:
 
 	\includegraphics[width=\textwidth]{time1.png}
@@ -320,9 +332,36 @@
 		\item Con: Have to look at everything
 	\end{itemize}
 	\pause
+	15-122's C0 ``contracts'' are assertions
+	\begin{itemize}
+		\item You don't need to use C0 to write assert-ful code
+		\item Asserts can go anywhere, not just around functions/loops
+	\end{itemize}
+	\pause
 	\linegap
 
-	% TODO
+	\texttt{~~~~\hilight{brown}{if}~(something\_that\_should\_never\_happen)~\{} \\
+	\texttt{~~~~~~~~print(\hilight{brickred}{"it~happened!"});} \\
+	\texttt{~~~~~~~~crash();} \\
+	\texttt{~~~~\}} \\
+\end{frame}
+\begin{frame}{Asserts: Stealthier, more concealable prints}
+	Adding print statements everywhere is very verbose
+	\begin{itemize}
+		\item Pro: Get to see everything
+		\item Con: Have to look at everything
+	\end{itemize}
+	15-122's C0 ``contracts'' are assertions
+	\begin{itemize}
+		\item You don't need to use C0 to write assert-ful code
+		\item Asserts can go anywhere, not just around functions/loops
+	\end{itemize}
+	\linegap
+
+		\texttt{~~~~\hilight{brown}{foreach}~element~\hilight{brown}{in}~input~\{} \\
+		\texttt{~~~~~~~~insert\_sorted(output,~element);} \\
+		\texttt{~~~~~~~~\hilight{olivegreen}{assert(is\_sorted(output));}} \\
+		\texttt{~~~~\}} \\
 \end{frame}
 
 \begin{frame}{Aside: 15-213 ``malloc lab''}
@@ -407,6 +446,13 @@
 \end{frame}
 
 \begin{frame}{Minimizing the Test Case}
+	Old story:
+
+	\begin{center}
+	\includegraphics[width=0.65\textwidth]{space0.png}
+	\end{center}
+\end{frame}
+\begin{frame}{Minimizing the Test Case}
 	New story:
 
 	\begin{center}
@@ -421,7 +467,40 @@
 \breakslide{Assorted Tricks \\ {\normalsize (Useful stuff that isn't really about ``space'' or ``time'')}}
 
 % TODO
-%\begin{frame}
+\begin{frame}{Rubber Duck / Cardboard Dog Debugging}
+	\begin{columns}[l]
+	\column{0.75\textwidth}
+	Hacker folklore says: describe your problem to a duck!
+	\begin{itemize}
+		\item ``What could I possibly get out of talking to an inanimate object?''
+	\end{itemize}
+	\linegap
+
+	\onslide<2->{
+	Hearing yourself speak makes you {\bf question your assumptions}.
+	\begin{itemize}
+		\item ``The bug can't be in X.''
+		\item ``Why not? Are you sure X works?''
+	\end{itemize}
+	\linegap
+
+	Helps figure out what part of the story to start searching at
+	}
+	\column{0.25\textwidth}
+	\includegraphics[width=\textwidth]{rubberduck.jpg}
+	\end{columns}
+\end{frame}
+
+\begin{frame}{Draw Pictures}
+	Draw what you think should happen
+
+	Label relevant variables and their values
+	\linegap
+
+	\begin{center}
+		\includegraphics[width=0.8\textwidth]{draw-a-picture.png}
+	\end{center}
+\end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusion}
