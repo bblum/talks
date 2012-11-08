@@ -226,11 +226,11 @@
 	\linegap
 		\texttt{~~~~insert\_sorted(list,~element)~\{} \\
 			\texttt{~~~~~~~~\hilight{olivegreen}{int}~i~=~\hilight{brickred}{0};} \\
-		\texttt{~~~~~~~~\hilight{brown}{while}~(i~<~length(list))~\{} \\
+			\texttt{~~~~~~~~\hilight{brown}{while}~(i~<~length(list)~-~\hilight{brickred}{1})~\{} \\
 		\texttt{~~~~~~~~~~~~\hilight{brown}{if}~(element~<~list[i])~\{} \\
 		\texttt{~~~~~~~~~~~~~~~~\hilight{brown}{break};} \\
 		\texttt{~~~~~~~~~~~~\}} \\
-		\texttt{~~~~~~~~~~~~i = i + 1;} \\
+		\texttt{~~~~~~~~~~~~i = i + \hilight{brickred}{1};} \\
 		\texttt{~~~~~~~~\}} \\
 		\texttt{~~~~~~~~insert\_at\_index(list,~element,~i);} \\
 		\texttt{~~~~\}} \\
@@ -470,7 +470,7 @@
 	\linegap
 		\texttt{~~~~insert\_sorted(list,~element)~\{} \\
 			\texttt{~~~~~~~~\hilight{olivegreen}{int}~i~=~\hilight{brickred}{0};} \\
-		\texttt{~~~~~~~~\hilight{brown}{while}~(i~<~length(list))~\{} \\
+			\texttt{~~~~~~~~\hilight{brown}{while}~(i~<~length(list)~-~\hilight{brickred}{1})~\{} \\
 		\texttt{~~~~~~~~~~~~\hilight{brown}{if}~(element~<~list[i])~\{} \\
 		\texttt{~~~~~~~~~~~~~~~~\hilight{brown}{break};} \\
 		\texttt{~~~~~~~~~~~~\}} \\
@@ -489,8 +489,8 @@
 	\linegap
 		\texttt{~~~~insert\_sorted(list,~element)~\{} \\
 			\texttt{~~~~~~~~\hilight{olivegreen}{int}~i~=~\hilight{brickred}{0};} \\
-			\texttt{~~~~~~~~\hilight{brown}{while}~(\hilight{red}{i~<~length(list)})~\{~\hilight{darkcyan}{//~Should~be~"<="!}} \\
-		\texttt{~~~~~~~~~~~~\hilight{brown}{if}~(element~<~list[i])~\{} \\
+			\texttt{~~~~~~~~\hilight{brown}{while}~(\hilight{red}{i~<~length(list)~-~1})~\{~\hilight{darkcyan}{//~Should~be~"<="!}} \\
+				\texttt{~~~~~~~~~~~~\hilight{brown}{if}~(element~<~list[i])~\{~~~\hilight{darkcyan}{~~~(or~not~"-1")}} \\
 		\texttt{~~~~~~~~~~~~~~~~\hilight{brown}{break};} \\
 		\texttt{~~~~~~~~~~~~\}} \\
 		\texttt{~~~~~~~~~~~~i = i + 1;} \\
