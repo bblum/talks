@@ -204,39 +204,41 @@
 	\end{itemize}
 \end{frame}
 
+% \begin{frame}{Running Example}
+%
+%	\linegap
+%	Sorts OK into the middle and front of list:
+%	\begin{itemize}
+%		\item \texttt{insert\_sorted} $\quad \hilight{olivegreen}{10} \quad  [20,30] \quad \Rightarrow \quad [\hilight{olivegreen}{10},20,30]$
+%		\item \texttt{insert\_sorted} $\quad \hilight{olivegreen}{32} \quad  [16,64] \quad \Rightarrow \quad [16,\hilight{olivegreen}{32},64]$
+%	\end{itemize}
+%
+%	\linegap
+%	But not so great at the end:
+%	\begin{itemize}
+%	\item \texttt{insert\_sorted} $\quad \hilight{red}{100}  \quad [97,98,99] \quad \Rightarrow \quad [97,98,\hilight{red}{100},99]$
+%	\end{itemize}
+% \end{frame}
+
 \begin{frame}{Running Example}
 	\textbf{Broken \texttt{insert\_sorted}}
-
-	\linegap
-	Sorts OK into the middle and front of list:
-	\begin{itemize}
-		\item \texttt{insert\_sorted} $\quad \hilight{olivegreen}{10} \quad  [20,30] \quad \Rightarrow \quad [\hilight{olivegreen}{10},20,30]$
-		\item \texttt{insert\_sorted} $\quad \hilight{olivegreen}{32} \quad  [16,64] \quad \Rightarrow \quad [16,\hilight{olivegreen}{32},64]$
-	\end{itemize}
-
-	\linegap
-	But not so great at the end:
-	\begin{itemize}
-	\item \texttt{insert\_sorted} $\quad \hilight{red}{100}  \quad [97,98,99] \quad \Rightarrow \quad [97,98,\hilight{red}{100},99]$
-	\end{itemize}
-\end{frame}
-
-\begin{frame}{Running Example}
-	\textbf{Broken \texttt{insert\_sorted}}
-
-	\linegap
-	In case you're curious, here's the bug:
 
 	\linegap
 		\texttt{~~~~insert\_sorted(list,~element)~\{} \\
 			\texttt{~~~~~~~~\hilight{olivegreen}{int}~i~=~\hilight{brickred}{0};} \\
-		\texttt{~~~~~~~~\hilight{brown}{while}~(i~<~length(list))~\{~\hilight{darkcyan}{//~Should~be~"<="!}} \\
+		\texttt{~~~~~~~~\hilight{brown}{while}~(i~<~length(list))~\{} \\
 		\texttt{~~~~~~~~~~~~\hilight{brown}{if}~(element~<~list[i])~\{} \\
 		\texttt{~~~~~~~~~~~~~~~~\hilight{brown}{break};} \\
 		\texttt{~~~~~~~~~~~~\}} \\
+		\texttt{~~~~~~~~~~~~i = i + 1;} \\
 		\texttt{~~~~~~~~\}} \\
 		\texttt{~~~~~~~~insert\_at\_index(list,~element,~i);} \\
 		\texttt{~~~~\}} \\
+	\pause
+	\linegap
+	\begin{itemize}
+		\item Staring at the code until you see it sometimes works, but is a bad habit.
+	\end{itemize}
 \end{frame}
 
 \begin{frame}{Running Example}
@@ -267,7 +269,7 @@
 \section{Strategies}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Time Travel}
+\subsection{A Story of Time}
 
 \breakslide{``Time Travel'': {\bf When} things go wrong\dots}
 
@@ -327,7 +329,7 @@
 	\pause
 	15-122's C0 ``contracts'' are assertions
 	\begin{itemize}
-		\item You don't need to use C0 to write assert-ful code
+		\item You don't need to be writing C0 to write assert-ful code
 		\item Asserts can go anywhere, not just around functions/loops
 	\end{itemize}
 	\pause
@@ -346,7 +348,7 @@
 	\end{itemize}
 	15-122's C0 ``contracts'' are assertions
 	\begin{itemize}
-		\item You don't need to use C0 to write assert-ful code
+		\item You don't need to be writing C0 to write assert-ful code
 		\item Asserts can go anywhere, not just around functions/loops
 	\end{itemize}
 	\linegap
@@ -383,7 +385,7 @@
 	\pause
 	\begin{itemize}
 		\item Think of it like a C0 contract that must hold forever.
-		\item \textbf{Write the heap checker simultaneously!}
+		\item \textbf{Write the heap checker simultaneously (or even first)!}
 			\pause
 			\begin{itemize}
 				\item Save time/effort debugging everything else
@@ -393,7 +395,7 @@
 	\end{itemize}
 \end{frame}
 
-\subsection{Space Travel}
+\subsection{A Story of Space}
 
 \breakslide{``Space Travel'': {\bf Where} things go wrong\dots}
 
@@ -432,10 +434,15 @@
 	\pause
 	\linegap
 
-	\texttt{~~~~input~=~\hilight{brickred}{[99]};~~~~~\hilight{darkcyan}{//~OK}} \\
-	\texttt{~~~~input~=~\hilight{brickred}{[100,99]};~\hilight{darkcyan}{//~OK}} \\
+	%\texttt{~~~~input~=~\hilight{brickred}{[99]};~~~~~\hilight{darkcyan}{//~OK}} \\
+	%\texttt{~~~~input~=~\hilight{brickred}{[100,99]};~\hilight{darkcyan}{//~OK}} \\
+	%\pause
+	%\texttt{~~~~input~=~\hilight{brickred}{[99,100]};~\hilight{darkcyan}{//~Fails}} \\
+
+	\texttt{insert\_sorted} $\quad \hilight{olivegreen}{99}  \quad [~]{\small~~~~} \quad \Rightarrow \quad [\hilight{olivegreen}{99}] \quad$ ~~~~~~(empty list OK) \\
+	\texttt{insert\_sorted} $\quad \hilight{olivegreen}{99}  \quad [100] \quad \Rightarrow \quad [\hilight{olivegreen}{99},100] \quad$ (front of list OK) \\
 	\pause
-	\texttt{~~~~input~=~\hilight{brickred}{[99,100]};~\hilight{darkcyan}{//~Fails}} \\
+	\texttt{insert\_sorted} $\quad \hilight{red}{100}  \quad [99] \quad \Rightarrow \quad [\hilight{red}{100},99] \quad$ (end of list BAD)
 \end{frame}
 
 \begin{frame}{Minimizing the Test Case}
@@ -453,6 +460,45 @@
 	\end{center}
 \end{frame}
 
+\begin{frame}{\texttt{insert\_sorted}, revisited}
+	Now that we know {\em where} and {\em when} the program breaks, let's fix it.
+	\begin{itemize}
+		\item Raise your hand (don't say anything) when you see what's wrong.
+		\item Remember: only fails at the {\em end of the list}.
+	\end{itemize}
+
+	\linegap
+		\texttt{~~~~insert\_sorted(list,~element)~\{} \\
+			\texttt{~~~~~~~~\hilight{olivegreen}{int}~i~=~\hilight{brickred}{0};} \\
+		\texttt{~~~~~~~~\hilight{brown}{while}~(i~<~length(list))~\{} \\
+		\texttt{~~~~~~~~~~~~\hilight{brown}{if}~(element~<~list[i])~\{} \\
+		\texttt{~~~~~~~~~~~~~~~~\hilight{brown}{break};} \\
+		\texttt{~~~~~~~~~~~~\}} \\
+		\texttt{~~~~~~~~~~~~i = i + 1;} \\
+		\texttt{~~~~~~~~\}} \\
+		\texttt{~~~~~~~~insert\_at\_index(list,~element,~i);} \\
+		\texttt{~~~~\}} \\
+\end{frame}
+\begin{frame}{\texttt{insert\_sorted}, revisited}
+	Now that we know {\em where} and {\em when} the program breaks, let's fix it.
+	\begin{itemize}
+		\item Raise your hand (don't say anything) when you see what's wrong.
+		\item Remember: only fails at the {\em end of the list}.
+	\end{itemize}
+
+	\linegap
+		\texttt{~~~~insert\_sorted(list,~element)~\{} \\
+			\texttt{~~~~~~~~\hilight{olivegreen}{int}~i~=~\hilight{brickred}{0};} \\
+			\texttt{~~~~~~~~\hilight{brown}{while}~(\hilight{red}{i~<~length(list)})~\{~\hilight{darkcyan}{//~Should~be~"<="!}} \\
+		\texttt{~~~~~~~~~~~~\hilight{brown}{if}~(element~<~list[i])~\{} \\
+		\texttt{~~~~~~~~~~~~~~~~\hilight{brown}{break};} \\
+		\texttt{~~~~~~~~~~~~\}} \\
+		\texttt{~~~~~~~~~~~~i = i + 1;} \\
+		\texttt{~~~~~~~~\}} \\
+		\texttt{~~~~~~~~insert\_at\_index(list,~element,~i);} \\
+		\texttt{~~~~\}} \\
+\end{frame}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Assorted Tips}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -465,7 +511,13 @@
 	Hacker folklore says: describe your problem to a duck!
 	\begin{itemize}
 		\item ``What could I possibly get out of talking to an inanimate object?''
+		\pause
+		\begin{itemize}
+			\item The duck only knows what you tell it
+			\item When it doesn't know, it responds with ``WHY?''
+		\end{itemize}
 	\end{itemize}
+	\pause
 	\linegap
 
 	\onslide<2->{
@@ -505,7 +557,7 @@
 	\end{itemize}
 	}
 	\column{0.25\textwidth}
-	\vspace{0.035in}
+	\vspace{0.095in}
 	\includegraphics[width=\textwidth]{rubberduck.jpg}
 	\end{columns}
 \end{frame}
@@ -618,10 +670,10 @@
 	\linegap
 	Make sure your test cases are {\bf repeatable}
 	\begin{itemize}
-		\item Getting help (from a TA, from a company) easier when you say ``Here is a failing test'' than ''I once saw a test fail''!
+		\item Getting help (from a TA) easier when you say ``Here is a failing test'', not ''I once saw a test fail''!
 		\item Nonrepeatable tests are often complex
 		\begin{itemize}
-			\item Use the rest of these techniques to produce a relevant, minimal failing test case.
+			\item Use the rest of these techniques to produce a relevant, minimal, {\em reliable} failing test case.
 		\end{itemize}
 	\end{itemize}
 \end{frame}
@@ -649,8 +701,8 @@
 		\pause
 		\item {\bf Tell a Story of Space}
 		\begin{itemize}
-			\item Minimize the failing test case
 			\item Make small tests that work
+			\item Minimize the failing test case
 		\end{itemize}
 		\pause
 		\item Draw pictures, collect data, question assumptions, binary search
