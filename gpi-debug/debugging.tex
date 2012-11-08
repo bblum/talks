@@ -83,7 +83,6 @@
 	\begin{itemize}
 		\item The good debugger's attitude
 			% "get more operators"
-		\item Binary Search
 	\end{itemize}
 	\linegap
 
@@ -101,6 +100,7 @@
 	\begin{itemize}
 		\item Question assumptions
 		\item Draw pictures
+		\item Binary search
 	\end{itemize}
 	\column{0.45\textwidth}
 	%\begin{center}
@@ -235,7 +235,7 @@
 		\texttt{~~~~~~~~~~~~~~~~\hilight{brown}{break};} \\
 		\texttt{~~~~~~~~~~~~\}} \\
 		\texttt{~~~~~~~~\}} \\
-		\texttt{~~~~~~~~insert\_at\_index(list,~element);} \\
+		\texttt{~~~~~~~~insert\_at\_index(list,~element,~i);} \\
 		\texttt{~~~~\}} \\
 \end{frame}
 
@@ -246,7 +246,7 @@
 	Consider this test case:
 
 	\linegap
-		\texttt{~~~~input~=~\hilight{brickred}{[99,~42,~3,~100,~87,~56,~22]};} \\
+		\texttt{~~~~input~=~\hilight{brickred}{[99,~42,~3,~100,~87,~56,~22,~38]};} \\
 		\texttt{~~~~output~=~\hilight{brickred}{[]};} \\
 		\texttt{~~~~\hilight{brown}{foreach}~element~\hilight{brown}{in}~input~\{} \\
 		\texttt{~~~~~~~~insert\_sorted(output,~element);} \\
@@ -304,14 +304,7 @@
 		\texttt{~~~~~~~~\hilight{olivegreen}{print(output);}} \\
 		\texttt{~~~~~~~~insert\_sorted(output,~element);} \\
 		\texttt{~~~~\}} \\
-	\pause
-	\linegap
 
-	Creating {\em bounds} on when the problem happened
-	\begin{itemize}
-		\item Adding more prints = making bounds smaller
-		\item (Lots and lots of time? Binary search!)
-	\end{itemize}
 \end{frame}
 
 \begin{frame}{Print Debugging}
@@ -341,7 +334,7 @@
 	\linegap
 
 	\texttt{~~~~\hilight{brown}{if}~(something\_that\_should\_never\_happen)~\{} \\
-	\texttt{~~~~~~~~print(\hilight{brickred}{"it~happened!"});} \\
+	\texttt{~~~~~~~~print(\hilight{brickred}{"oh~no,~it~happened!"});} \\
 	\texttt{~~~~~~~~crash();} \\
 	\texttt{~~~~\}} \\
 \end{frame}
@@ -461,12 +454,11 @@
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Assorted Tricks}
+\section{Assorted Tips}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\breakslide{Assorted Tricks \\ {\normalsize (Useful stuff that isn't really about ``space'' or ``time'')}}
+\breakslide{Assorted Tips \\ {\normalsize (Useful stuff that isn't specifically about ``space'' or ``time'')}}
 
-% TODO
 \begin{frame}{Rubber Duck / Cardboard Dog Debugging}
 	\begin{columns}[l]
 	\column{0.75\textwidth}
@@ -490,6 +482,33 @@
 	\includegraphics[width=\textwidth]{rubberduck.jpg}
 	\end{columns}
 \end{frame}
+\begin{frame}{Rubber Duck / Cardboard Dog Debugging}
+	\begin{columns}[l]
+	\column{0.75\textwidth}
+	{\em Question assumptions} also means {\em question explanations}.
+	\begin{itemize}
+		\item You: ``I think X is wrong''
+		\item Duck: ``How can you be sure?''
+	\end{itemize}
+	\onslide<2->{
+	\linegap
+	The {\bf Hypothesis/Test} workflow
+	\begin{itemize}
+		\item Guess what the root cause is
+		\item Write a small test that fails {\em iff} that's right.
+		\onslide<3->{
+		\begin{itemize}
+			\item Not ``change code blindly, see if that fixes it''
+			\item Until you know what's wrong, write {\em tests}
+		\end{itemize}
+		}
+	\end{itemize}
+	}
+	\column{0.25\textwidth}
+	\vspace{0.035in}
+	\includegraphics[width=\textwidth]{rubberduck.jpg}
+	\end{columns}
+\end{frame}
 
 \begin{frame}{Draw Pictures}
 	Draw what you think should happen
@@ -500,6 +519,111 @@
 	\begin{center}
 		\includegraphics[width=0.8\textwidth]{draw-a-picture.png}
 	\end{center}
+\end{frame}
+
+\begin{frame}{Binary Search}
+	Print statements and unit tests create {\em bounds} on when the problem happened
+	\begin{itemize}
+		\item Iteratively making bounds smaller helps you hone in on the bug.
+		\begin{itemize}
+			\item Add more print statements
+			\item Write unit tests to test many (small!) parts of the code
+		\end{itemize}
+		\item Hey wait, this sounds like a certain search algorithm...
+	\end{itemize}
+	\pause
+	Binary search: ``$O(\mathsf{log}(n))$'' is not just talking about code!
+	\linegap
+	\pause
+
+	\includegraphics[width=\textwidth]{binary1.png}
+\end{frame}
+\begin{frame}{Binary Search}
+	Print statements and unit tests create {\em bounds} on when the problem happened
+	\begin{itemize}
+		\item Iteratively making bounds smaller helps you hone in on the bug.
+		\begin{itemize}
+			\item Add more print statements
+			\item Write unit tests to test many (small!) parts of the code
+		\end{itemize}
+		\item Hey wait, this sounds like a certain search algorithm...
+	\end{itemize}
+	Binary search: ``$O(\mathsf{log}(n))$'' is not just talking about code!
+	\linegap
+
+	\includegraphics[width=\textwidth]{binary2.png}
+\end{frame}
+\begin{frame}{Binary Search}
+	Print statements and unit tests create {\em bounds} on when the problem happened
+	\begin{itemize}
+		\item Iteratively making bounds smaller helps you hone in on the bug.
+		\begin{itemize}
+			\item Add more print statements
+			\item Write unit tests to test many (small!) parts of the code
+		\end{itemize}
+		\item Hey wait, this sounds like a certain search algorithm...
+	\end{itemize}
+	Binary search: ``$O(\mathsf{log}(n))$'' is not just talking about code!
+	\linegap
+
+	\includegraphics[width=\textwidth]{binary3.png}
+\end{frame}
+\begin{frame}{Binary Search}
+	Print statements and unit tests create {\em bounds} on when the problem happened
+	\begin{itemize}
+		\item Iteratively making bounds smaller helps you hone in on the bug.
+		\begin{itemize}
+			\item Add more print statements
+			\item Write unit tests to test many (small!) parts of the code
+		\end{itemize}
+		\item Hey wait, this sounds like a certain search algorithm...
+	\end{itemize}
+	Binary search: ``$O(\mathsf{log}(n))$'' is not just talking about code!
+	\linegap
+
+	\includegraphics[width=\textwidth]{binary4.png}
+\end{frame}
+\begin{frame}{Binary Search}
+	This also applies to ``space'', not just to ''time''
+	\begin{itemize}
+		\item Sometimes the only thing that makes your code crash is a 1000-line test case
+		\begin{itemize}
+			\item Binary search on ``which parts of the test need to be there''
+		\end{itemize}
+	\end{itemize}
+	\pause
+	\linegap
+	Still don't believe me? \texttt{git bisect}
+	\begin{itemize}
+		\item Helps find which {\em git revision} introduced a bug
+		\item Start with one ``known good'' revision, one ``known bad'' one
+		\item \texttt{bisect} binary-searches on revisions in-between, asking you at each if it's good or bad.
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{One Last Aside: Repeatability}
+	All the tests and bugs here have been {\em deterministic}.
+	\begin{itemize}
+		\item If you see the failure once, you can keep making it happen until it's fixed.
+	\end{itemize}
+	\pause
+	\linegap
+
+	In the ``real world'', and in 400-level classes, failures are not so easy to reproduce.
+	\begin{itemize}
+		\item Consider: \texttt{input = [rand(), rand(), rand(), rand()]}
+		\item Might have failed last week, but never since
+	\end{itemize}
+	\pause
+	\linegap
+	Make sure your test cases are {\bf repeatable}
+	\begin{itemize}
+		\item Getting help (from a TA, from a company) easier when you say ``Here is a failing test'' than ''I once saw a test fail''!
+		\item Nonrepeatable tests are often complex
+		\begin{itemize}
+			\item Use the rest of these techniques to produce a relevant, minimal failing test case.
+		\end{itemize}
+	\end{itemize}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -529,7 +653,7 @@
 			\item Make small tests that work
 		\end{itemize}
 		\pause
-		\item Draw pictures, collect data, question assumptions
+		\item Draw pictures, collect data, question assumptions, binary search
 	\end{itemize}
 	\column{0.45\textwidth}
 	\pause
