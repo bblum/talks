@@ -21,7 +21,7 @@
 \author[Ben Blum]{Ben Blum \texttt{(bblum@andrew.cmu.edu)}}
 
 \institute[CMU 15-410]{Carnegie Mellon University - 15-410}
-\date[]{2012, April 6}
+\date[]{2013, April 14}
 
 \setbeamertemplate{footline}{\hspace*{.5cm}\scriptsize{\insertauthor\hspace*{50pt} \hfill\insertframenumber\hspace*{.5cm}}} 
 
@@ -94,12 +94,12 @@
 \begin{frame}[fragile]{Case Study}
 	\begin{center}
 	\begin{verbatim}
-	int thread_fork()
-	{
-	    thread_t *child = spawn_new_thread();
-	    add_to_runqueue(child);
-	    return child->tid;
-	}
+	    int thread_fork()
+	    {
+	        thread_t *child = construct_new_thread();
+	        add_to_runqueue(child);
+	        return child->tid;
+	    }
 	\end{verbatim}
 	\end{center}
 
@@ -156,6 +156,7 @@
 		\end{itemize}
 		\item Cryptic panic messages or machine reboots
 	\end{itemize}
+	\linegap
 	What if\ldots
 	\begin{itemize}
 		\item Make educated guesses about when to preempt
@@ -244,11 +245,12 @@
 		\item All threads run to completion, or
 		\item A bug is detected % Say: more on this later.
 	\end{itemize}
+	\linegap
 	{\bf Backtracking}:
 	\begin{itemize}
 		\item Identify a decision point to choose differently
 		\item Reset machine state and start over
-		\item Replay test from the beginning, with different choices
+		\item Replay test from the beginning, with different ``decisions''
 	\end{itemize}
 \end{frame}
 
@@ -259,16 +261,16 @@
 	\linegap
 	One extreme: Decide at every instruction
 	\begin{itemize}
-		\item Good news: Will find every possible race condition.
-		\item Bad news: Runtime of test will be impossibly large.
+		\item {\em Good news}: Will find every possible race condition.
+		\item {\em Bad news}: Runtime of test will be impossibly large.
 	\end{itemize}
 	\linegap
 
 	Other extreme: Nothing is a decision point
 	\begin{itemize}
-		\item Good news: Test will finish quickly.
-		\item Bad news: Only one execution was checked for bugginess.
-		\item Bad news: No alternative interleavings explored.
+		\item {\em Good news}: Test will finish quickly.
+		\item {\em Bad news}: Only one execution was checked for bugginess.
+		\item {\em Bad news}: No alternative interleavings explored.
 		\begin{itemize}
 			\item Makes ``no race found'' a weak claim.
 		\end{itemize}
@@ -374,6 +376,10 @@
 
 \begin{frame}{About The Project}
 	5th year MS since June 2011 % Say: planning to finish this may, hopefully
+	My MS thesis project (June 2011-2012)
+
+	\linegap
+	Now I'm a Ph.D. student\dots
 
 	\linegap
 	Working with Garth Gibson, Jiri Simsa
@@ -396,7 +402,7 @@
 	Artificially causes timer interrupts
 
 	\linegap
-	Checkpointing/backtracking via Simics bookmarks
+	Checkpointing/backtracking via Simics bookmarks (reverse execution)
 \end{frame}
 
 \begin{frame}{Anatomy}
@@ -412,10 +418,11 @@
 		\item Deadlock
 		\item Use-after-free / double-free
 	\end{itemize}
+	\linegap
 	Landslide can {\em reasonably suspect}:
 	\begin{itemize}
 		\item Memory leak
-		\item Progress sense (halting problem)
+		\item Infinite loop (halting problem)
 	\end{itemize}
 \end{frame}
 
@@ -433,7 +440,7 @@
 	Mutual benefit
 	\begin{itemize}
 		\item Landslide may help you find bugs
-		\item You may help Ben evaluate his thesis project
+		\item You help Ben evaluate his research
 	\end{itemize}
 \end{frame}
 
@@ -457,9 +464,6 @@
 		\item When do threads become runnable / descheduled?
 		\item When does the scheduler switch threads?
 	\end{itemize}
-	\linegap
-
-	\framebox{Time estimate: 40 minutes}
 \end{frame}
 
 \begin{frame}{Configuring Landslide}
@@ -471,9 +475,6 @@
 
 	Fill in two implementation-dependent C functions in Landslide ($\le$10 lines)
 	% Say: Which depend on your kernel's specific implementation
-	\linegap
-
-	\framebox{Time estimate: 60 minutes}
 \end{frame}
 
 \begin{frame}{Configuring Decision Points}
@@ -482,12 +483,19 @@
 		\item It might find bugs.
 		\item It might overlook more fine-grained interleavings.
 	\end{itemize}
+	\linegap
 	With help from you, it could find more.
 	\begin{itemize}
 		\item Optional annotation: \texttt{tell\_landslide\_decide()}
 		\item Hints to where a context switch should be forced.
 		\item Inside every call to \texttt{mutex\_lock}\ldots
 	\end{itemize}
+\end{frame}
+
+\begin{frame}{And Hopefully\dots}
+	\begin{center}
+		\includegraphics[width=\textwidth]{found_a_bug.png}
+	\end{center}
 \end{frame}
 
 \breakslide{\Large Quick Demo}
@@ -522,6 +530,28 @@
 
 \subsection{User Study}
 
+\begin{frame}{Last Year's Results}
+	\begin{itemize}
+		\item Worked with 5 groups
+		\begin{itemize}
+			\item \dots{}of which 4 put in enough time to make Landslide work
+		\end{itemize}
+		\linegap
+		\item {\bf Investment}: about 2 to 3 hours
+		\begin{itemize}
+			\item Average 112 minutes doing required instrumentation
+			\item Average 35 minutes configuring extra decision points \& interpreting ``found a bug'' output
+		\end{itemize}
+		\pause
+		\linegap
+		\item {\bf Return}: All 4 groups found bugs in their kernels.
+		\begin{itemize}
+			\item All groups found deterministic bugs (e.g., use-after-free)
+			\item 2 groups found race conditions (i.e., Landslide needed to backtrack)
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
 \begin{frame}{In Which Ben Offers Help - Warning}
 	\textbf{If you are already struggling, this will not ``save'' you.}
 	\begin{itemize}
@@ -529,11 +559,16 @@
 		\item Research-quality: possibly difficult to integrate with your kernel
 		\item Finishing the kernel project is more important.
 	\end{itemize}
-	You should:
+	\pause
+	\linegap
+	This is for you if:
 	\begin{itemize}
-		\item Be expecting an A or B
-		\item Be able to turn in without late days (if you really had to)
-		\item Be looking for\ldots
+		%\item Be expecting an A or a B
+		\item You have already submitted
+		\item You are using late days, but willing to work over Carnival
+		%\item Be able to turn in without late days (if you really had to)
+		\item You are taking p3extra, but you already pass the hurdle
+		\item You are looking for\ldots
 			\begin{itemize}
 				\item That ``one pesky race''
 				\item A race that stress-testing missed
@@ -560,13 +595,13 @@
 \end{frame}
 
 \begin{frame}{In Which Ben Offers Help}
-	User study next week, starting Monday
+	User study this week, by appointment (\texttt{bblum@cs.cmu.edu})
 
 	\linegap
 	Expect to spend:
 	\begin{itemize}
-		\item Up to 4 hours, just to try it out.
-		\item 6-8 hours, if you find a bug and track it down.
+		\item Up to 3 hours, just to try it out.
+		\item 4-6 hours, if you find a bug and track it down.
 		\item More, for multiple bugs or the truly dedicated\ldots
 	\end{itemize}
 	\linegap
