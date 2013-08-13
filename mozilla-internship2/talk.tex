@@ -83,7 +83,7 @@
 	\end{itemize}
 	\linegap
 
-	{\bf Use Case: Concurrent Data Types}
+	{\bf Use Case: Concurrent Data Structures}
 	\linegap
 
 	\column{0.45\textwidth}
@@ -124,10 +124,10 @@
 		\pause
 		\item In Rust, kinds (aka ``builtin bounds'') describe {\em capabilities} of types:
 		\begin{itemize}
-			\item {\tt \hilight{olivegreen}{Send}} - Data can be sent to other tasks
-			\item {\tt \hilight{olivegreen}{Freeze}} - Data has no mutable interior
-			\item {\tt \hilight{olivegreen}{Static}} - Data never goes out of scope
-			\item {\tt \hilight{olivegreen}{Copy}} - Data can be implicitly copied
+			\item {\tt \hilight{violet}{Send}} - Data can be sent to other tasks
+			\item {\tt \hilight{violet}{Freeze}} - Data has no mutable interior
+			\item {\tt \hilight{violet}{Static}} - Data never goes out of scope
+			\item {\tt \hilight{violet}{Copy}} - Data can be implicitly copied
 				\pause
 				\begin{itemize}
 					\item $\skull$
@@ -142,38 +142,45 @@
 				\texttt{~~~~\hilight{brickred}{None}} \\
 				\texttt{\}} \\
 			\end{tabular}
-		\item {\tt \hilight{olivegreen}{Option}<T>} has kind {\tt K} iff {\tt T} has kind {\tt K}.
+		\item {\tt \hilight{olivegreen}{Option}<T>} has kind {\tt \hilight{violet}{K}} iff {\tt T} has kind {\tt \hilight{violet}{K}}.
 		\end{itemize}
 	\end{itemize}
 \end{frame}
+
+\subsection{Motivation}
 \begin{frame}{What are kind bounds good for?}
-	\begin{itemize}
-		\item Message passing:
+		Message passing:
 		\begin{itemize}
 			\item \begin{tabular}{l}
-					\texttt{\hilight{brown}{fn}~stream<T:~\hilight{olivegreen}{Send}>()~->~(\hilight{olivegreen}{Port}<T>,~\hilight{olivegreen}{Chan}<T>)} \\
+					\texttt{\hilight{brown}{fn}~stream<T:~\hilight{violet}{Send}>()~->~(\hilight{olivegreen}{Port}<T>,~\hilight{olivegreen}{Chan}<T>)} \\
 					\texttt{} \\
-					\texttt{\hilight{brown}{fn}~recv<T:~\hilight{olivegreen}{Send}>(port:~\&\hilight{olivegreen}{Port}<T>)~->~T} \\ 
+					\texttt{\hilight{brown}{fn}~recv<T:~\hilight{violet}{Send}>(port:~\&\hilight{olivegreen}{Port}<T>)~->~T} \\ 
 					\texttt{} \\
-					\texttt{\hilight{brown}{fn}~send<T:~\hilight{olivegreen}{Send}>(chan:~\&\hilight{olivegreen}{Chan}<T>,~data:~T)} \\
+					\texttt{\hilight{brown}{fn}~send<T:~\hilight{violet}{Send}>(chan:~\&\hilight{olivegreen}{Chan}<T>,~data:~T)} \\
 
 			\end{tabular}
-			\item \texttt{\hilight{olivegreen}{Send}} bound ensures once data is sent, sender can no longer access it.
+			\pause
+			\linegap
+			\item \texttt{\hilight{violet}{Send}} bound ensures once data is sent, sender can no longer access it.
 		\end{itemize}
-		\pause
-		\linegap
-		\item Shared state across tasks:
+\end{frame}
+\begin{frame}{What are kind bounds good for?}
+		Shared state across tasks:
 		\begin{itemize}
 			\item \begin{tabular}{l}
-					\texttt{\hilight{brown}{fn}~\hilight{olivegreen}{Arc}<T:~\hilight{olivegreen}{Send}+\hilight{olivegreen}{Freeze}>(data:~T)~->~\hilight{olivegreen}{Arc}<T>} \\
-					\texttt{} \\
-					\texttt{\hilight{brown}{fn}~get<'a,~T:~\hilight{olivegreen}{Send}+\hilight{olivegreen}{Freeze}>(arc:~\&'a~\hilight{olivegreen}{Arc}<T>)~->~\&'a~T} \\
+					\texttt{\hilight{brown}{fn}~arc<T:~\hilight{violet}{Send}+\hilight{violet}{Freeze}>(data:~T)~->~\hilight{olivegreen}{Arc}<T>} \\
 					\\
-					\texttt{\hilight{brown}{fn}~clone<T:~\hilight{olivegreen}{Send}+\hilight{olivegreen}{Freeze}>(arc:~\&\hilight{olivegreen}{Arc}<T>)~->~\hilight{olivegreen}{Arc}<T>} \\
+					\texttt{\hilight{brown}{fn}~clone<T:~\hilight{violet}{Send}+\hilight{violet}{Freeze}>(arc:~\&\hilight{olivegreen}{Arc}<T>)~->~\hilight{olivegreen}{Arc}<T>} \\
+					\texttt{} \\
+					\texttt{\hilight{darkcyan}{//~note~immutable~pointer~to~T}} \\
+					\texttt{\hilight{brown}{fn}~get<'a,~T:~\hilight{violet}{Send}+\hilight{violet}{Freeze}>(arc:~\&'a~\hilight{olivegreen}{Arc}<T>)~->~\&'a~T} \\
 
 			\end{tabular}
+			\pause
+			\linegap
+		\item \texttt{\hilight{violet}{Send}} bound ensures only way to access data is through the \texttt{\hilight{olivegreen}{Arc}}
+		\item \texttt{\hilight{violet}{Freeze}} bound ensures data is immutable
 		\end{itemize}
-	\end{itemize}
 \end{frame}
 
 \subsection{Traits Overview}
@@ -186,8 +193,9 @@
 				\item \begin{tabular}{l}
 						\texttt{\hilight{brown}{trait}~\hilight{olivegreen}{Pet}~\{} \\
 
-					\texttt{~~~~\hilight{brown}{fn}~name(\&self)~->~\textasciitilde{}str} \\
-					\texttt{~~~~\hilight{brown}{fn}~num\_legs(\&self)~->~int} \\
+							\texttt{~~~~\hilight{brown}{fn}~name(\&self)~->~\textasciitilde{}\hilight{olivegreen}{str}} \\
+							\texttt{~~~~\hilight{brown}{fn}~num\_legs(\&self)~->~\hilight{olivegreen}{int}} \\
+							\texttt{~~~~\hilight{brown}{fn}~is\_well\_behaved(\&self)~->~\hilight{olivegreen}{bool}} \\
 					\texttt{\}} \\
 
 				\end{tabular}
@@ -196,7 +204,7 @@
 		\item Also objects (existential types):
 			\begin{itemize}
 				\item \begin{tabular}{l}
-						\texttt{struct~\hilight{olivegreen}{Dog}~\{~name:~\textasciitilde{}str,~bark\_decibels:~int~\}} \\
+						\texttt{struct~\hilight{olivegreen}{Dog}~\{~name:~\textasciitilde{}\hilight{olivegreen}{str},~bark\_decibels:~\hilight{olivegreen}{int}~\}} \\
 					\texttt{} \\
 					\texttt{\hilight{brown}{impl}~\hilight{olivegreen}{Pet}~\hilight{brown}{for}~\hilight{olivegreen}{Dog}~\{~...~\}} \\
 					\texttt{} \\
@@ -241,11 +249,11 @@
 		\pause
 		\item Some inflexible defaults:
 			\begin{itemize}
-				\item {\tt \textasciitilde{}Trait} can only contain {\tt \hilight{olivegreen}{Send}}able values
-				\item {\tt @Trait} can only contain {\tt \hilight{olivegreen}{Static}} values
-				\item {\tt \&Trait} can contain any values
+				\item {\tt \textasciitilde{}\hilight{olivegreen}{Trait}} can only contain {\tt \hilight{violet}{Send}}able values
+				\item {\tt @\hilight{olivegreen}{Trait}} can only contain {\tt \hilight{violet}{Static}} values
+				\item {\tt \&\hilight{olivegreen}{Trait}} can contain any values
 				\pause
-				\item Traits are not {\tt \hilight{olivegreen}{Freeze}}able or {\tt \hilight{olivegreen}{Copy}}able.
+				\item Traits are not {\tt \hilight{violet}{Freeze}}able or {\tt \hilight{violet}{Copy}}able.
 			\end{itemize}
 			\pause
 		\item Enter {\em kind bounds}.
@@ -259,7 +267,7 @@
 
 \begin{frame}{Kind Bounds on Traits}
 	\begin{itemize}
-		\item Today, \texttt{\textasciitilde{}\hilight{olivegreen}{Pet}:\hilight{olivegreen}{Copy}} is also a type.
+		\item Today, \texttt{\textasciitilde{}\hilight{olivegreen}{Pet}:\hilight{violet}{Copy}} is also a type.
 
 		\begin{itemize}
 			\item Restriction: ``Only copyable values can be captured in this``
@@ -275,8 +283,8 @@
 				\texttt{\hilight{brown}{let}~generic\_pet:~\&\hilight{olivegreen}{Pet}~=~\&noncopyable\_alan\_turing~\hilight{brown}{as}~\&\hilight{olivegreen}{Pet};} \\
 				\texttt{~~~~\hilight{darkcyan}{//~\^~OK}} \\
 				\texttt{} \\
-			\texttt{\hilight{brown}{let}~copyable\_pet:~\&\hilight{olivegreen}{Pet}:\hilight{olivegreen}{Copy}~=} \\
-				\texttt{~~~~~~~~\&noncopyable\_alan\_turing~\hilight{brown}{as}~\&\hilight{olivegreen}{Pet}:\hilight{olivegreen}{Copy};} \\
+			\texttt{\hilight{brown}{let}~copyable\_pet:~\&\hilight{olivegreen}{Pet}:\hilight{violet}{Copy}~=} \\
+				\texttt{~~~~~~~~\&noncopyable\_alan\_turing~\hilight{brown}{as}~\&\hilight{olivegreen}{Pet}:\hilight{violet}{Copy};} \\
 				\texttt{~~~~\hilight{darkcyan}{//~\^~{error}:~cannot~capture~noncopyable}} \\
 				\texttt{~~~~\hilight{darkcyan}{//~~~~~~~~~~~value~in~{trait}~bounded~by~{Copy}}} \\
 			\end{tabular}
@@ -295,14 +303,14 @@
 		Example:
 		\begin{itemize}
 			\item \begin{tabular}{l}
-					\texttt{\hilight{brown}{let}~alan\_turing~=~\hilight{olivegreen}{Dog}~\{~...~\}} \\
-					\texttt{\hilight{brown}{let}~ada\_lovelace~=~\hilight{olivegreen}{Cat}~\{~...~\}} \\
-					\texttt{\hilight{brown}{let}~albert\_einstein~=~\hilight{olivegreen}{Bird}~\{~...~\}} \\
+					\texttt{\hilight{brown}{let}~alan\_turing~=~\textasciitilde{}\hilight{olivegreen}{Dog}~\{~...~\}} \\
+					\texttt{\hilight{brown}{let}~ada\_lovelace~=~\textasciitilde{}\hilight{olivegreen}{Cat}~\{~...~\}} \\
+					\texttt{\hilight{brown}{let}~albert\_einstein~=~\textasciitilde{}\hilight{olivegreen}{Bird}~\{~...~\}} \\
 					\pause
 					\texttt{}\\
-					\texttt{\hilight{brown}{let}~pets~=~\textasciitilde{}[alan\_turing~~~~~\hilight{brown}{as}~\hilight{olivegreen}{Dog}:~~\hilight{olivegreen}{Send}+\hilight{olivegreen}{Freeze},} \\
-						\texttt{~~~~~~~~~~~~~ada\_lovelace~~~~\hilight{brown}{as}~\hilight{olivegreen}{Cat}:~~\hilight{olivegreen}{Send}+\hilight{olivegreen}{Freeze},} \\
-					\texttt{~~~~~~~~~~~~~albert\_einstein~\hilight{brown}{as}~\hilight{olivegreen}{Bird}:~\hilight{olivegreen}{Send}+\hilight{olivegreen}{Freeze}];} \\
+					\texttt{\hilight{brown}{let}~pets~=~\textasciitilde{}[alan\_turing~~~~~\hilight{brown}{as}~\textasciitilde{}\hilight{olivegreen}{Pet}:~\hilight{violet}{Send}+\hilight{violet}{Freeze},} \\
+						\texttt{~~~~~~~~~~~~~ada\_lovelace~~~~\hilight{brown}{as}~\textasciitilde{}\hilight{olivegreen}{Pet}:~\hilight{violet}{Send}+\hilight{violet}{Freeze},} \\
+					\texttt{~~~~~~~~~~~~~albert\_einstein~\hilight{brown}{as}~\textasciitilde{}\hilight{olivegreen}{Pet}:~\hilight{violet}{Send}+\hilight{violet}{Freeze}];} \\
 					\texttt{} \\
 					\texttt{\hilight{brown}{let}~shared\_pets~=~\hilight{olivegreen}{Arc}(pets);} \\
 					\texttt{\hilight{darkcyan}{//~proceed~to~share~pets~among~many~parallel~tasks}} \\
@@ -330,6 +338,63 @@
 	\end{center}
 \end{frame}
 
+\begin{frame}{Bonus slides}
+	\begin{center}
+	\large \textit{(I'm glad you asked that\dots)}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Sharing Mutable State}
+	\textbf{``RW-Arc'':} reader-/writer-locked atomically-refcounted shared state.
+	\code {
+		\texttt{\hilight{brown}{impl}~<T:~\hilight{violet}{Freeze}+\hilight{violet}{Send}>~\&\hilight{olivegreen}{RWArc}<T>~\{} \\
+\texttt{~~~~\hilight{brown}{fn}~\hilight{olivegreen}{read}~~(blk:~\hilight{brown}{fn}(\&T))~...} \\
+\texttt{~~~~\hilight{brown}{fn}~\hilight{olivegreen}{write}~(blk:~\hilight{brown}{fn}(\&\hilight{brown}{mut}~T))~...} \\
+%\texttt{~~~~\hilight{brown}{fn}~\hilight{olivegreen}{write\_cond}(blk:~\hilight{brown}{fn}(\&\hilight{brown}{mut}~T,~\&condvar));} \\
+\texttt{\}} \\
+	}
+%		impl <T: const send> &rw_arc<T> {
+%		    fn read      (blk: fn(&T));
+%		    fn write     (blk: fn(&mut T));
+%		    fn write_cond(blk: fn(&mut T, &condvar));
+%		}
+
+	\begin{center}
+	\begin{tabular}{cc}
+		\begin{tabular}{l}
+%\texttt{\hilight{brown}{do}~arc.write\_cond~|state,c|~\{} \\
+\texttt{\hilight{brown}{do}~arc.write~|state:~\&\hilight{brown}{mut}~T|~\{} \\
+\texttt{~~~~\hilight{darkcyan}{//~exclusive~access;}} \\
+%\texttt{~~~~c.wait();} \\
+\texttt{~~~~\hilight{darkcyan}{//~can~modify~the~data}} \\
+\texttt{~~~~*state~=~\hilight{brickred}{17};} \\
+%\texttt{~~~~c.signal();} \\
+\texttt{\}} \\
+		\end{tabular}
+	&
+%		do arc.write_cond |state, cond| {
+%		    // exclusive access
+%		    cond.wait();    // can block...
+%		    *state = 17;    // modify the data...
+%		    cond.signal();  // and wake others
+%		}
+		\begin{tabular}{l}
+\texttt{\hilight{brown}{do}~arc.read~|state:~\&T|~\{} \\
+\texttt{~~~~\hilight{darkcyan}{//~concurrent~access}} \\
+\texttt{~~~~\hilight{darkcyan}{//~immutable~state}} \\
+\texttt{~~~~\hilight{red}{assert}~*state~==~\hilight{brickred}{17};} \\
+\texttt{~~~~\hilight{darkcyan}{//~won't~compile}} \\
+\texttt{~~~~\hilight{darkcyan}{//~*state += 1;}} \\
+\texttt{\}} \\
+		\end{tabular}
+	\end{tabular}
+	\end{center}
+%		do arc.read |state| {
+%		    // shared access - immutable state
+%		    assert *state == 17;  // OK
+%		    *state += 1;  // Won't compile
+%		}
+\end{frame}
 
 \end{document}
 
