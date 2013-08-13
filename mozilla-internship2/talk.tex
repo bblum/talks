@@ -1,0 +1,337 @@
+\documentclass[xcolor=dvipsnames]{beamer}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+
+\usepackage{manfnt}
+\usepackage{wasysym}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{ulem}
+\usepackage{marvosym}
+\usepackage{skull}
+\usepackage{proof}
+\usepackage{array}
+\setbeamertemplate{navigation symbols}{}
+
+\title[Kinds for Parallelism]{{\bf Types of Types in Rust}}
+\subtitle[]{ {\em Better parallelism through traits and kinds}}
+\author[Ben Blum]{Ben Blum \texttt{(bblum@andrew.cmu.edu)}}
+
+\institute[Mozilla Research]{Mozilla Research}
+\date[]{2013, August 13}
+
+\setbeamertemplate{footline}{\hspace*{.5cm}\scriptsize{\insertauthor\hspace*{50pt} \hfill\insertframenumber\hspace*{.5cm}}} 
+
+\usecolortheme{seahorse}
+\usecolortheme{rose}
+\useoutertheme{infolines}
+
+\usecolortheme[named=RoyalBlue]{structure}
+
+\newcommand\noob{\mathsf{noob}}
+\newcommand\gibs{\mathsf{gibs}}
+\newcommand\dps{\mathsf{dps}}
+\newcommand\squig\rightsquigarrow
+\newcommand\Coloneqq{\mathrel{\mathop{::}}=}
+\newcommand\dmg{\text{\Laserbeam}}
+\newcommand\delter\delta
+\newcommand\alpher\alpha
+\newcommand\defnor{\text{ }|\text{ }}
+
+\newcommand\pimp{\mathop{\supset}}
+\newcommand\pand{\mathop{\wedge}}
+\newcommand\por{\mathop{\vee}}
+\newcommand\ptrue{\top}
+\newcommand\pfalse{\bot}
+
+
+\begin{document}
+\renewcommand{\inserttotalframenumber}{28}
+\normalem
+\begin{frame}
+	\titlepage
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand\linegap{\vspace{0.2in}}
+\newcommand\breakslide[1]{\begin{frame}{} \begin{center} \Large #1 \end{center} \end{frame}}
+\newcommand\related[1]{\textsuperscript{\em [#1]}}
+\newcommand\hilight[2]{\color{#1}#2\color{black}}
+
+\begin{frame}{Outline}
+	\begin{columns}
+	\column{0.05\textwidth}
+	\column{0.5\textwidth}
+	\textbf{Overview}
+	\begin{itemize}
+		\item Kinds Overview
+		\item Traits Overview
+		\item Existential Types Overview
+	\end{itemize}
+	\linegap
+
+	{\bf Kind Bounds}
+	\begin{itemize}
+		\item Reasoning about Captures
+		\item New Expressivity
+	\end{itemize}
+	\linegap
+
+	{\bf Use Case: Concurrent Data Types}
+	\linegap
+
+	\column{0.45\textwidth}
+	\begin{center}
+	\includegraphics[width=0.9\textwidth]{rust.png}
+	\end{center}
+	\end{columns}
+\end{frame}
+
+\begin{frame}{We have a new runtime!}
+	I also worked on it, but... \\
+	\pause
+	\begin{center}
+		\includegraphics[width=0.8\textwidth]{last-year.png}
+	\end{center}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Overview}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand\code[1]{{\begin{center}\fbox{\begin{tabular}{l} #1 \end{tabular}} \end{center}}}
+
+\definecolor{grey}{RGB}{127,127,127}
+\definecolor{darkcyan}{RGB}{0,127,127}
+\definecolor{olivegreen}{RGB}{0,127,0}
+\definecolor{violet}{RGB}{127,0,127}
+\definecolor{brickred}{RGB}{127,0,0}
+\definecolor{brown}{RGB}{127,63,0}
+
+\breakslide{Kinds}
+
+\subsection{Kinds Overview}
+
+\begin{frame}{What are Kinds?}
+	\begin{itemize}
+		\item Type theory lingo: ``kinds'' == ``types of types''
+		\pause
+		\item In Rust, kinds (aka ``builtin bounds'') describe {\em capabilities} of types:
+		\begin{itemize}
+			\item {\tt \hilight{olivegreen}{Send}} - Data can be sent to other tasks
+			\item {\tt \hilight{olivegreen}{Freeze}} - Data has no mutable interior
+			\item {\tt \hilight{olivegreen}{Static}} - Data never goes out of scope
+			\item {\tt \hilight{olivegreen}{Copy}} - Data can be implicitly copied
+				\pause
+				\begin{itemize}
+					\item $\skull$
+				\end{itemize}
+		\end{itemize}
+		\pause
+		\item Kind bounds are automatically derived: \\
+		\begin{itemize}
+			\item \begin{tabular}{l}
+				\texttt{\hilight{brown}{enum}~\hilight{olivegreen}{Option}<T>~\{} \\
+				\texttt{~~~~\hilight{brickred}{Some}(T),} \\
+				\texttt{~~~~\hilight{brickred}{None}} \\
+				\texttt{\}} \\
+			\end{tabular}
+		\item {\tt \hilight{olivegreen}{Option}<T>} has kind {\tt K} iff {\tt T} has kind {\tt K}.
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+\begin{frame}{What are kind bounds good for?}
+	\begin{itemize}
+		\item Message passing:
+		\begin{itemize}
+			\item \begin{tabular}{l}
+					\texttt{\hilight{brown}{fn}~stream<T:~\hilight{olivegreen}{Send}>()~->~(\hilight{olivegreen}{Port}<T>,~\hilight{olivegreen}{Chan}<T>)} \\
+					\texttt{} \\
+					\texttt{\hilight{brown}{fn}~recv<T:~\hilight{olivegreen}{Send}>(port:~\&\hilight{olivegreen}{Port}<T>)~->~T} \\ 
+					\texttt{} \\
+					\texttt{\hilight{brown}{fn}~send<T:~\hilight{olivegreen}{Send}>(chan:~\&\hilight{olivegreen}{Chan}<T>,~data:~T)} \\
+
+			\end{tabular}
+			\item \texttt{\hilight{olivegreen}{Send}} bound ensures once data is sent, sender can no longer access it.
+		\end{itemize}
+		\pause
+		\linegap
+		\item Shared state across tasks:
+		\begin{itemize}
+			\item \begin{tabular}{l}
+					\texttt{\hilight{brown}{fn}~\hilight{olivegreen}{Arc}<T:~\hilight{olivegreen}{Send}+\hilight{olivegreen}{Freeze}>(data:~T)~->~\hilight{olivegreen}{Arc}<T>} \\
+					\texttt{} \\
+					\texttt{\hilight{brown}{fn}~get<'a,~T:~\hilight{olivegreen}{Send}+\hilight{olivegreen}{Freeze}>(arc:~\&'a~\hilight{olivegreen}{Arc}<T>)~->~\&'a~T} \\
+					\\
+					\texttt{\hilight{brown}{fn}~clone<T:~\hilight{olivegreen}{Send}+\hilight{olivegreen}{Freeze}>(arc:~\&\hilight{olivegreen}{Arc}<T>)~->~\hilight{olivegreen}{Arc}<T>} \\
+
+			\end{tabular}
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\subsection{Traits Overview}
+\breakslide{Traits and Objects}
+
+\begin{frame}{What are Traits?}
+	\begin{itemize}
+		\item Typeclasses, interfaces, ...
+			\begin{itemize}
+				\item \begin{tabular}{l}
+						\texttt{\hilight{brown}{trait}~\hilight{olivegreen}{Pet}~\{} \\
+
+					\texttt{~~~~\hilight{brown}{fn}~name(\&self)~->~\textasciitilde{}str} \\
+					\texttt{~~~~\hilight{brown}{fn}~num\_legs(\&self)~->~int} \\
+					\texttt{\}} \\
+
+				\end{tabular}
+			\end{itemize}
+		\pause
+		\item Also objects (existential types):
+			\begin{itemize}
+				\item \begin{tabular}{l}
+						\texttt{struct~\hilight{olivegreen}{Dog}~\{~name:~\textasciitilde{}str,~bark\_decibels:~int~\}} \\
+					\texttt{} \\
+					\texttt{\hilight{brown}{impl}~\hilight{olivegreen}{Pet}~\hilight{brown}{for}~\hilight{olivegreen}{Dog}~\{~...~\}} \\
+					\texttt{} \\
+					\texttt{\hilight{brown}{let}~alan\_turing:~\hilight{olivegreen}{Dog}~=~\hilight{olivegreen}{Dog}~\{~...~\}} \\
+					\texttt{} \\
+					\texttt{\hilight{brown}{let}~generic\_pet:~\&\hilight{olivegreen}{Pet}~=~\&alan\_turing~\hilight{brown}{as}~\&\hilight{olivegreen}{Pet};} \\
+					\texttt{~~~~\hilight{darkcyan}{//~\^~value~contains~a~vtable}} \\
+
+				\end{tabular}
+			\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Existential Types}
+	\begin{itemize}
+		\item ``Opaque type that presents a generic interface''
+		\begin{itemize}
+			\item $\exists x:T \rightarrow \mathsf{SomeInterface}(x)$
+		\end{itemize}
+		\item OOP: Interfaces-as-objects
+		\pause
+		\item Closures are a ``special case'' of trait objects:
+		\begin{itemize}
+			\item \begin{tabular}{l}
+					\texttt{\hilight{brown}{trait}~\hilight{olivegreen}{Closure}<Args,Ret>~\{} \\
+			\texttt{~~~~\hilight{brown}{fn}~call(self,~Args)~->~Ret;} \\
+			\texttt{\}} \\
+			\end{tabular}
+		\end{itemize}
+		\pause
+		\item In Rust, existential objects are {\em dynamically-sized}
+			\begin{itemize}
+				\item Have to be hidden behind a {\tt \&}, {\tt \textasciitilde}, or {\tt @} pointer.
+			\end{itemize}
+
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{What's in an Object?}
+	\begin{itemize}
+		\item (In terms of kind bounds?)
+		\pause
+		\item Some inflexible defaults:
+			\begin{itemize}
+				\item {\tt \textasciitilde{}Trait} can only contain {\tt \hilight{olivegreen}{Send}}able values
+				\item {\tt @Trait} can only contain {\tt \hilight{olivegreen}{Static}} values
+				\item {\tt \&Trait} can contain any values
+				\pause
+				\item Traits are not {\tt \hilight{olivegreen}{Freeze}}able or {\tt \hilight{olivegreen}{Copy}}able.
+			\end{itemize}
+			\pause
+		\item Enter {\em kind bounds}.
+	\end{itemize}
+\end{frame}
+
+\section{Kind Bounds}
+\breakslide{Kind Bounds}
+
+\subsection{Reasoning about Captured Values}
+
+\begin{frame}{Kind Bounds on Traits}
+	\begin{itemize}
+		\item Today, \texttt{\textasciitilde{}\hilight{olivegreen}{Pet}:\hilight{olivegreen}{Copy}} is also a type.
+
+		\begin{itemize}
+			\item Restriction: ``Only copyable values can be captured in this``
+			\item Capability: ``...so this whole thing can be copied!''
+		\end{itemize}
+		\pause
+		Example:
+		\begin{itemize}
+			\item \begin{tabular}{l}
+				\texttt{\hilight{brown}{let}~noncopyable\_alan\_turing:~\hilight{olivegreen}{Dog}~=~\hilight{olivegreen}{Dog}~\{~...~\}} \\
+				\pause
+				\texttt{} \\
+				\texttt{\hilight{brown}{let}~generic\_pet:~\&\hilight{olivegreen}{Pet}~=~\&noncopyable\_alan\_turing~\hilight{brown}{as}~\&\hilight{olivegreen}{Pet};} \\
+				\texttt{~~~~\hilight{darkcyan}{//~\^~OK}} \\
+				\texttt{} \\
+			\texttt{\hilight{brown}{let}~copyable\_pet:~\&\hilight{olivegreen}{Pet}:\hilight{olivegreen}{Copy}~=} \\
+				\texttt{~~~~~~~~\&noncopyable\_alan\_turing~\hilight{brown}{as}~\&\hilight{olivegreen}{Pet}:\hilight{olivegreen}{Copy};} \\
+				\texttt{~~~~\hilight{darkcyan}{//~\^~{error}:~cannot~capture~noncopyable}} \\
+				\texttt{~~~~\hilight{darkcyan}{//~~~~~~~~~~~value~in~{trait}~bounded~by~{Copy}}} \\
+			\end{tabular}
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{What is this good for?}
+	\begin{itemize}
+		\item {\bf Sharing lists of objects between threads}
+		\pause
+		\begin{itemize}
+			\item ``Heterogeneous'' objects, i.e., different implementations of the same trait
+		\end{itemize}
+		\pause
+		Example:
+		\begin{itemize}
+			\item \begin{tabular}{l}
+					\texttt{\hilight{brown}{let}~alan\_turing~=~\hilight{olivegreen}{Dog}~\{~...~\}} \\
+					\texttt{\hilight{brown}{let}~ada\_lovelace~=~\hilight{olivegreen}{Cat}~\{~...~\}} \\
+					\texttt{\hilight{brown}{let}~albert\_einstein~=~\hilight{olivegreen}{Bird}~\{~...~\}} \\
+					\pause
+					\texttt{}\\
+					\texttt{\hilight{brown}{let}~pets~=~\textasciitilde{}[alan\_turing~~~~~\hilight{brown}{as}~\hilight{olivegreen}{Dog}:~~\hilight{olivegreen}{Send}+\hilight{olivegreen}{Freeze},} \\
+						\texttt{~~~~~~~~~~~~~ada\_lovelace~~~~\hilight{brown}{as}~\hilight{olivegreen}{Cat}:~~\hilight{olivegreen}{Send}+\hilight{olivegreen}{Freeze},} \\
+					\texttt{~~~~~~~~~~~~~albert\_einstein~\hilight{brown}{as}~\hilight{olivegreen}{Bird}:~\hilight{olivegreen}{Send}+\hilight{olivegreen}{Freeze}];} \\
+					\texttt{} \\
+					\texttt{\hilight{brown}{let}~shared\_pets~=~\hilight{olivegreen}{Arc}(pets);} \\
+					\texttt{\hilight{darkcyan}{//~proceed~to~share~pets~among~many~parallel~tasks}} \\
+
+			\end{tabular}
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Perspective}
+	Can't C++ already do this?
+	\begin{itemize}
+		\item Q: ``IDGI, why is it so great that you used to not be able to do something C++ could always do?''
+		\pause
+		\item A: Doing the same thing while not compromising on safety guarantees (no data races)
+	\end{itemize}
+\end{frame}
+
+\breakslide{Thanks to\dots}
+
+\begin{frame}{Questions?}
+	% rust logo
+	\begin{center}
+		\includegraphics[width=0.6\textwidth]{rust.png}
+	\end{center}
+\end{frame}
+
+
+\end{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% vim: foldmethod=indent
