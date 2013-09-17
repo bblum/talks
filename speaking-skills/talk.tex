@@ -23,7 +23,7 @@
 \institute[Mozilla Research]{Mozilla Research}
 \date[]{2013, September 17}
 
-\setbeamertemplate{footline}{\hspace*{.5cm}\scriptsize{\insertauthor\hspace*{50pt} \hfill\insertframenumber\hspace*{.5cm}}} 
+\setbeamertemplate{footline}{\hspace*{.5cm}\scriptsize{\insertauthor\hspace*{50pt} \hfill\insertframenumber\hspace*{.5cm}}}
 
 \usecolortheme{seahorse}
 \usecolortheme{rose}
@@ -224,7 +224,11 @@
 \section{Performance}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\breakslide{Performance}
+\begin{frame}{Performance}
+	\begin{center}
+	\includegraphics[width=0.9\textwidth]{speed.jpg}
+	\end{center}
+\end{frame}
 
 \begin{frame}{Stack and Heap Allocation}
 	Interior types
@@ -276,15 +280,22 @@
 \section{Memory Safety}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\breakslide{Memory Safety}
+\begin{frame}{Safety}
+	\begin{center}
+	\includegraphics[width=0.9\textwidth]{safety.jpg}
+	\end{center}
+\end{frame}
+
+\newcommand\hashtableexample{\begin{tabular}{l}
+		\texttt{HashTable<K,V> *table = ...;} \\
+		\texttt{foreach value in table \{ \hilight{darkcyan}{// create alias into table}} \\
+		\texttt{~~~~table.insert(...); \hilight{darkcyan}{// might reallocate bucket array}} \\
+		\texttt{~~~~access(*value);} \\
+\texttt{\}}
+	\end{tabular} }
 
 \begin{frame}{Motivation: Data Structure Mutation}
-	\begin{tabular}{l}
-		\texttt{Hashtable<K,V> *table = ...;} \\
-		\texttt{V *value = table.find(...); \hilight{darkcyan}{// create alias into table}} \\
-		\texttt{table.insert(...); \hilight{darkcyan}{// might reallocate bucket array}} \\
-		\texttt{access(value);} \\
-	\end{tabular}
+	\hashtableexample
 	\pause
 	\linegap
 
@@ -333,7 +344,7 @@
 	\begin{itemize}
 		\item Creating one does not allocate
 		\item At runtime, same representation as C++ references
-		\item Usage restricted by static {\em lifetime analysis} $^{\small \text{Jim '02}}$
+		\item Always valid, usage restricted by static {\em lifetime analysis} $^{\small \text{Jim '02}}$
 	\end{itemize}
 	\pause
 	\linegap
@@ -359,11 +370,86 @@
 
 \subsection{Mutability}
 
+\begin{frame}{Mutability}
+	Mutability must be declared explicitly.
+	\begin{itemize}
+		\item \texttt{\hilight{brown}{let}~\hilight{brown}{mut}~x~=~\textasciitilde{}[\hilight{brickred}{0},\hilight{brickred}{0},\hilight{brickred}{0}];}
+	\end{itemize}
+	Mutability is {\em inherited}.
+	\begin{itemize}
+		\item \texttt{x = ~\textasciitilde{}[\hilight{brickred}{1},\hilight{brickred}{2},\hilight{brickred}{3}];}
+		\item \texttt{x[\hilight{brickred}{2}]~=~\hilight{brickred}{4};}
+	\end{itemize}
+	\pause
+	\linegap
+
+	Borrowed pointers can also be mutable (\texttt{\&\hilight{brown}{mut}~expr}, \texttt{\&\hilight{brown}{mut}~Type})
+	\begin{itemize}
+		\item Mutable borrowed pointers are the {\em only mutable path} to the data.
+		\item Cannot coexist with any other borrowed pointer to the same data.
+	\end{itemize}
+	\pause
+	\linegap
+	\begin{tabular}{l}
+	\texttt{\hilight{brown}{let}~y~=~\&x[\hilight{brickred}{2}];} \\
+		\texttt{(\&\hilight{brown}{mut}~x).push(\hilight{brickred}{8});~~\hilight{darkcyan}{//~might~reallocate~the~vector~(ERROR)}} \\
+	\texttt{\hilight{blue}{printf!}(\hilight{brickred}{"\%d"},~*y);~\hilight{darkcyan}{//~potential~use-after-free}} \\
+	\end{tabular}
+\end{frame}
+
+\begin{frame}{Putting it all together}
+	Recall:
+	\linegap
+
+	\hashtableexample
+\end{frame}
+\begin{frame}{Putting it all together}
+	\begin{tabular}{l}
+		\texttt{\hilight{brown}{fn}~each<K,V>(table:~\&\hilight{olivegreen}{HashTable}<K,V>,~f:~\hilight{brown}{fn}(\&K,~\&V))} \\
+		\texttt{\hilight{brown}{fn}~insert<K,V>(table:~\&\hilight{brown}{mut}~\hilight{olivegreen}{HashTable}<K,V>,~key:~K,~value:~V)} \\
+		\pause
+		\texttt{} \\
+		\texttt{\hilight{brown}{let}~table~=~...;} \\
+		\texttt{} \\
+		\texttt{} \\
+		\texttt{\hilight{brown}{do}~(\&table).each~|key,value|~\{} \\
+		\texttt{} \\
+		\texttt{} \\
+		\texttt{~~~~(\&\hilight{brown}{mut}~table).insert(...);~} \\
+		\texttt{} \\
+		\texttt{~~~~\hilight{blue}{printf!}(\hilight{brickred}{"\%?"},~*value);} \\
+		\texttt{\}} \\
+
+	\end{tabular}
+\end{frame}
+\begin{frame}{Putting it all together}
+	\begin{tabular}{l}
+		\texttt{\hilight{brown}{fn}~each<K,V>(table:~\&\hilight{olivegreen}{HashTable}<K,V>,~f:~\hilight{brown}{fn}(\&K,~\&V))} \\
+		\texttt{\hilight{brown}{fn}~insert<K,V>(table:~\&\hilight{brown}{mut}~\hilight{olivegreen}{HashTable}<K,V>,~key:~K,~value:~V)} \\
+		\texttt{} \\
+		\texttt{\hilight{brown}{let}~table~=~...;} \\
+		\texttt{} \\
+		\texttt{\hilight{darkcyan}{//~NOTE:~prior~borrow~occurred~here}} \\
+		\texttt{\hilight{brown}{do}~(\&table).each~|key,value|~\{} \\
+		\texttt{~~~~\hilight{darkcyan}{//~ERROR:~cannot~borrow~`table'~as~mutable~due~to}} \\
+		\texttt{~~~~\hilight{darkcyan}{//~conflicting~prior~borrow}} \\
+		\texttt{~~~~(\&\hilight{brown}{mut}~table).insert(...);~} \\
+		\texttt{} \\
+		\texttt{~~~~\hilight{blue}{printf!}(\hilight{brickred}{"\%?"},~*value);} \\
+		\texttt{\}} \\
+
+	\end{tabular}
+\end{frame}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Concurrency}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\breakslide{Concurrency}
+\begin{frame}{Concurrency}
+	\begin{center}
+	\includegraphics[width=0.6\textwidth]{concurrency.jpg}
+	\end{center}
+\end{frame}
 
 %make sure before this to talk about noncopyability and moving
 \subsection{Tasks}
@@ -397,7 +483,7 @@
                 \item A \texttt{\hilight{violet}{Send}}able type cannot alias any memory owned elsewhere.
                 \item No \texttt{\&}-pointers
                 \item No \texttt{@}-pointers
-                \item Moving a \texttt{\hilight{violet}{Send}}able type into another task gives up access rights to its memory. 
+                \item Moving a \texttt{\hilight{violet}{Send}}able type into another task gives up access rights to its memory.
         \end{itemize}
         \pause
         \linegap
@@ -493,7 +579,22 @@
 \section{Conclusion}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\breakslide{Thanks to\dots}
+\begin{frame}{Conclusion}
+	Rust achieves:
+	\begin{itemize}
+		\item Systems-level performance demands
+		\item Memory safety in the face of mutable aliases
+		\item Data-race-free concurrency
+	\end{itemize}
+	\linegap
+
+	through the use of:
+	\begin{itemize}
+		\item Ownership (linear/noncopyable) types
+		\item Static lifetime analysis (borrow-checking)
+		\item Kind analysis and safe concurrency library interfaces
+	\end{itemize}
+\end{frame}
 
 \begin{frame}{Questions?}
 	% rust logo
@@ -502,63 +603,63 @@
 	\end{center}
 \end{frame}
 
-\begin{frame}{Bonus slides}
-	\begin{center}
-	\large \textit{(I'm glad you asked that\dots)}
-	\end{center}
-\end{frame}
-
-\begin{frame}{Sharing Mutable State}
-	\textbf{``RW-Arc'':} reader-/writer-locked atomically-refcounted shared state.
-	\code {
-		\texttt{\hilight{brown}{impl}~<T:~\hilight{violet}{Freeze}+\hilight{violet}{Send}>~\&\hilight{olivegreen}{RWArc}<T>~\{} \\
-\texttt{~~~~\hilight{brown}{fn}~\hilight{olivegreen}{read}~~(blk:~\hilight{brown}{fn}(\&T))~...} \\
-\texttt{~~~~\hilight{brown}{fn}~\hilight{olivegreen}{write}~(blk:~\hilight{brown}{fn}(\&\hilight{brown}{mut}~T))~...} \\
-%\texttt{~~~~\hilight{brown}{fn}~\hilight{olivegreen}{write\_cond}(blk:~\hilight{brown}{fn}(\&\hilight{brown}{mut}~T,~\&condvar));} \\
-\texttt{\}} \\
-	}
-%		impl <T: const send> &rw_arc<T> {
-%		    fn read      (blk: fn(&T));
-%		    fn write     (blk: fn(&mut T));
-%		    fn write_cond(blk: fn(&mut T, &condvar));
-%		}
-
-	\begin{center}
-	\begin{tabular}{cc}
-		\begin{tabular}{l}
-%\texttt{\hilight{brown}{do}~arc.write\_cond~|state,c|~\{} \\
-\texttt{\hilight{brown}{do}~arc.write~|state:~\&\hilight{brown}{mut}~T|~\{} \\
-\texttt{~~~~\hilight{darkcyan}{//~exclusive~access;}} \\
-%\texttt{~~~~c.wait();} \\
-\texttt{~~~~\hilight{darkcyan}{//~can~modify~the~data}} \\
-\texttt{~~~~*state~=~\hilight{brickred}{17};} \\
-%\texttt{~~~~c.signal();} \\
-\texttt{\}} \\
-		\end{tabular}
-	&
-%		do arc.write_cond |state, cond| {
-%		    // exclusive access
-%		    cond.wait();    // can block...
-%		    *state = 17;    // modify the data...
-%		    cond.signal();  // and wake others
-%		}
-		\begin{tabular}{l}
-\texttt{\hilight{brown}{do}~arc.read~|state:~\&T|~\{} \\
-\texttt{~~~~\hilight{darkcyan}{//~concurrent~access}} \\
-\texttt{~~~~\hilight{darkcyan}{//~immutable~state}} \\
-\texttt{~~~~\hilight{red}{assert}~*state~==~\hilight{brickred}{17};} \\
-\texttt{~~~~\hilight{darkcyan}{//~won't~compile}} \\
-\texttt{~~~~\hilight{darkcyan}{//~*state += 1;}} \\
-\texttt{\}} \\
-		\end{tabular}
-	\end{tabular}
-	\end{center}
-%		do arc.read |state| {
-%		    // shared access - immutable state
-%		    assert *state == 17;  // OK
-%		    *state += 1;  // Won't compile
-%		}
-\end{frame}
+% \begin{frame}{Bonus slides}
+% 	\begin{center}
+% 	\large \textit{(I'm glad you asked that\dots)}
+% 	\end{center}
+% \end{frame}
+%
+% \begin{frame}{Sharing Mutable State}
+% 	\textbf{``RW-Arc'':} reader-/writer-locked atomically-refcounted shared state.
+% 	\code {
+% 		\texttt{\hilight{brown}{impl}~<T:~\hilight{violet}{Freeze}+\hilight{violet}{Send}>~\&\hilight{olivegreen}{RWArc}<T>~\{} \\
+% \texttt{~~~~\hilight{brown}{fn}~\hilight{olivegreen}{read}~~(blk:~\hilight{brown}{fn}(\&T))~...} \\
+% \texttt{~~~~\hilight{brown}{fn}~\hilight{olivegreen}{write}~(blk:~\hilight{brown}{fn}(\&\hilight{brown}{mut}~T))~...} \\
+% %\texttt{~~~~\hilight{brown}{fn}~\hilight{olivegreen}{write\_cond}(blk:~\hilight{brown}{fn}(\&\hilight{brown}{mut}~T,~\&condvar));} \\
+% \texttt{\}} \\
+% 	}
+% %		impl <T: const send> &rw_arc<T> {
+% %		    fn read      (blk: fn(&T));
+% %		    fn write     (blk: fn(&mut T));
+% %		    fn write_cond(blk: fn(&mut T, &condvar));
+% %		}
+%
+% 	\begin{center}
+% 	\begin{tabular}{cc}
+% 		\begin{tabular}{l}
+% %\texttt{\hilight{brown}{do}~arc.write\_cond~|state,c|~\{} \\
+% \texttt{\hilight{brown}{do}~arc.write~|state:~\&\hilight{brown}{mut}~T|~\{} \\
+% \texttt{~~~~\hilight{darkcyan}{//~exclusive~access;}} \\
+% %\texttt{~~~~c.wait();} \\
+% \texttt{~~~~\hilight{darkcyan}{//~can~modify~the~data}} \\
+% \texttt{~~~~*state~=~\hilight{brickred}{17};} \\
+% %\texttt{~~~~c.signal();} \\
+% \texttt{\}} \\
+% 		\end{tabular}
+% 	&
+% %		do arc.write_cond |state, cond| {
+% %		    // exclusive access
+% %		    cond.wait();    // can block...
+% %		    *state = 17;    // modify the data...
+% %		    cond.signal();  // and wake others
+% %		}
+% 		\begin{tabular}{l}
+% \texttt{\hilight{brown}{do}~arc.read~|state:~\&T|~\{} \\
+% \texttt{~~~~\hilight{darkcyan}{//~concurrent~access}} \\
+% \texttt{~~~~\hilight{darkcyan}{//~immutable~state}} \\
+% \texttt{~~~~\hilight{red}{assert}~*state~==~\hilight{brickred}{17};} \\
+% \texttt{~~~~\hilight{darkcyan}{//~won't~compile}} \\
+% \texttt{~~~~\hilight{darkcyan}{//~*state += 1;}} \\
+% \texttt{\}} \\
+% 		\end{tabular}
+% 	\end{tabular}
+% 	\end{center}
+% %		do arc.read |state| {
+% %		    // shared access - immutable state
+% %		    assert *state == 17;  // OK
+% %		    *state += 1;  // Won't compile
+% %		}
+% \end{frame}
 
 \end{document}
 
