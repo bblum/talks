@@ -73,11 +73,11 @@
 	\end{itemize}
 	\linegap
 
-	{\bf Problem: Dynamic Vector Fields}
-	\linegap
-
-	{\bf Solution: Dynamic Scheduling}
-	% TODO: Include a slide for the future work question
+	{\bf Dynamic Scheduling}
+	\begin{itemize}
+		\item Problem: Dynamic Vector Fields
+		\item Solution: Cache Computed Values
+	\end{itemize}
 	\linegap
 
 	{\bf Evaluation}
@@ -98,13 +98,14 @@
 \definecolor{violet}{RGB}{127,0,127}
 \definecolor{brickred}{RGB}{127,0,0}
 \definecolor{brown}{RGB}{127,63,0}
+\definecolor{orange}{RGB}{192,96,0}
 
 \begin{frame}{Image Processing is Functional Programming}
 	\begin{columns}
 
 	\column{0.5\textwidth}
 	\begin{tabular}{l}
-		\texttt{blur\_y(x,y,c) =} \\
+		\texttt{blur\_y(x,y) =} \\
 		\texttt{~~~~(input(x, y-1) +}\\
 		\texttt{~~~~~input(x, y~~) +}\\
 		\texttt{~~~~~input(x, y+1))/3;}\\
@@ -125,12 +126,12 @@
 
 	\column{0.5\textwidth}
 	\begin{tabular}{l}
-		\texttt{blur\_y(x,y,c) =} \\
+		\texttt{blur\_y(x,y) =} \\
 		\texttt{~~~~(input(x, y-1) +}\\
 		\texttt{~~~~~input(x, y~~) +}\\
 		\texttt{~~~~~input(x, y+1))/3;}\\
 		\\
-		\texttt{blur\_x(x,y,c) =} \\
+		\texttt{blur\_x(x,y) =} \\
 		\texttt{~~~~(blur\_y(x-1, y) +}\\
 		\texttt{~~~~~blur\_y(x,~~~y) +}\\
 		\texttt{~~~~~blur\_y(x+1, y))/3;}\\
@@ -188,12 +189,12 @@
 
 	\column{0.4\textwidth}
 	\begin{tabular}{l}
-		\texttt{\hilight{olivegreen}{blur\_y(x,y,c) =}} \\
+		\texttt{\hilight{olivegreen}{blur\_y(x,y) =}} \\
 		\texttt{\hilight{olivegreen}{~~(input(x, y-1) +}}\\
 		\texttt{\hilight{olivegreen}{~~~input(x, y,~~~c) +}}\\
 		\texttt{\hilight{olivegreen}{~~~input(x, y+1))/3;}}\\
 		\\
-		\texttt{\hilight{blue}{blur\_x(x,y,c) =}} \\
+		\texttt{\hilight{blue}{blur\_x(x,y) =}} \\
 		\texttt{\hilight{blue}{~~(blur\_y(x-1, y) +}}\\
 		\texttt{\hilight{blue}{~~~blur\_y(x,~~~y) +}}\\
 		\texttt{\hilight{blue}{~~~blur\_y(x+1, y))/3;}}\\
@@ -226,7 +227,7 @@
 
 \begin{frame}{Function Schedules Can Be Configured}
 	\begin{tabular}{l}
-		{\bf \texttt{blur\_x.tile(x, y, x2, y2, 8, 8);}}\\
+		{\bf \texttt{blur\_x.tile(x, y, x2, y2, 8, 8).parallel(x, y);}}\\
 		{\bf \texttt{blur\_y.store\_at(blur\_x, x).compute\_at(blur\_x, y2);}}\\
 		\\
 		\\
@@ -248,7 +249,7 @@
 
 \begin{frame}{Function Schedules Can Be Configured}
 	\begin{tabular}{l}
-		{\bf \texttt{blur\_x.tile(x, y, x2, y2, 8, 8);}}\\
+		{\bf \texttt{blur\_x.tile(x, y, x2, y2, 8, 8).parallel(x, y);}}\\
 		{\bf \texttt{blur\_y.store\_at(blur\_x, x).compute\_at(blur\_x, y2);}}\\
 		\\
 		\texttt{\hilight{blue}{float~blur\_x[HEIGHT][WIDTH];}} \\
@@ -270,7 +271,7 @@
 
 \begin{frame}{Function Schedules Can Be Configured}
 	\begin{tabular}{l}
-		{\bf \texttt{blur\_x.tile(x, y, x2, y2, 8, 8);}}\\
+		{\bf \texttt{blur\_x.tile(x, y, x2, y2, 8, 8).parallel(x, y);}}\\
 		{\bf \texttt{blur\_y.store\_at(blur\_x, x).compute\_at(blur\_x, y2);}}\\
 		\\
 		\texttt{\hilight{blue}{float~blur\_x[HEIGHT][WIDTH];}} \\
@@ -289,6 +290,19 @@
 		\texttt{\hilight{blue}{\}}} \\
 	\end{tabular}
 \end{frame}
+
+\begin{frame}{Tiling Helps Parallelism and Locality}
+	\begin{center}
+	\includegraphics[width=0.6\textwidth]{blur-tile.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Tiling Helps Parallelism and Locality}
+	\begin{center}
+	\includegraphics[width=0.6\textwidth]{blur-tile2.pdf}
+	\end{center}
+\end{frame}
+
 
 %float blur_x[HEIGHT][WIDTH];
 %for (row = 0 to 8) {
@@ -322,9 +336,117 @@
 
 \breakslide{Dynamic Scheduling}
 
+\begin{frame}{Static vs Dynamic Data Dependencies}
+	Avoiding duplicate work when tiling relies on {\bf static data dependencies}.
+	\begin{itemize}
+		\item In 3x3 blur, max distance from output to input location was 1.
+	\end{itemize}
+	\linegap
+
+	However, some algorithms compute which pixels to read from dynamically.
+	\begin{itemize}
+		\item Patch-match
+		\item Edge detection
+	\end{itemize}
+	\linegap
+
+	Which input pixels each output pixel will need to compute (the {\bf vector field}) is not known until runtime.
+\end{frame}
+
+\begin{frame}{Dynamic Vector Field Example}
+	\vspace{-0.3in}
+	\begin{center}
+	\begin{tabular}{cc}
+	\begin{tabular}{c}
+	Original image \\
+	\includegraphics[width=0.40\textwidth]{canoe-0.png}
+	\end{tabular}
+	& \pause
+	\begin{tabular}{c}
+	Invert colours  \\
+	\includegraphics[width=0.40\textwidth]{canoe-1.png}
+	\end{tabular}
+	\\ \pause
+	\begin{tabular}{c}
+	Flip \& Blur \\
+	\includegraphics[width=0.40\textwidth]{canoe-2.png}
+	\end{tabular}
+	& \pause
+	\begin{tabular}{c}
+	Flip conditionally by colour of pixel \\
+	\includegraphics[width=0.40\textwidth]{canoe-3.png}
+	\end{tabular}
+	\end{tabular}
+	\end{center}
+\end{frame}
+\begin{frame}{Dynamic Vector Fields Cause Duplicate Work}
+	\begin{center}
+	\includegraphics[width=0.7\textwidth]{blur-dynamic.pdf}
+	\end{center}
+	\linegap
+	Goal: When tile 1 computes \texttt{invert()} on a pixel, {\bf remember it} for tile 2.
+\end{frame}
+
+\begin{frame}{Solution: Caching Computed Results}
+	\textbf{Generated code, before:}
+	\linegap
+
+	\begin{tabular}{l}
+		\\
+		\texttt{\hilight{blue}{for~(tile~=~...)~\{}} \quad {\bf // Work duplicated across iterations} \\
+		\texttt{\hilight{olivegreen}{~~for~(row~=~...) \{}}\\
+		\texttt{\hilight{olivegreen}{~~~~for~(col~=~...) \{}}\\
+		\\
+		\texttt{\hilight{olivegreen}{~~~~~~~~inverted[row][col]~=~...;}} \\
+		\\
+		\\
+		\texttt{\hilight{olivegreen}{~~~~\}}} \\
+		\texttt{\hilight{olivegreen}{~~\}}} \\
+		\texttt{\hilight{blue}{~~(... compute flipped ...)}} \\
+		\texttt{\hilight{blue}{\}}} \\
+	\end{tabular}
+\end{frame}
+
+\begin{frame}{Solution: Caching Computed Results}
+	\textbf{Generated code, after:}
+	\linegap
+
+	\begin{tabular}{l}
+		\texttt{\hilight{orange}{bool~result\_computed[...];}}\\
+		\texttt{\hilight{blue}{for~(tile~=~...)~\{}} \quad {\bf // Work cached across iterations} \\
+		\texttt{\hilight{olivegreen}{~~for~(row~=~...) \{}}\\
+		\texttt{\hilight{olivegreen}{~~~~for~(col~=~...) \{}}\\
+		\texttt{\hilight{orange}{~~~~~~if (!result\_computed[row][col]) \{}} \\
+		\texttt{\hilight{olivegreen}{~~~~~~~~inverted[row][col]~=~...;}} \\
+		\texttt{\hilight{orange}{~~~~~~~~result\_computed[row][col]~=~true;}} \\
+		\texttt{\hilight{orange}{~~~~~~\}}} \\
+		\texttt{\hilight{olivegreen}{~~~~\}}} \\
+		\texttt{\hilight{olivegreen}{~~\}}} \\
+		\texttt{\hilight{blue}{~~(... compute flipped ...)}} \\
+		\texttt{\hilight{blue}{\}}} \\
+	\end{tabular}
+\end{frame}
+
+\begin{frame}{Open Questions}
+	Additional features\footnote{read as: ``Future Work''}
+	\begin{itemize}
+		\item Can we cache results at {\bf tile granularity} instead of {\bf pixel granularity}?
+		\item With {\bf parallel loops}, where do we need memory barriers?
+	\end{itemize}
+	\linegap
+
+	Evaluation
+	\begin{itemize}
+		\item How much duplicate work does this let us avoid?
+		\item How do different tilings, etc. affect savings?
+	\end{itemize}
+\end{frame}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Introduction}
+\section{Evaluation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\breakslide{Evaluation}
 
 
 \end{document}
