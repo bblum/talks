@@ -1,0 +1,88 @@
+\documentclass[xcolor=dvipsnames]{beamer}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+
+\usepackage{manfnt}
+\usepackage{wasysym}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{ulem}
+\usepackage{marvosym}
+\usepackage{skull}
+\usepackage{proof}
+\usepackage{array}
+\setbeamertemplate{navigation symbols}{}
+
+\title[Dynamic Scheduling in Halide]{{\bf Dynamic Scheduling in Halide}}
+\subtitle[]{ {\em Clever subtitle goes here}}
+\author[Ben Blum]{Ben Blum \texttt{(bblum@andrew.cmu.edu)}}
+
+\institute[CMU]{Carnegie Mellon University}
+\date[]{2013, December 16}
+
+\setbeamertemplate{footline}{\hspace*{.5cm}\scriptsize{\insertauthor\hspace*{50pt} \hfill\insertframenumber\hspace*{.5cm}}} 
+
+\usecolortheme{seahorse}
+\usecolortheme{rose}
+\useoutertheme{infolines}
+
+\usecolortheme[named=RoyalBlue]{structure}
+
+\newcommand\noob{\mathsf{noob}}
+\newcommand\gibs{\mathsf{gibs}}
+\newcommand\dps{\mathsf{dps}}
+\newcommand\squig\rightsquigarrow
+\newcommand\Coloneqq{\mathrel{\mathop{::}}=}
+\newcommand\dmg{\text{\Laserbeam}}
+\newcommand\delter\delta
+\newcommand\alpher\alpha
+\newcommand\defnor{\text{ }|\text{ }}
+
+\newcommand\pimp{\mathop{\supset}}
+\newcommand\pand{\mathop{\wedge}}
+\newcommand\por{\mathop{\vee}}
+\newcommand\ptrue{\top}
+\newcommand\pfalse{\bot}
+
+
+\begin{document}
+\renewcommand{\inserttotalframenumber}{28}
+\normalem
+\begin{frame}
+	\titlepage
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand\linegap{\vspace{0.2in}}
+\newcommand\breakslide[1]{\begin{frame}{} \begin{center} \Large #1 \end{center} \end{frame}}
+\newcommand\related[1]{\textsuperscript{\em [#1]}}
+\newcommand\hilight[2]{\color{#1}#2\color{black}}
+
+\begin{frame}{Outline}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Overview}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand\code[1]{{\begin{center}\fbox{\begin{tabular}{l} #1 \end{tabular}} \end{center}}}
+
+\definecolor{grey}{RGB}{127,127,127}
+\definecolor{darkcyan}{RGB}{0,127,127}
+\definecolor{olivegreen}{RGB}{0,127,0}
+\definecolor{violet}{RGB}{127,0,127}
+\definecolor{brickred}{RGB}{127,0,0}
+\definecolor{brown}{RGB}{127,63,0}
+
+\breakslide{Kinds}
+
+\end{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% vim: foldmethod=indent
