@@ -65,10 +65,29 @@
 \newcommand\hilight[2]{\color{#1}#2\color{black}}
 
 \begin{frame}{Outline}
+	\textbf{Halide Review}
+	\begin{itemize}
+		\item Function Definitions
+		\item Function Scheduling
+		% TODO: include pictures here 
+	\end{itemize}
+	\linegap
+
+	{\bf Problem: Dynamic Vector Fields}
+	\linegap
+
+	{\bf Solution: Dynamic Scheduling}
+	% TODO: Include a slide for the future work question
+	\linegap
+
+	{\bf Evaluation}
+	\begin{itemize}
+		\item TODO
+	\end{itemize}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Overview}
+\section{Halide Review}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newcommand\code[1]{{\begin{center}\fbox{\begin{tabular}{l} #1 \end{tabular}} \end{center}}}
@@ -80,7 +99,233 @@
 \definecolor{brickred}{RGB}{127,0,0}
 \definecolor{brown}{RGB}{127,63,0}
 
-\breakslide{Kinds}
+\begin{frame}{Image Processing is Functional Programming}
+	\begin{columns}
+
+	\column{0.5\textwidth}
+	\begin{tabular}{l}
+		\texttt{blur\_y(x,y,c) =} \\
+		\texttt{~~~~(input(x, y-1) +}\\
+		\texttt{~~~~~input(x, y~~) +}\\
+		\texttt{~~~~~input(x, y+1))/3;}\\
+		\\
+		\\
+		\\
+		\\
+		\\
+	\end{tabular}
+
+	\column{0.5\textwidth}
+	\includegraphics[width=\textwidth]{blury.pdf}
+	\end{columns}
+\end{frame}
+
+\begin{frame}{Image Processing is Functional Programming}
+	\begin{columns}
+
+	\column{0.5\textwidth}
+	\begin{tabular}{l}
+		\texttt{blur\_y(x,y,c) =} \\
+		\texttt{~~~~(input(x, y-1) +}\\
+		\texttt{~~~~~input(x, y~~) +}\\
+		\texttt{~~~~~input(x, y+1))/3;}\\
+		\\
+		\texttt{blur\_x(x,y,c) =} \\
+		\texttt{~~~~(blur\_y(x-1, y) +}\\
+		\texttt{~~~~~blur\_y(x,~~~y) +}\\
+		\texttt{~~~~~blur\_y(x+1, y))/3;}\\
+	\end{tabular}
+
+	\column{0.5\textwidth}
+	\includegraphics[width=\textwidth]{blurx.pdf}
+	\end{columns}
+\end{frame}
+
+\begin{frame}{...embedded in C++}
+	\begin{tabular}{l}
+		\\
+		\\
+		\\
+		\\
+		\\
+		\texttt{void main(int argc, char **argv)}\\
+		\texttt{~~~~Image<float> \hilight{blue}{input}~= load(argv[1]);} \\
+		\texttt{~~~~Image<float> output(input.width(), input.height());}\\
+		\texttt{~~~~Func \hilight{blue}{blur\_y}, \hilight{blue}{blur\_x};} \\
+		\texttt{~~~~Var \hilight{blue}{x},\hilight{blue}{y};}\\
+		\texttt{~~~~\hilight{blue}{blur\_y(x,y) = (input(x, y-1) + ...)/3;}} \\
+		\texttt{~~~~\hilight{blue}{blur\_x(x,y) = (blur\_y(x-1, y) + ...)/3;}} \\
+		\\
+		\texttt{~~~~\hilight{blue}{blur\_x}.realize(output); // JITs and runs the blur} \\
+		\texttt{~~~~save(output, "output.png");} \\
+		\texttt{\}}\\
+	\end{tabular}
+\end{frame}
+
+\begin{frame}{...embedded in C++}
+	\begin{tabular}{l}
+		\texttt{class Expr \{ ... \};}\\
+		\texttt{class Func \{}\\
+		\texttt{~~~~operator()(Expr x, Expr y, Expr z, ...);}\\
+		\texttt{~~~~...}\\
+		\texttt{\};}\\
+		\texttt{void main(int argc, char **argv)}\\
+		\texttt{~~~~Image<float> \hilight{blue}{input}~= load(argv[1]);} \\
+		\texttt{~~~~Image<float> output(input.width(), input.height());}\\
+		\texttt{~~~~Func \hilight{blue}{blur\_y}, \hilight{blue}{blur\_x};} \\
+		\texttt{~~~~Var \hilight{blue}{x},\hilight{blue}{y};}\\
+		\texttt{~~~~\hilight{blue}{blur\_y(x,y) = (input(x, y-1) + ...)/3;}} \\
+		\texttt{~~~~\hilight{blue}{blur\_x(x,y) = (blur\_y(x-1, y) + ...)/3;}} \\
+		\\
+		\texttt{~~~~\hilight{blue}{blur\_x}.realize(output); // JITs and runs the blur} \\
+		\texttt{~~~~save(output, "output.png");} \\
+		\texttt{\}}\\
+	\end{tabular}
+\end{frame}
+
+\begin{frame}{Functions are Automatically ``Scheduled''}
+	\begin{columns}
+
+	\column{0.4\textwidth}
+	\begin{tabular}{l}
+		\texttt{\hilight{olivegreen}{blur\_y(x,y,c) =}} \\
+		\texttt{\hilight{olivegreen}{~~(input(x, y-1) +}}\\
+		\texttt{\hilight{olivegreen}{~~~input(x, y,~~~c) +}}\\
+		\texttt{\hilight{olivegreen}{~~~input(x, y+1))/3;}}\\
+		\\
+		\texttt{\hilight{blue}{blur\_x(x,y,c) =}} \\
+		\texttt{\hilight{blue}{~~(blur\_y(x-1, y) +}}\\
+		\texttt{\hilight{blue}{~~~blur\_y(x,~~~y) +}}\\
+		\texttt{\hilight{blue}{~~~blur\_y(x+1, y))/3;}}\\
+		\\
+		\\
+		\\
+	\end{tabular}
+
+	\column{0.05\textwidth}
+	\column{0.55\textwidth}
+		\texttt{\hilight{olivegreen}{float~blur\_y[HEIGHT][WIDTH];}} \\
+		\texttt{\hilight{olivegreen}{for~(row~=~0~to~HEIGHT)~\{}} \\
+		\texttt{\hilight{olivegreen}{~~for~(col~=~0~to~WIDTH)~\{}} \\
+		\texttt{\hilight{olivegreen}{~~~~blur\_y[row][col] = ...;}}\\
+		\texttt{\hilight{olivegreen}{~~\}}} \\
+		\texttt{\hilight{olivegreen}{\}}} \\
+		\texttt{\hilight{blue}{float~blur\_x[HEIGHT][WIDTH];}} \\
+		\texttt{\hilight{blue}{for~(row~=~0~to~HEIGHT)~\{}} \\
+		\texttt{\hilight{blue}{~~for~(col~=~0~to~WIDTH)~\{}} \\
+		\texttt{\hilight{blue}{~~~~blur\_x[row][col] = ...;}}\\
+		\texttt{\hilight{blue}{~~\}}} \\
+		\texttt{\hilight{blue}{\}}} \\
+	\end{columns}
+	\pause
+	\begin{itemize}
+		\item Bad locality: Traversing the whole image twice
+		\item Bad paralellism: One thread per row/column/pixel??
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Function Schedules Can Be Configured}
+	\begin{tabular}{l}
+		{\bf \texttt{blur\_x.tile(x, y, x2, y2, 8, 8);}}\\
+		{\bf \texttt{blur\_y.store\_at(blur\_x, x).compute\_at(blur\_x, y2);}}\\
+		\\
+		\\
+		\\
+		\\
+		\\
+		\\
+		\\
+		\\
+		\\
+		\\
+		\\
+		\\
+		\\
+		\\
+		\\
+	\end{tabular}
+\end{frame}
+
+\begin{frame}{Function Schedules Can Be Configured}
+	\begin{tabular}{l}
+		{\bf \texttt{blur\_x.tile(x, y, x2, y2, 8, 8);}}\\
+		{\bf \texttt{blur\_y.store\_at(blur\_x, x).compute\_at(blur\_x, y2);}}\\
+		\\
+		\texttt{\hilight{blue}{float~blur\_x[HEIGHT][WIDTH];}} \\
+		\texttt{\hilight{blue}{PARALLEL for~(row~=~0~to~8)~\{}} \\
+		\texttt{\hilight{blue}{~~PARALLEL for~(col~=~0~to~8)~\{}} \\
+		\texttt{\hilight{olivegreen}{~~~~float~blur\_y[HEIGHT/8][WIDTH/8];}} \\
+		\texttt{\hilight{blue}{~~~~for~(row2~=~0~to~WIDTH/8)~\{}} \\
+		\texttt{\hilight{olivegreen}{~~~~~~for~(col2~=~0~to~WIDTH/8)~\{}} \\
+		\texttt{\hilight{olivegreen}{~~~~~~~~blur\_y[row*8~+~row2][col*8~+~col2]~=~...;}} \\
+		\texttt{\hilight{olivegreen}{~~~~~~\}}} \\
+		\texttt{\hilight{blue}{~~~~~~for~(col2~=~0~to~WIDTH/8)~\{}} \\
+		\texttt{\hilight{blue}{~~~~~~~~blur\_x[row*8~+~row2][col*8~+~col2]~=~...;}} \\
+		\texttt{\hilight{blue}{~~~~~~\}}} \\
+		\texttt{\hilight{blue}{~~~~\}}} \\
+		\texttt{\hilight{blue}{~~\}}} \\
+		\texttt{\hilight{blue}{\}}} \\
+	\end{tabular}
+\end{frame}
+
+\begin{frame}{Function Schedules Can Be Configured}
+	\begin{tabular}{l}
+		{\bf \texttt{blur\_x.tile(x, y, x2, y2, 8, 8);}}\\
+		{\bf \texttt{blur\_y.store\_at(blur\_x, x).compute\_at(blur\_x, y2);}}\\
+		\\
+		\texttt{\hilight{blue}{float~blur\_x[HEIGHT][WIDTH];}} \\
+		\texttt{\hilight{blue}{PARALLEL for~(row~=~0~to~8)~\{}} \quad {\bf // Good parallelism} \\
+		\texttt{\hilight{blue}{~~PARALLEL for~(col~=~0~to~8)~\{}} \\
+		\texttt{\hilight{olivegreen}{~~~~float~blur\_y[HEIGHT/8][WIDTH/8];}} \quad {\bf // Low memory usage} \\
+		\texttt{\hilight{blue}{~~~~for~(row2~=~0~to~WIDTH/8)~\{}} \\
+		\texttt{\hilight{olivegreen}{~~~~~~for~(col2~=~0~to~WIDTH/8)~\{}} \quad {\bf // Good locality} \\
+		\texttt{\hilight{olivegreen}{~~~~~~~~blur\_y[row*8~+~row2][col*8~+~col2]~=~...;}} \\
+		\texttt{\hilight{olivegreen}{~~~~~~\}}} \\
+		\texttt{\hilight{blue}{~~~~~~for~(col2~=~0~to~WIDTH/8)~\{}} \\
+		\texttt{\hilight{blue}{~~~~~~~~blur\_x[row*8~+~row2][col*8~+~col2]~=~...;}} \\
+		\texttt{\hilight{blue}{~~~~~~\}}} \\
+		\texttt{\hilight{blue}{~~~~\}}} \\
+		\texttt{\hilight{blue}{~~\}}} \\
+		\texttt{\hilight{blue}{\}}} \\
+	\end{tabular}
+\end{frame}
+
+%float blur_x[HEIGHT][WIDTH];
+%for (row = 0 to 8) {
+%  for (col = 0 to 8) {
+%    float blur_y[HEIGHT/8][WIDTH/8];
+%    for (row2 = 0 to WIDTH/8) {
+%      for (col2 = 0 to WIDTH/8) {
+%        blur_y[row*8 + row2][col*8 + col2] = ...;
+%      }
+%      for (col2 = 0 to WIDTH/8) {
+%        blur_x[row*8 + row2][col*8 + col2] = ...;
+%      }
+%    }
+%  }
+%}
+
+%float blur_x[HEIGHT][WIDTH];
+%for (blur_x_row = 0 to HEIGHT) {
+%  float blur_y[WIDTH];
+%  for (blur_y_col = 0 to WIDTH) {
+%    blur_y[blur_y_col] = ...;
+%  }
+%  for (blur_x_col = 0 to WIDTH) {
+%    blur_x[blur_x_col] = ...;
+%  }
+%}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Dynamic Scheduling}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\breakslide{Dynamic Scheduling}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 \end{document}
 

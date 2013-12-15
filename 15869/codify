@@ -6,36 +6,36 @@ IFS='\n'
 while read line; do
 	echo -n "\\texttt{"
 	echo -n "$line" | sed 's/{/\\{/g' | sed 's/}/\\}/g' | sed 's/_/\\_/g' | sed 's/~/\\textasciitilde\{\}/g' | sed 's/ /~/g' | sed 's/^\t*//' | sed 's/%/\\%/g' | sed 's/&/\\\&/g' | \
-		sed 's/\<fn\>/\\hilight{brown}{fn}/g' | \
-		sed 's/\<do\>/\\hilight{brown}{do}/g' | \
-		sed 's/\<for\>/\\hilight{brown}{for}/g' | \
-		sed 's/\<trait\>/\\hilight{brown}{trait}/g' | \
-		sed 's/\<enum\>/\\hilight{brown}{enum}/g' | \
-		sed 's/\<as\>/\\hilight{brown}{as}/g' | \
-		sed 's/\<let\>/\\hilight{brown}{let}/g' | \
-		sed 's/\<mut\>/\\hilight{brown}{mut}/g' | \
-		sed 's/\<if\>/\\hilight{brown}{if}/g' | \
-		sed 's/\<impl\>/\\hilight{brown}{impl}/g' | \
-		sed 's/\<Dog\>/\\hilight{olivegreen}{Dog}/g' | \
-		sed 's/\<Pet\>/\\hilight{olivegreen}{Pet}/g' | \
-		sed 's/\<Option\>/\\hilight{olivegreen}{Option}/g' | \
-		sed 's/\<Port\>/\\hilight{olivegreen}{Port}/g' | \
-		sed 's/\<Chan\>/\\hilight{olivegreen}{Chan}/g' | \
-		sed 's/\<Arc\>/\\hilight{olivegreen}{Arc}/g' | \
-		sed 's/\<Freeze\>/\\hilight{olivegreen}{Freeze}/g' | \
-		sed 's/\<Copy\>/\\hilight{olivegreen}{Copy}/g' | \
-		sed 's/\<Send\>/\\hilight{olivegreen}{Send}/g' | \
-		sed 's/\<Shared\>/\\hilight{olivegreen}{Shared}/g' | \
-		sed 's/\(\/\/.*\)/\\hilight{darkcyan}{\1}/g' | \
-		sed 's/\<assert\>/\\hilight{red}{assert}/g' | \
-		sed 's/\<main\>/\\hilight{olivegreen}{main}/g' | \
-		sed 's/\<5\>/\\hilight{brickred}{5}/g' | \
-		sed 's/None/\\hilight{brickred}{None}/g' | \
-		sed 's/Some/\\hilight{brickred}{Some}/g' | \
-		sed 's/\(".*"\)/\\hilight{brickred}{\1}/g' | \
-		sed 's/\(\<\w*\>\)::/\\hilight{violet}{\1}::/g' | \
-		sed 's/::/\\hilight{grey}{::}/g' | \
-		sed 's/\(\w*!\)/\\hilight{blue}{\1}/g' | \
+		#sed 's/\<fn\>/\\hilight{brown}{fn}/g' | \
+		#sed 's/\<do\>/\\hilight{brown}{do}/g' | \
+		#sed 's/\<for\>/\\hilight{brown}{for}/g' | \
+		#sed 's/\<trait\>/\\hilight{brown}{trait}/g' | \
+		#sed 's/\<enum\>/\\hilight{brown}{enum}/g' | \
+		#sed 's/\<as\>/\\hilight{brown}{as}/g' | \
+		#sed 's/\<let\>/\\hilight{brown}{let}/g' | \
+		#sed 's/\<mut\>/\\hilight{brown}{mut}/g' | \
+		#sed 's/\<if\>/\\hilight{brown}{if}/g' | \
+		#sed 's/\<impl\>/\\hilight{brown}{impl}/g' | \
+		#sed 's/\<Dog\>/\\hilight{olivegreen}{Dog}/g' | \
+		#sed 's/\<Pet\>/\\hilight{olivegreen}{Pet}/g' | \
+		#sed 's/\<Option\>/\\hilight{olivegreen}{Option}/g' | \
+		#sed 's/\<Port\>/\\hilight{olivegreen}{Port}/g' | \
+		#sed 's/\<Chan\>/\\hilight{olivegreen}{Chan}/g' | \
+		#sed 's/\<Arc\>/\\hilight{olivegreen}{Arc}/g' | \
+		#sed 's/\<Freeze\>/\\hilight{olivegreen}{Freeze}/g' | \
+		#sed 's/\<Copy\>/\\hilight{olivegreen}{Copy}/g' | \
+		#sed 's/\<Send\>/\\hilight{olivegreen}{Send}/g' | \
+		#sed 's/\<Shared\>/\\hilight{olivegreen}{Shared}/g' | \
+		#sed 's/\(\/\/.*\)/\\hilight{darkcyan}{\1}/g' | \
+		#sed 's/\<assert\>/\\hilight{red}{assert}/g' | \
+		#sed 's/\<main\>/\\hilight{olivegreen}{main}/g' | \
+		#sed 's/\<5\>/\\hilight{brickred}{5}/g' | \
+		#sed 's/None/\\hilight{brickred}{None}/g' | \
+		#sed 's/Some/\\hilight{brickred}{Some}/g' | \
+		#sed 's/\(".*"\)/\\hilight{brickred}{\1}/g' | \
+		#sed 's/\(\<\w*\>\)::/\\hilight{violet}{\1}::/g' | \
+		#sed 's/::/\\hilight{grey}{::}/g' | \
+		#sed 's/\(\w*!\)/\\hilight{blue}{\1}/g' | \
 		cat
 	echo "} \\\\"
 done
