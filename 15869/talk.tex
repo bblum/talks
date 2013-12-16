@@ -427,27 +427,173 @@
 	\end{tabular}
 \end{frame}
 
-\begin{frame}{Open Questions}
-	Additional features\footnote{read as: ``Future Work''}
-	\begin{itemize}
-		\item Can we cache results at {\bf tile granularity} instead of {\bf pixel granularity}?
-		\item With {\bf parallel loops}, where do we need memory barriers?
-	\end{itemize}
-	\linegap
-
-	Evaluation
-	\begin{itemize}
-		\item How much duplicate work does this let us avoid?
-		\item How do different tilings, etc. affect savings?
-	\end{itemize}
-\end{frame}
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Evaluation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \breakslide{Evaluation}
 
+\begin{frame}{Evaluation}
+	Evaluation Questions
+	\begin{itemize}
+		\item How much duplicate work does this let us avoid?
+		\item How do different tilings, etc. affect savings?
+	\end{itemize}
+	\pause
+	\linegap
+
+	Approach
+	\begin{itemize}
+		\item Used the transformation from the example
+		\begin{itemize}
+			\item (stage 1 \texttt{invert}, stage 2 \texttt{flip\_and\_blur})
+		\end{itemize}
+		\item Measured \# of calls to \texttt{invert} and execution time
+		\item Tested with several different function schedules
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Experimental Setup}
+	Ran experiments using small, medium, and large images
+	\begin{center}
+	\begin{tabular}{ccc}
+	\begin{tabular}{c}
+	64 x 64 \\
+	\includegraphics{gradient.png} \\
+	\includegraphics{gradient-output.png} \\
+	\end{tabular} &
+	\begin{tabular}{c}
+	400 x 261 \\
+	\includegraphics[width=0.3\textwidth]{readers-writers.png} \\
+	\includegraphics[width=0.3\textwidth]{rw-output.png} \\
+	\end{tabular} &
+	\begin{tabular}{c}
+	963 x 642 \\
+	\includegraphics[width=0.3\textwidth]{canoe-0.png} \\
+	\includegraphics[width=0.3\textwidth]{canoe-3.png} \\
+	\end{tabular}
+	\end{tabular}
+	\end{center}
+
+\end{frame}
+
+\begin{frame}{Result: Dynamic Scheduling Saves Computation}
+	For small image, measured number of \texttt{invert()} calls during execution
+	\begin{itemize}
+		\item (think: number of ``cache hits'')
+	\end{itemize}
+	\linegap
+
+	\begin{center}
+	\includegraphics[width=0.7\textwidth]{graphs/small.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Result: Dynamic Scheduling Saves Time (sometimes...)}
+	For medium and large images, measured execution time
+
+	\begin{center}
+	\includegraphics[width=0.7\textwidth]{graphs/medium.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Result: Dynamic Scheduling Saves Time (sometimes...)}
+	For medium and large images, measured execution time
+
+	\begin{center}
+	\includegraphics[width=0.7\textwidth]{graphs/large.pdf}
+	\end{center}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusion}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\breakslide{Conclusion}
+
+\begin{frame}{Summary}
+	Halide separates {\bf algorithm logic} from {\bf function scheduling}.
+	\linegap
+
+	Schedules are influenced by {\bf data dependencies} between algorithm stages.
+	\linegap
+
+	\textbf{Dynamically caching results} can succeed where static reasoning fails.
+\end{frame}
+
+\begin{frame}{Questions?}
+	\begin{center}
+	\begin{tabular}{ccc}
+	\begin{tabular}{c}
+	\includegraphics[width=0.2\textwidth]{bloopers/01.png} \\
+	\\
+	\includegraphics[width=0.2\textwidth]{bloopers/04.png} \\
+	\end{tabular} &
+	\begin{tabular}{c}
+	\includegraphics[width=0.2\textwidth]{bloopers/02.png} \\
+	\\
+	\includegraphics[width=0.2\textwidth]{bloopers/05.png} \\
+	\end{tabular} &
+	\begin{tabular}{c}
+	\includegraphics[width=0.2\textwidth]{bloopers/03.png} \\
+	\\
+	\includegraphics[width=0.2\textwidth]{bloopers/06.png} \\
+	\end{tabular}
+	\end{tabular}
+	\\ \linegap
+	(``bloopers'' produced during debugging)
+	\end{center}
+
+\end{frame}
+
+\breakslide{Bonus Slides}
+
+\begin{frame}{Open Questions}
+	Can we cache results at {\bf tile granularity} instead of {\bf pixel granularity}?
+	\begin{itemize}
+		\item (Not straightforwardly. Sizes and shapes of tiles change across iterations of outer loops. Need more runtime support.)
+	\end{itemize}
+	\linegap
+
+	With {\bf parallel loops}, where do we need memory barriers?
+	\begin{itemize}
+		\item (And how does multithreading affect work deduplication?)
+	\end{itemize}
+	\linegap
+
+\end{frame}
+
+\begin{frame}{Which function schedules did I use?}
+	\texttt{flipped.tile(x, y, xi, yi, 2, 2);}
+	\pause
+	\linegap
+
+	\begin{itemize}
+		\item \texttt{inverted.store\_at(c)}
+		\begin{itemize}
+			\item \texttt{.compute\_at(y);} (not included)
+			\item \texttt{.compute\_at(x);} (not included)
+			\item \texttt{.compute\_at(yi);} (\#1)
+			\item \texttt{.compute\_at(xi);} (\#2)
+		\end{itemize}
+		\item \texttt{inverted.store\_at(y)}
+		\begin{itemize}
+			\item \texttt{.compute\_at(x);} (\#3)
+			\item \texttt{.compute\_at(yi);} (\#4)
+			\item \texttt{.compute\_at(xi);} (\#5)
+		\end{itemize}
+		\item \texttt{inverted.store\_at(x)}
+		\begin{itemize}
+			\item \texttt{.compute\_at(yi);} (\#6)
+			\item \texttt{.compute\_at(xi);} (\#7)
+		\end{itemize}
+		\item \texttt{inverted.store\_at(yi)}
+		\begin{itemize}
+			\item \texttt{.compute\_at(xi);} (\#8)
+		\end{itemize}
+	\end{itemize}
+	
+\end{frame}
 
 \end{document}
 
