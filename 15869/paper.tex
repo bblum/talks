@@ -1,0 +1,125 @@
+\documentclass{article}
+\usepackage{lmodern}
+\usepackage[charter]{mathdesign}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+
+\usepackage{fullpage}
+\usepackage{manfnt}
+\usepackage{wasysym}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{url}
+%\usepackage{ulem}
+\usepackage{marvosym}
+%\usepackage{skull}
+\usepackage{proof}
+\usepackage{array}
+
+\title{{\bf Dynamic Scheduling in Halide}}
+\author{Ben Blum \texttt{(bblum@andrew.cmu.edu)}}
+
+\date{2013, December 16}
+
+\newcommand\noob{\mathsf{noob}}
+\newcommand\gibs{\mathsf{gibs}}
+\newcommand\dps{\mathsf{dps}}
+\newcommand\squig\rightsquigarrow
+\newcommand\Coloneqq{\mathrel{\mathop{::}}=}
+\newcommand\dmg{\text{\Laserbeam}}
+\newcommand\delter\delta
+\newcommand\alpher\alpha
+\newcommand\defnor{\text{ }|\text{ }}
+
+\newcommand\pimp{\mathop{\supset}}
+\newcommand\pand{\mathop{\wedge}}
+\newcommand\por{\mathop{\vee}}
+\newcommand\ptrue{\top}
+\newcommand\pfalse{\bot}
+
+
+\begin{document}
+\maketitle
+
+\begin{figure}[h]
+	\begin{center}
+	\begin{tabular}{llllll}
+		\begin{tabular}{l}
+                \texttt{blur\_y(x,y) =} \\
+                \texttt{~~~~(input(x, y-1) +}\\
+                \texttt{~~~~~input(x, y~~) +}\\
+                \texttt{~~~~~input(x, y+1))/3;}\\
+                \\
+                \texttt{blur\_x(x,y) =} \\
+                \texttt{~~~~(blur\_y(x-1, y) +}\\
+                \texttt{~~~~~blur\_y(x,~~~y) +}\\
+                \texttt{~~~~~blur\_y(x+1, y))/3;}\\
+		\end{tabular}
+		& & & & &
+		\begin{tabular}{l}
+                \texttt{blur\_y\_far\_away(x,y) =} \\
+                \texttt{~~~~(input(x, {\bf y-rand()}) +}\\
+                \texttt{~~~~~input(x, y~~~~~~~) +}\\
+                \texttt{~~~~~input(x, {\bf y+rand()}))/3;}\\
+                \\
+                \texttt{blur\_x\_far\_away(x,y) =} \\
+                \texttt{~~~~(blur\_y({\bf x-rand()}, y) +}\\
+                \texttt{~~~~~blur\_y(x,~~~~~~~~y) +}\\
+                \texttt{~~~~~blur\_y({\bf x+rand()}, y))/3;}\\
+		\end{tabular}
+
+	\end{tabular}
+	\end{center}
+	\caption{Static and dynamic data dependencies in Halide. On the left, a 3x3 blur (the canonical example Halide program) need only reference input data up to 1 pixel away in each direction for each output pixel. On the right, the algorithm is modified such that the compiler cannot statically know which input pixels each output pixel may reference.}
+	\label{fig:intro}
+\end{figure}
+
+\section{Introduction}
+
+Halide~\cite{halide} is a programming language for image processing pipelines designed to separate the concerns of performance and expressivity. The programming model is functional, representing images as functions from pixel coordinates to colour values, and representing each pass of an image processing algorithm as a function from images to images. Once implemented, the programmer's algorithm is then automatically parallelized by the Halide runtime, taking into account considerations such as how to split each pass into parallel tiles and the data dependencies between two consecutive passes.
+The structure of the generated loop nest and the function calls therein is known as the {\em function schedule}.
+
+One weakness of Halide is its inability to express image processing passes that don't operate uniformly across their domain; i.e., algorithms whose data dependencies on portions of previous passes cannot be known statically. 
+Figure~\ref{fig:intro} above contrasts two simple example algorithms, showcasing the difference between static and dynamic data dependencies.
+
+In this project I investigate and implement {\em dynamic function scheduling}, a new language feature for Halide to support such algorithms.
+My approach allows the computations for early pipeline stages to be cached across loop iterations of later stages, so that the results may be reused when data dependencies happen to coincide on the same location.
+The principal contribution of this work is the implementation and performance evaluation of {\em dynamic scheduling at pixel granularity}. I also investigated dynamic scheduling at coarser (e.g. tile) granularities, but the problem was more difficult than anticipated; for this I provide some discussion and a design sketch for future work.
+
+\section{Motivation}
+% TODO
+
+\section{Design and Interface}
+% TODO
+
+\section{Implementation}
+
+\subsection{Code Generation}
+% TODO
+
+\subsection{Legality Checking}
+% TODO
+
+\subsection{Code}
+
+The reader should feel free to find and peruse my code at \texttt{https://github.com/bblum/Halide}. During the weeks following this submission I will polish it and submit a pull request upstream.
+
+\section{Evaluation}
+% TODO
+
+\section{Open Questions}
+% TODO
+
+\section{Conclusion}
+% TODO
+
+\section*{Acknowledgements}
+
+Thanks to Jonathan Ragan-Kelley and Andrew Adams, developers of Halide, for their guidance, insights, and patience. Thanks to Kayvon Fatahalian for supervising this project, and for a great semester in 15-869.
+
+\bibliography{citations}{}
+\bibliographystyle{alpha}
+\end{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% vim: foldmethod=indent

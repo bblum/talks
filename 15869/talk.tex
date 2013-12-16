@@ -379,7 +379,9 @@
 	\begin{center}
 	\includegraphics[width=0.7\textwidth]{blur-dynamic.pdf}
 	\end{center}
+	\pause
 	\linegap
+
 	Goal: When tile 1 computes \texttt{invert()} on a pixel, {\bf remember it} for tile 2.
 \end{frame}
 
@@ -476,28 +478,12 @@
 \begin{frame}{Result: Dynamic Scheduling Saves Computation}
 	For small image, measured number of \texttt{invert()} calls during execution
 	\begin{itemize}
-		\item (think: number of ``cache hits'')
+		\item (think: number of ``cache misses'')
 	\end{itemize}
 	\linegap
 
 	\begin{center}
 	\includegraphics[width=0.7\textwidth]{graphs/small.pdf}
-	\end{center}
-\end{frame}
-
-\begin{frame}{Result: Dynamic Scheduling Saves Time (sometimes...)}
-	For medium and large images, measured execution time
-
-	\begin{center}
-	\includegraphics[width=0.7\textwidth]{graphs/medium.pdf}
-	\end{center}
-\end{frame}
-
-\begin{frame}{Result: Dynamic Scheduling Saves Time (sometimes...)}
-	For medium and large images, measured execution time
-
-	\begin{center}
-	\includegraphics[width=0.7\textwidth]{graphs/large.pdf}
 	\end{center}
 \end{frame}
 
@@ -557,6 +543,22 @@
 	\end{itemize}
 	\linegap
 
+\end{frame}
+
+\begin{frame}{Result: Dynamic Scheduling Saves Time (sometimes...)}
+	For medium and large images, measured execution time
+
+	\begin{center}
+	\includegraphics[width=0.7\textwidth]{graphs/medium.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Result: Dynamic Scheduling Saves Time (sometimes...)}
+	For medium and large images, measured execution time
+
+	\begin{center}
+	\includegraphics[width=0.7\textwidth]{graphs/large.pdf}
+	\end{center}
 \end{frame}
 
 \begin{frame}{Which function schedules did I use?}
