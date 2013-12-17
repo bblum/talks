@@ -167,7 +167,7 @@ The principal contribution of this work is the implementation and performance ev
 	\label{fig:scheds}
 \end{figure}
 
-The high concept of Halide is to separate the logic of an image processing algorithm from the order in which the functions for each stage are scheduled. Figure~\ref{fig:scheds} shows two possible schedules for our example algorithm, and discusses the performance characteristics of each.
+The high concept of Halide is to separate the logic of an image processing algorithm from the order in which the functions for each stage are scheduled. Figure~\ref{fig:scheds} shows two possible schedules for my example algorithm, and discusses the performance characteristics of each.
 Though Figure~\ref{fig:scheds-b} is more cache-friendly and offers superior paralellism opportunity, a notable disadvantage is that some computation is duplicated across tiles. This is shown in the extra 2 pixels computed for \texttt{blur\_y} in each dimension. In this example, the overhead is minor, as Halide can statically reason about the maximum extra ``padding'' that \texttt{blur\_y} must compute for each tile of \texttt{blur\_x}.
 
 However, this extra computation can become a significant problem when the dependencies between the algorithm's stages are computed at runtime and hence are not available for compile-time reasoning, as in the PatchMatch algorithm~\cite{patchmatch} and in edge detection. If the user wishes to use a cache-friendly, highly-parallel function schedule, as in Figure~\ref{fig:scheds-b}, Halide must make a conservative estimate regarding how much extra padding is required, resulting in extra work duplication.
@@ -240,12 +240,14 @@ Hence, the motivation for {\em dynamic scheduling} is to extend Halide's ability
 
 	\end{tabular}
 	\end{center}
-	\caption{Selected code from the implementation of our sample image processing program.}
+	\caption{Selected code from the implementation of the sample image processing program.}
 	\label{fig:flip-code}
 \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Design and Implementation}
+
+% This section discusses how I organized my code to implement this project. The reader seeking a research perspective will likely be disinterested, while the reader seeking to extend or maintain my work may well find this the most useful section in the report.
 
 \subsection{Overview}
 
@@ -255,6 +257,141 @@ Conceptually, my goal for dynamic function scheduling as a Halide language featu
 
 % TODO
 {\bf Tile-granularity dynamic scheduling.} DISCUSSION FORTHCOMING.
+
+\subsection{Code Generation}
+
+Inside the compiler, the dynamic schedule configuration is stored in a \texttt{Func}'s \texttt{Schedule} object as a \texttt{LoopLevel} named \texttt{lazy\_level}, alongside the existing configurations \texttt{store\_level} and \texttt{compute\_level}. Unlike the latter two, however, the \texttt{lazy\_level} is not defined in terms of the loop variable of a different function, but rather for one of the function's own loop variables. Hence, \texttt{lazy\_level.func} always refers to the containing function.
+
+The code generation itself occurs during the \texttt{Lower} phase of compilation, between the \texttt{schedule\_functions()} phase (found in \texttt{Lower.cpp}) and the \texttt{storage\_flattening()} phase (found in \texttt{StorageFlattening.cpp}). The former processes the \texttt{lazy\_level} configuration and generates IR to represent it, and the latter converts those IR nodes into conventional IR that can be code-generated. For this purpose I added a new type of IR node, \texttt{DynamicStmt} (found in \texttt{IR.h}), which represents the ``if not-in-cache then compute; mark-cache; end'' pattern.
+
+\begin{itemize}
+	\item {\bf Function Scheduling.} This phase converts the dynamic schedule configuration into IR in two places. The first is when it generates a \texttt{Realize} node (in \texttt{build\_realize()}); it simply sets the node's \texttt{lazy} flag to \texttt{true} if the associated function's \texttt{lazy\_level} was set.\footnote{
+	I experimented here with computing and storing an expression representing the necessary size for the bitmask, rather than just a boolean. Future work may find this approach worth doing after all.}
+	The second is when building a function's loop nest (in \texttt{build\_provide\_loop\_nest()}); when the approprate loop level is encountered, it inserts a \texttt{DynamicStmt} node between the \texttt{For} loop and its body.
+	\item {\bf Storage Flattening.} This phase visits the IR described above and ``flattens'' it into arrays more reminiscent of the C memory model. In \texttt{visit(Realize *)}, where it makes the \texttt{Allocate} node for the function's computed results, it now also will make another \texttt{Allocate} and a brief initialization loop if \texttt{realize->lazy} is set. Second, in \texttt{visit(DynamicStmt *)}, it converts the \texttt{DynamicStmt} node into a conventional \texttt{IfThenElse} node using the provided index for the allocated bitmask.
+\end{itemize}
+
+\subsection{Legality Checking}
+
+During the function scheduling in \texttt{Lower.cpp} Halide must also check that a specified dynamic schedule is legal. I currently check for the following cases:
+
+\begin{itemize}
+	\item {\bf Vectorized loop.} If any of the loops between the \texttt{store\_level} and the \texttt{lazy\_level} are vectorized, it may not make sense to emit a check which conditionally skips much of the computation. Though it would make sense to generate code for a single boolean check around a single pixel computation, with more sophisticated tile-level dynamic scheduling the vectorized execution might behave pathologically (especially if the conditional check involves traversing a sophisticated data structure as suggested in Section~\ref{sec:future-tiles}).
+	\item {\bf Parallel loop.} If any of the loops between the \texttt{store\_level} and the \texttt{lazy\_level} are parallelized, then one thread attempting to record the result of a computation might race with another thread attempting to use that result. With x86's sequentially-consistent memory model and the simple boolean check, this is not an issue, but when compiling for ARM or using a more sophisticated data structure for memoizing Halide would need to emit memory barriers at best and locks at worst. This is not infeasible to implement, but raises research questions of its own and so is left to future work.
+	\item {\bf Update phase.} Dynamic scheduling is not (yet) compatible with functions which have an update phase in their \texttt{Pipeline} node, which can arise when the user provides a reduction definition. This is merely a case I did not consider in detail, and may well be possible to handle.
+\end{itemize}
+
+\subsection{Code}
+
+The reader should feel free to find and peruse my code at \texttt{https://github.com/bblum/Halide}. During the weeks following this submission I will polish it and submit a pull request upstream.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Evaluation}
+
+To evaluate dynamic scheduling I sought to answer the following questions.
+
+\begin{itemize}
+	\item How much duplicate work does dynamic scheduling let us avoid?
+	\item How does the amount of duplicate work avoided and the execution time vary when different function schedules are used?
+\end{itemize}
+
+To approach these questions I ran experiments with input images of three different sizes using 8 different function schedules. I list the schedules used in Figure~\ref{fig:eval-scheds}, and show the images in Figure~\ref{fig:eval-images}.
+
+\begin{figure}[h]
+	\begin{center}
+	\begin{tabular}{c|c}
+		x-axis label & schedule used \\
+		\hline
+                1 & \texttt{invert.store\_at(flip, c).compute\_at(flip, yi);~} \\
+                2 & \texttt{invert.store\_at(flip, c).compute\_at(flip, xi);~} \\
+                3 & \texttt{invert.store\_at(flip, y).compute\_at(flip, x);~~} \\
+                4 & \texttt{invert.store\_at(flip, y).compute\_at(flip, yi);~} \\
+                5 & \texttt{invert.store\_at(flip, y).compute\_at(flip, xi);~} \\
+                6 & \texttt{invert.store\_at(flip, x).compute\_at(flip, yi);~} \\
+                7 & \texttt{invert.store\_at(flip, x).compute\_at(flip, xi);~} \\
+                8 & \texttt{invert.store\_at(flip, yi).compute\_at(flip, xi);} 
+	\end{tabular}
+	\end{center}
+	\caption{All experiments used the schedule \texttt{flipped.tile(x, y, xi, yi, 2, 2);}. On the subsequent graphs in this evaluation, the x-axis labels correspond to the corresponding schedule for \texttt{invert} here.}
+	\label{fig:eval-scheds}
+\end{figure}
+\begin{figure}[h]
+        \begin{center}
+        \begin{tabular}{ccc}
+	\begin{subfigure}[b]{0.22\textwidth}
+        \includegraphics[width=\textwidth]{gradient.png} \\
+        \\
+        \includegraphics[width=\textwidth]{gradient-output.png} \\
+        \caption{Small image (64x64)}
+	\end{subfigure}
+	&
+	\begin{subfigure}[b]{0.34\textwidth}
+        \includegraphics[width=\textwidth]{readers-writers.png} \\
+        \\
+        \includegraphics[width=\textwidth]{rw-output.png} \\
+        \caption{Medium image (400x261)}
+	\end{subfigure}
+	&
+	\begin{subfigure}[b]{0.335\textwidth}
+        \includegraphics[width=\textwidth]{canoe-0.png} \\
+        \\
+        \includegraphics[width=\textwidth]{canoe-3.png} \\
+        \caption{Large image (963x642)}
+	\end{subfigure}
+        \end{tabular}
+        \caption{Images used for evaluation (top), and the outputs given by the invert/flip algorithm (bottom).}
+        \label{fig:eval-images}
+        \end{center}
+\end{figure}
+
+\begin{figure}[h]
+	\begin{center}
+	\includegraphics[width=0.4\textwidth]{graphs/small.pdf}
+	\end{center}
+	\caption{Analysis of how much duplicate work was saved for the small image.}
+	\label{fig:graph-trace}
+\end{figure}
+\begin{figure}[h]
+	\begin{center}
+	\includegraphics[width=0.4\textwidth]{graphs/medium.pdf} \quad
+	\includegraphics[width=0.4\textwidth]{graphs/large.pdf}
+	\end{center}
+	\caption{Performance results for the medium and large images.}
+	\label{fig:graph-perf}
+\end{figure}
+
+\subsection{Work Saved}
+
+For the small input image, I used Halide's tracing facility to measure the number of pixels computed by the \texttt{invert()} operation (\texttt{invert.trace\_stores()}), comparing the numbers obtained from dynamic and from static scheduling. For each schedule, the difference in this number represents the amount of computation saved.
+
+Figure~\ref{fig:graph-trace} shows this experiment's results. We can see that in some cases, several orders of magnitude of work are saved; in some, a modest amount of work is saved; and in some it makes no difference. Naturally dynamic scheduling never creates additional \texttt{invert()} calls.
+
+\subsection{Peformance Discussion}
+
+For the medium and large input image I measured the elapsed wall clock time during execution, running both statically and dynamically. Figure~\ref{fig:graph-perf} shows this experiment's results. The performance patterns are similar between the medium and large images, apart from the obvious difference in number of total seconds taken.
+
+One notable anomaly is that in schedules 6, 7, and 8, performance is actually worse with dynamic scheduling than with static scheduling. I attribute this to the fact that in these schedules the \texttt{invert()} code is confined to the innermost loop levels of \texttt{flip()}, which causes \texttt{invert()}'s buffer to be freed and re-allocated many times, thereby hurting the potential for saving computation across loop iterations.
+Though these schedules still reduce the number of \texttt{invert()} calls (as shown in the previous experiment), it fails to compensate for the incidental overhead of using dynamic scheduling to begin with -- that is, the cost of allocating an extra buffer and branching on a read from it inside of a tight loop. From this we conclude that dynamic scheduling achieves the greatest wins when the store level is closer to the root of the loop nest.
+
+Also note the significant performance difference when using \texttt{xi}, the innermost loop variable, as the compute level (schedules \#2 and \#5) as compared to computing at more outer loops (schedules \#1, \#3, \#4). This trend is independent of static vs dynamic scheduling, but suggests that this algorithm benefits from computing \texttt{invert()} in tiles or rows at a time (with respect to \texttt{flip()}).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Open Questions}
+\label{sec:future-tiles}
+% TODO
+
+% kayvon's idea: an analysis tool for algs that says whether they should be lazy
+
+DISCUSSION FORTHCOMING
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusion}
+
+Halide provides a novel way of implementing image processing algorithms: expressing the {\em algorithm logic} and the {\em function schedule} independently from each other. The programmer supplies a functional-style algorithm description and a set of scheduling directives, and the Halide compiler and runtime translates it into a structured loop nest that can be flexibly and portably parallelized, vectorized, and so on.
+However, Halide's ability to generate performant code is limited by its reliance on {\em static knowledge} of data dependencies between an algorithm's stages. In situations where it lacks such information, it must make conservative approximations that often cause duplicate work across outer loop iterations.
+
+I have extended Halide with a new feature, called {\em dynamic scheduling}, which enables it to avoid a majority of the duplicate work that static schedules would incur in such situations. Users may now direct the Halide compiler to generate code which decides at runtime, not compile-time, when to perform computation associated with an algorithm's early stages. I have also supplied an evaluation of dynamic scheduling which proves the technique's usefulness and shows some performance patterns which suggest how best to use it. Finally, I have discussed some possible directions for extending this work which will hopefully make the technique even more broadly applicable and useful.
 
 \begin{figure}[t]
 	\begin{center}
@@ -345,47 +482,6 @@ Conceptually, my goal for dynamic function scheduling as a Halide language featu
 	\caption{Generated code listings for dynamic function schedules, at both pixel and tile granularity. In addition to highlighting the code associated with the \hilight{blue}{flip}~and \hilight{olivegreen}{invert}~stages of the algorithm, I also {\bf \hilight{orange}{emphasize}} the additional code generated for dynamic scheduling.}
 	\label{fig:dynamic}
 \end{figure}
-
-\subsection{Code Generation}
-
-Inside the compiler, the dynamic schedule configuration is stored in a \texttt{Func}'s \texttt{Schedule} object as a \texttt{LoopLevel} named \texttt{lazy\_level}, alongside the existing configurations \texttt{store\_level} and \texttt{compute\_level}. Unlike the latter two, however, the \texttt{lazy\_level} is not defined in terms of the loop variable of a different function, but rather for one of the function's own loop variables. Hence, \texttt{lazy\_level.func} always refers to the containing function.
-
-The code generation itself occurs during the \texttt{Lower} phase of compilation, between the \texttt{schedule\_functions()} phase (found in \texttt{Lower.cpp}) and the \texttt{storage\_flattening()} phase (found in \texttt{StorageFlattening.cpp}). The former processes the \texttt{lazy\_level} configuration and generates IR to represent it, and the latter converts those IR nodes into conventional IR that can be code-generated. For this purpose I added a new type of IR node, \texttt{DynamicStmt} (found in \texttt{IR.h}), which represents the ``if not-in-cache then compute; mark-cache; end'' pattern.
-
-\begin{itemize}
-	\item {\bf Function Scheduling.} This phase converts the dynamic schedule configuration into IR in two places. The first is when it generates a \texttt{Realize} node (in \texttt{build\_realize()}); it simply sets the node's \texttt{lazy} flag to \texttt{true} if the associated function's \texttt{lazy\_level} was set.\footnote{
-	I experimented here with computing and storing an expression representing the necessary size for the bitmask, rather than just a boolean. Future work may find this approach worth doing after all.}
-	The second is when building a function's loop nest (in \texttt{build\_provide\_loop\_nest()}); when the approprate loop level is encountered, it inserts a \texttt{DynamicStmt} node between the \texttt{For} loop and its body.
-	\item {\bf Storage Flattening.} This phase visits the IR described above and ``flattens'' it into arrays more reminiscent of the C memory model. In \texttt{visit(Realize *)}, where it makes the \texttt{Allocate} node for the function's computed results, it now also will make another \texttt{Allocate} and a brief initialization loop if \texttt{realize->lazy} is set. Second, in \texttt{visit(DynamicStmt *)}, it converts the \texttt{DynamicStmt} node into a conventional \texttt{IfThenElse} node using the provided index for the allocated bitmask.
-\end{itemize}
-
-\subsection{Legality Checking}
-
-During the function scheduling in \texttt{Lower.cpp} Halide must also check that a specified dynamic schedule is legal. I currently check for the following cases:
-
-\begin{itemize}
-	\item {\bf Vectorized loop.} If any of the loops between the \texttt{store\_level} and the \texttt{lazy\_level} are vectorized, it may not make sense to emit a check which conditionally skips much of the computation. Though it would make sense to generate code for a single boolean check around a single pixel computation, with more sophisticated tile-level dynamic scheduling the vectorized execution might behave pathologically (especially if the conditional check involves traversing a sophisticated data structure as suggested in Section~\ref{sec:future-tiles}).
-	\item {\bf Parallel loop.} If any of the loops between the \texttt{store\_level} and the \texttt{lazy\_level} are parallelized, then one thread attempting to record the result of a computation might race with another thread attempting to use that result. With x86's sequentially-consistent memory model and the simple boolean check, this is not an issue, but when compiling for ARM or using a more sophisticated data structure for memoizing Halide would need to emit memory barriers at best and locks at worst. This is not infeasible to implement, but raises research questions of its own and so is left to future work.
-	\item {\bf Update phase.} Dynamic scheduling is not (yet) compatible with functions which have an update phase in their \texttt{Pipeline} node, which can arise when the user provides a reduction definition. This is merely a case I did not consider in detail, and may well be possible to handle.
-\end{itemize}
-
-\subsection{Code}
-
-The reader should feel free to find and peruse my code at \texttt{https://github.com/bblum/Halide}. During the weeks following this submission I will polish it and submit a pull request upstream.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Evaluation}
-% TODO
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Open Questions}
-% TODO
-
-\label{sec:future-tiles}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Conclusion}
-% TODO
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Acknowledgements}
