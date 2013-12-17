@@ -172,7 +172,7 @@ Though Figure~\ref{fig:scheds-b} is more cache-friendly and offers superior para
 
 However, this extra computation can become a significant problem when the dependencies between the algorithm's stages are computed at runtime and hence are not available for compile-time reasoning, as in the PatchMatch algorithm~\cite{patchmatch} and in edge detection. If the user wishes to use a cache-friendly, highly-parallel function schedule, as in Figure~\ref{fig:scheds-b}, Halide must make a conservative estimate regarding how much extra padding is required, resulting in extra work duplication.
 
-To get a sense for how much extra unnecessary computation can arise, we introduce a sample two-stage Halide program in which the second stage (\texttt{flip()}) dynamically computes which pixels it requires from the first stage (\texttt{invert()}). This program is described in Figure~\ref{fig:flip}. We then ran this program on a test image using the simple schedule from Figure~\ref{fig:scheds-a} and using several nested schedules as in Figure~\ref{fig:scheds-b}. We found that in the former situation, 13,068 calls to \texttt{invert()} were required, while in the latter, \texttt{invert()} was invoked anywhere between 252,648 to 7,847,400 times depending on the schedule used.
+To get a sense for how much extra unnecessary computation can arise, I introduce a sample two-stage Halide program in which the second stage (\texttt{flip()}) dynamically computes which pixels it requires from the first stage (\texttt{invert()}). This program is described in Figures~\ref{fig:flip} and~\ref{fig:flip-code}. I then ran this program on a test image using the simple schedule from Figure~\ref{fig:scheds-a} and using several nested schedules as in Figure~\ref{fig:scheds-b}. I found that in the former situation, 13,068 calls to \texttt{invert()} were required, while in the latter, \texttt{invert()} was invoked anywhere between 252,648 to 7,847,400 times depending on the schedule used.
 Hence, the motivation for {\em dynamic scheduling} is to extend Halide's ability to avoid duplicate work to apply to this wider range of algorithms.
 
 \begin{figure}[t]
@@ -206,23 +206,168 @@ Hence, the motivation for {\em dynamic scheduling} is to extend Halide's ability
 		\label{fig:flip-blur-2}
 	\end{subfigure}
 	\end{tabular}
-	\caption{Our sample image processing program consists of two stages, \texttt{invert()} (shown in \ref{fig:invert}) and \texttt{flip()} (shown in \ref{fig:flip-blur-1} and \ref{fig:flip-blur-2}). We designed this program expressly to create dynamic data dependencies with wide ranges across the image, to ensure a static function schedule could not avoid duplicating work.}
+	\caption{Our sample image processing program consists of two stages, \texttt{invert()} (shown in \ref{fig:invert}) and \texttt{flip()} (shown in \ref{fig:flip-blur-1} and \ref{fig:flip-blur-2}). I designed this program expressly to create dynamic data dependencies with wide ranges across the image, to ensure a static function schedule could not avoid duplicating work.}
 
 	\label{fig:flip}
 \end{figure}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Design and Interface}
-% TODO
+\begin{figure}[t]
+	\begin{center}
+	\begin{tabular}{l}
+\texttt{\hilight{olivegreen}{Var}~x(\hilight{brickred}{"column"}), y(\hilight{brickred}{"row"}), c(\hilight{brickred}{"colour"});} \\
+\\
+\texttt{\hilight{darkcyan}{/* Stage 1 */}} \\
+\texttt{\hilight{olivegreen}{Func}~invert(\hilight{olivegreen}{Func}~input)~\{} \\
+\texttt{~~~~\hilight{olivegreen}{Func}~f(\hilight{brickred}{"invert"});} \\
+\texttt{~~~~f(x,~y,~c)~=~\hilight{brickred}{1}~-~input(x,~y,~c);~} \\
+\texttt{~~~~\hilight{brown}{return}~f;} \\
+\texttt{\}} \\
+\\
+\texttt{\hilight{darkcyan}{/* The vector field used in stage 2 */}} \\
+\texttt{\#define~vf\_x(image,~do\_flip,~x)~(\hilight{brown}{select}(do\_flip,~x,~((\hilight{brickred}{3}~*~image.width()~~/~\hilight{brickred}{2})~-~x)))} \\
+\texttt{\#define~vf\_y(image,~do\_flip,~y)~(\hilight{brown}{select}(do\_flip,~y,~((\hilight{brickred}{3}~*~image.height()~/~\hilight{brickred}{2})~-~y)))} \\
+\texttt{} \\
+\texttt{\hilight{darkcyan}{/* Stage 2 */}} \\
+\texttt{\hilight{olivegreen}{Func}~flip(\hilight{olivegreen}{Image}<\hilight{olivegreen}{float}>~\&i,~\hilight{olivegreen}{Func}~input)~\{} \\
+\texttt{~~~~\hilight{olivegreen}{Expr}~do\_flip~=~input(x,~y,~c)~>~\hilight{brickred}{0.5f};} \\
+\texttt{~~~~\hilight{olivegreen}{Func}~f(\hilight{brickred}{"flip"});} \\
+\texttt{~~~~f(x,~y,~c)~=} \\
+\texttt{~~~~~~~~(input(vf\_x(i,~do\_flip,~x-\hilight{brickred}{1}),~vf\_y(i,~do\_flip,~y-\hilight{brickred}{1}),~c)~+} \\
+\texttt{~~~~~~~~~\hilight{darkcyan}{/* ... intermediate coordinates of 3x3 blur omitted ... */}} \\
+\texttt{~~~~~~~~~input(vf\_x(i,~do\_flip,~x+\hilight{brickred}{1}),~vf\_y(i,~do\_flip,~y+\hilight{brickred}{1}),~c))~/~\hilight{brickred}{9};} \\
+\texttt{~~~~\hilight{brown}{return}~f;} \\
+\texttt{\}} \\
+
+	\end{tabular}
+	\end{center}
+	\caption{Selected code from the implementation of our sample image processing program.}
+	\label{fig:flip-code}
+\end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Implementation}
+\section{Design and Implementation}
+
+\subsection{Overview}
+
+Conceptually, my goal for dynamic function scheduling as a Halide language feature was as follows. In addition to the existing directives \texttt{compute\_at()}, \texttt{store\_at()}, and so on which users may call on their \texttt{Func} objects, supplying appropriate loop variable arguments, I would add a new directive \texttt{compute\_lazy()}.
+
+{\bf Pixel-granularity dynamic scheduling.} Used with no arguments, this directive would instruct Halide to allocate a ``bitmask'', an array of booleans with the same dimensions as the array used to store the function's results themselves. Halide would then surround any expression which computed a value to store in the array at a certain index with a check to this bitmask at the same index, which would cause the expression to be bypassed if a value for that index had been computed before. I refer to this as dynamic scheduling at {\em pixel granularity} because there is one bitmask check per expression that would compute a value for a single pixel. In Figure~\ref{fig:dynamic-pixel} I show sample code that Halide would generate for a program that used pixel-level dynamic scheduling.
+
+% TODO
+{\bf Tile-granularity dynamic scheduling.} DISCUSSION FORTHCOMING.
+
+\begin{figure}[t]
+	\begin{center}
+	\begin{subfigure}[b]{0.475\textwidth}
+		\begin{center}
+		\begin{tabular}{l}
+		{\em User-provided schedule:} \\
+		\\
+                \hilight{blue}{\texttt{flip.tile(col, row, col2, row2, 8, 8);}} \\
+                \hilight{olivegreen}{\texttt{invert.store\_at(flip, col);}} \\
+		\hilight{olivegreen}{\texttt{invert.compute\_at(invert, row2);}}\\
+                {\bf \hilight{orange}{\texttt{invert.compute\_lazy();}}} \\
+                \\
+		{\em Compiler-generated code:} \\
+		\\
+                \texttt{\hilight{blue}{float~flip[HEIGHT][WIDTH];}} \\
+                \texttt{\hilight{blue}{for~(row~=~0~to~8)~\{}} \\
+                \texttt{\hilight{blue}{~~for~(col~=~0~to~8)~\{}} \\
+                \texttt{\hilight{olivegreen}{~~~~float~invert[...][...];}} \\
+		{\bf \texttt{\hilight{orange}{~~~~bool~result\_computed[...][...];}}} \\
+                \texttt{\hilight{blue}{~~~~for~(row2~=~0~to~WIDTH/8)~\{}} \\
+                \texttt{\hilight{olivegreen}{~~~~~~let min\_row = ...;}} \\
+                \texttt{\hilight{olivegreen}{~~~~~~let max\_row = ...;}} \\
+                \texttt{\hilight{olivegreen}{~~~~~~let min\_col = ...;}} \\
+                \texttt{\hilight{olivegreen}{~~~~~~let max\_col = ...;}} \\
+                \texttt{\hilight{olivegreen}{~~~~~~for~(row\_i~=~min\_row~to~max\_row)~\{}} \\
+                \texttt{\hilight{olivegreen}{~~~~~~~~for~(col\_i~=~min\_col~to~max\_col)~\{}} \\
+		{\bf \texttt{\hilight{orange}{~~~~~~~~~~if (!result\_computed[...][...]) \{}}} \\
+                \texttt{\hilight{olivegreen}{~~~~~~~~~~~~invert[row\_i][col\_i]~=~...;}} \\
+		{\bf \texttt{\hilight{orange}{~~~~~~~~~~~~result\_computed[...][...]~=~TRUE;}}} \\
+		{\bf \texttt{\hilight{orange}{~~~~~~~~~~\}}}} \\
+                \texttt{\hilight{olivegreen}{~~~~~~~~\}}} \\
+                \texttt{\hilight{olivegreen}{~~~~~~\}}} \\
+                \texttt{\hilight{blue}{~~~~~~for~(col2~=~0~to~WIDTH/8)~\{}} \\
+                \texttt{\hilight{blue}{~~~~~~~~flip[...][...]~=~...;}} \\
+                \texttt{\hilight{blue}{~~~~~~\}}} \\
+                \texttt{\hilight{blue}{~~~~\}}} \\
+                \texttt{\hilight{blue}{~~\}}} \\
+                \texttt{\hilight{blue}{\}}} \\
+		\end{tabular}
+		\end{center}
+		\caption{Dynamic scheduling at pixel granularity. The directive \texttt{invert.compute\_lazy()} with no arguments is shorthand for supplying \texttt{invert}'s innermost loop variable (in this case, \texttt{col\_i}).}
+		\label{fig:dynamic-pixel}
+	\end{subfigure}
+	\qquad
+	\begin{subfigure}[b]{0.475\textwidth}
+		\begin{center}
+		\begin{tabular}{l}
+		{\em User-provided schedule:} \\
+		\\
+                \hilight{blue}{\texttt{flip.tile(col, row, col2, row2, 8, 8);}} \\
+                \hilight{olivegreen}{\texttt{invert.store\_at(flip, col);}} \\
+		\hilight{olivegreen}{\texttt{invert.compute\_at(invert, row2);}}\\
+                {\bf \hilight{orange}{\texttt{invert.compute\_lazy(row\_i);}}} \\
+                \\
+		{\em Compiler-generated code:} \\
+		\\
+                \texttt{\hilight{blue}{float~flip[HEIGHT][WIDTH];}} \\
+                \texttt{\hilight{blue}{for~(row~=~0~to~8)~\{}} \\
+                \texttt{\hilight{blue}{~~for~(col~=~0~to~8)~\{}} \\
+                \texttt{\hilight{olivegreen}{~~~~float~invert[...][...];}} \\
+		{\bf \texttt{\hilight{orange}{~~~~bool~result\_computed[...][...];}}} \\
+                \texttt{\hilight{blue}{~~~~for~(row2~=~0~to~WIDTH/8)~\{}} \\
+                \texttt{\hilight{olivegreen}{~~~~~~let min\_row = ...;}} \\
+                \texttt{\hilight{olivegreen}{~~~~~~let max\_row = ...;}} \\
+                \texttt{\hilight{olivegreen}{~~~~~~let min\_col = ...;}} \\
+                \texttt{\hilight{olivegreen}{~~~~~~let max\_col = ...;}} \\
+                \texttt{\hilight{olivegreen}{~~~~~~for~(row\_i~=~min\_row~to~max\_row)~\{}} \\
+		{\bf \texttt{\hilight{orange}{~~~~~~~~if (!result\_computed[...][...]) \{}}} \\
+                \texttt{\hilight{olivegreen}{~~~~~~~~~~for~(col\_i~=~min\_col~to~max\_col)~\{}} \\
+                \texttt{\hilight{olivegreen}{~~~~~~~~~~~~invert[row\_i][col\_i]~=~...;}} \\
+                \texttt{\hilight{olivegreen}{~~~~~~~~~~\}}} \\
+		{\bf \texttt{\hilight{orange}{~~~~~~~~~~result\_computed[...][...]~=~TRUE;}}} \\
+		{\bf \texttt{\hilight{orange}{~~~~~~~~\}}}} \\
+                \texttt{\hilight{olivegreen}{~~~~~~\}}} \\
+                \texttt{\hilight{blue}{~~~~~~for~(col2~=~0~to~WIDTH/8)~\{}} \\
+		\texttt{\hilight{blue}{~~~~~~~~flip[...][...]~=~...;}} \\
+                \texttt{\hilight{blue}{~~~~~~\}}} \\
+                \texttt{\hilight{blue}{~~~~\}}} \\
+                \texttt{\hilight{blue}{~~\}}} \\
+                \texttt{\hilight{blue}{\}}} \\
+		\end{tabular}
+		\end{center}
+		\caption{Dynamic scheduling at tile granularity. Here, the ``tile'' is simply the row denited by the variable \texttt{row\_i}. Simply using a single boolean for each tile can be unsound in some cases, as discussed in Section~\ref{sec:future-tiles}.}
+		\label{fig:dynamic-tile}
+	\end{subfigure}
+	\end{center}
+	\caption{Generated code listings for dynamic function schedules, at both pixel and tile granularity. In addition to highlighting the code associated with the \hilight{blue}{flip}~and \hilight{olivegreen}{invert}~stages of the algorithm, I also {\bf \hilight{orange}{emphasize}} the additional code generated for dynamic scheduling.}
+	\label{fig:dynamic}
+\end{figure}
 
 \subsection{Code Generation}
-% TODO
+
+Inside the compiler, the dynamic schedule configuration is stored in a \texttt{Func}'s \texttt{Schedule} object as a \texttt{LoopLevel} named \texttt{lazy\_level}, alongside the existing configurations \texttt{store\_level} and \texttt{compute\_level}. Unlike the latter two, however, the \texttt{lazy\_level} is not defined in terms of the loop variable of a different function, but rather for one of the function's own loop variables. Hence, \texttt{lazy\_level.func} always refers to the containing function.
+
+The code generation itself occurs during the \texttt{Lower} phase of compilation, between the \texttt{schedule\_functions()} phase (found in \texttt{Lower.cpp}) and the \texttt{storage\_flattening()} phase (found in \texttt{StorageFlattening.cpp}). The former processes the \texttt{lazy\_level} configuration and generates IR to represent it, and the latter converts those IR nodes into conventional IR that can be code-generated. For this purpose I added a new type of IR node, \texttt{DynamicStmt} (found in \texttt{IR.h}), which represents the ``if not-in-cache then compute; mark-cache; end'' pattern.
+
+\begin{itemize}
+	\item {\bf Function Scheduling.} This phase converts the dynamic schedule configuration into IR in two places. The first is when it generates a \texttt{Realize} node (in \texttt{build\_realize()}); it simply sets the node's \texttt{lazy} flag to \texttt{true} if the associated function's \texttt{lazy\_level} was set.\footnote{
+	I experimented here with computing and storing an expression representing the necessary size for the bitmask, rather than just a boolean. Future work may find this approach worth doing after all.}
+	The second is when building a function's loop nest (in \texttt{build\_provide\_loop\_nest()}); when the approprate loop level is encountered, it inserts a \texttt{DynamicStmt} node between the \texttt{For} loop and its body.
+	\item {\bf Storage Flattening.} This phase visits the IR described above and ``flattens'' it into arrays more reminiscent of the C memory model. In \texttt{visit(Realize *)}, where it makes the \texttt{Allocate} node for the function's computed results, it now also will make another \texttt{Allocate} and a brief initialization loop if \texttt{realize->lazy} is set. Second, in \texttt{visit(DynamicStmt *)}, it converts the \texttt{DynamicStmt} node into a conventional \texttt{IfThenElse} node using the provided index for the allocated bitmask.
+\end{itemize}
 
 \subsection{Legality Checking}
-% TODO
+
+During the function scheduling in \texttt{Lower.cpp} Halide must also check that a specified dynamic schedule is legal. I currently check for the following cases:
+
+\begin{itemize}
+	\item {\bf Vectorized loop.} If any of the loops between the \texttt{store\_level} and the \texttt{lazy\_level} are vectorized, it may not make sense to emit a check which conditionally skips much of the computation. Though it would make sense to generate code for a single boolean check around a single pixel computation, with more sophisticated tile-level dynamic scheduling the vectorized execution might behave pathologically (especially if the conditional check involves traversing a sophisticated data structure as suggested in Section~\ref{sec:future-tiles}).
+	\item {\bf Parallel loop.} If any of the loops between the \texttt{store\_level} and the \texttt{lazy\_level} are parallelized, then one thread attempting to record the result of a computation might race with another thread attempting to use that result. With x86's sequentially-consistent memory model and the simple boolean check, this is not an issue, but when compiling for ARM or using a more sophisticated data structure for memoizing Halide would need to emit memory barriers at best and locks at worst. This is not infeasible to implement, but raises research questions of its own and so is left to future work.
+	\item {\bf Update phase.} Dynamic scheduling is not (yet) compatible with functions which have an update phase in their \texttt{Pipeline} node, which can arise when the user provides a reduction definition. This is merely a case I did not consider in detail, and may well be possible to handle.
+\end{itemize}
 
 \subsection{Code}
 
@@ -235,6 +380,8 @@ The reader should feel free to find and peruse my code at \texttt{https://github
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Open Questions}
 % TODO
+
+\label{sec:future-tiles}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusion}
