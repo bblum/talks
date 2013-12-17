@@ -49,7 +49,7 @@
 
 
 \begin{document}
-\renewcommand{\inserttotalframenumber}{28}
+\renewcommand{\inserttotalframenumber}{27}
 \normalem
 \begin{frame}
 	\titlepage
@@ -63,6 +63,28 @@
 \newcommand\breakslide[1]{\begin{frame}{} \begin{center} \Large #1 \end{center} \end{frame}}
 \newcommand\related[1]{\textsuperscript{\em [#1]}}
 \newcommand\hilight[2]{\color{#1}#2\color{black}}
+
+\begin{frame}{}
+	\begin{center}
+		\begin{tabular}{l}
+		\texttt{} \\
+		\texttt{~~~~compute\_foo();~~~~~~~~~} \\
+		\texttt{} \\
+		\texttt{} \\
+		\end{tabular}
+	\end{center}
+\end{frame}
+
+\begin{frame}{}
+	\begin{center}
+		\begin{tabular}{l}
+		\texttt{if (!cache\_contains(foo)) \{} \\
+		\texttt{~~~~compute\_foo();} \\
+		\texttt{~~~~cache\_insert(foo);} \\
+		\texttt{\}} \\
+		\end{tabular}
+	\end{center}
+\end{frame}
 
 \begin{frame}{Outline}
 	\textbf{Halide Review}

@@ -74,6 +74,7 @@
 	\label{fig:intro}
 \end{figure}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 
 Halide~\cite{halide} is a programming language for image processing pipelines designed to separate the concerns of performance and expressivity. The programming model is functional, representing images as functions from pixel coordinates to colour values, and representing each pass of an image processing algorithm as a function from images to images. Once implemented, the programmer's algorithm is then automatically parallelized by the Halide runtime, taking into account considerations such as how to split each pass into parallel tiles and the data dependencies between two consecutive passes.
@@ -83,15 +84,18 @@ One weakness of Halide is its inability to express image processing passes that 
 Figure~\ref{fig:intro} above contrasts two simple example algorithms, showcasing the difference between static and dynamic data dependencies.
 
 In this project I investigate and implement {\em dynamic function scheduling}, a new language feature for Halide to support such algorithms.
-My approach allows the computations for early pipeline stages to be cached across loop iterations of later stages, so that the results may be reused when data dependencies happen to coincide on the same location.
-The principal contribution of this work is the implementation and performance evaluation of {\em dynamic scheduling at pixel granularity}. I also investigated dynamic scheduling at coarser (e.g. tile) granularities, but the problem was more difficult than anticipated; for this I provide some discussion and a design sketch for future work.
+My approach allows the computations for early pipeline stages to be cached across loop iterations of later stages, so that the results may be reused when data dependencies happen to coincide on the same location, saving redundant computation of a possibly expensive intermediate function.
+The principal contribution of this work is the implementation and performance evaluation of {\em dynamic scheduling at pixel granularity}. I also investigated dynamic scheduling at coarser (e.g. tile) granularities, with which entire loop iterations may be skipped. However, the problem was more difficult than anticipated, so I instead provide some discussion and a design sketch for future work.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Motivation}
 % TODO
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Design and Interface}
 % TODO
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
 
 \subsection{Code Generation}
@@ -104,18 +108,22 @@ The principal contribution of this work is the implementation and performance ev
 
 The reader should feel free to find and peruse my code at \texttt{https://github.com/bblum/Halide}. During the weeks following this submission I will polish it and submit a pull request upstream.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Evaluation}
 % TODO
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Open Questions}
 % TODO
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusion}
 % TODO
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Acknowledgements}
 
-Thanks to Jonathan Ragan-Kelley and Andrew Adams, developers of Halide, for their guidance, insights, and patience. Thanks to Kayvon Fatahalian for supervising this project, and for a great semester in 15-869.
+Thanks to Jonathan Ragan-Kelley and Andrew Adams, developers of Halide, for their guidance, insights, and patience. Thanks to Kayvon Fatahalian for supervising this project and for a great semester in 15-869.
 
 \bibliography{citations}{}
 \bibliographystyle{alpha}
