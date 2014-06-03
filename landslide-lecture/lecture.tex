@@ -16,12 +16,12 @@
 \usepackage{array}
 \setbeamertemplate{navigation symbols}{}
 
-\title[Landslide]{{\bf Systematic Dynamic Race Condition Detection}}
+\title[Landslide]{{\bf Systematic Testing: A New Perspective on Races}}
 \subtitle[]{ {\em more clever than } ``\texttt{slaughter cho2}'' {\em since 2011.}}
 \author[Ben Blum]{Ben Blum \texttt{(bblum@andrew.cmu.edu)}}
 
 \institute[CMU 15-410]{Carnegie Mellon University - 15-410}
-\date[]{2013, April 15}
+\date[]{2014, April 2}
 
 \setbeamertemplate{footline}{\hspace*{.5cm}\scriptsize{\insertauthor\hspace*{50pt} \hfill\insertframenumber\hspace*{.5cm}}} 
 
@@ -47,6 +47,8 @@
 \newcommand\ptrue{\top}
 \newcommand\pfalse{\bot}
 
+\newcommand\hilight[2]{\color{#1}#2\color{black}}
+\definecolor{olivegreen}{RGB}{0,127,0}
 
 \begin{document}
 \normalem
@@ -69,7 +71,7 @@
 	\begin{itemize}
 		\item Case study (example)
 		\item The execution tree
-		\item Decision points
+		\item Preemption points
 	\end{itemize}
 	{\bf Technique: Systematic testing}
 	% Say: A way of enumerating all possible interleavings of a concurrent test case.
@@ -110,7 +112,7 @@
 %	\end{itemize}
 \end{frame}
 
-\begin{frame}{Decision Points (``good'' case)}
+\begin{frame}{Thread Interleavings (``good'' case)}
 	\begin{tabular}{|l|l|l}
 		\cline{1-2}
 		{\bf Thread 1} & {\bf Thread 2} & \\
@@ -128,7 +130,7 @@
 	\end{tabular}
 \end{frame}
 
-\begin{frame}{Decision Points (race condition)}
+\begin{frame}{Thread Interleavings (race condition)}
 	\begin{tabular}{|l|l|l}
 		\cline{1-2}
 		{\bf Thread 1} & {\bf Thread 2} & \\
@@ -144,6 +146,22 @@
 		\texttt{return child->tid} && (bad!) \\
 		\cline{1-2}
 	\end{tabular}
+\end{frame}
+
+\begin{frame}{Testing}
+	How can programmers be confident in their code's correctness?
+	\begin{itemize}
+		\item Theorem proving
+		\item Unit tests
+		\item Stress tests
+		\begin{itemize}
+			\item (state of the art in 15-410)
+		\end{itemize}
+		\item Releasing to paying customers and worrying about correctness later
+	\end{itemize}
+	\linegap
+
+	{\bf Motivation}: Can we do better than stress testing?
 \end{frame}
 
 \begin{frame}{Testing Mechanisms}
@@ -190,8 +208,9 @@
 	\end{center}
 \end{frame}
 
-\begin{frame}{Decision Points} % TODO: duplicate slide with later
-	A {\bf decision point} is\ldots
+% TODO TODO 2014: Move this slide to after "systematic testing", before "more on preemption points"
+\begin{frame}{Preemption Points} % TODO: duplicate slide with later
+	A {\bf preemption point} is\ldots
 
 	\linegap
 	A code location where being preempted causes different behaviour.
@@ -230,15 +249,16 @@
 		\end{itemize}
 		\item Exploring all branches in these trees
 		\begin{itemize}
-			\item (by controlling scheduling decisions at decision points)
+			\item (by controlling scheduling decisions at preemption points)
 		\end{itemize}
 		\item In practice: Depth-first search of branches
 	\end{itemize}
 \end{frame}
 
+% TODO TODO 2014: reorg subsection dividers
 \subsection{Requirements}
 
-
+% TODO TODO 2014: move this slide below the "preemption point" series, to after "controlling scheduling decisions", so it can be a two-parter -- "What are the two parts necessary to navigate a path through the tree?"
 \begin{frame}{Execution Tree Exploration}
 	Important point: When does a branch end?
 	\begin{itemize}
@@ -248,14 +268,14 @@
 	\linegap
 	{\bf Backtracking}:
 	\begin{itemize}
-		\item Identify a decision point to choose differently
+		\item Identify a preemption point to replay differently
 		\item Reset machine state and start over
-		\item Replay test from the beginning, with different ``decisions''
+		\item Replay test from the beginning, with different preemptions
 	\end{itemize}
 \end{frame}
 
 
-\begin{frame}{More on Decision Points}
+\begin{frame}{More on Preemption Points}
 	Important point: What does ``all possible interleavings'' mean?
 
 	\linegap
@@ -266,18 +286,21 @@
 	\end{itemize}
 	\linegap
 
-	Other extreme: Nothing is a decision point
+	Other extreme: Nothing is a preemption point
 	\begin{itemize}
 		\item {\em Good news}: Test will finish quickly.
 		\item {\em Bad news}: Only one execution was checked for bugginess.
-		\item {\em Bad news}: No alternative interleavings explored.
 		\begin{itemize}
+			\item No alternative interleavings explored.
 			\item Makes ``no race found'' a weak claim.
 		\end{itemize}
 	\end{itemize}
+	\linegap
+
+	Is there a ``sweet spot''?
 \end{frame}
 
-\begin{frame}{More on Decision Points}
+\begin{frame}{More on Preemption Points}
 	Sweet spot: Insert a thread switch everywhere it ``might matter''.
 
 	\linegap
@@ -304,7 +327,11 @@
 \subsection{Challenges}
 
 \begin{frame}{Controlling Scheduling Decisions}
-	Control over sources of nondeterminism
+	How do we control which thread runs when?
+	\linegap
+
+	In other words, what sources of nondeterminism must we control?
+
 	\begin{itemize}
 		\item Device interrupts/input
 			\begin{itemize}
@@ -315,7 +342,11 @@
 	\end{itemize}
 \end{frame}
 
+% TODO TODO 2014: this slide can be deleted
 \begin{frame}{Memory Interposition}
+	How do we detect race-induced heap corruption?
+	\linegap
+
 	In order to find use-after-free, need to know:
 	\begin{itemize}
 		\item When objects are \texttt{free()}d
@@ -335,9 +366,9 @@
 \subsection{State Space Explosion}
 
 \begin{frame}{State Space Explosion}
-	State spaces grow exponentially
+	Serious problem: State spaces grow exponentially
 	\begin{itemize}
-		\item With $d$ decision points, $k$ runnable threads, size $d^k$.
+		\item With $p$ preemption points and $k$ runnable threads, size $p^k$.
 		\item Threatens our ability to explore everything.
 		\item Fortunately, some sequences result in identical states.
 	\end{itemize}
@@ -345,8 +376,8 @@
 
 	{\bf Partial Order Reduction} can help.
 	\begin{itemize}
-		\item Complicated algorithm; ask me later for details.
-		\item Intuitive explanation follows.
+		\item Intuitively: After exploring each interleaving, identify ``equivalent'' alternatives and skip over them.
+		\item Example follows\dots
 	\end{itemize}
 \end{frame}
 
@@ -376,9 +407,9 @@
 
 \begin{frame}{About The Project}
 	% 5th year MS since June 2011 % Say: planning to finish this may, hopefully
-	My MS thesis project (June 2011-2012)
+	My MS thesis project (2011-2012)
 	\begin{itemize}
-		\item Blum 2012 (CMU-CS-12-118) -- \url{http://bblum.net/thesis.pdf}
+		\item {}[CMU-CS-12-118 -- \url{http://bblum.net/thesis.pdf}]
 	\end{itemize}
 
 	\linegap
@@ -402,7 +433,7 @@
 		\item Every memory address the kernel reads/writes
 	\end{itemize}
 	\linegap
-	Artificially causes timer interrupts
+	Artificially causes timer interrupts to control scheduling
 
 	\linegap
 	Checkpointing/backtracking via Simics bookmarks (reverse execution)
@@ -435,7 +466,7 @@
 
 \breakslide{\Large Using Landslide}
 
-\begin{frame}{In Which Ben Offers Help}
+\begin{frame}{Recruitment}
 	% Say: So, this wasn't just a research talk
 	This is something you can try!
 	\linegap
@@ -447,7 +478,8 @@
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{Keeping It Real}
+% TODO TODO 2014: move this slide later, to be neighbours with the other words of warning
+\begin{frame}{Words of Warning}
 	Finding race conditions is hard for humans.
 
 	\linegap
@@ -460,9 +492,23 @@
 \begin{frame}{Annotating Your Kernel}
 	Step 1
 	\begin{center}
-		\includegraphics[width=0.9\textwidth]{tell_landslide.png}
+		{\small
+		\begin{tabular}{l}
+		\texttt{\hilight{olivegreen}{int}~thread\_fork() \{} \\
+	        \texttt{~~~~\hilight{olivegreen}{thread\_t}~*child = construct\_new\_thread();} \\
+		\texttt{~~~~\hilight{purple}{tell\_landslide\_forking}();~\hilight{blue}{/* A new thread was created.~*/}} \\
+	        \texttt{~~~~add\_to\_runqueue(child);} \\
+	        \texttt{~~~~return child->tid;} \\
+		\texttt{\}} \\
+		\texttt{\hilight{olivegreen}{void}~add\_to\_runqueue(\hilight{olivegreen}{thread\_t}~*t) \{} \\
+		\texttt{~~~~\hilight{blue}{/* This thread is now runnable.~*/}} \\
+		\texttt{~~~~\hilight{purple}{tell\_landslide\_thread\_on\_rq}(t->tid);} \\
+		\texttt{~~~~...} \\
+		\texttt{\}} \\
+		\end{tabular}
+		}
 	\end{center}
-	Your kernel needs to say when certain events happen:
+	Your kernel needs to say when certain events happen, for example:
 	\begin{itemize}
 		\item When do threads become runnable / descheduled?
 		\item When does the scheduler switch threads?
@@ -472,16 +518,31 @@
 \begin{frame}{Configuring Landslide}
 	Step 2
 	\begin{center}
-		\includegraphics[width=0.8\textwidth]{config-landslide.png}
+		{\small
+		\begin{tabular}{l}
+		\texttt{\hilight{blue}{\# What test case to run?}} \\
+		\texttt{\hilight{black}{TEST\_CASE}=\hilight{olivegreen}{"double\_thread\_fork"}} \\
+		\texttt{} \\
+		\texttt{\hilight{blue}{\# The names of some important functions~~~~~~~~~~~}} \\
+		\texttt{\hilight{black}{TIMER\_WRAPPER}=\hilight{olivegreen}{"timer\_handler\_wrapper"}} \\
+		\texttt{\hilight{black}{CONTEXT\_SWITCH}=\hilight{olivegreen}{"ctx\_switch"}} \\
+		\texttt{} \\
+		\texttt{\hilight{blue}{\# What functions to pay attention to?}} \\
+		\texttt{within\_function \hilight{olivegreen}{"thread\_fork"}} \\
+		\texttt{within\_function \hilight{olivegreen}{"vanish"}} \\
+		\end{tabular}
+		}
 	\end{center}
-	Edit \texttt{config.landslide} with some details and tweaks
+	\linegap
 
-	Fill in two implementation-dependent C functions in Landslide ($\le$10 lines)
+	Fill out \texttt{config.landslide} with design details and names of important functions
+
+	% Fill in two implementation-dependent C functions in Landslide ($\le$10 lines)
 	% Say: Which depend on your kernel's specific implementation
 \end{frame}
 
-\begin{frame}{Configuring Decision Points}
-	Landslide automatically identifies a minimal set of decision points.
+\begin{frame}{Configuring Preemption Points}
+	Landslide automatically identifies a minimal set of preemption points.
 	\begin{itemize}
 		\item It might find bugs.
 		\item It might overlook more fine-grained interleavings.
@@ -489,15 +550,38 @@
 	\linegap
 	With help from you, it could find more.
 	\begin{itemize}
-		\item Optional annotation: \texttt{tell\_landslide\_decide()}
+		\item Optional annotation: \texttt{tell\_landslide\_preempt()}
 		\item Hints to where a context switch should be forced.
 		\item Inside every call to \texttt{mutex\_lock}\ldots
 	\end{itemize}
 \end{frame}
 
+% TODO TODO 2014: hopefully, update this with a tabular format in a semester's time!
 \begin{frame}{And Hopefully\dots}
 	\begin{center}
-		\includegraphics[width=\textwidth]{found_a_bug.png}
+	{\small
+        \begin{tabular}{l}
+        \texttt{\hilight{red}{USE AFTER FREE - read from 0x199630 at eip 0x104264}} \\
+        \texttt{Heap contents:~\{...\}} \\
+        \texttt{[0x199630 | 4140] was allocated by TID3 at (...)} \\
+        \texttt{~~~~~~~~~~~~~~~~~~~~~~and freed by TID4 at (...)} \\
+        \texttt{\hilight{red}{****~~~~~~A bug was found!~~~~~****}} \\
+        \texttt{\hilight{red}{**** Preemption trace follows.~****}} \\
+        \texttt{\hilight{olivegreen}{1:~~TID 3 -{}-> TID 4}} \\
+        \texttt{~~~~TID3 at 0x105a10 in \hilight{blue}{context\_switch},} \\
+        \texttt{~~~~~~~~~~~~0x1041f4 in \hilight{blue}{thread\_fork},} \\
+        \texttt{~~~~~~~~~~~~0x10362b in \hilight{blue}{thread\_fork\_wrapper}} \\
+        \texttt{\hilight{olivegreen}{2:~~TID 4 -{}-> TID 3}} \\
+        \texttt{~~~~TID4 at 0x105a10 in \hilight{blue}{context\_switch},} \\
+        \texttt{~~~~~~~~~~~~0x104681 in \hilight{blue}{yield},} \\
+        \texttt{~~~~~~~~~~~~0x104570 in \hilight{blue}{vanish},} \\
+        \texttt{~~~~~~~~~~~~0x103708 in \hilight{blue}{vanish\_wrapper}} \\
+        \texttt{\hilight{red}{Current stack:}}\\
+        \texttt{~~~~TID3 at 0x104209 in \hilight{blue}{thread\_fork},} \\
+        \texttt{~~~~~~~~~~~~0x10362b in \hilight{blue}{thread\_fork\_wrapper}}
+        \end{tabular}
+	}
+
 	\end{center}
 \end{frame}
 
@@ -505,7 +589,7 @@
 
 % TODO more of these with screenshots
 
-%\begin{frame}{Decision Points (noticing a theme here?)}
+%\begin{frame}{Preemption Points (noticing a theme here?)}
 %	Landslide is {\bf false negative}-oriented.
 %	\begin{itemize}
 %		\item If Landslide reports a bug, there is a bug for sure.
@@ -513,11 +597,11 @@
 %		\item If not,
 %			\begin{itemize}
 %				\item Maybe there was no race, or
-%				\item Maybe your decision points were not granular enough.
+%				\item Maybe your preemption points were not granular enough.
 %			\end{itemize}
 %	\end{itemize}
 %\end{frame}
-%\begin{frame}{Decision Points (noticing a theme here?)}
+%\begin{frame}{Preemption Points (noticing a theme here?)}
 %	Sometimes the default set will work.
 %
 %	Sometimes you need to tweak\ldots
@@ -543,7 +627,7 @@
 		\item {\bf Investment}: about 2 to 3 hours
 		\begin{itemize}
 			\item Average 112 minutes doing required instrumentation
-			\item Average 35 minutes configuring extra decision points \& interpreting ``found a bug'' output
+			\item Average 35 minutes configuring extra preemption points \& interpreting ``found a bug'' output
 		\end{itemize}
 		\pause
 		\linegap
@@ -555,7 +639,7 @@
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{In Which Ben Offers Help - Warning}
+\begin{frame}{Words of Warning Again}
 	\textbf{If you are already struggling, this will not ``save'' you.}
 	\begin{itemize}
 		\item False-negatives: not guaranteed to find races at all
@@ -580,7 +664,7 @@
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{In Which Ben Offers Help}
+\begin{frame}{Recruitment - Kernel Requirements}
 	Your kernel
 	\begin{itemize}
 		\item Must load the shell and run programs
@@ -589,7 +673,10 @@
 			\texttt{vanish},
 			\texttt{wait},
 			\texttt{readline}
-		\item Must never spin-wait (see hurdle form!)
+		\item Must pass the hurdle architectural requirements
+		\begin{itemize}
+			\item especially: must never spin-wait!
+		\end{itemize}
 		\item Should \texttt{assert()} important invariants
 		\begin{itemize}
 			\item Think of \texttt{panic()} as \texttt{tell\_landslide\_bug()}
@@ -597,7 +684,7 @@
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{In Which Ben Offers Help}
+\begin{frame}{Recruitment}
 	User study this week, by appointment (\texttt{bblum@cs.cmu.edu})
 
 	\linegap
