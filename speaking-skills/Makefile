@@ -1,2 +1,4 @@
-all: talk.tex
-	pdflatex talk.tex && pdflatex talk.tex
+all: talk
+	
+talk: talk.tex
+	pdflatex talk.tex
