@@ -71,6 +71,11 @@
 \begin{frame}{Outline}
 	\textbf{Intro to Systematic Testing}
 	\begin{itemize}
+			% Say: I'll start of with a running example of a race condition, and use that to lead into the main subject of systematic testing. I'll briefly discuss stress testing, currently the most popular method of testing for race conditions. Then I'll introduce systematic testing, an alternative technique that offers many advantages over stress testing, but comes with a major downside of its own - that of exponential explosion. I'll do a quick survey of the techniques state-of-the-art systematic testing tools use to cope with exponential explosion, and discuss the major challenge that still remains.
+
+			% Say: Then I'll talk about Landslide, the systematic tool I've built which tests the projects students in our undergrad OS class write, and discuss how that very challenge prevents landslide from being a useful educational tool.
+
+			% Finally I'll introduce my new technique, called iterative deepening, which essentially means automatically configuring test parameters to keep state space size in check without the need for human interaction, which will allow us to save user time and accomodate testing time limits. I'll discuss my plan for evaluating this project, and some limitations that I anticipate, and then it'll be time for questions.
 		\item Race condition example
 		\item Stress testing
 		\item Preemption points and systematic testing
@@ -370,7 +375,7 @@
 \breakslide{\includegraphics[width=0.40\textwidth]{exponential-curve.pdf}}
 
 \begin{frame}{State Space Reduction}
-	Dynamic Partial Order Reduction\related{Flanagan '05, Simsa '13, Coons '13, Abdulla '14}
+Dynamic Partial Order Reduction\related{Flanagan '05}%, Simsa '13, Coons '13, Abdulla '14}
 	\begin{itemize}
 		\item Identifies and prunes equivalent interleavings
 		\item Analyzes memory accesses between threads to identify independence
@@ -442,7 +447,7 @@
 
 	Next: Students who could benefit from systematic testing, if only it were automatic.
 
-	% Say: "In the next section I'll talk about my experience working with students who could potentially benefit from systematic testing, which motivates the need for an automated solution to preemption points.
+	% Say: "In the next section I'll talk about my experience working with students who were interested in using systematic testing, and how this challenge got in the way, which motivates the need for an automated solution to preemption points.
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -698,6 +703,40 @@
 
 % TODO: POST-PRACTICE bonus slide for CHESS ICB
 % TODO: POST-PRACTICE bonus slide for THIS IS WHAT THE REFRANCE
+
+\section{Bonus Slides}
+
+\begin{frame}{References}
+	\small
+	[Godefroid '97]:
+	Model Checking for Programming Languages using VeriSoft.
+	Patrice Godefroid.
+	POPL 1997.
+	\linegap
+
+	[Flanagan '05]:
+	Dynamic Partial Order Reduction for Model Checking Software.
+	Cormac Flanagan, Patrice Godefroid.
+	POPL 2005.
+	\linegap
+
+	[Simsa '10]:
+	dBug: Systematic Evaluation of Distributed Systems.
+	Jiri Simsa, Randy Bryant, Garth Gibson.
+	SSV 2010.
+	\linegap
+
+	[Blum '12]:
+	Landslide: Systematic Dynamic Race Detection in Kernel-Space.
+	Ben Blum.
+	CMU CSD MS thesis.
+	\linegap
+
+	[Simsa '12]:
+	Runtime Estimation and Resource Allocation for Concurrency Testing.
+	Jiri Simsa, Randy Bryant, Garth Gibson.
+	CMU PDL tech report.
+\end{frame}
 
 
 
