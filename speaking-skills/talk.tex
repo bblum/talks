@@ -86,7 +86,6 @@
 		\item Design \& scope
 		\item Successes and limitations in 15-410
 	\end{itemize}
-	\linegap
 	% Say: "A way of dealing with this challenge" - w/o details
 	{\bf Iterative Deepening}
 	\begin{itemize}
@@ -107,6 +106,9 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\definecolor{thread1}{RGB}{87,172,255}
+\definecolor{thread2}{RGB}{255,201,102}
 
 \section{Systematic Testing}
 
@@ -136,7 +138,7 @@
 \begin{frame}{Case Study - ``Good'' Interleaving}
 	\begin{tabular}{|l|l|l}
 		\cline{1-2}
-		{\bf Thread 1} & {\bf Thread 2} & \\
+		\cellcolor{thread1} {\bf Thread 1} & \cellcolor{thread2} {\bf Thread 2} & \\
 		\cline{1-2}
 		\texttt{spawn\_new\_thread} && \\
 		\cline{1-2}
@@ -154,7 +156,7 @@
 \begin{frame}{Case Study - Buggy Interleaving}
 	\begin{tabular}{|l|l|l}
 		\cline{1-2}
-		{\bf Thread 1} & {\bf Thread 2} & \\
+		\cellcolor{thread1} {\bf Thread 1} & \cellcolor{thread2} {\bf Thread 2} & \\
 		\cline{1-2}
 		\texttt{spawn\_new\_thread} && \\
 		\cline{1-2}
@@ -201,9 +203,6 @@
 	Considering PPs, state space of interleavings can be viewed as a tree.
 	% Say "Let's see what our example program's state space looks like if we use X, Y, and Z PPs."
 \end{frame}
-
-\definecolor{thread1}{RGB}{87,172,255}
-\definecolor{thread2}{RGB}{255,201,102}
 
 \begin{frame}{Case Study - Execution Tree}
 	\begin{center}
@@ -371,7 +370,7 @@
 \breakslide{\includegraphics[width=0.40\textwidth]{exponential-curve.pdf}}
 
 \begin{frame}{State Space Reduction}
-	Dynamic Partial Order Reduction\related{Flanagan '05}
+	Dynamic Partial Order Reduction\related{Flanagan '05, Simsa '13, Coons '13, Abdulla '14}
 	\begin{itemize}
 		\item Identifies and prunes equivalent interleavings
 		\item Analyzes memory accesses between threads to identify independence
