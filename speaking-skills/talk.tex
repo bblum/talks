@@ -14,11 +14,12 @@
 \usepackage{skull}
 \usepackage{proof}
 \usepackage{array}
+\usepackage{colortbl}
 \setbeamertemplate{navigation symbols}{}
 
 \title[Landslide]{{\bf Coping with Exponential Explosion \\ during Systematic Testing}}
 %\subtitle[]{ {\em more clever than } ``\texttt{slaughter cho2}'' {\em since 2011.}}
-\author[Ben Blum]{Ben Blum \texttt{(bblum@cs.cmu.edu)}}
+\author[Ben Blum]{Ben Blum \texttt{(bblum@cs.cmu.edu)} \\ {\small Joint work with Garth Gibson}}
 
 \institute[CMU]{Carnegie Mellon University}
 \date[]{2014, June 4}
@@ -85,10 +86,12 @@
 		\item Design \& scope
 		\item Successes and limitations in 15-410
 	\end{itemize}
+	\linegap
+	% Say: "A way of dealing with this challenge" - w/o details
 	{\bf Iterative Deepening}
 	\begin{itemize}
 			% say: "which basically means..."
-		\item Automatically configuring preemption points
+		\item Automatically configuring test parameters
 			% say: "to save user time and accomodate testing time limits"
 		\item Evaluation plan
 		\item Limitations
@@ -177,6 +180,7 @@
 
 	\textbf{Stress testing}
 	\begin{itemize}
+		\item Testing kernel code, repeatedly run userspace programs
 		\item Relies on randomly-occurring timer interrupts % say: to cause context switches
 		\item Exposes race conditions unreliably
 		\item Might not find bugs in any bounded time
@@ -198,24 +202,131 @@
 	% Say "Let's see what our example program's state space looks like if we use X, Y, and Z PPs."
 \end{frame}
 
+\definecolor{thread1}{RGB}{87,172,255}
+\definecolor{thread2}{RGB}{255,201,102}
+
 \begin{frame}{Case Study - Execution Tree}
 	\begin{center}
-		\includegraphics[width=0.9\textwidth]{threadfork0.png}
+		\includegraphics[width=0.7\textwidth]{threadfork0.pdf}
+		\hspace{-0.5in} {\tiny 
+		\begin{tabular}{c}
+			\begin{tabular}{|l|l|}
+				\hline
+				\cellcolor{thread1} {\bf Thread 1} & \cellcolor{thread2} {\bf Thread 2} \\
+				\hline
+				{\tt spawn\_new\_thread()} & \\
+				\hline
+				{\tt add\_to\_runqueue()} & \\
+				\hline
+				{\tt return child->tid;} & \\
+				\hline
+				& {\tt exit()} \\
+				\hline
+				& {\tt <free TCB>} \\
+				\hline
+			\end{tabular}
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+		\end{tabular}
+		}
 	\end{center}
 \end{frame}
 \begin{frame}{Case Study - Execution Tree}
 	\begin{center}
-		\includegraphics[width=0.9\textwidth]{threadfork05.png}
+		\includegraphics[width=0.7\textwidth]{threadfork05.pdf}
+		\hspace{-0.5in} {\tiny 
+		\begin{tabular}{c}
+			\begin{tabular}{|l|l|}
+				\hline
+				\cellcolor{thread1} {\bf Thread 1} & \cellcolor{thread2} {\bf Thread 2} \\
+				\hline
+				{\tt spawn\_new\_thread()} & \\
+				\hline
+				{\tt add\_to\_runqueue()} & \\
+				\hline
+				{\tt return child->tid;} & \\
+				\hline
+				& {\tt exit()} \\
+				\hline
+				& {\tt <free TCB>} \\
+				\hline
+			\end{tabular}
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+		\end{tabular}
+		}
 	\end{center}
 \end{frame}
 \begin{frame}{Case Study - Execution Tree}
 	\begin{center}
-		\includegraphics[width=0.9\textwidth]{threadfork1.png}
+		\includegraphics[width=0.7\textwidth]{threadfork1.pdf}
+		\hspace{-0.5in} {\tiny 
+		\begin{tabular}{c}
+			\begin{tabular}{|l|l|}
+				\hline
+				\cellcolor{thread1} {\bf Thread 1} & \cellcolor{thread2} {\bf Thread 2} \\
+				\hline
+				{\tt spawn\_new\_thread()} & \\
+				\hline
+				{\tt add\_to\_runqueue()} & \\
+				\hline
+				& {\tt exit()} \\
+				\hline
+				{\tt return child->tid;} & \\
+				\hline
+				& {\tt <free TCB>} \\
+				\hline
+			\end{tabular}
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+		\end{tabular}
+		}
 	\end{center}
 \end{frame}
 \begin{frame}{Case Study - Execution Tree}
 	\begin{center}
-		\includegraphics[width=0.9\textwidth]{threadfork2.png}
+		\includegraphics[width=0.7\textwidth]{threadfork.pdf}
+		\hspace{-0.5in} {\tiny 
+		\begin{tabular}{c}
+			\begin{tabular}{|l|l|}
+				\hline
+				\cellcolor{thread1} {\bf Thread 1} & \cellcolor{thread2} {\bf Thread 2} \\
+				\hline
+				{\tt spawn\_new\_thread()} & \\
+				\hline
+				{\tt add\_to\_runqueue()} & \\
+				\hline
+				& {\tt exit()} \\
+				\hline
+				& {\tt <free TCB>} \\
+				\hline
+				{\tt return child->tid;} & \\
+				\hline
+			\end{tabular}
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+			\\ \\ \\ \\ \\ \\ \\ \\
+		\end{tabular}
+		}
 	\end{center}
 \end{frame}
 % Say: "Systematic testing simply means forcing the program to execute each branch of this tree in sequence (and looking for bugs in each one)."
@@ -227,7 +338,7 @@
 		\item Alternative approach to stress testing
 		\item Exhaustively exercise {\em all} thread interleavings
 		\begin{itemize}
-			\item ...around a given set of ``preemption points''
+			\item ...around a given set of preemption points
 		\end{itemize}
 		\item Offers more reliable coverage and better reproducibility
 			% say: compared to stress testing
@@ -255,7 +366,7 @@
 
 \section{Exponential Explosion}
 
-\breakslide{How does systematic testing scale with more preemption points?}
+\breakslide{How does systematic testing scale \\ with more preemption points?}
 
 \breakslide{\includegraphics[width=0.40\textwidth]{exponential-curve.pdf}}
 
@@ -263,15 +374,13 @@
 	Dynamic Partial Order Reduction\related{Flanagan '05}
 	\begin{itemize}
 		\item Identifies and prunes equivalent interleavings
-		\item Requires knowledge of shared memory accesses between threads
-		\item Requires depth-first search of execution tree
+		\item Analyzes memory accesses between threads to identify independence
+		%\item Requires depth-first search of execution tree
 	\end{itemize}
 	\pause
-	\linegap
-
-	[picture goes here]
-	% TODO: put DPOR gr4fix here
-
+	\begin{center}
+		\includegraphics[width=0.55\textwidth]{dpor.pdf}
+	\end{center}
 	% Say: DPOR makes some infeasible -> feasible, but some infeasible are still infeasible. To know the difference? transition...
 
 	%Stable Multithreading\related{Cui '13}
@@ -280,7 +389,7 @@
 \end{frame}
 
 \begin{frame}{State Space Estimation}
-	Runtime estimation\related{Simsa '12} can guess state space size in advance
+	State space estimation\related{Simsa '12} can guess state space size in advance
 	\begin{itemize}
 		\item Uses known branches as heuristic to guess total tree size
 			% say: something more lucid :(
@@ -291,8 +400,8 @@
 	%\linegap
 
 	%[picture goes here]
-
-	% TODO: gr4fix
+	% no picture.
+	% picture status: no.
 \end{frame}
 
 %\begin{frame}{Iterative Context Bounding\related{Musuvathi 07}}
@@ -329,6 +438,10 @@
 		\item Which PPs are ``good'' differs for each test case.
 		\item Relationship between PPs and testing time is unpredictable.
 	\end{itemize}
+	\pause
+	\linegap
+
+	Next: Students who could benefit from systematic testing, if only it were automatic.
 
 	% Say: "In the next section I'll talk about my experience working with students who could potentially benefit from systematic testing, which motivates the need for an automated solution to preemption points.
 \end{frame}
@@ -356,7 +469,7 @@
 
 	Project history
 	\begin{itemize}
-		\item Began as 5th-year MS project with Garth Gibson, Jiri Simsa
+		%\item Began as 5th-year MS project with Garth Gibson, Jiri Simsa
 		\item Tested Pebbles kernels, with user-provided annotations
 		\item Recently, fully-automatic instrumentation for thread libraries
 	\end{itemize}
@@ -381,16 +494,20 @@
 		\end{itemize}
 		\item At end of each iteration (i.e., each interleaving pattern):
 		\begin{itemize}
-			\item Uses Simics bookmarks (reverse-execution) to rewind machine state
+			\item Uses Simics reverse-execution to rewind machine state
 		\end{itemize}
 	\end{itemize}
 \end{frame}
 
-% TODO: picture of landslide internals here
 \begin{frame}{Landslide Design}
-	[picture goes here]
+	\begin{center}
+		\includegraphics[width=0.6\textwidth]{landslide.pdf}
+	\end{center}
 \end{frame}
 
+\newcommand\hilight[2]{\color{#1}#2\color{black}}
+\definecolor{olivegreen}{RGB}{0,127,0}
+\definecolor{brickred}{RGB}{192,0,0}
 \begin{frame}{Landslide Design}
 	Identifying bugs
 	\begin{itemize}
@@ -400,8 +517,27 @@
 	\pause
 	\linegap
 
-	[preemption trace goes here]
-	% TODO: picture of foundabug here
+	{\small
+        \begin{tabular}{l}
+        \texttt{\hilight{brickred}{USE AFTER FREE - read from 0x199630 at eip 0x104209}} \\
+        %\texttt{Heap contents:~\{...\}} \\
+        \texttt{[0x199630 | 4140] was allocated by TID~3 at (...)} \\
+        \texttt{~~~~~~~~~~~~~~~~~~~~~~and freed by TID~4 at (...)} \\
+        \texttt{\hilight{brickred}{**** A bug was found! Preemption trace follows. ****}} \\
+        \texttt{\hilight{olivegreen}{1:~~TID 3 -{}-> TID 4}} \\
+	\texttt{~~~~TID 3 at 0x10c25a in \hilight{blue}{timer\_interrupt()},} \\
+	\texttt{~~~~~~~~~~~~~0x1041f4 in \hilight{blue}{thread\_fork()}} \\
+        %\texttt{~~~~~~~~~~~~0x10362b in \hilight{blue}{thread\_fork\_wrapper}} \\
+        \texttt{\hilight{olivegreen}{2:~~TID 4 -{}-> TID 3}} \\
+	\texttt{~~~~TID 4 at 0x105a10 in \hilight{blue}{context\_switch()},} \\
+	\texttt{~~~~~~~~~~~~~0x104681 in \hilight{blue}{yield()},} \\
+	\texttt{~~~~~~~~~~~~~0x104570 in \hilight{blue}{exit()}} \\
+        %\texttt{~~~~~~~~~~~~0x103708 in \hilight{blue}{vanish\_wrapper}} \\
+        \texttt{\hilight{olivegreen}{Current stack:}}\\
+	\texttt{~~~~TID 3 at 0x104209 in \hilight{blue}{thread\_fork()}} \\
+        %\texttt{~~~~~~~~~~~~0x10362b in \hilight{blue}{thread\_fork\_wrapper}}
+        \end{tabular}
+	}
 \end{frame}
 
 \begin{frame}{Experience}
@@ -434,7 +570,7 @@
 		\item Depth-first search
 		\item Each iteration limited by constant maximum branch depth
 		\item CPU time budget fixed in advance
-		\item Unpredictable relationship between depth and time
+		%\item Unpredictable relationship between depth and time
 	\end{itemize}
 	\pause
 	\linegap
@@ -442,12 +578,32 @@
 \end{frame}
 
 \begin{frame}{Iterative Deepening in Landslide}
-	Repeat iterations of DPOR, adding preemption points, until time is exhausted.
+	Repeat state space explorations, adding preemption points, until time is exhausted.
 	\pause
-	\linegap
-	% TODO: gr4fix
+	\vspace{0.29in}
+	\begin{center}
+		\includegraphics[width=0.25\textwidth]{tree0.pdf}
+	\end{center}
+\end{frame}
 
-	[picture goes here]
+\begin{frame}{Iterative Deepening in Landslide}
+	Repeat state space explorations, adding preemption points, until time is exhausted.
+	\vspace{0.15in}
+	\begin{center}
+		\begin{tabular}{cc}
+			\includegraphics[width=0.35\textwidth]{tree1.pdf} &
+			\includegraphics[width=0.35\textwidth]{tree2.pdf}
+		\end{tabular}
+	\end{center}
+\end{frame}
+
+
+\begin{frame}{Iterative Deepening in Landslide}
+	Repeat state space explorations, adding preemption points, until time is exhausted.
+	\begin{center}
+		\includegraphics[width=0.5\textwidth]{tree3.pdf}
+	\end{center}
+	% say: and depending on your time budget, you might decide that you expect this one to be feasible, or you might fall back to a smaller state space from before.
 \end{frame}
 \begin{frame}{Iterative Deepening Challenges}
 	How best to use state space estimates to predict testing time?
@@ -458,12 +614,14 @@
 		\item Wait less each iteration before using estimate: More time saved
 	\end{itemize}
 	\pause
+	\linegap
+
 	Which preemption points matter more? % say i.e., which are most likely to find bugs? conversely, which provide most meaningful guarantee if no bug is found?
 	% say: relying on human intuition, how can we reproduce that automatically
 	\begin{itemize}
 		\item Use same default set as before (mutex/scheduler operations)
-		\item Look for data races during testing to identify new candidates
-		\item Assign heuristic priorities to each class of preemption points
+		\item Look for unsafe shared memory accesses to identify new candidates
+		%\item Assign heuristic priorities to each class of preemption points
 	\end{itemize}
 \end{frame}
 
@@ -476,7 +634,7 @@
 	\pause
 	\linegap
 
-	Can students use systematic testing as easily + effectively as stress testing?
+	Can students use systematic testing as easily as stress testing?
 	\begin{itemize}
 		\item Offer fully-automatic Landslide during thread library project
 		\item Compare quality of student submissions to past semesters
@@ -496,12 +654,12 @@
 	Reliance on imperfect techniques as building blocks
 	\begin{itemize}
 		\item State space estimates
+			%\begin{itemize}
+				%\item Accuracy is often dependent on exploration ordering
+			%\end{itemize}
+		\item Using shared memory accesses as preemption points
 			\begin{itemize}
-				\item Accuracy is often dependent on exploration ordering
-			\end{itemize}
-		\item Data race detection
-			\begin{itemize}
-				\item False positives (benign data races) can cause unnecessary work
+				\item False positives (benign access pairs) can cause unnecessary work
 				\item Especially likely when testing concurrency primitives
 			\end{itemize}
 	\end{itemize}
@@ -531,13 +689,13 @@
 
 	{\bf Iterative deepening} of preemption points
 	\begin{itemize}
-		\item Allows systematic testing to predictably fit CPU time budgets
 		\item Use state space estimation to inform testing strategy
+		\item Allows systematic testing to predictably fit CPU time budgets
 		\item In Landslide, may offer a new testing/debugging platform for 15-410
 	\end{itemize}
 \end{frame}
 
-\breakslide{Questions?}
+\breakslide{\begin{center} Questions? \\ \vspace{0.3in} \includegraphics[width=0.6\textwidth]{3word-questions.png} \end{center}}
 
 % TODO: POST-PRACTICE bonus slide for CHESS ICB
 % TODO: POST-PRACTICE bonus slide for THIS IS WHAT THE REFRANCE
