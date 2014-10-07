@@ -1,0 +1,146 @@
+\documentclass{article}
+%\usepackage{amsmath,amsthm,amssymb,fullpage,yfonts,graphicx,proof,subfig,wrapfig,appendix,hyperref,mdwlist,wasysym}
+\usepackage{amsmath,amsthm,amssymb,fullpage,yfonts,graphicx,proof,appendix,hyperref,mdwlist,wasysym}
+\usepackage{upgreek}
+%\usepackage{times}
+\usepackage[charter]{mathdesign}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{multirow}
+\usepackage[usenames,dvipsnames]{xcolor}
+%\usepackage{epsfig}
+\usepackage[bottom]{footmisc}
+%\usepackage{mjz-titlepage}
+\usepackage{framed}
+\usepackage{setspace}
+%\setstretch{1.05}
+\usepackage{subfig}
+\usepackage{changebar}
+\usepackage{colortbl}
+\usepackage{wrapfig}
+
+\newcommand\true{\;\textit{true}}
+\newcommand\false{\;\textit{false}}
+
+\newcommand\alpher\alpha
+\newcommand\beter\beta
+\newcommand\gammer\gamma
+\newcommand\delter\delta
+\newcommand\zeter\zeta
+\newcommand\Sigmer\Sigma
+
+\newcommand\NN{\mathbb{N}}
+\newcommand\QQ{\mathbb{Q}}
+\newcommand\RR{\mathbb{R}}
+\newcommand\ZZ{\mathbb{Z}}
+
+\begin{document}
+%\captionsetup{width=.75\textwidth,font=small,labelfont=bf}
+
+\title{\bf Landslide: Systematic Testing in 15-410 \\ User Guide and Survey}
+\author{Ben Blum}
+\date{}
+\maketitle
+
+\section{Introduction}
+
+Normally here I would write something researchy about systematic testing and preemption points, but if you're here it probably means you know what this is about. If you don't, please refer to the lecture material.
+\\
+
+\noindent Thanks for volunteering to try out Landslide. We have worked hard to make it nice enough to give to you, and we hope you're just as excited as we are to try out some systematic testing techniques the world has never seen before.
+\\
+
+\noindent You should have received a document titled {\em User Study Information Sheet} that describes your rights as a study participant and our confidentiality procedures. If you are missing this, please contact Ben immediately at {\tt bblum@cs.cmu.edu}.
+% TODO: Host them on maxi or contrib and link to them.
+
+\section{Instructions}
+
+The very first thing you should do is {\bf READ THIS DOCUMENT ENTIRELY FIRST!} We need you to print out several survey sheets before you dive in.
+\\
+
+\noindent We encourage you to use Landslide on the GHC cluster or UNIX pool machines ({\tt ghcXX.ghc.andrew.cmu.edu} or {\tt unix.andrew.cmu.edu}). Landslide has not been tested with other configurations and will probably fail mysteriously on your personal laptop, and we cannot promise to be of any help.
+
+\begin{enumerate}
+	\item Clone the repository -- {\tt git clone https://github.com/bblum/landslide.git} -- this will be your workspace.
+	\item Run {\tt ./p2-setup.sh PATH}, where {\tt PATH} is the absolute path to your p2 implementation.
+		\begin{itemize}
+			\item This command will import your p2 into {\tt ./pebsim/p2-basecode/} and then attempt to build it.
+			\item {\tt PATH} should be the path with {\tt 410kern}, {\tt 410user}, {user/libthread}, etc as subdirectories, not the {\tt user/libthread} directory itself.
+		\end{itemize}
+	\item Next, make sure you have read this document entirely. At this point you should have several survey sheets printed out, ready to write on -- see the Survey section below. You should also have some means of timing yourself.
+	\item Run {\tt ./landslide OPTIONS} to run tests with Landslide. {\bf Fill out a fresh survey sheet each time you do this.} Repeat until satisfied.
+		\begin{itemize}
+			\item Use {\tt ./landslide -h} to view command line options. The most important ones are {\tt -t}, max testing time, and {\tt -p}, which test program to run.
+				% TODO: Remove this TODO when you have implemented glue to move the html files to the toplevel directory.
+			\item Landslide's bug reports will show up as HTML files. If you are using a cluster machine in person, you can view them by pointing a browser to {\tt file:///PATH/TO/landslide/FILENAME.html}.
+				\footnote{Another option: move it to {\tt \textasciitilde/www} in your AFS, and view it at {\tt http://www.contrib.andrew.cmu.edu/\textasciitilde{}YOUR\_ANDREWID/FILENAME.html}. Note the {\tt www} in the URL is mandatory; note also that this will allow the world to see it, so be careful!}
+			\item The available test programs are {\tt thr\_exit\_join} (the default), {\tt broadcast\_test}, {\tt paraguay}, and {\tt rwlock\_downgrade\_read\_test}.
+				\footnote{If you have your own custom test case, you can put it in {\tt pebsim/p2-basecode/user/progs} and edit \\ {\tt pebsim/p2-basecode/config.mk} to build it, then run {\tt ./p2-setup.sh} again.}
+		\end{itemize}
+\end{enumerate}
+
+\noindent {\bf What to do when something goes wrong:}
+If you find a Landslide bug, such as an assertion/crash, or such as a bug report that you think is actually a bug in Landslide rather than a bug in your P2, or such as it getting stuck and not exiting in the given time limit, please create a tarball of your workspace, just as you would to report a reference kernel bug, but send it to Ben instead of 410 staff.
+For any other technical issues getting it to work, or if you have difficulty understanding a bug report, send email.
+\\
+
+\noindent
+However, we {\em cannot} provide help on how to understand {\em why} your bug happened or how to fix it. The point of the study is that Landslide's automation plus your own brain should be enough! On the other hand, if you have a design question while deciding between potential ways to fix a bug, send it to 410 course staff as usual.
+
+
+\newpage
+
+\section{Survey}
+\subsection{Overall Survey Questions}
+
+\begin{center}
+{\bf Print this page out once.}
+\end{center}
+
+\begin{enumerate}
+	\item How much time did you spend directly using Landslide? This includes configuring test parameters and interpreting debug output. It does not include time spent running Landslide in the background, e.g. overnight.
+		\vspace{0.5in}
+
+	\item What test configurations did you use that DIDN'T find bugs? For example, {\tt ./landslide -t 15m -p thr\_exit\_join}
+\end{enumerate}
+
+\newpage
+\subsection{Per-Bug Survey Questions}
+\begin{center}
+{\bf \large PRINT OUT THIS PAGE MULTIPLE TIMES.
+\\
+
+Each time you find a new bug with Landslide, fill this out again.}
+\end{center}
+
+\begin{enumerate}
+		% TODO: find a way to allow ze studence to condense non-bug-finding runs onto 1 page.
+	\item What test configuration did you use? For example, {\tt ./landslide -t 15m -p thr\_exit\_join}
+		\vspace{0.5in}
+	\item Summarize the bug.
+		\vspace{0.5in}
+	\item How IMPORTANT was this bug? Rate on a scale from 1 to 10, where:
+		\begin{itemize}
+			\item 1 = Trivial; an obvious ``oops'' that does not reflect any key lessons learned during the project. I would expect to not lose any points for this bug.
+			\item 4 = Minor; a logic problem not related to threads/synchronization. I would expect to lose 1 or 2 points at most for this bug.
+			\item 7 = Major; a concurrency-related bug related to subject matter discussed in lecture.
+			\item 10 = Severe; this bug reflects a fundamental lesson about concurrency that we learned during the project. I would expect to receive ``see course staff'' in my ink if I turned in code with this bug!
+		\end{itemize}
+		\vspace{0.5in}
+	\item How much EFFORT/TIME did this bug require to diagnose and fix? Rate on a scale from 1 to 10, where:
+		\begin{itemize}
+			\item 1 = Very little; we knew immediately what was wrong and needed to change only 1 or 2 lines of code.
+			\item 5 = Some; the bug took considerable thought to fix, and required nontrivial code changes.
+			\item 10 = Lots; we worked for several hours to fix the bug and/or required a major refactoring of our code.
+		\end{itemize}
+		\vspace{0.5in}
+	\item How likely would a CONVENTIONAL STRESS TEST be able to find the bug (i.e., running the program repeatedly, not using Landslide)? Rate on a scale from 1 to 10, where:
+		\begin{itemize}
+			\item 1 = No hope. The window for a random timer interrupt to expose the bug is so small that a conventional stress test could easily run continuously overnight without encountering it.
+			\item 5 = Moderate chance. Most random timer interrupts would not expose the bug, but the window is more than just a few instructions.
+			\item 10 = Very likely. A random timer interrupt during the test would expose the bug more often than not.
+		\end{itemize}
+\end{enumerate}
+
+\end{document}

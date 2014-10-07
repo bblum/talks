@@ -1,0 +1,12 @@
+== protocol ==
+
+After students have submitted their project code, TAs will be asked to use the tool alongside the conventional stress testing framework during grading, analyze debug output from the tool, and provide feedback on the number and severity of bugs found compared to stress testing.
+How many bugs did Landslide find that stress testing did not? Describe severity, deterministic-or-race, and data-race-or-not.
+How many bugs did stress testing find that Landslide did not, from among the tests included in Landslide's test suite? Describe as above.
+How many bugs did Landslide find that you did not? Describe as above.
+Among bugs that you found by manual inspection, which of them could have been exposed by programs in Landslide's test suite but weren't encountered when you actually ran Landslide? Describe as above
+
+
+== recruitment ==
+
+For the TAs we will use a higher degree of coercion, as there are fewer of them and we require a higher participation rate. Ben and David will both encourage the TAs to participate in person during one or more course staff meetings

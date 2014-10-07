@@ -1,0 +1,103 @@
+\documentclass{article}
+%\usepackage{amsmath,amsthm,amssymb,fullpage,yfonts,graphicx,proof,subfig,wrapfig,appendix,hyperref,mdwlist,wasysym}
+\usepackage{amsmath,amsthm,amssymb,fullpage,yfonts,graphicx,proof,appendix,hyperref,mdwlist,wasysym}
+\usepackage{upgreek}
+%\usepackage{times}
+\usepackage[charter]{mathdesign}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{multirow}
+\usepackage[usenames,dvipsnames]{xcolor}
+%\usepackage{epsfig}
+\usepackage[bottom]{footmisc}
+%\usepackage{mjz-titlepage}
+\usepackage{framed}
+\usepackage{setspace}
+%\setstretch{1.05}
+\usepackage{subfig}
+\usepackage{changebar}
+\usepackage{colortbl}
+\usepackage{wrapfig}
+
+\newcommand\true{\;\textit{true}}
+\newcommand\false{\;\textit{false}}
+
+\newcommand\alpher\alpha
+\newcommand\beter\beta
+\newcommand\gammer\gamma
+\newcommand\delter\delta
+\newcommand\zeter\zeta
+\newcommand\Sigmer\Sigma
+
+\newcommand\NN{\mathbb{N}}
+\newcommand\QQ{\mathbb{Q}}
+\newcommand\RR{\mathbb{R}}
+\newcommand\ZZ{\mathbb{Z}}
+
+\begin{document}
+%\captionsetup{width=.75\textwidth,font=small,labelfont=bf}
+
+\title{\bf Landslide: Systematic Testing in 15-410 \\ User Study Information Sheet}
+\author{Ben Blum}
+\date{}
+\maketitle
+
+\section{Purpose of this Study}
+
+{\em Systematic testing}, a novel technique for testing concurrent programs, offers a mechanical way to exhaustively explore large state spaces of thread interleavings.
+The purpose of the study is to compare systematic testing against stress testing in the context of 15-410.
+State-of-the-art systematic testing tools are fundamentally limited by exponential state space explosion: the user must manually configure the set of {\em preemption points} which define the state space in order to achieve meaningful test results within a reasonable CPU budget.
+This high cognitive overhead makes such tools unsuitable for use in a classroom setting.
+However, we have extended our systematic testing platform, known as Landslide, with several novel automation techniques.
+We hope to show these techniques can make systematic testing just as accessible to students as conventional stress testing.
+% This study will evaluate whether Landslide is useful as an educational tool.
+
+\section{Risks and Benefits}
+
+{\bf Risks.}
+We expect the risks and discomfort associated with participation in this study to be no greater than those ordinarily encountered while working on 15-410 class projects.
+As always with concurrent programming, it is possible to spend a lot of time looking for a bug with no meaningful result, while that time could otherwise have been spent on project implementation.
+However, as Landslide is a research tool still under development, it is also possible that a bug in Landslide itself may produce a misleading error report. We expect you to protect yourself by responsibly allocating time between using Landslide and working on P2 normally.
+\\
+
+\noindent {\bf Benefits.}
+Because we are providing you with a more powerful testing tool during P2 than you would normally have access to, we hope you will be able to find and fix bugs faster, resulting in a higher grade.
+
+\section{Confidentiality}
+
+During this study we will collect personally identifiable information from you as follows. While you use Landslide, it will automatically record your activity in terms of commands issued, time spent running tests, bug reports, and snapshots of your code. We will also collect paper surveys which you will fill out while using Landslide.
+Carnegie Mellon may be required to disclose personally identifiable information as required by law, regulation, subpoena or court order.
+Otherwise, we will protect your confidentiality as follows:
+
+\begin{itemize}
+	\item Data collected by Landslide will be stored in AFS accessible only to Ben Blum and Garth Gibson.
+	\item Paper surveys will be stored in a locked filing cabinet accessible only to Ben Blum and Garth Gibson.
+	\item Within one semester after the study, we will destroy all personally identifying information, keeping only anonymized and aggregate results.
+	\item Professor Eckhardt will have access to study data only after final semester grades are submitted. Other members of course staff will never have access to study data. Course staff may, however, use Landslide on your final submitted code on their own.
+\end{itemize}
+
+\section{Your Rights}
+There is no coercion or deception associated with this study.
+Your participation is voluntary.
+You are free to stop your participation at any point; likewise, the Principal Investigator may at his discretion remove you from the study.
+Refusal to participate or discontinued participation in the study will not result in any penalty or loss of benefits or rights to which you might otherwise be entitled.
+Your participation or lack thereof will have no impact in your 15-410 class grade, except as it might (hopefully) help you write better code.
+\\
+
+\noindent If you have any questions about this study, desire additional information, or wish to withdraw
+your participation please contact the Principal Investigator by mail, phone or email.
+If you have questions pertaining to your rights as a research participant,
+or to report concerns about this study, you should contact the
+Office of Research Integrity and Compliance at Carnegie Mellon University.
+Email: {\tt irb-review@andrew.cmu.edu}. Phone: 412-268-1901 or 412-268-5460.
+
+\section{Contact Information}
+
+\begin{itemize}
+	\item {\bf Ben Blum} (Principal Investigator): Email: {\tt bblum@cs.cmu.edu}; Office: GHC 9009; Phone: 412-304-4294
+	\item {\bf Garth Gibson} (Faculty Advisor): Email: {\tt garth@cs.cmu.edu}; Office: GHC 9111
+	\item {\bf David Eckhardt} (Course Instructor): Email: {\tt de0u@andrew.cmu.edu}; Office: GHC 7717
+\end{itemize}
+
+\end{document}
