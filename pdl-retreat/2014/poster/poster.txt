@@ -1,0 +1,108 @@
+title: Systematic Testing Needs To Be More User-Friendly!
+authors: Ben Blum and Garth Gibson
+
+==== frame 1: What is Systematic Testing? ====
+
+*Stress Testing* relies on random thread switches to expose bugs.
+- Unbounded time until bugs are found
+- Window for necessary preemption may be extremely small
+
+*Systematic Testing* [1] explores thread interleavings around a given set of *preemption points*.
+- Exhaustively testing each interleaving possibility
+- Exponentially-sized state space
+
+[Figure 1 (just a code snippet)]
+
+int thread_fork() {
+    tcb_t *child = init_new_thread();
+    schedule(child);
+    // Preempting here causes use-after-free!
+    return child->tid;
+}
+
+[Figure 2 (two tables with code inside)]
+
+(Note: In figure 3, the bubbles for the different thread are coloured blue and
+orange. If possible, make the header cells of these tables (i.e., with "Parent
+thread" and "Child thread" have a filled-in background to match those
+colours.)
+
+          Benign interleaving
+ ----------------------------------
+|  Parent thread   | Child thread  |
+|------------------+---------------|
+| child = init()   |               |
+| schedule(child); |               |
+| child->tid;      |               |
+|         (preemption point)       |
+|                  | exit();       |
+|                  | free(my_tcb); |
+ ----------------------------------
+
+          Buggy interleaving
+ ----------------------------------
+|  Parent thread   | Child thread  |
+|------------------+---------------|
+| child = init()   |               |
+| schedule(child); |               |
+|         (preemption point)       |
+|                  | exit();       |
+|                  | free(my_tcb); |
+|         (preemption point)       |
+| child->tid;      |               |
+ ----------------------------------
+
+[Figure 3 (picture: poster-threadfork.svg)]
+
+==== frame 2: What's Wrong with Preemption Points? ====
+
+State space size depends on preemption points (PPs) chosen in advance.
+- Too few PPs: poor coverage
+- Too many PPs: completion is infeasible
+- Can't know in advance whether resulting state space fits in CPU budget.
+
+Most related work [2,3] hard-codes a fixed set of
+PPs.
+
+Past Landslide experiments [4] let users turn PPs on/off.
+
+Goal: /Automatically/ find the best set of PPs for a given CPU budget.
+
+==== frame 3: Iterative Deepening ====
+
+*Iterative Deepening* of preemption points (PPs) - our current project
+- Explore a minimal state space, and add more PPs until time runs out.
+- State space estimation [5] helps decide which state spaces are worth
+  exploring.
+- Instead of unpredictable completion time, unpredictable which PPs will be
+  able to be tested.
+
+[Figure 4: same as last year - 4 images: tree0.svg, tree1.svg, tree2.svg,
+ and tree3.svg. Ideally they should be in a grid or a diamond, with arrows
+  from 0 to 1, 0 to 2, 1 to 3, and 2 to 3.]
+
+Advantages:
+- User does not have to configure PP set; needs only supply a time limit.
+- Can incorporate data races [6] as new PPs, avoiding false positives
+
+Disadvantages (or future work!):
+- Repeats redundant work done by exploring smaller state spaces
+- Reliance on imperfect state space estimation to guide search
+
+==== frame 4: Evaluation ====
+
+Landslide can test userspace thread libraries from 15-410 (undergrad OS at
+CMU) without any user config effort.
+
+Preliminary study of thread library projects from Spring 2014:
+- TODO: some bug reports/anecdots/numbers will go here; not collected yet;
+  will submit later! Probably about 4-6 lines of text, no graphs.
+
+==== frame 5: References ====
+
+[1] Patrice Godefroid. VeriSoft, CAV 1997.
+[2] Jiri Simsa. dBug, SSV 2010.
+[3] Heming Cui et al. PARROT, SOSP 2013.
+[4] Ben Blum. Landslide, MS thesis, CMU CS TR 12-118.
+[5] Jiri Simsa. Runtime Estimation, CMU PDL TR 12-113.
+[6] Stefan Savage. Eraser, ACM TOCS 1997.
