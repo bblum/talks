@@ -14,6 +14,7 @@
 \usepackage{skull}
 \usepackage{proof}
 \usepackage{array}
+\usepackage{colortbl}
 \setbeamertemplate{navigation symbols}{}
 
 \title[Landslide]{{\bf Systematic Testing: A New Perspective on Races}}
@@ -21,7 +22,7 @@
 \author[Ben Blum]{Ben Blum \texttt{(bblum@andrew.cmu.edu)}}
 
 \institute[CMU 15-410]{Carnegie Mellon University - 15-410}
-\date[]{2014, April 2}
+\date[]{2014, December 3}
 
 \setbeamertemplate{footline}{\hspace*{.5cm}\scriptsize{\insertauthor\hspace*{50pt} \hfill\insertframenumber\hspace*{.5cm}}} 
 
@@ -70,19 +71,20 @@
 	\textbf{Theory: Seeing race conditions in a new way}
 	\begin{itemize}
 		\item Case study (example)
+		\item Tabular execution traces
 		\item The execution tree
-		\item Preemption points
 	\end{itemize}
 	{\bf Technique: Systematic testing}
 	% Say: A way of enumerating all possible interleavings of a concurrent test case.
 	\begin{itemize}
-		\item Requirements
+		\item Preemption points
 		\item Challenges and feasibility
 	\end{itemize}
 	{\bf Tool: Landslide}
 	\begin{itemize}
 		\item How it works
-		\item The user-tool relationship
+		\item Coping with state space explosion
+		\item Automatically choosing preemption points
 		\item User study (that's you!)
 			% !!! SAY !!! : If you are struggling, this is not for you, etc.
 	\end{itemize}
@@ -112,10 +114,13 @@
 %	\end{itemize}
 \end{frame}
 
+\definecolor{thread1}{RGB}{87,172,255}
+\definecolor{thread2}{RGB}{255,201,102}
+
 \begin{frame}{Thread Interleavings (``good'' case)}
 	\begin{tabular}{|l|l|l}
 		\cline{1-2}
-		{\bf Thread 1} & {\bf Thread 2} & \\
+		\cellcolor{thread1} {\bf Thread 1} & \cellcolor{thread2} {\bf Thread 2} & \\
 		\cline{1-2}
 		\texttt{spawn\_new\_thread} && \\
 		\cline{1-2}
@@ -133,7 +138,7 @@
 \begin{frame}{Thread Interleavings (race condition)}
 	\begin{tabular}{|l|l|l}
 		\cline{1-2}
-		{\bf Thread 1} & {\bf Thread 2} & \\
+		\cellcolor{thread1} {\bf Thread 1} & \cellcolor{thread2} {\bf Thread 2} & \\
 		\cline{1-2}
 		\texttt{spawn\_new\_thread} && \\
 		\cline{1-2}
@@ -191,6 +196,12 @@
 	% Say: At the end of this lecture, I'm going to be looking for some among you...
 \end{frame}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Systematic Testing}
+
 \breakslide{\Large A different way of looking at race conditions\ldots}
 
 \begin{frame}{Execution Tree}
@@ -216,22 +227,16 @@
 
 % Say: Obviously we want to be able to always run the third path. But knowing
 % that ahead of time is impossible.
-% Say: Okay, now what if we could build a tool that could ``systematically''
-% explore this tree, and find the branch with the bug in it? What would such a
-% tool need to be able to do?
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\section{Systematic Testing}
-
-\breakslide{\Large Systematic Testing}
+% Say: In the rest of the lecture I'm going to refer to the "state space of
+% possible interleavings", simply referring to this tree, and "size" of the state
+% space refers to the number of branches.
 
 \begin{frame}{Systematic Testing - The Big Picture}
 	\textbf{Goal: Force the system to execute every possible interleaving.}
 	% Say: checking for crashes/memory errors/etc in each one.
 	\begin{itemize}
+		\item On 1st execution, schedule threads arbitrarily until program ends.
 		\item At end of each branch, rewind system and restart test.
 		\item Artificially add preemptions to test different thread interleavings.
 		\item Intuitively: Generate many ``tabular execution traces''.
@@ -242,12 +247,13 @@
 	Okay, wait a sec...
 	\begin{itemize}
 		\item How can you possibly execute {\em every possible} interleaving?
-		\item How can you know where preempting matters most?
+		%\item How can you know where preempting matters most?
+		\item How did you know to draw that tree's branches where they matter?
 	\end{itemize}
 \end{frame}
 
 \begin{frame}{Preemption Points}
-	\textbf{Preemption points} (PPs) are code location where being preempted may cause different behaviour.
+	\textbf{Preemption points} (PPs) are code locations where being preempted may cause different behaviour.
 	\begin{itemize}
 		\item IOW, somewhere that interesting interleavings can happen around.
 	\end{itemize}
@@ -265,17 +271,17 @@
 	What does ``all possible interleavings'' actually mean?
 
 	\linegap
-	One extreme: Preempt at every instruction
+	{\bf One extreme}: Preempt at {\em every instruction}
 	\begin{itemize}
-		\item {\em Good news}: Will find every possible race condition.
-		\item {\em Bad news}: Runtime of test will be impossibly large.
+		\item Good news: Will find every possible race condition.
+		\item Bad news: Runtime of test will be impossibly large.
 	\end{itemize}
 	\linegap
 
-	Other extreme: Nothing is a preemption point
+	{\bf Other extreme}: {\em Nothing} is a preemption point
 	\begin{itemize}
-		\item {\em Good news}: Test will finish quickly.
-		\item {\em Bad news}: Only one execution was checked for bugginess.
+		\item Good news: Test will finish quickly.
+		\item Bad news: Only one execution was checked for bugginess.
 		\begin{itemize}
 			\item No alternative interleavings explored.
 			\item Makes ``no race found'' a weak claim.
@@ -283,11 +289,11 @@
 	\end{itemize}
 	\linegap
 
-	Is there a ``sweet spot''?
+	Is there a {\bf ``sweet spot''}?
 \end{frame}
 
 \begin{frame}{Preemption Points}
-	Sweet spot: Insert a thread switch everywhere it ``might matter''.
+	\textbf{Sweet spot}: Insert a thread switch everywhere it ``might matter''.
 
 	\linegap
 	When do we fear being preempted?
@@ -298,107 +304,31 @@
 			\end{itemize}
 		\item Synchronization primitives (\texttt{mutex\_lock()}/\texttt{unlock()}, etc.)
 			\begin{itemize}
-				\item If used improperly\ldots
+				\item If buggy or used improperly\ldots
 			\end{itemize}
-		\item Unprotected shared memory accesses % Say: more on this later.
+		\item Unprotected shared memory accesses (``data races'')% Say: more on this later.
 			\begin{itemize}
 				\item May result in data structure corruption
 			\end{itemize}
 	\end{itemize}
-	\linegap
 
 	%%%% Not anymore! :D
 	%Finding the sweet spot is a joint effort between programmer and tool. (More on this later.)
+	%However, all these points together may still be too expensive...
 \end{frame}
 
-\subsection{Challenges}
-
-%% TODO -- left off working on slides here.
-
-% TODO TODO 2014: move this slide below the "preemption point" series, to after "controlling scheduling decisions", so it can be a two-parter -- "What are the two parts necessary to navigate a path through the tree?"
-\begin{frame}{Execution Tree Exploration}
-	Important point: When does a branch end?
+\begin{frame}{Challenges}
+	Parameters of systematic tests must be kept small.
 	\begin{itemize}
-		\item All threads run to completion, or
-		\item A bug is detected % Say: more on this later.
-	\end{itemize}
-	\linegap
-	{\bf Backtracking}:
-	\begin{itemize}
-		\item Identify a preemption point to replay differently
-		\item Reset machine state and start over
-		\item Replay test from the beginning, with different preemptions
-	\end{itemize}
-\end{frame}
-
-\begin{frame}{Controlling Scheduling Decisions}
-	How do we control which thread runs when?
-	\linegap
-
-	In other words, what sources of nondeterminism must we control?
-
-	\begin{itemize}
-		\item Device interrupts/input
-			\begin{itemize}
-				\item Disk drivers: when disk reads finish
-				\item Ethernet drivers: when packets arrive
-			\end{itemize}
-		\item To control thread switches in a 410 kernel, vary when clock ticks happen.
-	\end{itemize}
-\end{frame}
-
-% TODO TODO 2014: this slide can be deleted
-\begin{frame}{Memory Interposition}
-	How do we detect race-induced heap corruption?
-	\linegap
-
-	In order to find use-after-free, need to know:
-	\begin{itemize}
-		\item When objects are \texttt{free()}d
-		\item When threads access shared memory in the heap
+		\item Test program length / number of threads
+		\item Number of preemption points used
 	\end{itemize}
 	\linegap
 
-	Solution: Keep track of all memory events
-	\begin{itemize}
-		\item All calls to \texttt{malloc}/\texttt{free}
-		\item All shared memory reads/writes
-	\end{itemize}
-\end{frame}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\subsection{State Space Explosion}
-
-\begin{frame}{State Space Explosion}
-	Serious problem: State spaces grow exponentially
-	\begin{itemize}
-		\item With $p$ preemption points and $k$ runnable threads, size $p^k$.
-		\item Threatens our ability to explore everything.
-		\item Fortunately, some sequences result in identical states.
-	\end{itemize}
-	\linegap
-
-	{\bf Partial Order Reduction} can help.
-	\begin{itemize}
-		\item Intuitively: After exploring each interleaving, identify ``equivalent'' alternatives and skip over them.
-		\item Example follows\dots
-	\end{itemize}
-\end{frame}
-
-\begin{frame}{State Space Explosion}
 	\begin{center}
-	\includegraphics[width=\textwidth]{undiamond0.png}
-	\end{center}
-\end{frame}
-\begin{frame}{State Space Explosion}
-	\begin{center}
-	\includegraphics[width=\textwidth]{undiamond1.png}
-	\end{center}
-\end{frame}
-\begin{frame}{State Space Explosion}
-	\begin{center}
-	\includegraphics[width=\textwidth]{diamond1.png}
+		\hspace{-0.25in}\includegraphics[width=0.3\textwidth]{expo.pdf} \\
+		\vspace{-1.33in}\hspace{-1.75in}{\rotatebox{90}{\small state space size}} \\
+		\vspace{0.15in}\hspace{-0.25in}{\small number of PPs}
 	\end{center}
 \end{frame}
 
@@ -411,38 +341,57 @@
 \breakslide{\Huge Landslide}
 
 \begin{frame}{About The Project}
-	% 5th year MS since June 2011 % Say: planning to finish this may, hopefully
-	My MS thesis project (2011-2012)
+	\textbf{About me}: 4th year graduate student, advised by Garth Gibson
 	\begin{itemize}
-		\item {}[CMU-CS-12-118 -- \url{http://bblum.net/thesis.pdf}]
+		\item TAed 15-410 for 3 semesters during undergrad
+		\item 1st graduate year was 5th year MS, rest in Ph.D. program
+		\begin{itemize}
+			\item \url{http://www.contrib.andrew.cmu.edu/~bblum/thesis.pdf}
+		\end{itemize}
 	\end{itemize}
-
+	\pause
 	\linegap
-	Now I'm a Ph.D. student\dots
 
-	\linegap
-	Working with Garth Gibson, Jiri Simsa
-
-	\linegap
-	{\bf Landslide}: Shows that your Pebbles are not as stable as you thought.
+	{\bf About Landslide}
+	\begin{itemize}
+		\item Simics module, which traces:
+			\begin{itemize}
+				\item Every instruction executed
+				\item Every memory access read/written
+			\end{itemize}
+			% FIXME for next year -- how much slowdown is there? 20x?
+		\item Originally supported only P3s; can now test P2s as well
+		\item {\em Landslide} shows that your {\em Pebbles} are less stable than you thought.
+	\end{itemize}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{How Landslide Works}
+\subsection{Technical Overview}
 
-\begin{frame}{Landslide in Simics}
-	As a Simics module, Landslide knows:
+\begin{frame}{Big Picture: Execution Tree Exploration}
+	\textbf{Backtracking}
 	\begin{itemize}
-		\item Every instruction the kernel executes
-		\item Every memory address the kernel reads/writes
+		\item At end of each branch, identify a PP to replay differently
+		\item Reset machine state and start over
+		\item Implemented using Simics bookmarks
+			\begin{itemize}
+				\item {\tt set-bookmark} and {\tt skip-to}
+			\end{itemize}
+		\item Replay test from the beginning, with a different interleaving
 	\end{itemize}
+	\pause
 	\linegap
-	Artificially causes timer interrupts to control scheduling
 
-	\linegap
-	Checkpointing/backtracking via Simics bookmarks (reverse execution)
+	{\bf Controlling scheduling decisions}
+	\begin{itemize}
+		\item Tool must control all sources of nondeterminism
+		\item In 15-410, just timer and keyboard interrupts
+			% optional - say: "in real kernels, disk/network io interrupts"
+		\item Landslide repeatedly fires timer ticks until desired thread is run.
+	\end{itemize}
 \end{frame}
+
 
 \begin{frame}{Anatomy}
 	\begin{center}
@@ -460,449 +409,301 @@
 	\linegap
 	Landslide can {\em reasonably suspect}:
 	\begin{itemize}
-		\item Memory leak
 		\item Infinite loop (halting problem)
+		\item Data races
 	\end{itemize}
 \end{frame}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\subsection{Using Landslide}
-
-\breakslide{\Large Using Landslide}
-
-\begin{frame}{Recruitment}
-	% Say: So, this wasn't just a research talk
-	This is something you can try!
-	\linegap
-
-	Mutual benefit
+\begin{frame}{Brief Aside: Data Races}
+	A {\bf data race} is a pair of memory accesses between two threads, where:
 	\begin{itemize}
-		\item Landslide may help you find bugs
-		\item You help Ben evaluate his research
-	\end{itemize}
-\end{frame}
-
-% TODO TODO 2014: move this slide later, to be neighbours with the other words of warning
-\begin{frame}{Words of Warning}
-	Finding race conditions is hard for humans.
-
-	\linegap
-	It is hard for computer programs too.
-
-	\linegap
-	Landslide is not an oracle.
-\end{frame}
-
-\begin{frame}{Annotating Your Kernel}
-	Step 1
-	\begin{center}
-		{\small
-		\begin{tabular}{l}
-		\texttt{\hilight{olivegreen}{int}~thread\_fork() \{} \\
-	        \texttt{~~~~\hilight{olivegreen}{thread\_t}~*child = construct\_new\_thread();} \\
-		\texttt{~~~~\hilight{purple}{tell\_landslide\_forking}();~\hilight{blue}{/* A new thread was created.~*/}} \\
-	        \texttt{~~~~add\_to\_runqueue(child);} \\
-	        \texttt{~~~~return child->tid;} \\
-		\texttt{\}} \\
-		\texttt{\hilight{olivegreen}{void}~add\_to\_runqueue(\hilight{olivegreen}{thread\_t}~*t) \{} \\
-		\texttt{~~~~\hilight{blue}{/* This thread is now runnable.~*/}} \\
-		\texttt{~~~~\hilight{purple}{tell\_landslide\_thread\_on\_rq}(t->tid);} \\
-		\texttt{~~~~...} \\
-		\texttt{\}} \\
-		\end{tabular}
-		}
-	\end{center}
-	Your kernel needs to say when certain events happen, for example:
-	\begin{itemize}
-		\item When do threads become runnable / descheduled?
-		\item When does the scheduler switch threads?
-	\end{itemize}
-\end{frame}
-
-\begin{frame}{Configuring Landslide}
-	Step 2
-	\begin{center}
-		{\small
-		\begin{tabular}{l}
-		\texttt{\hilight{blue}{\# What test case to run?}} \\
-		\texttt{\hilight{black}{TEST\_CASE}=\hilight{olivegreen}{"double\_thread\_fork"}} \\
-		\texttt{} \\
-		\texttt{\hilight{blue}{\# The names of some important functions~~~~~~~~~~~}} \\
-		\texttt{\hilight{black}{TIMER\_WRAPPER}=\hilight{olivegreen}{"timer\_handler\_wrapper"}} \\
-		\texttt{\hilight{black}{CONTEXT\_SWITCH}=\hilight{olivegreen}{"ctx\_switch"}} \\
-		\texttt{} \\
-		\texttt{\hilight{blue}{\# What functions to pay attention to?}} \\
-		\texttt{within\_function \hilight{olivegreen}{"thread\_fork"}} \\
-		\texttt{within\_function \hilight{olivegreen}{"vanish"}} \\
-		\end{tabular}
-		}
-	\end{center}
-	\linegap
-
-	Fill out \texttt{config.landslide} with design details and names of important functions
-
-	% Fill in two implementation-dependent C functions in Landslide ($\le$10 lines)
-	% Say: Which depend on your kernel's specific implementation
-\end{frame}
-
-\begin{frame}{Configuring Preemption Points}
-	Landslide automatically identifies a minimal set of preemption points.
-	\begin{itemize}
-		\item It might find bugs.
-		\item It might overlook more fine-grained interleavings.
-	\end{itemize}
-	\linegap
-	With help from you, it could find more.
-	\begin{itemize}
-		\item Optional annotation: \texttt{tell\_landslide\_preempt()}
-		\item Hints to where a context switch should be forced.
-		\item Inside every call to \texttt{mutex\_lock}\ldots
-	\end{itemize}
-\end{frame}
-
-% TODO TODO 2014: hopefully, update this with a tabular format in a semester's time!
-\begin{frame}{And Hopefully\dots}
-	\begin{center}
-	{\small
-        \begin{tabular}{l}
-        \texttt{\hilight{red}{USE AFTER FREE - read from 0x199630 at eip 0x104264}} \\
-        \texttt{Heap contents:~\{...\}} \\
-        \texttt{[0x199630 | 4140] was allocated by TID3 at (...)} \\
-        \texttt{~~~~~~~~~~~~~~~~~~~~~~and freed by TID4 at (...)} \\
-        \texttt{\hilight{red}{****~~~~~~A bug was found!~~~~~****}} \\
-        \texttt{\hilight{red}{**** Preemption trace follows.~****}} \\
-        \texttt{\hilight{olivegreen}{1:~~TID 3 -{}-> TID 4}} \\
-        \texttt{~~~~TID3 at 0x105a10 in \hilight{blue}{context\_switch},} \\
-        \texttt{~~~~~~~~~~~~0x1041f4 in \hilight{blue}{thread\_fork},} \\
-        \texttt{~~~~~~~~~~~~0x10362b in \hilight{blue}{thread\_fork\_wrapper}} \\
-        \texttt{\hilight{olivegreen}{2:~~TID 4 -{}-> TID 3}} \\
-        \texttt{~~~~TID4 at 0x105a10 in \hilight{blue}{context\_switch},} \\
-        \texttt{~~~~~~~~~~~~0x104681 in \hilight{blue}{yield},} \\
-        \texttt{~~~~~~~~~~~~0x104570 in \hilight{blue}{vanish},} \\
-        \texttt{~~~~~~~~~~~~0x103708 in \hilight{blue}{vanish\_wrapper}} \\
-        \texttt{\hilight{red}{Current stack:}}\\
-        \texttt{~~~~TID3 at 0x104209 in \hilight{blue}{thread\_fork},} \\
-        \texttt{~~~~~~~~~~~~0x10362b in \hilight{blue}{thread\_fork\_wrapper}}
-        \end{tabular}
-	}
-
-	\end{center}
-\end{frame}
-
-\breakslide{\Large Quick Demo}
-
-% TODO more of these with screenshots
-
-%\begin{frame}{Preemption Points (noticing a theme here?)}
-%	Landslide is {\bf false negative}-oriented.
-%	\begin{itemize}
-%		\item If Landslide reports a bug, there is a bug for sure.
-%			% Say: Well, except progress sense might be wrong.
-%		\item If not,
-%			\begin{itemize}
-%				\item Maybe there was no race, or
-%				\item Maybe your preemption points were not granular enough.
-%			\end{itemize}
-%	\end{itemize}
-%\end{frame}
-%\begin{frame}{Preemption Points (noticing a theme here?)}
-%	Sometimes the default set will work.
-%
-%	Sometimes you need to tweak\ldots
-%	\begin{itemize}
-%		\item Ignore certain global mutexes
-%		\item Whitelist or blacklist entire syscalls
-%		\item (get creative)
-%	\end{itemize}
-%	Intuitively: focusing Landslide on relevant parts of the kernel.
-%\end{frame}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\subsection{User Study}
-
-\begin{frame}{Last Year's Results}
-	\begin{itemize}
-		\item Worked with 5 groups
-		\begin{itemize}
-			\item \dots{}of which 4 put in enough time to make Landslide work
-		\end{itemize}
-		\linegap
-		\item {\bf Investment}: about 2 to 3 hours
-		\begin{itemize}
-			\item Average 112 minutes doing required instrumentation
-			\item Average 35 minutes configuring extra preemption points \& interpreting ``found a bug'' output
-		\end{itemize}
-		\pause
-		\linegap
-		\item {\bf Return}: All 4 groups found bugs in their kernels.
-		\begin{itemize}
-			\item All groups found deterministic bugs (e.g., use-after-free)
-			\item 2 groups found race conditions (i.e., Landslide needed to backtrack)
-		\end{itemize}
-	\end{itemize}
-\end{frame}
-
-\begin{frame}{Words of Warning Again}
-	\textbf{If you are already struggling, this will not ``save'' you.}
-	\begin{itemize}
-		\item False-negatives: not guaranteed to find races at all
-		\item Research-quality: possibly difficult to integrate with your kernel
-		\item Finishing the kernel project is more important.
+		\item At least one of the accesses is a write
+		\item The threads are not holding the same mutex
+		\item The threads can be reordered (e.g. no \texttt{cond\_signal()} in between)
 	\end{itemize}
 	\pause
 	\linegap
-	This is for you if:
+
+	Data races are {\em not necessarily} bugs, just highly suspicious!
 	\begin{itemize}
-		%\item Be expecting an A or a B
-		\item You have already submitted
-		\item You are using late days, but willing to work over Carnival
-		%\item Be able to turn in without late days (if you really had to)
-		\item You are taking p3extra, but you already pass the hurdle
-		\item You are looking for\ldots
-			\begin{itemize}
-				\item That ``one pesky race''
-				\item A race that stress-testing missed
-				\item Or just familiarity with a new technique
-			\end{itemize}
+		\item ``If threads interleaved the wrong way here, it might crash later.''
+		\begin{itemize}
+			\item Hmmm...
+		\end{itemize}
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{Recruitment - Kernel Requirements}
-	Your kernel
+\breakslide{
+	\begin{center}
+		\includegraphics[width=0.85\textwidth]{trace1.png}
+	\end{center}
+}
+\breakslide{
+	\begin{center}
+		\includegraphics[width=\textwidth]{trace2.png}
+	\end{center}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{State Space Reduction}
+
+\begin{frame}{State Space Explosion}
+	Serious problem: State spaces grow exponentially
 	\begin{itemize}
-		\item Must load the shell and run programs
-		\item \texttt{fork},
-			\texttt{exec},
-			\texttt{vanish},
-			\texttt{wait},
-			\texttt{readline}
-		\item Must pass the hurdle architectural requirements
+		\item With $p$ preemption points and $k$ runnable threads, size $p^k$.
+		\item Threatens our ability to explore everything.
+		\item Fortunately, some sequences result in identical states.
+	\end{itemize}
+	\linegap
+
+	{\bf Partial Order Reduction} identifies and skips ``equivalent'' interleavings.
+	\begin{itemize}
+		\item After each execution, compare memory reads/writes of each thread.
+		\item Find when reordering threads couldn't possibly change behaviour.
+		\item Example follows\dots
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{State Space Reduction}
+	\begin{center}
+	\includegraphics[width=\textwidth]{undiamond0.png}
+	\end{center}
+\end{frame}
+\begin{frame}{State Space Reduction}
+	\begin{center}
+	\includegraphics[width=\textwidth]{undiamond1.png}
+	\end{center}
+\end{frame}
+\begin{frame}{State Space Reduction}
+	\begin{center}
+	\includegraphics[width=\textwidth]{diamond1.png}
+	\end{center}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Iterative Deepening}
+
+\begin{frame}{Choosing the Right Preemption Points}
+	So far we only {\em mitigated}, not {\em solved}, exponential explosion.
+	\pause
+	\linegap
+
+	State of the art tools hard-code a fixed set of preemption points.
+	\begin{itemize}
+		\item E.g., ``all thread library API calls'' or ``all kernel mutex locks/unlocks''
+		\item Depending on length of test, completion time is unpredictable.
+		\item More often, a subset is better in terms of time/coverage. 
+	\end{itemize}
+	\pause
+	\linegap
+	Current systematic testing model is not user-friendly.
+	\begin{itemize}
+		\item Tool: ``I want to use these PPs, but can't predict completion time.''
+		\item User: ``I have 16 CPUs and 24 hours to test my program.''
+	\end{itemize}
+	\linegap
+	{\em Stress testing offers this -- can we offer it too?}
+\end{frame}
+
+\begin{frame}{``Iterative Deepening'' (my current project)}
+	Goal: Run the best tests for a given CPU budget.
+	\linegap
+
+	Based on experience from past 15-410 student volunteers
+	\begin{itemize}
+		\item Students worked best with an iterative process
+		\item ``Start small, then add more preemption points as time allows''
+		\item Can we automate this process?
+	\end{itemize}
+	\linegap
+
+	Named after analogous technique in chess AI.
+	\begin{itemize}
+		\item Chess search is DFS limited by max number of moves (ply).
+		\item Chess AIs repeat DFS, increasing ply, until timeout.
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Iterative Deepening}
+	Repeat state space explorations, adding preemption points, until time is exhausted.
+	\vspace{0.29in}
+	\begin{center}
+		\includegraphics[width=0.25\textwidth]{tree0.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Iterative Deepening}
+	Repeat state space explorations, adding preemption points, until time is exhausted.
+	\vspace{0.15in}
+	\begin{center}
+		\begin{tabular}{cc}
+			\includegraphics[width=0.35\textwidth]{tree1.pdf} &
+			\includegraphics[width=0.35\textwidth]{tree2.pdf}
+		\end{tabular}
+	\end{center}
+\end{frame}
+
+
+\begin{frame}{Iterative Deepening}
+	Repeat state space explorations, adding preemption points, until time is exhausted.
+	\begin{center}
+		\includegraphics[width=0.5\textwidth]{tree3.pdf}
+	\end{center}
+	% say: and depending on your time budget, you might decide that you expect this one to be feasible, or you might fall back to a smaller state space from before.
+\end{frame}
+
+\begin{frame}{Iterative Deepening in Landslide}
+	\textbf{Landslide-ID}: wrapper program for Landslide
+	\begin{itemize}
+		\item Manages work queue of jobs with different PPs
+		\item Each job represents a new state space for Landslide to explore
+		\item Prioritizes which jobs are important / likely to finish
 		\begin{itemize}
-			\item especially: must never spin-wait!
+			\item Based on nature of PPs (data races? mutexes?)
+			\item Based on estimated completion time
 		\end{itemize}
-		\item Should \texttt{assert()} important invariants
+	\end{itemize}
+
+	\linegap
+	{\em Only required argument is CPU budget}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Evaluation}
+\breakslide{\Large Evaluation}
+
+\begin{frame}{Preliminary Evaluation}
+	We tested 22 random submitted P2s from Spring 2014.
+	\begin{itemize}
+		\item Test cases:
 		\begin{itemize}
-			\item Think of \texttt{panic()} as \texttt{tell\_landslide\_bug()}
+			\item {\tt thr\_exit\_join}
+			\item {\tt paraguay}
+			\item {\tt rwlock\_downgrade\_read\_test}
+			\item {\tt broadcast\_test} (new)
 		\end{itemize}
+		\item Each test given CPU budget of 11 cores $\times$ 10 minutes.
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Preliminary Results}
+	88 total tests were run (9,680 total CPU-minutes)
+	\linegap
+
+	Found 7 {\bf deterministic} initialization bugs (e.g. use-after-free)
+	\linegap
+
+	56 tests ran to completion without finding bugs:
+	\begin{itemize}
+		\item 47 exhausted the CPU budget.
+		\item 9 completed all state spaces before time ran out.
+	\end{itemize}
+	\linegap
+
+	Between 20 and 33 {\bf non-deterministic} bugs were found:
+	\begin{itemize}
+		\item 20 deadlock races among 12 P2s
+		\item 10 use-after-free races among 6 P2s
+		\item 3 misc (assert fail, segfault) among 2 P2s
 	\end{itemize}
 \end{frame}
 
 \begin{frame}{Recruitment}
-	User study this week, by appointment (\texttt{bblum@cs.cmu.edu})
-
-	\linegap
-	Expect to spend:
+	\textbf{User study}: Come try Landslide on your P2!
 	\begin{itemize}
-		\item Up to 3 hours, just to try it out.
-		\item 4-6 hours, if you find a bug and track it down.
-		\item More, for multiple bugs or the truly dedicated\ldots
+		\item Bare minimum effort: No more than 30 minutes
+		\begin{itemize}
+			\item Clone a github URL, run setup script, run, send results
+		\end{itemize}
+		\item Testing P2s is fully automated, but can also test P3s
+		\begin{itemize}
+			\item Landslide requires manual kernel annotations
+			\item Comes with pre-annotated reference kernel for P2
+			\item Past students take approx. 1 hour to annotate own P3s.
+		\end{itemize}
 	\end{itemize}
+	\pause
 	\linegap
+
+	{\bf Ultimate goal}: Provide Landslide to every 410 student during P2.
+	\begin{itemize}
+		\item This semester: Prep \& testing
+			\begin{itemize}
+				\item Improving user interface
+				\item Making sure Landslide itself is stable
+			\end{itemize}
+		%\item Please help us!
+		\item {\bf \large Just for fun -- this will NOT impact your grade.}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Recruitment}
+	%User study this week, by appointment (\texttt{bblum@cs.cmu.edu})
+	User study during exam week, by appointment (\texttt{bblum@cs.cmu.edu})
+	\linegap
+
+%	Recommended to use fully-automated P2 test suite, but you can try testing your P3 with approx. 1 hour of manual annotation.
+%	\linegap
+%
+	%Expect to spend:
+	%\begin{itemize}
+	%	\item Up to 3 hours, just to try it out.
+	%	\item 4-6 hours, if you find a bug and track it down.
+	%	\item More, for multiple bugs or the truly dedicated\ldots
+	%\end{itemize}
+	%\linegap
 
 	Give feedback (intuitive? frustrating? found bugs?)
 
 	\linegap
-	{\bf Watch \texttt{410.announce} for details!}
+	Watch your email for details!
 \end{frame}
 
-\subsection{End}
-\breakslide{\Large Questions?}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{End}
+\breakslide{\Large Questions?
+\linegap
+
+\begin{center}
+	\includegraphics[width=0.65\textwidth]{3word-questions.png}
+\end{center}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\section{Bonus Slide(s)}
 
-% \section{Conclusion}
-% \subsection{Conclusion}
-% 
-% \begin{frame}{Summary}
-% 	\begin{itemize}
-% 		\item
-% 	\end{itemize}
-% \end{frame}
+\begin{frame}{More Results}
+	\textbf{Is dynamically adding ``data race'' PPs effective?}
+	\begin{itemize}
+		\item 3 among reported bugs (9-15\%) required data races to expose.
+	\end{itemize}
+	\linegap
+
+	{\bf Is ``iterative deepening'' better than state-of-the-art?}
+	\begin{itemize}
+		\item Control experiment: Just 1 state space, same CPU time
+		\begin{itemize}
+			\item PPs used: \texttt{mutex\_lock()}, \texttt{mutex\_unlock()}
+			\item 110 minutes on 1 CPU
+		\end{itemize}
+		\item Of 33 total bug reports, control failed to find 10 (30\%).
+		\begin{itemize}
+			\item 3 required data race PPs to expose
+			\item 1 ran out of time
+			\item 6 obscured by different bug in same state space
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
 
 \end{document}
-%\begin{frame}{Partial Order Reduction}
-%	\begin{center}
-%	The next 6 slides won't be on the exam.
-%
-%		\Huge \dbend
-%	\end{center}
-%\end{frame}
-%
-%\begin{frame}{Partial Order Reduction}
-%	A {\bf transition} is\ldots
-%	\begin{itemize}
-%		\item The sequence of instructions executed between choice points.
-%	\end{itemize}
-%	To express concurrency between transitions:
-%	% Say: As a prerequisite for this algorithm, we need to build two sets to express the concurrency relations between the transitions
-%	\begin{itemize}
-%		\item Independence relation
-%		\item Happens-before relation
-%	\end{itemize}
-%	% Say: This is hard, and I don't expect you to understand it during this lecture; you won't be tested on it or anything. My goal in presenting it is to convey how intensely cool the algorithm is, and hopefully you will keep thinking about it later. I'd be happy to answer questions about it later.
-%\end{frame}
-%
-%\begin{frame}[fragile]{Partial Order Reduction - Independence Relation}
-%	\begin{columns}[l]
-%		\column{0.5\textwidth}
-%		\begin{center}
-%		\begin{verbatim}
-%		void thread_A() {
-%		    foo = 42;
-%		}
-%		void thread_B() {
-%		    if (bar == 1337)
-%		        print "Hello"
-%		}
-%		\end{verbatim}
-%		\end{center}
-%		\linegap
-%
-%		$A$ and $B$ are {\bf independent}.
-%		\column{0.5\textwidth}
-%		\begin{center}
-%		\begin{verbatim}
-%		void thread_A() {
-%		    foo = 42;
-%		}
-%		void thread_C() {
-%		    if (foo == 1337)
-%		        print "Hello"
-%		}
-%		\end{verbatim}
-%		\end{center}
-%		\linegap
-%
-%		$A$ and $C$ {\bf conflict}.
-%	\end{columns}
-%\end{frame}
-%
-%\begin{frame}{Partial Order Reduction - Independence Relation}
-%	Consider a trace of all shared memory reads/writes
-%
-%	\linegap
-%	Two transitions (instruction sequences) $A$ and $B$ are independent iff:
-%	\begin{itemize}
-%		\item $Writes(A) \cap Writes(B) = \emptyset$
-%		\item $Writes(A) \cap Reads(B) = \emptyset$
-%		\item $Reads(A) \cap Writes(B) = \emptyset$
-%	\end{itemize}
-%\end{frame}
-%
-%\begin{frame}{Partial Order Reduction - Happens-before Relation}
-%	\begin{columns}[l]
-%		\column{0.5\textwidth}
-%		\includegraphics[width=\textwidth]{hb.png}
-%		\column{0.5\textwidth}
-%		Is a transition ``enabled'' by a previous one?
-%		\begin{itemize}
-%			\item $A$ enables $B$
-%			\item $B$ enables $C$ (same thread)
-%			\item $B$ enables $D$
-%		\end{itemize}
-%%		Transitive closure
-%%		\begin{itemize}
-%%			\item $HB^* = \{AB, AC, AD, BC, BD\}$
-%%		\end{itemize}
-%		$C$ and $D$ are {\bf concurrent}!
-%	\end{columns}
-%\end{frame}
-%
-%\begin{frame}{Partial Order Reduction - Tagging}
-%	Run POR at the end of each branch
-%	\begin{itemize}
-%		\item Identify which branches to explore next
-%		\item Tag only a subset of all branches (hopefully)
-%	\end{itemize}
-%\end{frame}
-%
-%\begin{frame}{Partial Order Reduction - Tagging}
-%	For each transition $T$, find an {\bf evil ancestor} $E$:
-%	\begin{itemize}
-%		\item $E$ and $T$ are concurrent.
-%		\item $E$ and $T$ are not independent.
-%		\item Intuitively: $T$ and $E$ could be reordered, and might behave differently.
-%	\end{itemize}
-%	Find a {\bf good sibling} $G$ of $E$:
-%	\begin{itemize}
-%		\item $G$ is the same thread as $T$
-%		% Say: (if no such sibling, all siblings)
-%		\item Intuitively: Find a branch in which $T$ runs before $E$.
-%	\end{itemize}
-%	Explore tagged branches depth-first.
-%\end{frame}
-%
-%\begin{frame}{Partial Order Reduction}
-%	\begin{center}
-%		{\Huge \dbend}
-%		\linegap
-%		\linegap
-%		\linegap
-%
-%		Feel free to ask me about this later.
-%	\end{center}
-%\end{frame}
-
-% TODO: run through an example
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%\subsection{Other Dynamic Techniques}
-%
-%\begin{frame}{Heuristic-Based Searching}
-%	% Say: Note that this is beyond the scope of my personal project.
-%	Maybe the tree is too big to search anyway?
-%
-%	\linegap
-%	Search {\em most likely} branches first.
-%	\begin{itemize}
-%		\item ``Iterative Context Bounding''
-%		\footnote{Microsoft Research - CHESS - Musuvathi et al.}
-%		\begin{itemize}
-%			\item Insight: Races tend to show up with few forced context switches.
-%			\item Search branches with fewer preemptions first.
-%		\end{itemize}
-%		\item Find behaviours that are typical of buggy software.
-%		\footnote{Stanford University - Dawson Engler}
-%		\begin{itemize}
-%			\item Different behaviour in different branches.
-%				% Say: different all the time: no. different rarely: yes.
-%			\item Use suspicious memory accesses as future choice points.
-%		\end{itemize}
-%	\end{itemize}
-%	\linegap
-%	Open research field, possibly my future work.
-%\end{frame}
-%
-%% Say: I'm going to take a break from talking about systematic exploration to talk about other types of dynamic race detection - FIXME: if these slides fit in 60min.
-%\begin{frame}{Data Race Detection}
-%	Requires happens-before set and ``lock set''
-%	\linegap
-%
-%	Two memory accesses $m_1$ and $m_2$ are a data race iff:
-%	\begin{itemize}
-%		\item Read/write or write/write to the same address, and
-%		\item $(m_1,m_2) \not\in HB$, and
-%		\item $Lock(m_1) \cap Lock(m_2) = \emptyset$
-%	\end{itemize}
-%\end{frame}
-%\begin{frame}{Data Race Detection}
-%	Data race detection vs systematic exploration
-%	\begin{itemize}
-%		\item More false positives
-%			\begin{itemize}
-%				\item (but still good style-checking!)
-%			\end{itemize}
-%		\item No false negatives
-%		\item Still unable to find some types of bugs
-%	\end{itemize}
-%	\linegap
-%	Hybrid approach? (future research)
-%\end{frame}
-
-
