@@ -46,12 +46,16 @@
 \section{Introduction}
 
 %Normally here I would write something researchy about systematic testing and preemption points, but if you're here it probably means you know what this is about. If you don't, please refer to the lecture material.
-%\noindent
-Thanks for volunteering to try out Landslide. We have worked hard to make it nice enough to give to you, and we hope you're just as excited as we are to try out some systematic testing techniques the world has never seen before.
+%\\
+%
+%\noindent Thanks for volunteering to try out Landslide. We have worked hard to make it nice enough to give to you, and we hope you're just as excited as we are to try out some systematic testing techniques the world has never seen before.
+%\\
+
+\noindent You should have received a document titled {\em User Study Information Sheet} that describes your rights as a study participant and our confidentiality procedures. If you are missing this, please contact me immediately. My email address is {\tt bblum@cs.cmu.edu} and my phone number is 412-304-4294; email is preferred.
+% TODO: Host them on maxi or contrib and link to them.
 \\
 
-\noindent You should have received a document titled {\em User Study Information Sheet} that describes your rights as a study participant and our confidentiality procedures. If you are missing this, please contact Ben immediately at {\tt bblum@cs.cmu.edu}. If you have not yet reviewed the lecture slides (found on the course website), please do so before proceeding.
-% TODO: Host them on maxi or contrib and link to them.
+\noindent Likewise, please make sure you have read and understand the lecture slides on systematic testing, which are available on the 15-410 course website. If you have any questions about the research background I would be happy to answer them.
 
 \section{Instructions}
 
@@ -74,13 +78,19 @@ The very first thing you should do is {\bf READ THIS DOCUMENT ENTIRELY FIRST!} W
 				% TODO: Remove this TODO when you have implemented glue to move the html files to the toplevel directory.
 			\item Landslide's bug reports will show up as HTML files. If you are using a cluster machine in person, you can view them by pointing a browser to {\tt file:///PATH/TO/landslide/FILENAME.html}.
 				\footnote{Another option: move it to {\tt \textasciitilde/www} in your AFS, and view it at {\tt http://www.contrib.andrew.cmu.edu/\textasciitilde{}YOUR\_ANDREWID/FILENAME.html}. Note the {\tt www} in the URL is mandatory; note also that this will allow the world to see it, so be careful!}
-			\item The available test programs are {\tt thr\_exit\_join} (the default), {\tt broadcast\_test}, {\tt paraguay}, and {\tt rwlock\_downgrade\_read\_test}.
 				\footnote{If you have your own custom test case, you can put it in {\tt pebsim/p2-basecode/user/progs} and edit \\ {\tt pebsim/p2-basecode/config.mk} to build it, then run {\tt ./p2-setup.sh} again.}
+			\item The available test programs are {\tt thr\_exit\_join} (the default), {\tt broadcast\_test}, {\tt paraguay}, and {\tt rwlock\_downgrade\_read\_test}.
+			\item Suggested test configurations to get you started are as follows.
+			\begin{itemize}
+				\item {\tt ./landslide} --- Run the default test program ({\tt thr\_exit\_join}) for the default amount of time (one hour).
+				\item {\tt ./landslide -p broadcast\_test -t 600} --- Run {\tt broadcast\_test} for 600 seconds (10 minutes).
+				\item {\tt ./landslide -p paraguay -t 12h -c 4} --- Run {\tt paraguay} overnight (12 hours), using at most 4 CPUs at a time.
+			\end{itemize}
 		\end{itemize}
 \end{enumerate}
 
 \noindent {\bf What to do when something goes wrong:}
-If you find a Landslide bug, such as an assertion/crash, or such as a bug report that you think is actually a bug in Landslide rather than a bug in your P2, or such as it getting stuck and not exiting in the given time limit, please create a tarball of your workspace, just as you would to report a reference kernel bug, but send it to Ben instead of 410 staff.
+If you find a Landslide bug, such as an assertion/crash, or such as a bug report that you think is actually a bug in Landslide rather than a bug in your P2, or such as it getting stuck and not exiting in the given time limit, please create a tarball of your workspace, just as you would to report a reference kernel bug, but send it to me instead of 410 staff.
 For any other technical issues getting it to work, or if you have difficulty understanding a bug report, send email.
 \\
 
