@@ -80,18 +80,27 @@ The very first thing you should do is {\bf READ THIS DOCUMENT ENTIRELY FIRST!} W
 				\footnote{Another option: move it to {\tt \textasciitilde/www} in your AFS, and view it at {\tt http://www.contrib.andrew.cmu.edu/\textasciitilde{}YOUR\_ANDREWID/FILENAME.html}. Note the {\tt www} in the URL is mandatory; note also that this will allow the world to see it, so be careful!}
 				\footnote{If you have your own custom test case, you can put it in {\tt pebsim/p2-basecode/user/progs} and edit \\ {\tt pebsim/p2-basecode/config.mk} to build it, then run {\tt ./p2-setup.sh} again.}
 			\item The available test programs are {\tt thr\_exit\_join} (the default), {\tt broadcast\_test}, {\tt paraguay}, and {\tt rwlock\_downgrade\_read\_test}.
-			\item Suggested test configurations to get you started are as follows.
+			\item The suggested sequence of test configurations to run is as follows. You can, of course, change the time limits or test programs as you see fit. For the longer-running configurations, it's recommended to run them inside of a {\tt screen} session.
 			\begin{itemize}
-				\item {\tt ./landslide} --- Run the default test program ({\tt thr\_exit\_join}) for the default amount of time (one hour).
-				\item {\tt ./landslide -p broadcast\_test -t 600} --- Run {\tt broadcast\_test} for 600 seconds (10 minutes).
-				\item {\tt ./landslide -p paraguay -t 12h -c 4} --- Run {\tt paraguay} overnight (12 hours), using at most 4 CPUs at a time.
+				\item {\tt ./landslide -p thr\_exit\_join -t 30m}
+				\item {\tt ./landslide -p broadcast\_test -t 30m}
+				\item {\tt ./landslide -p paraguay -t 30m}
+				\item {\tt ./landslide -p rwlock\_downgrade\_read\_test -t 30m}
+				\item {\tt ./landslide -p thr\_exit\_join -t 3h}
+				\item {\tt ./landslide -p broadcast\_test -t 3h}
+				\item {\tt ./landslide -p paraguay -t 3h}
+				\item {\tt ./landslide -p rwlock\_downgrade\_read\_test -t 3h}
+				\item {\tt ./landslide -p thr\_exit\_join -t 12h}
+				\item {\tt ./landslide -p broadcast\_test -t 12h}
+				\item {\tt ./landslide -p paraguay -t 12h}
+				\item {\tt ./landslide -p rwlock\_downgrade\_read\_test -t 12h}
 			\end{itemize}
 		\end{itemize}
 \end{enumerate}
 
 \noindent {\bf What to do when something goes wrong:}
-If you find a Landslide bug, such as an assertion/crash, or such as a bug report that you think is actually a bug in Landslide rather than a bug in your P2, or such as it getting stuck and not exiting in the given time limit, please create a tarball of your workspace, just as you would to report a reference kernel bug, but send it to me instead of 410 staff.
-For any other technical issues getting it to work, or if you have difficulty understanding a bug report, send email.
+If you find a Landslide bug, such as an assertion/crash, or such as a bug report that you think is actually a bug in Landslide rather than a bug in your P2, or such as it getting stuck and not exiting in the given time limit, please create a tarball of your workspace, just as you would to report a reference kernel bug, but send it to Ben (\texttt{bblum@cs.cmu.edu}) instead of 410 staff.
+For any other technical issues getting it to work, or if you have difficulty understanding a bug report, send email to Ben.
 \\
 
 \noindent
@@ -128,7 +137,7 @@ Each time you find a new bug with Landslide, fill this out again.}
 	\item What test configuration did you use? For example, {\tt ./landslide -t 15m -p thr\_exit\_join}
 		\vspace{0.5in}
 	\item Summarize the bug.
-		\vspace{0.5in}
+		\vspace{2in}
 	\item How IMPORTANT was this bug? Rate on a scale from 1 to 10, where:
 		\begin{itemize}
 			\item 1 = Trivial; an obvious ``oops'' that does not reflect any key lessons learned during the project. I would expect to not lose any points for this bug.
@@ -136,14 +145,14 @@ Each time you find a new bug with Landslide, fill this out again.}
 			\item 7 = Major; a concurrency-related bug related to subject matter discussed in lecture.
 			\item 10 = Severe; this bug reflects a fundamental lesson about concurrency that we learned during the project. I would expect to receive ``see course staff'' in my ink if I turned in code with this bug!
 		\end{itemize}
-		\vspace{0.5in}
+		\vspace{0.2in}
 	\item How much EFFORT/TIME did this bug require to diagnose and fix? Rate on a scale from 1 to 10, where:
 		\begin{itemize}
 			\item 1 = Very little; we knew immediately what was wrong and needed to change only 1 or 2 lines of code.
 			\item 5 = Some; the bug took considerable thought to fix, and required nontrivial code changes.
 			\item 10 = Lots; we worked for several hours to fix the bug and/or required a major refactoring of our code.
 		\end{itemize}
-		\vspace{0.5in}
+		\vspace{0.2in}
 	\item How likely would a CONVENTIONAL STRESS TEST be able to find the bug (i.e., running the program repeatedly, not using Landslide)? Rate on a scale from 1 to 10, where:
 		\begin{itemize}
 			\item 1 = No hope. The window for a random timer interrupt to expose the bug is so small that a conventional stress test could easily run continuously overnight without encountering it.
