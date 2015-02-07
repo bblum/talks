@@ -52,7 +52,7 @@
 \definecolor{olivegreen}{RGB}{0,127,0}
 
 \begin{document}
-\renewcommand{\inserttotalframenumber}{41}
+\renewcommand{\inserttotalframenumber}{34}
 \normalem
 \begin{frame}
 	\titlepage
@@ -95,7 +95,7 @@
 
 \definecolor{thread1}{RGB}{87,172,255}
 \definecolor{thread2}{RGB}{255,201,102}
-\definecolor{thread3}{RGB}{255,87,130}
+\definecolor{thread3}{RGB}{255,128,160}
 
 \begin{frame}{Case Study}
 	\begin{center}
@@ -104,26 +104,26 @@
 				Consumer thread \\
 				\hline
 				\\
-				\texttt{LOCK(mx);} \\
+				\texttt{mutex\_lock(mx);} \\
 				\\
 				\texttt{if~(!work\_exists())} \\
-				\texttt{~~~~WAIT(cvar,~mx);} \\
-				\texttt{work~=~claim\_work();} \\
+				\texttt{~~~~cond\_wait(cvar,~mx);} \\
+				\texttt{work~=~dequeue();} \\
 				\\
-				\texttt{UNLOCK(mx);} \\
-				\texttt{assert(work~!=~NULL);} \\
+				\texttt{mutex\_unlock(mx);} \\
+				\texttt{access(work->data);} \\
 			\end{tabular}
 			& & &
 			\begin{tabular}{l}
 				Producer thread \\
 				\hline
 				\\
-				\texttt{LOCK(mx);} \\
+				\texttt{mutex\_lock(mx);} \\
 				\\
-				\texttt{give\_work(work);} \\
-				\texttt{SIGNAL(cvar);} \\
+				\texttt{enqueue(work);} \\
+				\texttt{signal(cvar);} \\
 				\\
-				\texttt{UNLOCK(mx);} \\
+				\texttt{mutex\_unlock(mx);} \\
 				\\
 				\\
 			\end{tabular}
@@ -142,22 +142,22 @@
 			\hline
 			\cellcolor{thread1} {\bf Thread 1} & \cellcolor{thread2} {\bf Thread 2} & \cellcolor{thread3} {\bf Thread 3} \\
 			\hline
-			\small \texttt{LOCK(mx);} & & \\
+			\small \texttt{lock(mx);} & & \\
 			\small \texttt{if~(!work\_exists())} & & \\
-			\small \texttt{~~~~WAIT(cvar,~mx);} & & \\
+			\small \texttt{~~~~wait(cvar,~mx);} & & \\
 			
-			& \small \texttt{LOCK(mx);} & \\
-			& \small \texttt{give\_work(work);} & \\
-			& \small \texttt{SIGNAL(cvar);} & \\
-			& \small \texttt{UNLOCK(mx);} & \\
+			& & \small \texttt{lock(mx);} \\
+			& & \small \texttt{if~(!work\_exists())} \\
+			& & \small \texttt{~~~~wait(cvar,~mx);} \\
+
+			& \small \texttt{lock(mx);} & \\
+			& \small \texttt{enqueue(work);} & \\
+			& \small \texttt{signal(cvar);} & \\
+			& \small \texttt{unlock(mx);} & \\
 			
-			\small \texttt{work~=~claim\_work();~} & & \\
-			\small \texttt{UNLOCK(mx);} & & \\
-			\small \texttt{//~got~the~work} {\large \smiley}& & \\
-			
-			& & \small \texttt{LOCK(mx);} \\
-			& & \small \texttt{if~(!work\_exists())~} \\
-			& & \small \texttt{~~~~WAIT(cvar,~mx);} \\
+			\small \texttt{work~=~dequeue();~} & & \\
+			\small \texttt{unlock(mx);} & & \\
+			\small \texttt{access(work->data);}& & \\
 			\hline
 		\end{tabular}
 	\end{center}
@@ -168,22 +168,22 @@
 			\hline
 			\cellcolor{thread1} {\bf Thread 1} & \cellcolor{thread2} {\bf Thread 2} & \cellcolor{thread3} {\bf Thread 3} \\
 			\hline
-			\small \texttt{LOCK(mx);} & & \\
+			\small \texttt{lock(mx);} & & \\
 			\small \texttt{if~(!work\_exists())} & & \\
-			\small \texttt{~~~~WAIT(cvar,~mx);} & & \\
+			\small \texttt{~~~~wait(cvar,~mx);} & & \\
 			
-			& & \small \texttt{LOCK(mx);} \\
-			& & \small \texttt{if~(!work\_exists())~} \\
-			& & \small \texttt{~~~~WAIT(cvar,~mx);} \\
-
-			& \small \texttt{LOCK(mx);} & \\
-			& \small \texttt{give\_work(work);} & \\
-			& \small \texttt{SIGNAL(cvar);} & \\
-			& \small \texttt{UNLOCK(mx);} & \\
+			& \small \texttt{lock(mx);} & \\
+			& \small \texttt{enqueue(work);} & \\
+			& \small \texttt{signal(cvar);} & \\
+			& \small \texttt{unlock(mx);} & \\
 			
-			\small \texttt{work~=~claim\_work();~} & & \\
-			\small \texttt{UNLOCK(mx);} & & \\
-			\small \texttt{//~got~the~work} {\large \smiley}& & \\
+			\small \texttt{work~=~dequeue();~} & & \\
+			\small \texttt{unlock(mx);} & & \\
+			\small \texttt{access(work->data);}& & \\
+			
+			& & \small \texttt{lock(mx);} \\
+			& & \small \texttt{if~(!work\_exists())} \\
+			& & \small \texttt{~~~~wait(cvar,~mx);} \\
 			\hline
 		\end{tabular}
 	\end{center}
@@ -194,22 +194,22 @@
 			\hline
 			\cellcolor{thread1} {\bf Thread 1} & \cellcolor{thread2} {\bf Thread 2} & \cellcolor{thread3} {\bf Thread 3} \\
 			\hline
-			\small \texttt{LOCK(mx);} & & \\
+			\small \texttt{lock(mx);} & & \\
 			\small \texttt{if~(!work\_exists())} & & \\
-			\small \texttt{~~~~WAIT(cvar,~mx);} & & \\
+			\small \texttt{~~~~wait(cvar,~mx);} & & \\
 			
-			& \small \texttt{LOCK(mx);} & \\
-			& \small \texttt{give\_work(work);} & \\
-			& \small \texttt{SIGNAL(cvar);} & \\
-			& \small \texttt{UNLOCK(mx);} & \\
+			& \small \texttt{lock(mx);} & \\
+			& \small \texttt{enqueue(work);} & \\
+			& \small \texttt{signal(cvar);} & \\
+			& \small \texttt{unlock(mx);} & \\
 			
-			& & \small \texttt{LOCK(mx);} \\
-			& & \small \texttt{work~=~claim\_work();} \\
-			& & \small \texttt{UNLOCK(mx);} \\
+			& & \small \texttt{lock(mx);} \\
+			& & \small \texttt{work~=~dequeue();~~} \\
+			& & \small \texttt{unlock(mx);} \\
 
-			\small \texttt{work~=~claim\_work();~} & & \\
-			\small \texttt{UNLOCK(mx);} & & \\
-			\small \texttt{//~work~was~stolen} {\large \frownie}& & \\
+			\small \texttt{work~=~dequeue();} & & \\
+			\small \texttt{unlock(mx);} & & \\
+			\small \texttt{//~SIGSEGV} {\large \frownie}& & \\
 			\hline
 		\end{tabular}
 	\end{center}
@@ -268,24 +268,44 @@
 \breakslide{\Large A different way of looking at race conditions\ldots}
 
 \begin{frame}{Execution Tree}
-	\begin{center}
-		\includegraphics[width=0.9\textwidth]{threadfork0.png}
-	\end{center}
+		\includegraphics[width=0.78\textwidth]{execution-tree-0.pdf} \\
+		\vspace{-3in}
+		\hspace{3in}
+		\includegraphics[width=0.34\textwidth]{table-0.png}
+		\\
+		\vspace{1.2in}
+		\hspace{3.7in}
+		\includegraphics[width=0.15\textwidth]{frownie-blank.png}
 \end{frame}
 \begin{frame}{Execution Tree}
-	\begin{center}
-		\includegraphics[width=0.9\textwidth]{threadfork05.png}
-	\end{center}
+		\includegraphics[width=0.78\textwidth]{execution-tree-1.pdf} \\
+		\vspace{-3in}
+		\hspace{3in}
+		\includegraphics[width=0.34\textwidth]{table-0.png}
+		\\
+		\vspace{1.2in}
+		\hspace{3.7in}
+		\includegraphics[width=0.15\textwidth]{frownie-blank.png}
 \end{frame}
 \begin{frame}{Execution Tree}
-	\begin{center}
-		\includegraphics[width=0.9\textwidth]{threadfork1.png}
-	\end{center}
+		\includegraphics[width=0.78\textwidth]{execution-tree-2.pdf} \\
+		\vspace{-3in}
+		\hspace{3in}
+		\includegraphics[width=0.34\textwidth]{table-1.png}
+		\\
+		\vspace{1.2in}
+		\hspace{3.7in}
+		\includegraphics[width=0.15\textwidth]{frownie-blank.png}
 \end{frame}
 \begin{frame}{Execution Tree}
-	\begin{center}
-		\includegraphics[width=0.9\textwidth]{threadfork2.png}
-	\end{center}
+		\includegraphics[width=0.78\textwidth]{execution-tree-full.pdf} \\
+		\vspace{-3in}
+		\hspace{3in}
+		\includegraphics[width=0.34\textwidth]{table-2.png}
+		\\
+		\vspace{1.2in}
+		\hspace{3.7in}
+		\includegraphics[width=0.15\textwidth]{frownie.png}
 \end{frame}
 
 % Say: Obviously we want to be able to always run the third path. But knowing
@@ -657,6 +677,9 @@
 % Participation has no impact on grade but you will find bugs
 
 \begin{frame}{User Study - How to Participate}
+	Interested?
+	\linegap
+
 	To participate\dots
 	\begin{itemize}
 		\item Review this lecture and study information sheet
