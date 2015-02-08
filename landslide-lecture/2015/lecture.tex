@@ -52,7 +52,7 @@
 \definecolor{olivegreen}{RGB}{0,127,0}
 
 \begin{document}
-\renewcommand{\inserttotalframenumber}{34}
+\renewcommand{\inserttotalframenumber}{36}
 \normalem
 \begin{frame}
 	\titlepage
@@ -607,13 +607,53 @@
 	{\em Only required argument is CPU budget}
 \end{frame}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Evaluation}
+
 \breakslide{\Huge Demo}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Preliminary Evaluation}
+	We tested 22 random submitted P2s from Spring 2014.
+	\begin{itemize}
+		\item Test cases:
+		\begin{itemize}
+			\item {\tt thr\_exit\_join}
+			\item {\tt paraguay}
+			\item {\tt rwlock\_downgrade\_read\_test}
+			\item {\tt broadcast\_test} (new)
+		\end{itemize}
+		\item Each test given CPU budget of 11 cores $\times$ 10 minutes.
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Preliminary Results}
+	88 total tests were run (9,680 total CPU-minutes)
+	\linegap
+
+	Found 7 {\bf deterministic} initialization bugs (e.g. use-after-free)
+	\linegap
+
+	56 tests ran to completion without finding bugs:
+	\begin{itemize}
+		\item 47 exhausted the CPU budget.
+		\item 9 completed all state spaces before time ran out.
+	\end{itemize}
+	\linegap
+
+	Between 20 and 33 {\bf non-deterministic} bugs were found:
+	\begin{itemize}
+		\item 20 deadlock races among 12 P2s
+		\item 10 use-after-free races among 6 P2s
+		\item 3 misc (assert fail, segfault) among 2 P2s
+	\end{itemize}
+\end{frame}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Landslide for the People}
+\subsection{Landslide for the People}
 
 \begin{frame}{User Study}
 	\textbf{Try Landslide on your P2!}
@@ -672,10 +712,6 @@
 	% Say: Accordingly, although I hope you will use landslide enough to get good results for me, you should also responsibly allocate time between testing with landslide versus actually implementing your P2.
 \end{frame}
 
-% IRB approved, plan on publishing collected data, anonymized
-% Expect to spend X time
-% Participation has no impact on grade but you will find bugs
-
 \begin{frame}{User Study - How to Participate}
 	Interested?
 	\linegap
@@ -709,6 +745,31 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Bonus Slides}
+
+\subsection{Experimental Results}
+
+\begin{frame}{More Preliminary Results}
+	\textbf{Is dynamically adding ``data race'' PPs effective?}
+	\begin{itemize}
+		\item 3 among reported bugs (9-15\%) required data races to expose.
+	\end{itemize}
+	\linegap
+
+	{\bf Is ``iterative deepening'' better than state-of-the-art?}
+	\begin{itemize}
+		\item Control experiment: Just 1 state space, same CPU time
+		\begin{itemize}
+			\item PPs used: \texttt{mutex\_lock()}, \texttt{mutex\_unlock()}
+			\item 110 minutes on 1 CPU
+		\end{itemize}
+		\item Of 33 total bug reports, control failed to find 10 (30\%).
+		\begin{itemize}
+			\item 3 required data race PPs to expose
+			\item 1 ran out of time
+			\item 6 obscured by different bug in same state space
+		\end{itemize}
+	\end{itemize}
+\end{frame}
 
 \subsection{State Space Reduction}
 
@@ -744,67 +805,5 @@
 	\includegraphics[width=\textwidth]{diamond1.png}
 	\end{center}
 \end{frame}
-
-\subsection{Experimental Results}
-
-\begin{frame}{Preliminary Evaluation}
-	We tested 22 random submitted P2s from Spring 2014.
-	\begin{itemize}
-		\item Test cases:
-		\begin{itemize}
-			\item {\tt thr\_exit\_join}
-			\item {\tt paraguay}
-			\item {\tt rwlock\_downgrade\_read\_test}
-			\item {\tt broadcast\_test} (new)
-		\end{itemize}
-		\item Each test given CPU budget of 11 cores $\times$ 10 minutes.
-	\end{itemize}
-\end{frame}
-
-\begin{frame}{Preliminary Results}
-	88 total tests were run (9,680 total CPU-minutes)
-	\linegap
-
-	Found 7 {\bf deterministic} initialization bugs (e.g. use-after-free)
-	\linegap
-
-	56 tests ran to completion without finding bugs:
-	\begin{itemize}
-		\item 47 exhausted the CPU budget.
-		\item 9 completed all state spaces before time ran out.
-	\end{itemize}
-	\linegap
-
-	Between 20 and 33 {\bf non-deterministic} bugs were found:
-	\begin{itemize}
-		\item 20 deadlock races among 12 P2s
-		\item 10 use-after-free races among 6 P2s
-		\item 3 misc (assert fail, segfault) among 2 P2s
-	\end{itemize}
-\end{frame}
-
-\begin{frame}{More Preliminary Results}
-	\textbf{Is dynamically adding ``data race'' PPs effective?}
-	\begin{itemize}
-		\item 3 among reported bugs (9-15\%) required data races to expose.
-	\end{itemize}
-	\linegap
-
-	{\bf Is ``iterative deepening'' better than state-of-the-art?}
-	\begin{itemize}
-		\item Control experiment: Just 1 state space, same CPU time
-		\begin{itemize}
-			\item PPs used: \texttt{mutex\_lock()}, \texttt{mutex\_unlock()}
-			\item 110 minutes on 1 CPU
-		\end{itemize}
-		\item Of 33 total bug reports, control failed to find 10 (30\%).
-		\begin{itemize}
-			\item 3 required data race PPs to expose
-			\item 1 ran out of time
-			\item 6 obscured by different bug in same state space
-		\end{itemize}
-	\end{itemize}
-\end{frame}
-
 
 \end{document}
