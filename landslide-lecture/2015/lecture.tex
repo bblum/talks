@@ -454,7 +454,7 @@
 			\end{itemize}
 			% FIXME for next year -- how much slowdown is there? 20x?
 		\item Originally supported only P3s; can now test P2s fully-automated
-		\item {\em Landslide} shows that your {\em Pebbles} are less stable than you thought.
+		\item {\em Landslide} shows how your {\em Pebbles} programs are not stable.
 	\end{itemize}
 \end{frame}
 
@@ -577,36 +577,8 @@
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{Iterative Deepening}
-	Repeat state space explorations, adding preemption points, until time is exhausted.
-	\vspace{0.29in}
-	\begin{center}
-		\includegraphics[width=0.25\textwidth]{tree0.pdf}
-	\end{center}
-\end{frame}
-
-\begin{frame}{Iterative Deepening}
-	Repeat state space explorations, adding preemption points, until time is exhausted.
-	\vspace{0.15in}
-	\begin{center}
-		\begin{tabular}{cc}
-			\includegraphics[width=0.35\textwidth]{tree1.pdf} &
-			\includegraphics[width=0.35\textwidth]{tree2.pdf}
-		\end{tabular}
-	\end{center}
-\end{frame}
-
-
-\begin{frame}{Iterative Deepening}
-	Repeat state space explorations, adding preemption points, until time is exhausted.
-	\begin{center}
-		\includegraphics[width=0.5\textwidth]{tree3.pdf}
-	\end{center}
-	% say: and depending on your time budget, you might decide that you expect this one to be feasible, or you might fall back to a smaller state space from before.
-\end{frame}
-
 \begin{frame}{Iterative Deepening in Landslide}
-	\textbf{Landslide-ID}: wrapper program for Landslide
+	Landslide automatically iterates through different configurations of PPs.
 	\begin{itemize}
 		\item Manages work queue of jobs with different PPs
 		\item Each job represents a new state space for Landslide to explore
@@ -615,10 +587,42 @@
 			\item Based on nature of PPs (data races? mutexes?)
 			\item Based on estimated completion time
 		\end{itemize}
+		\item Repeat state space explorations, adding preemption points, until time is exhausted.
 	\end{itemize}
 
 	\linegap
 	{\em Only required argument is CPU budget}
+\end{frame}
+
+\begin{frame}{Iterative Deepening}
+	Minimal state space includes only ``mandatory'' context switches
+	\begin{itemize}
+		\item e.g., {\tt yield()}, {\tt cond\_wait()}.
+	\end{itemize}
+	\vspace{0.29in}
+	\begin{center}
+		\includegraphics[width=0.35\textwidth]{tree0.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Iterative Deepening}
+	Adding different PPs can produce state spaces of different sizes; Landslide tries them in parallel.
+	\vspace{0.15in}
+	\begin{center}
+		\begin{tabular}{cc}
+			\includegraphics[width=0.45\textwidth]{tree1.pdf} &
+			\includegraphics[width=0.5\textwidth]{tree2.pdf}
+		\end{tabular}
+	\end{center}
+\end{frame}
+
+
+\begin{frame}{Iterative Deepening}
+	If time allows, Landslide will combine PPs into larger, more comprehensive state spaces.
+	\begin{center}
+		\includegraphics[width=0.8\textwidth]{tree3.pdf}
+	\end{center}
+	% say: and depending on your time budget, you might decide that you expect this one to be feasible, or you might fall back to a smaller state space from before.
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
