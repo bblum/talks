@@ -9,7 +9,7 @@ projects.
 I would like to invite you to try Landslide on your own thread library, to
 supplement the stress tests, as P2 comes to a close.
 
-Between today (feb 11) and the end of P2 (feb 18) I will be running a user
+Between today (feb 11) and the end of P2 (feb 20) I will be running a user
 study to evaluate Landslide's effectiveness. By participating, I hope you will
 find it helpful for finding and fixing race conditions in your code. If you
 are interested, please:
@@ -31,8 +31,10 @@ estimate between 4-8 hours of active attention (including debugging time),
 depending how many bugs Landslide finds.
 
 When finished with Landslide, please submit your completed survey sheets at my
-office. During the study I will also be available for technical support in my
-office (weekdays 13:00-17:00) and by email (bblum@cs.cmu.edu).
+office. Or if it's more convenient for you, I will be available to collect
+surveys for 5 minutes at the end of class on the 20th, 23rd, 25th. During the
+study I will also be available for technical support in my office (weekdays
+13:00-17:00) and by email (bblum@cs.cmu.edu).
 
 happy hacking,
 Ben

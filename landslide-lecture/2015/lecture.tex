@@ -519,7 +519,8 @@
 
 	Data races are {\em not necessarily} bugs, just highly suspicious!
 	\begin{itemize}
-		\item Is unprotected {\tt foobar\_statistics\_counter++} bad?
+		\item Bakery algorithm: Is {\tt number[i]=max(number[0],number[1])} bad?
+		%\item Is unprotected {\tt foobar\_statistics\_counter++} bad?
 		\item What about unprotected {\tt next\_thread\_id++}?
 		\item ``If threads interleaved the wrong way here, it {\em might} crash later.''
 		\begin{itemize}
