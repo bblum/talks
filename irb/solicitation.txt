@@ -1,0 +1,38 @@
+Hi students of 15-410,
+
+Today I gave a special guest lecture wherein I talked about "systematic
+testing", a research technique for testing and debugging of concurrency
+errors. I introduced Landslide, a systematic testing tool I've been working on
+during my Ph.D. study with a particular focus on testing 15-410 thread library
+projects.
+
+I would like to invite you to try Landslide on your own thread library, to
+supplement the stress tests, as P2 comes to a close.
+
+Between today (feb 11) and the end of P2 (feb 18) I will be running a user
+study to evaluate Landslide's effectiveness. By participating, I hope you will
+find it helpful for finding and fixing race conditions in your code. If you
+are interested, please:
+
+  1. Review the lecture slides (available on 410 course website)
+
+  2. Read the study info sheet:
+     http://www.contrib.andrew.cmu.edu/~bblum/landslide-info-sheet.pdf
+
+  3. Fill out the sign-up sheet, and bring it to my office (GHC 9022) for
+     further instructions:
+     http://www.contrib.andrew.cmu.edu/~bblum/landslide-sign-up.pdf
+
+Participation is ENTIRELY VOLUNTARY: I am not on course staff, and cannot
+influence your grade. However, Landslide is fully automatic, and I estimate
+that minimal participation (i.e. running 1 test) should take no more than 1
+hour of effort. For those who are interested to follow the full test plan, I
+estimate between 4-8 hours of active attention (including debugging time),
+depending how many bugs Landslide finds.
+
+When finished with Landslide, please submit your completed survey sheets at my
+office. During the study I will also be available for technical support in my
+office (weekdays 13:00-17:00) and by email (bblum@cs.cmu.edu).
+
+happy hacking,
+Ben

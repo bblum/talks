@@ -22,7 +22,7 @@
 \author[Ben Blum]{Ben Blum \texttt{(bblum@andrew.cmu.edu)}}
 
 \institute[CMU 15-410]{Carnegie Mellon University - 15-410}
-\date[]{2014, December 3}
+\date[]{2015, February 11}
 
 \setbeamertemplate{footline}{\hspace*{.5cm}\scriptsize{\insertauthor\hspace*{50pt} \hfill\insertframenumber\hspace*{.5cm}}} 
 
@@ -75,7 +75,7 @@
 		\item Tabular execution traces
 		\item The execution tree
 	\end{itemize}
-	{\bf Technique: Systematic testing}
+	{\bf Research Technique: ``Systematic testing''}
 	% Say: A way of enumerating all possible interleavings of a concurrent test case.
 	\begin{itemize}
 		\item Preemption points
@@ -100,6 +100,7 @@
 \begin{frame}{Case Study}
 	\begin{center}
 		\begin{tabular}{llll}
+			\fbox{
 			\begin{tabular}{l}
 				Consumer thread \\
 				\hline
@@ -113,7 +114,9 @@
 				\texttt{mutex\_unlock(mx);} \\
 				\texttt{access(work->data);} \\
 			\end{tabular}
+			}
 			& & &
+			\fbox{
 			\begin{tabular}{l}
 				Producer thread \\
 				\hline
@@ -127,6 +130,7 @@
 				\\
 				\\
 			\end{tabular}
+			}
 		\end{tabular}
 		\linegap
 
@@ -162,7 +166,7 @@
 		\end{tabular}
 	\end{center}
 \end{frame}
-\begin{frame}{Thread Interleavings (``good'' case, again)}
+\begin{frame}{Thread Interleavings (different ``good'' case)}
 	\begin{center}
 		\begin{tabular}{|l|l|l|}
 			\hline
@@ -217,7 +221,7 @@
 
 
 \begin{frame}{Testing}
-	How can programmers be confident in their code's correctness?
+	How can programmers be confident in the correctness of their code?
 	\begin{itemize}
 		\item Unit tests
 		\begin{itemize}
@@ -320,8 +324,11 @@
 	% Say: checking for crashes/memory errors/etc in each one.
 	\begin{itemize}
 		\item On 1st execution, schedule threads arbitrarily until program ends.
+			\begin{itemize}
+				\item This represents one branch of the tree.
+			\end{itemize}
 		\item At end of each branch, rewind system and restart test.
-		\item Artificially add preemptions to test different thread interleavings.
+		\item Artificially add preemptions to produce different thread interleavings.
 		\item Intuitively: Generate many ``tabular execution traces''.
 	\end{itemize}
 	\pause
@@ -346,6 +353,9 @@
 	\begin{itemize}
 		\item If there are $n$ PPs and $k$ threads, state space size is $n^k$.
 		\item Need to choose the set of PPs very carefully for test to be effective.
+		\begin{itemize}
+			\item ``Effective'' = both comprehensive and feasible.
+		\end{itemize}
 	\end{itemize}
 \end{frame}
 
@@ -541,11 +551,14 @@
 		\item User: ``I have 16 CPUs and 24 hours to test my program.''
 	\end{itemize}
 	\linegap
-	{\em Stress testing offers this -- can we offer it too?}
+	{\em Stress testing allows user to choose total run time -- can we offer this too?}
 \end{frame}
 
-\begin{frame}{``Iterative Deepening'' of Preemption Points}
+\begin{frame}{Iterative Deepening of Preemption Points}
 	Goal: Run the best tests for a given CPU budget.
+	\begin{itemize}
+		\item Technique: ``Iterative Deepening''
+	\end{itemize}
 	\linegap
 
 	Based on experience from past 15-410 student volunteers
@@ -708,6 +721,7 @@
 	\begin{itemize}
 		\item Benefit: Landslide may help you find/fix bugs, improving your grade!
 		\item Risk: Landslide may find no bugs and be a waste of your time.
+		\item Benefit: You might learn something...
 	\end{itemize}
 	% Say: Accordingly, although I hope you will use landslide enough to get good results for me, you should also responsibly allocate time between testing with landslide versus actually implementing your P2.
 \end{frame}
