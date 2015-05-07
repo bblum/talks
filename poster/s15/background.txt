@@ -1,0 +1,97 @@
+title: Systematic Testing -- Background
+authors: Ben Blum, Jiri Simsa, Garth Gibson
+
+==== frame 1: What is Systematic Testing? ====
+
+*Stress Testing* relies on random thread switches to expose bugs.
+- Unbounded time until bugs are found
+- Preemption windows may be extremely small
+
+*Systematic Testing* [1] explores interleavings around given *preemption points*.
+- Exhaustively testing each interleaving possibility
+- Exponentially-sized state space
+
+[Figure 1 (just a code snippet)]
+
+int thread_fork() {
+    tcb_t *child = init_new_thread();
+    schedule(child);
+    // Preempting here causes use-after-free!
+    return child->tid;
+}
+
+[Figure 2 (two tables with code inside)]
+
+(Note: In figure 3, the bubbles for the different thread are coloured blue and
+orange. If possible, make the header cells of these tables (i.e., with "Parent
+thread" and "Child thread" have a filled-in background to match those
+colours.)
+
+          Benign interleaving
+ ----------------------------------
+|  Parent thread   | Child thread  |
+|------------------+---------------|
+| child = init()   |               |
+| schedule(child); |               |
+| child->tid;      |               |
+|         (preemption point)       |
+|                  | exit();       |
+|                  | free(my_tcb); |
+ ----------------------------------
+
+          Buggy interleaving
+ ----------------------------------
+|  Parent thread   | Child thread  |
+|------------------+---------------|
+| child = init()   |               |
+| schedule(child); |               |
+|         (preemption point)       |
+|                  | exit();       |
+|                  | free(my_tcb); |
+|         (preemption point)       |
+| child->tid;      |               |
+ ----------------------------------
+
+[Figure 3 (picture: poster-threadfork.svg)]
+
+==== frame 2: Coping with Exponential Explosion ====
+
+Dynamic Partial Order Reduction [2]
+- Identifies and skips "equivalent" interleavings.
+- Requires shared memory tracing and happens-before relation.
+
+[Figure 4: DPOR]
+
+State Space Estimation [3]
+- Estimation techniques guess number of interleavings in advance.
+- Estimate improves over time depending on shape of execution tree.
+
+[figure 5: estimation graphs]
+
+==== frame 3: Landslide ====
+
+Landslide [4], systematic testing tool implemented in Simics.
+- Simulated environment allows tracing all instructions/memory.
+- Controls thread scheduling by injecting timer ticks.
+- Uses checkpointing / reverse-execution to manage multiple executions.
+- Bug detection is false-negative-oriented
+  -- Definite checks for crashes, deadlock, use-after-free / heap corruption
+  -- Heuristic checks for infinite loops and data races
+
+[figure 6: Landslide]
+
+Landslide supports testing:
+- CMU 15-410 Pebbles kernel projects ("P3")
+  -- Requires manual annotation of internal kernel APIs.
+- CMU 15-410 thread libraries ("P2")
+  -- Instrumentation is fully automated.
+- Pintos kernel projects
+  -- Teaching OS used at Stanford, Berkeley, U. Chicago, etc.
+  -- Work in progress; looking to collaborate!
+
+==== frame 4: References ====
+
+[1] Patrice Godefroid. VeriSoft, CAV 1997.
+[2] Cormac Flanagan et al. DPOR. POPL 2005.
+[3] Jiri Simsa. Runtime Estimation, CMU PDL TR 12-113.
+[4] Ben Blum. Landslide, MS thesis, CMU CS TR 12-118.

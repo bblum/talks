@@ -1,0 +1,93 @@
+title: Systematic Testing Needs To Be More User-Friendly!
+authors: Ben Blum and Garth Gibson
+
+==== frame 1: What's Wrong with Preemption Points? ====
+
+State space size depends on preemption points (PPs) chosen in advance.
+- Too few PPs: poor coverage
+- Too many PPs: completion is infeasible
+- Can't know in advance whether resulting state space fits in CPU budget.
+
+Most related work [1,2] hard-codes a fixed set of PPs.
+
+Past Landslide experiments [3] let users turn PPs on/off.
+
+Goal: /Automatically/ find the best set of PPs for a given CPU budget.
+
+==== frame 3: Iterative Deepening ====
+
+*Iterative Deepening* of PPs
+- Explore a minimal state space, and add more PPs until time runs out.
+- Estimations decide whether to explore or defer each test.
+- Completion time is controlled
+  -- (at expense of predicting which PPs can be tested)
+
+[Figure 1: 4 images: tree0.svg, tree1.svg, tree2.svg, and tree3.svg.
+  Ideally arranged in a diamond, with arrows pointing
+  from 0 to 1, 0 to 2, 1 to 3, and 2 to 3.]
+
+Advantages:
+- User does not have to configure PP set; needs only supply a time limit.
+  -- Good for use by students and TAs!
+- Tests data races [4] as new PPs, avoiding false positives
+
+Limitations:
+- Repeats redundant work from smaller "subset" state spaces
+- Relies on imperfect estimation to guide search
+
+==== frame 4: Evaluation ====
+
+Experiment 1: Testing student thread libraries from CMU 15-410 (S'14)
+
+Setup
+- 18 randomly-chosen submissions; 4 test programs on each
+- Each test given CPU budget of 11 cores * 10 minutes.
+  -- 8000 CPU-minutes of testing in total
+- Compared iterative deepening to state-of-the-art "control"
+  -- Control: test just 1 state space with all PPs enabled
+  -- Of 33 total bug reports, "control" failed to find 10 (30%).
+
+Experiment 2: Giving Landslide to students for teaching/debugging (S'15)
+
+Setup
+- Solicited students during a guest lecture in 15-410
+- Landslide recorded info about each test (complete? bug?)
+- Students surveyed to interpret the bugs they found
+- 7 groups signed up to use Landslide during P2
+- 3 surveys were returned (How to encourage more?)
+- Planned to continue in future semesters
+
+[ Table - results (I can make this in LaTeX or a PDF or whatever if that'd be better)]
+----------------------------------------
+                      | Exp. 1 | Exp. 2
+----------------------------------------
+total tests run       | 72     | 63
+completions (no bug)  | 32     | 21
+bug reports           | 40     | 42
+*distinct* bugs       | 24     | 17
+deterministic bugs    |  7     |  4
+nondeterministic bugs | 17     | 13
+data race bugs        |  3     |  6
+----------------------------------------
+
+
+==== frame 5: Ongoing Work ====
+
+Support for instructional OSes from other schools
+
+Landslide can test Pintos kernels as well as Pebbles
+- Support for "threads" and "userprog" projects
+- Currently testing 13 submitted projects from U Chicago
+- Planning evaluation of 70+ submissions from Stanford
+
+*Use Pintos or another teaching OS? Let me know!* ((make sure this line stands out))
+- Have students volunteer submitted code
+- Plan to give Landslide to students in future semesters
+- Help design test program suite to expose common races
+
+==== frame 5: References ====
+
+[1] Jiri Simsa. dBug, SSV 2010.
+[2] Heming Cui et al. PARROT, SOSP 2013.
+[3] Ben Blum. Landslide, MS thesis, CMU CS TR 12-118.
+[4] Stefan Savage. Eraser, ACM TOCS 1997.
