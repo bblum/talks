@@ -1,1 +1,9 @@
-Add a survey question, "What do you think you learned from this?"
+Add to survey:
+	question, "What do you think you learned from this?"
+	question, "were there any false positive bug reports that waylaid you?"
+	field to write andrewids on each printed-out sheet
+
+Add a test case to correspond to the paradise lost example in lecture.
+
+Modify the lecture so that I can pose a question or two to the students.
+
