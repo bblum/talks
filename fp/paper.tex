@@ -20,7 +20,9 @@
 \usepackage{array}
 
 \title{{\bf Systematic Testing of Concurrent C0 with Landslide}}
-\author{Ben Blum \texttt{(bblum@cs.cmu.edu)} \and Garth Gibson \texttt{(garth@cs.cmu.edu)}}
+\author{Ben Blum \\ \texttt{bblum@cs.cmu.edu}
+	\and Frank Pfenning \\ \texttt{fp@cs.cmu.edu}
+	\and Garth Gibson \\ \texttt{garth@cs.cmu.edu}}
 
 \date{\today}
 
@@ -45,19 +47,45 @@
 \maketitle
 
 \begin{abstract}
-We have recently extended Landslide, our systematic testing platform originally for kernels, with some support for userspace testing. While the primary focus of this support is to test student thread library implementations, it can also test userspace apps built on top of those thread libraries. In this tech report we describe our experience using Landslide to test Concurrent C0, a type-safe instructional language with a concurrent message-passing implementation in its runtime libraries.
+We have recently extended Landslide, our systematic testing platform originally for kernels, with some support for userspace testing. While the primary focus of this support is to test student thread library implementations, it can also test userspace apps built on top of those thread libraries. In this tech report we describe our experience using Landslide to test Concurrent C0, a type-safe educational language with a concurrent message-passing implementation in its runtime libraries.
 \end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Background}
+
+We assume the reader will be familiar with the background in {\em systematic testing} \cite{verisoft}, the concurrency testing technique upon which Landslide is built.
+Examples of state-of-the-art systematic testing tools from prior work include dBug \cite{dbug-ssv,dbug-retreat,parrot}, CHESS \cite{chess}, MoDist \cite{modist}, and MaceMC \cite{macemc}.
+
+The primary state-space reduction technique for systematic testing is {\em dynamic partial order reduction} (DPOR) \cite{dpor}, various enhancements of which have been proposed in \cite{distributed-dpor,sdpor,parallel-dpor,bpor,optimal-dpor}.
+Alternative and/or orthogonal systematic testing techniques include {\em iterative context bounding} (ICB) \cite{chess}, {\em dynamic interface reduction} (DIR) \cite{demeter}, {\em deterministic multithreading} (DMT) \cite{peregrine,dthreads,kendo,parrot}, {\em data race detection} \cite{eraser,tsan} and {\em state space estimation} \cite{estimation}.
+We are presently developing {\em iterative deepening} (ID), a new orthogonal technique for automatically configuring subsets of preemption points (PPs) according to a fixed CPU budget, which has yet to be published.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 
-Landslide \cite{landslide} is
+Landslide \cite{landslide} is a systematic testing tool built with a focus on educational kernel architectures.
+It is built as a module for Wind River Simics \cite{simics}, and supports testing Pebbles kernel code \cite{kspec}, userspace thread library code running on top of Pebbles \cite{thrlib}, and any userspace programs built on top of those.
+Recently, we have also added support for testing Pintos kernels \cite{pintos} from schools such as Berkeley and U. Chicago; however in this paper we will focus on the Pebbles projects at CMU.
 
-C0 \cite{c0} is...
+C0 \cite{c0} is a C-like, type-safe educational programming language recently introduced for CMU's introductory CS curriculum.
+It has recently been extended to support concurrent programming using a message-passing implementation known as channels.
+These channels are defined by a {\tt choice}, a union-like protocol comprising multiple branches of possible message types, each with an expected payload and send/receive direction. Operations on these channels include sending and receiving, as well as forwarding, a way to join two channels of matching type together so messages automatically flow across them.
+
+These channels' definitions and usage are type-checked at compile-time, so no type-safety violations (i.e. crashes), or even deadlocks, are possible -- at least, assuming the runtime implementation is correct. It is this implementation which we seek to verify in this paper.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Techniques}
 
+The astute follower of our work will note that the advantages Landslide offers over the state-of-the-art seem ill-matched with the testing requirements of C0. The C0 runtime is a userspace program built on top of pthreads, so why jump through hoops to use a testing platform as heavyweight as Landslide, when tools like dBug exist that directly target the pthreads interface?
+
+We chose Landslide because of its data-race analysis and iterative-deepening framework.
+A type-safe concurrent language's runtime must necessarily contain some type-unsafe programming patterns, i.e., some manual sharing of state between threads outside the normal mutex/condvar primitives.
+Even if all concurrent memory accesses end up being adequately protected by those primitives, we require instruction-level memory introspection to verify that property.
+Landslide, which runs in a simulated environment and runs a data-race analysis on the fly, is ideal for this task, while the library-level interposition of dBug is too coarse-grained.
+After identifying data race candidates, the iterative-deepening framework aids to manage multiple explorations to test interleavings around those accesses.
+
+
+\subsection{Porting C0 to Pebbles}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Evaluation}
 
