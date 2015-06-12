@@ -1,0 +1,76 @@
+\documentclass{article}
+\usepackage{lmodern}
+\usepackage[charter]{mathdesign}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+
+\usepackage{caption,subcaption}
+\usepackage{fullpage}
+\usepackage{color}
+\usepackage{manfnt}
+\usepackage{wasysym}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{url}
+%\usepackage{ulem}
+\usepackage{marvosym}
+%\usepackage{skull}
+\usepackage{proof}
+\usepackage{wrapfig}
+\usepackage{array}
+
+\title{{\bf Systematic Testing of Concurrent C0 with Landslide}}
+\author{Ben Blum \texttt{(bblum@cs.cmu.edu)} \and Garth Gibson \texttt{(garth@cs.cmu.edu)}}
+
+\date{\today}
+
+\newcommand\noob{\mathsf{noob}}
+\newcommand\gibs{\mathsf{gibs}}
+\newcommand\dps{\mathsf{dps}}
+\newcommand\squig\rightsquigarrow
+\newcommand\Coloneqq{\mathrel{\mathop{::}}=}
+\newcommand\dmg{\text{\Laserbeam}}
+\newcommand\delter\delta
+\newcommand\alpher\alpha
+\newcommand\defnor{\text{ }|\text{ }}
+
+\newcommand\pimp{\mathop{\supset}}
+\newcommand\pand{\mathop{\wedge}}
+\newcommand\por{\mathop{\vee}}
+\newcommand\ptrue{\top}
+\newcommand\pfalse{\bot}
+
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We have recently extended Landslide, our systematic testing platform originally for kernels, with some support for userspace testing. While the primary focus of this support is to test student thread library implementations, it can also test userspace apps built on top of those thread libraries. In this tech report we describe our experience using Landslide to test Concurrent C0, a type-safe instructional language with a concurrent message-passing implementation in its runtime libraries.
+\end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+
+Landslide \cite{landslide} is
+
+C0 \cite{c0} is...
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Techniques}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Evaluation}
+
+evaluating stuff here
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusion}
+
+\bibliography{citations}{}
+\bibliographystyle{alpha}
+\end{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% vim: foldmethod=indent
