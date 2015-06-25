@@ -176,15 +176,46 @@ However, in Landslide we are taking a far simpler approach for now. We provide a
 
 \subsection{Test Case Design}
 
+As always, the feasibility of a systematic test depends not just on the set of preemption points, but by the length and branch factor of the input test program (``test case'') used to drive the execution.
+Even though we use Iterative Deepening, a new technique under development for automatically choosing feasible PPs, a test case's stress factor itself needs to be considered so that even a minimal state space can be within range for iterative deepening to expand upon.
+
+{\bf Configuring test parameters.}
+In C0, this is an especially sensitive issue, since many individual program statements involving channels can spawn a new thread, increasing not only the program length (in terms of number of concurrency events) but also the branch factor at the same time.
+We chose the three test programs {\tt odd\_even\_sort4.c1}, {\tt seg.c1}, and {\tt bitstring1.c1}, and configured (by manual trial-and-error and with the help of Landslide's state space estimator) input parameters that would produce appropriately-sized state spaces.
+The test case source code, including the parameters we settled on, are shown in Appendix~\ref{sec:codez}. For the case of {\tt bitstring1.c1}, we tested 3 separate configurations, with the values 1, 2, and 4 for {\tt COUNT}.
+We abbreviate these test case names as OES, seg, BS(1), BS(2), and BS(4) respectively..
+
+\newcommand\clis{\texttt{cs()}}
+\newcommand\clir{\texttt{cr()}}
+\newcommand\pros{\texttt{ps()}}
+\newcommand\pror{\texttt{pr()}}
+\newcommand\fwd{\texttt{fwd()}}
+\newcommand\all{\texttt{ALL}}
+{\bf Whitelisting functions.}
+Landslide provides a feature to ``focus'' preemption points on specific sub-modules using the commands {\tt within\_function} and {\tt without\_function} (described in \cite{landslide}).
+We found that, even limiting the stress factor of the above test cases to reasonable ``mid-range'' numbers, the state spaces could be too unwieldy, forcing us to fall back to minimal, often degenerate, parameters (i.e., making a bitstring incremet loop only go around 1 time would miss covering lots of program logic) if we wanted to achieve 100\% completion to verify the absence of bugs.
+However, we found that using Landslide's whitelist/blacklist commands to further limit PPs to subsets of C0's concurrency implementation produced easily manageable state spaces.
+This optimization allows us to more thoroughly verify each function alone, at the expense of more thorough testing of interleavings among 2 or more of each function.
+
+The C0 concurrency runtime features five functions of interest for concurrency testing. These are
+\texttt{client\_send\_msg()},
+\texttt{client\_recv\_msg()},
+\texttt{provider\_send\_msg()},
+\texttt{provider\_recv\_msg()},
+and
+\texttt{forward()}.
+We chose to run our evaluation with six possible test configurations; five where each of these functions is whitelisted alone in turn, which we'll abbreviate respectively as \clis, \clir, \pros, \pror, and \fwd; and one where all functions are whitelisted together, denoted \all.
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Evaluation}
 
-evaluating stuff here
-
-
+TODO
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusion}
+
+TODO
 
 \bibliography{citations}{}
 \bibliographystyle{alpha}
