@@ -172,7 +172,7 @@ The Eraser paper \cite{eraser} describes a heuristic for suppressing these DR re
 We think the best way of dealing with this problem is to incorporate a dataflow analysis, either static or dynamic, to track {\tt malloc}ed pointers and identify when they are first stored in a globally-visible location (i.e., not on the initializing thread's stack).
 However, in Landslide we are taking a far simpler approach for now. We provide an annotation, {\tt ignore\_dr\_function}, to identify regions of code following this initialization pattern.
 
-{\bf Free/Re-Malloc False Positives.} Figure~\ref{fig:drb} shows a similar pattern. Here, the variables each thread accesses are not even logically connected to the same data structure, and may not even be the same type. However, in the course of {\tt free}ing and {\tt malloc}ing memory, the same address is used in a later co-enabled thread transition. If the threads were reordered, {\tt malloc} would simply return a different heap chunk and the accesses would not collide. We fix these false positives as a special case by introducing a generation counter into our heap tracker module. Whenever a memory access is recorded for later data race analysis, the containing heap chunk's generation counter (if any) is stored as metadata, and later compared against the generation counters of other candidate accesses.
+{\bf Free/Re-Malloc False Positives.} Figure~\ref{fig:drb} shows a similar pattern. Here, the variables each thread accesses are not logically connected to the same data structure, and may not even be the same type. However, in the course of {\tt free}ing and {\tt malloc}ing memory, the same address is used in a later co-enabled thread transition. If the threads were reordered, {\tt malloc} would simply return a different heap chunk and the accesses would not collide. We fix these false positives as a special case by introducing a generation counter into our heap tracker module. Whenever a memory access is recorded for later data race analysis, the containing heap chunk's generation counter (if any) is stored as metadata, and later compared against the generation counters of other candidate accesses.
 
 \subsection{Test Case Design}
 
@@ -188,6 +188,371 @@ evaluating stuff here
 
 \bibliography{citations}{}
 \bibliographystyle{alpha}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\appendix
+\section{Test Case Source Code}
+\label{sec:codez}
+\subsection{odd-even-sort4.c1}
+\small
+
+\begin{tabular}{l}
+	\texttt{\hilight{darkcyan}{//test~return~0}} \\
+	\texttt{} \\
+	\texttt{\hilight{darkcyan}{/*~}} \\
+	\texttt{\hilight{darkcyan}{~*~A~version~of~odd-even~sort~where~only~the}} \\
+	\texttt{\hilight{darkcyan}{~*~'tail'~process~counts~down~to~0~(or~1).~~Processes}} \\
+	\texttt{\hilight{darkcyan}{~*~alternate~between~elemL~and~elemR~to~enhance}} \\
+	\texttt{\hilight{darkcyan}{~*~parallelism,~even~while~the~sorting~network}} \\
+	\texttt{\hilight{darkcyan}{~*~is~constructed.}} \\
+	\texttt{\hilight{darkcyan}{~*}} \\
+	\texttt{\hilight{darkcyan}{~*~This~version~tests~on~all~permutations~of~a~given~size.}} \\
+	\texttt{\hilight{darkcyan}{~*/}} \\
+	\texttt{} \\
+	\texttt{\hilight{violet}{\#use~<conio>}} \\
+	\texttt{} \\
+	\texttt{\hilight{brown}{choice}~\hilight{olivegreen}{list}~\{} \\
+	\texttt{~~<>~~~~~~~~~~~~~~~~~~~\hilight{brickred}{Nil};} \\
+	\texttt{~~<!\hilight{olivegreen}{int};~!\hilight{brown}{choice}~\hilight{olivegreen}{list}>~\hilight{brickred}{Cons};} \\
+	\texttt{\};} \\
+	\texttt{\hilight{olivegreen}{typedef}~<!\hilight{brown}{choice}~\hilight{olivegreen}{list}>~\hilight{olivegreen}{list};} \\
+	\texttt{} \\
+	\texttt{\hilight{olivegreen}{list}~\$c~nil()~\{} \\
+	\texttt{~~\$c.\hilight{brickred}{Nil};} \\
+	\texttt{~~\hilight{blue}{close}(\$c);} \\
+	\texttt{\}} \\
+	\texttt{} \\
+	\texttt{\hilight{olivegreen}{list}~\$c~cons(\hilight{olivegreen}{int}~n,~\hilight{olivegreen}{list}~\$d)~\{} \\
+	\texttt{~~\$c.\hilight{brickred}{Cons};} \\
+	\texttt{~~\hilight{blue}{send}(\$c,~n);} \\
+	\texttt{~~\$c~=~\$d;} \\
+	\texttt{\}} \\
+	\texttt{} \\
+	\texttt{\hilight{brown}{choice}~cell~\{} \\
+	\texttt{~~<!\hilight{olivegreen}{int};~?\hilight{brown}{choice}~cell\_response>~SomeR;} \\
+	\texttt{~~<!\hilight{brown}{choice}~cell>~~~~~~~~~~~~~~~~Tail;} \\
+	\texttt{~~<!\hilight{olivegreen}{list};~>~~~~~~~~~~~~~~~~~~~~~DoneR;} \\
+	\texttt{\};} \\
+	\texttt{\hilight{brown}{choice}~cell\_response~\{} \\
+	\texttt{~~<?\hilight{olivegreen}{int};~!\hilight{brown}{choice}~cell>~~SomeL;} \\
+	\texttt{~~<!\hilight{brown}{choice}~cell>~~~~~~~~Head;} \\
+	\texttt{\};} \\
+	\texttt{\hilight{olivegreen}{typedef}~<!\hilight{brown}{choice}~cell>~cell;} \\
+	\texttt{\hilight{olivegreen}{typedef}~<?\hilight{brown}{choice}~cell\_response>~cell\_response;} \\
+	\texttt{} \\
+	\texttt{cell~\$c~~~~~elemL(\hilight{olivegreen}{int}~m,~cell~\$d);} \\
+	\texttt{cell~\$c~~~~~elemR(\hilight{olivegreen}{int}~m,~cell~\$d);} \\
+	\texttt{<!\hilight{olivegreen}{list};>~\$c~head(cell~\$d);} \\
+	\texttt{cell~\$c~~~~~tail(\hilight{olivegreen}{int}~i);} \\
+	\texttt{} \\
+	\texttt{cell~\$c~elemL(\hilight{olivegreen}{int}~m,~cell~\$d)~\{} \\
+	\texttt{~~~~\hilight{brown}{switch}(\$d)~\{} \\
+	\texttt{~~~~~~\hilight{brown}{case}~SomeR:} \\
+	\texttt{~~~~~~~~\hilight{olivegreen}{int}~n~=~\hilight{blue}{recv}(\$d);} \\
+	\texttt{~~~~~~~~\$d.SomeL;} \\
+	\texttt{~~~~~~~~\hilight{blue}{send}(\$d,~m);} \\
+\end{tabular}
+\begin{tabular}{l}
+	\texttt{~~~~~~~~\hilight{brown}{if}~(m~>~n)} \\
+	\texttt{~~~~~~~~~~\$c~=~elemR(n,~\$d);} \\
+	\texttt{~~~~~~~~else} \\
+	\texttt{~~~~~~~~~~\$c~=~elemR(m,~\$d);} \\
+	\texttt{~~~~~~\hilight{brown}{case}~Tail:} \\
+	\texttt{~~~~~~~~\$c~=~elemR(m,~\$d);} \\
+	\texttt{~~~~~~\hilight{brown}{case}~DoneR:} \\
+	\texttt{~~~~~~~~\hilight{olivegreen}{list}~\$l~=~\hilight{blue}{recv}(\$d);} \\
+	\texttt{~~~~~~~~\hilight{blue}{wait}(\$d);} \\
+	\texttt{~~~~~~~~\$c.DoneR;} \\
+	\texttt{~~~~~~~~\hilight{olivegreen}{list}~\$k~=~cons(m,~\$l);} \\
+	\texttt{~~~~~~~~\hilight{blue}{send}(\$c,~\$k);} \\
+	\texttt{~~~~~~~~\hilight{blue}{close}(\$c);} \\
+	\texttt{~~~~\}} \\
+	\texttt{\}} \\
+	\texttt{cell~\$c~elemR(\hilight{olivegreen}{int}~m,~cell~\$d)~\{} \\
+	\texttt{~~\$c.SomeR;} \\
+	\texttt{~~\hilight{blue}{send}(\$c,~m);} \\
+	\texttt{~~\hilight{brown}{switch}~(\$c)~\{} \\
+	\texttt{~~~~\hilight{brown}{case}~SomeL:} \\
+	\texttt{~~~~~~\hilight{olivegreen}{int}~n~=~\hilight{blue}{recv}(\$c);} \\
+	\texttt{~~~~~~\hilight{brown}{if}~(n~>~m)} \\
+	\texttt{~~~~~~~~\$c~=~elemL(n,~\$d);} \\
+	\texttt{~~~~~~else} \\
+	\texttt{~~~~~~~~\$c~=~elemL(m,~\$d);} \\
+	\texttt{~~~~\hilight{brown}{case}~Head:} \\
+	\texttt{~~~~~~\$c~=~elemL(m,~\$d);} \\
+	\texttt{~~\}} \\
+	\texttt{\}} \\
+	\texttt{} \\
+	\texttt{<!\hilight{olivegreen}{list};>~\$c~head(cell~\$d)~\{} \\
+	\texttt{~~\hilight{brown}{switch}~(\$d)~\{} \\
+	\texttt{~~~~\hilight{brown}{case}~SomeR:} \\
+	\texttt{~~~~~~\hilight{olivegreen}{int}~n~=~\hilight{blue}{recv}(\$d);} \\
+	\texttt{~~~~~~\$d.Head;} \\
+	\texttt{~~~~~~\$c~=~head(\$d);} \\
+	\texttt{~~~~\hilight{brown}{case}~Tail:} \\
+	\texttt{~~~~~~\$c~=~head(\$d);} \\
+	\texttt{~~~~\hilight{brown}{case}~DoneR:} \\
+	\texttt{~~~~~~\$c~=~\$d;} \\
+	\texttt{~~\}} \\
+	\texttt{\}} \\
+	\texttt{} \\
+	\texttt{cell~\$c~tail(\hilight{olivegreen}{int}~i)~\{} \\
+	\texttt{~~\hilight{brown}{if}~(i~>~1)~\{} \\
+	\texttt{~~~~\$c.Tail;} \\
+	\texttt{~~~~\$c~=~tail(i-2);} \\
+	\texttt{~~\}~else~\{~\hilight{darkcyan}{/*~i~==~0~or~1~*/}} \\
+	\texttt{~~~~\$c.DoneR;} \\
+	\texttt{~~~~\hilight{olivegreen}{list}~\$l~=~nil();} \\
+	\texttt{~~~~\hilight{blue}{send}(\$c,~\$l);} \\
+	\texttt{~~~~\hilight{blue}{close}(\$c);} \\
+	\texttt{~~\}} \\
+	\texttt{\}} \\
+	%\texttt{} \\
+\end{tabular}
+
+\begin{tabular}{l}
+	\texttt{\hilight{olivegreen}{void}~sort(\hilight{olivegreen}{int}[]~A,~\hilight{olivegreen}{int}[]~B,~\hilight{olivegreen}{int}~n)} \\
+	\texttt{\hilight{darkcyan}{//@requires~0~<=~n~\&\&~n~<=~length(A);}} \\
+	\texttt{\hilight{darkcyan}{//@requires~0~<=~n~\&\&~n~<=~length(B);}} \\
+	\texttt{\{} \\
+	\texttt{~~cell~\$c~=~tail(n);} \\
+	\texttt{~~\hilight{olivegreen}{int}~i;} \\
+	\texttt{~~\hilight{brown}{for}~(i~=~0;~i~<~n-1;~i~=~i+2)~\{} \\
+	\texttt{~~~~\hilight{darkcyan}{/*~alternating~L~and~R~enhances~parallelism~*/}} \\
+	\texttt{~~~~\$c~=~elemL(A[i],~\$c);} \\
+	\texttt{~~~~\$c~=~elemR(A[i+1],~\$c);} \\
+	\texttt{~~\}} \\
+	\texttt{~~\hilight{brown}{if}~(i~<~n)~\$c~=~elemL(A[i],~\$c);} \\
+	\texttt{~~<!\hilight{olivegreen}{list};>~\$d~=~head(\$c);} \\
+	\texttt{~~\hilight{olivegreen}{list}~\$l~=~\hilight{blue}{recv}(\$d);} \\
+	\texttt{~~\hilight{blue}{wait}(\$d);} \\
+	\texttt{~~\hilight{brown}{for}~(i~=~0;~i~<~n;~i~=~i+1)~\{} \\
+	\texttt{~~~~\hilight{brown}{switch}(\$l)~\{} \\
+	\texttt{~~~~~~\hilight{brown}{case}~\hilight{brickred}{Nil}:~\hilight{red}{error}(\hilight{brickred}{"impossible!(8)"});} \\
+	\texttt{~~~~~~\hilight{brown}{case}~\hilight{brickred}{Cons}:} \\
+	\texttt{~~~~~~~~B[i]~=~\hilight{blue}{recv}(\$l);} \\
+	\texttt{~~~~~~~~break;} \\
+	\texttt{~~~~\}} \\
+	\texttt{~~\}} \\
+	\texttt{~~\hilight{brown}{switch}(\$l)~\{} \\
+	\texttt{~~~~\hilight{brown}{case}~\hilight{brickred}{Nil}:~\hilight{blue}{wait}(\$l);~break;} \\
+	\texttt{~~~~\hilight{brown}{case}~\hilight{brickred}{Cons}:~\hilight{red}{error}(\hilight{brickred}{"impossible!(9)"});} \\
+	\texttt{~~\}} \\
+	\texttt{~~return;} \\
+	\texttt{\}} \\
+	\texttt{\hilight{olivegreen}{void}~print\_array(\hilight{olivegreen}{int}[]~A,~\hilight{olivegreen}{int}~n)} \\
+	\texttt{\hilight{darkcyan}{//@requires~0~<=~n~\&\&~n~<=~length(A);}} \\
+	\texttt{\{} \\
+	\texttt{~~\hilight{brown}{for}~(\hilight{olivegreen}{int}~i~=~0;~i~<~n;~i++)~\{} \\
+	\texttt{~~~~printint(A[i]);~print(\hilight{brickred}{"~"});} \\
+	\texttt{~~\}} \\
+	\texttt{~~print(\hilight{brickred}{"n"});} \\
+	\texttt{\}} \\
+	\texttt{} \\
+	\texttt{\hilight{olivegreen}{bool}~is\_sorted(\hilight{olivegreen}{int}[]~A,~\hilight{olivegreen}{int}~n)} \\
+	\texttt{\hilight{darkcyan}{//@requires~0~<=~n~\&\&~n~<=~length(A);}} \\
+	\texttt{\{} \\
+	\texttt{~~\hilight{brown}{for}~(\hilight{olivegreen}{int}~i~=~0;~i~<~n-1;~i++)} \\
+	\texttt{~~~~\hilight{brown}{if}~(A[i]~>~A[i+1])~return~false;} \\
+	\texttt{~~return~true;} \\
+	\texttt{\}} \\
+	\texttt{} \\
+	\texttt{\hilight{olivegreen}{void}~swap(\hilight{olivegreen}{int}[]~A,~\hilight{olivegreen}{int}~i,~\hilight{olivegreen}{int}~j)} \\
+	\texttt{\hilight{darkcyan}{//@requires~0~<=~i~\&\&~i~<=~length(A);}} \\
+	\texttt{\hilight{darkcyan}{//@requires~0~<=~j~\&\&~j~<=~length(A);}} \\
+	\texttt{\{} \\
+	\texttt{~~\hilight{olivegreen}{int}~tmp~=~A[i];} \\
+	\texttt{~~A[i]~=~A[j];} \\
+	\texttt{~~A[j]~=~tmp;} \\
+	\texttt{~~return;} \\
+	\texttt{\}} \\
+	%\texttt{} \\
+\end{tabular}
+\begin{tabular}{l}
+	\texttt{\hilight{darkcyan}{/*~enumerate~all~permutations,}} \\
+	\texttt{\hilight{darkcyan}{~*~based~on~Heap's~algorithm~*/}} \\
+	\texttt{\hilight{olivegreen}{void}~permute\_and\_sort(\hilight{olivegreen}{int}[]~A,~\hilight{olivegreen}{int}[]~B,} \\
+	\texttt{~~~~~~~~~~~~~~~~~~~~~~~\hilight{olivegreen}{int}~n,~\hilight{olivegreen}{int}~k)} \\
+	\texttt{\hilight{darkcyan}{//@requires~0~<=~n~\&\&~n~<=~length(A);}} \\
+	\texttt{\hilight{darkcyan}{//@requires~0~<=~n~\&\&~n~<=~length(B);}} \\
+	\texttt{\hilight{darkcyan}{//@requires~0~<=~k~\&\&~k~<~n;}} \\
+	\texttt{~\{} \\
+	\texttt{~~\hilight{brown}{if}~(k~==~0)~\{} \\
+	\texttt{~~~~\hilight{darkcyan}{//~print\_array(A,~n);}} \\
+	\texttt{~~~~sort(A,~B,~n);} \\
+	\texttt{~~~~\hilight{darkcyan}{//~print\_array(B,~n);}} \\
+	\texttt{~~~~\hilight{darkcyan}{//~print(\hilight{brickred}{"-----------n"});}} \\
+	\texttt{~~~~print(\hilight{brickred}{"."});~flush();} \\
+	\texttt{~~~~\hilight{red}{assert}(is\_sorted(B,~n));} \\
+	\texttt{~~\}~else~\{} \\
+	\texttt{~~~~\hilight{brown}{for}~(\hilight{olivegreen}{int}~i~=~0;~i~<=~k;~i++)~\{} \\
+	\texttt{~~~~~~permute\_and\_sort(A,~B,~n,~k-1);} \\
+	\texttt{~~~~~~swap(A,~k\%2==0?0:i,~k);} \\
+	\texttt{~~~~\}} \\
+	\texttt{~~\}} \\
+	\texttt{\}} \\
+	\texttt{\hilight{olivegreen}{int}~main()~\{} \\
+	\texttt{~~\hilight{olivegreen}{int}[]~A~=~alloc\_array(\hilight{olivegreen}{int},~6);} \\
+	\texttt{~~\hilight{olivegreen}{int}[]~A\_out~=~alloc\_array(\hilight{olivegreen}{int},~6);} \\
+	\texttt{} \\
+	\texttt{~~\hilight{darkcyan}{//\hilight{darkcyan}{/*~6~elements~*/}}} \\
+	\texttt{~~\hilight{darkcyan}{//\hilight{brown}{for}~(\hilight{olivegreen}{int}~i~=~0;~i~<~6;~i++)~A[i]~=~i;}} \\
+	\texttt{~~\hilight{darkcyan}{//print(\hilight{brickred}{"Testing~all~permutations~of~6~elements"});}} \\
+	\texttt{~~\hilight{darkcyan}{//permute\_and\_sort(A,~A\_out,~6,~5);}} \\
+	\texttt{~~\hilight{darkcyan}{//print(\hilight{brickred}{"n"});}} \\
+	\texttt{} \\
+	\texttt{~~\hilight{darkcyan}{/*~1~element~*/}} \\
+	\texttt{~~print(\hilight{brickred}{"Testing~all~permutations~of~1~element"});} \\
+	\texttt{~~A[0]~=~0;} \\
+	\texttt{~~permute\_and\_sort(A,~A\_out,~1,~0);} \\
+	\texttt{~~print(\hilight{brickred}{"n"});} \\
+	\texttt{} \\
+	\texttt{~~return~0;} \\
+	\texttt{\}} \\
+\end{tabular}
+
+\subsection{seg.c1}
+\small
+
+\begin{tabular}{l}
+	\texttt{\hilight{darkcyan}{//test~return~2}} \\
+	\texttt{} \\
+	\texttt{\hilight{brown}{choice}~\hilight{olivegreen}{list}~\{} \\
+	\texttt{~~<>~~~~~~~~~~~~~~~~~~~\hilight{brickred}{Nil};} \\
+	\texttt{~~<!\hilight{olivegreen}{int};~!\hilight{brown}{choice}~\hilight{olivegreen}{list}>~\hilight{brickred}{Cons};} \\
+	\texttt{\};} \\
+	\texttt{\hilight{brown}{typedef}~<!\hilight{brown}{choice}~\hilight{olivegreen}{list}>~\hilight{olivegreen}{list};} \\
+	\texttt{} \\
+	\texttt{\hilight{olivegreen}{list}~\$c~nil()~\{} \\
+	\texttt{~~\$c.\hilight{brickred}{Nil};} \\
+	\texttt{~~\hilight{blue}{close}(\$c);} \\
+	\texttt{\}} \\
+	\texttt{} \\
+	\texttt{\hilight{olivegreen}{list}~\$c~cons(\hilight{olivegreen}{int}~x,~\hilight{olivegreen}{list}~\$d)~\{~~~~~~~~~~~~~~~~} \\
+	\texttt{~~\$c.\hilight{brickred}{Cons};} \\
+	\texttt{~~\hilight{blue}{send}(\$c,~x);} \\
+	\texttt{~~\$c~=~\$d;} \\
+	\texttt{\}} \\
+	\texttt{} \\
+	\texttt{\hilight{brown}{typedef}~<?\hilight{olivegreen}{list};~\hilight{olivegreen}{list}>~seg;} \\
+	\texttt{} \\
+	\texttt{seg~\$c~empty()~\{} \\
+	\texttt{~~\hilight{olivegreen}{list}~\$tail~=~\hilight{blue}{recv}(\$c);} \\
+	\texttt{~~\$c~=~\$tail;} \\
+	\texttt{\}} \\
+	\texttt{} \\
+	\texttt{seg~\$c~concat(seg~\$d,~seg~\$e)~\{} \\
+	\texttt{~~\hilight{olivegreen}{list}~\$tail~=~\hilight{blue}{recv}(\$c);} \\
+	\texttt{~~\hilight{blue}{send}(\$e,~\$tail);} \\
+	\texttt{~~\hilight{blue}{send}(\$d,~\$e);} \\
+	\texttt{~~\$c~=~\$d;~} \\
+	\texttt{\}} \\
+	\texttt{} \\
+	\texttt{seg~\$c~prepend(\hilight{olivegreen}{int}~x,~seg~\$e)~\{} \\
+	\texttt{~~\hilight{olivegreen}{list}~\$tail~=~\hilight{blue}{recv}(\$c);} \\
+	\texttt{~~\hilight{blue}{send}(\$e,~\$tail);} \\
+	\texttt{~~\$c~=~cons(x,~\$e);} \\
+	\texttt{\}} \\
+	\texttt{} \\
+	\texttt{seg~\$c~append(seg~\$d,~\hilight{olivegreen}{int}~x)~\{} \\
+	\texttt{~~\hilight{olivegreen}{list}~\$tail~=~\hilight{blue}{recv}(\$c);} \\
+	\texttt{~~\hilight{olivegreen}{list}~\$e~=~cons(x,~\$tail);} \\
+	\texttt{~~\hilight{blue}{send}(\$d,~\$e);} \\
+	\texttt{~~\$c~=~\$d;~} \\
+	\texttt{\}} \\
+	%\texttt{} \\
+\end{tabular}
+\begin{tabular}{l}
+	\texttt{\hilight{olivegreen}{int}~read\_elements(seg~\$d)~\{} \\
+	\texttt{~~\hilight{olivegreen}{list}~\$nil~=~nil();} \\
+	\texttt{~~\hilight{blue}{send}(\$d,~\$nil);} \\
+	\texttt{~~\hilight{olivegreen}{int}~n~=~0;} \\
+	\texttt{~~while~(true)~\{} \\
+	\texttt{~~~~\hilight{brown}{switch}~(\$d)~\{} \\
+	\texttt{~~~~~~\hilight{brown}{case}~\hilight{brickred}{Nil}:~\hilight{blue}{wait}(\$d);~return~n;} \\
+	\texttt{~~~~~~\hilight{brown}{case}~\hilight{brickred}{Cons}:} \\
+	\texttt{~~~~~~~~\hilight{olivegreen}{int}~d~=~\hilight{blue}{recv}(\$d);} \\
+	\texttt{~~~~~~~~n~=~10*n+d;} \\
+	\texttt{~~~~~~~~break;} \\
+	\texttt{~~~~\}~~~} \\
+	\texttt{~~\}} \\
+	\texttt{~~\hilight{red}{error}(\hilight{brickred}{"exited~infinite~loop"});} \\
+	\texttt{\}} \\
+	\texttt{} \\
+	\texttt{\hilight{olivegreen}{int}~main()~\{} \\
+	\texttt{~~seg~\$d1~=~empty();} \\
+	\texttt{~~seg~\$d2~=~append(\$d1,~2);} \\
+	\texttt{~~\hilight{olivegreen}{int}~n~=~read\_elements(\$d2);} \\
+	\texttt{~~\hilight{red}{assert}(n~==~2);} \\
+	\texttt{~~return~n;} \\
+	\texttt{\}} \\
+\end{tabular}
+
+\pagebreak
+\subsection{bitstring1.c1}
+
+\small
+
+\begin{tabular}{l}
+	\texttt{\hilight{darkcyan}{//test~return~COUNT}} \\
+	\texttt{} \\
+	\texttt{\hilight{violet}{\#use~<conio>}} \\
+	\texttt{} \\
+	\texttt{\hilight{brown}{typedef}~<?\hilight{brown}{choice}~bits>~bits;} \\
+	\texttt{\hilight{brown}{choice}~bits~\{} \\
+	\texttt{~~<bits>~~~~~~Inc;} \\
+	\texttt{~~<!\hilight{olivegreen}{int};~bits>~Val;} \\
+	\texttt{~~<>~~~~~~~~~~Dealloc;} \\
+	\texttt{\};} \\
+	\texttt{} \\
+	\texttt{bits~\$lower~bit(\hilight{olivegreen}{bool}~b,~bits~\$higher)~\{} \\
+	\texttt{~~\hilight{brown}{switch}~(\$lower)~\{} \\
+	\texttt{~~~~\hilight{brown}{case}~Inc:} \\
+	\texttt{~~~~~~\hilight{brown}{if}~(!b)~\{} \\
+	\texttt{~~~~~~~~\$lower~=~bit(true,~\$higher);} \\
+	\texttt{~~~~~~\}~else~\{} \\
+	\texttt{~~~~~~~~\$higher.Inc;} \\
+	\texttt{~~~~~~~~\$lower~=~bit(false,~\$higher);} \\
+	\texttt{~~~~~~\}~~~} \\
+	\texttt{~~~~\hilight{brown}{case}~Val:} \\
+	\texttt{~~~~~~\$higher.Val;} \\
+	\texttt{~~~~~~\hilight{olivegreen}{int}~n~=~\hilight{blue}{recv}(\$higher);} \\
+	\texttt{~~~~~~\hilight{blue}{send}(\$lower,~2*n+(b?1:0));} \\
+	\texttt{~~~~~~\$lower~=~bit(b,~\$higher);} \\
+	\texttt{~~~~\hilight{brown}{case}~Dealloc:} \\
+	\texttt{~~~~~~\$higher.Dealloc;} \\
+	\texttt{~~~~~~\hilight{blue}{wait}(\$higher);} \\
+	\texttt{~~~~~~\hilight{blue}{close}(\$lower);} \\
+	\texttt{~~\}} \\
+	\texttt{\}} \\
+	\texttt{} \\
+	\texttt{bits~\$lower~eps()~\{} \\
+	\texttt{~~\hilight{brown}{switch}~(\$lower)~\{} \\
+	\texttt{~~~~\hilight{brown}{case}~Inc:} \\
+	\texttt{~~~~~~bits~\$zero~=~eps();} \\
+	\texttt{~~~~~~bits~\$one~=~bit(true,~\$zero);} \\
+	\texttt{~~~~~~\$lower~=~\$one;} \\
+	\texttt{~~~~\hilight{brown}{case}~Val:} \\
+	\texttt{~~~~~~\hilight{blue}{send}(\$lower,~0);~} \\
+	\texttt{~~~~~~\$lower~=~eps();} \\
+	\texttt{~~~~\hilight{brown}{case}~Dealloc:} \\
+	\texttt{~~~~~~\hilight{blue}{close}(\$lower);} \\
+	\texttt{~~\}} \\
+	\texttt{\}} \\
+	\texttt{} \\
+	\texttt{\hilight{olivegreen}{int}~main()~\{} \\
+	\texttt{~~bits~\$c~=~eps();} \\
+	\texttt{~~\hilight{brown}{for}~(\hilight{olivegreen}{int}~i~=~0;~i~<~COUNT;~i++)~\{} \\
+	\texttt{~~~~\$c.Inc;} \\
+	\texttt{~~\}~} \\
+	\texttt{~~\$c.Val;} \\
+	\texttt{~~\hilight{olivegreen}{int}~n~=~\hilight{blue}{recv}(\$c);} \\
+	\texttt{~~\$c.Dealloc;~\hilight{blue}{wait}(\$c);} \\
+	\texttt{~~\hilight{red}{assert}(n~==~COUNT);~} \\
+	\texttt{~~return~n;} \\
+	\texttt{\}} \\
+\end{tabular}
+
 \end{document}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
