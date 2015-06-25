@@ -65,7 +65,7 @@ We are presently developing {\em iterative deepening} (ID), a new orthogonal tec
 
 Landslide \cite{landslide} is a systematic testing tool built with a focus on educational kernel architectures.
 It is built as a module for Wind River Simics \cite{simics}, and supports testing Pebbles kernel code \cite{kspec}, userspace thread library code running on top of Pebbles \cite{thrlib}, and any userspace programs built on top of those.
-Recently, we have also added support for testing Pintos kernels \cite{pintos} from schools such as Berkeley and U. Chicago; however in this paper we will focus on the Pebbles projects at CMU.
+Recently, we have also added support for testing Pintos kernels \cite{pintos} from schools such as Berkeley and U. Chicago; however in this project focused on the better-supported Pebbles environment.
 
 C0 \cite{c0} is a C-like, type-safe educational programming language recently introduced for CMU's introductory CS curriculum.
 It has recently been extended to support concurrent programming using a message-passing implementation known as channels.
@@ -86,6 +86,96 @@ After identifying data race candidates, the iterative-deepening framework aids t
 
 
 \subsection{Porting C0 to Pebbles}
+
+Because the C0 concurrency runtime is implemented on top of the pthread interface, which Pebbles thread libraries, adapting it to run on top of a Pebbles kernel was a small task. The only missing functionality we needed to add was a {\tt thr\_detach()} implementation, requiring only about 10 lines of code. Apart from that, we stubbed out C0's file I/O and ncurses routines, as Pebbles does not provide system calls for those services.
+The ported C0 libraries can be found at \url{https://github.com/bblum/landslide/tree/fp/pebsim/p2-basecode/user}.
+
+\subsection{Improving Data Race Detection}
+
+\definecolor{grey}{RGB}{127,127,127}
+\definecolor{darkcyan}{RGB}{0,127,127}
+\definecolor{olivegreen}{RGB}{0,127,0}
+\definecolor{violet}{RGB}{127,0,127}
+\definecolor{brickred}{RGB}{127,0,0}
+\definecolor{brown}{RGB}{127,63,0}
+\definecolor{orange}{RGB}{192,96,0}
+\newcommand\hilight[2]{\color{#1}#2\color{black}}
+
+\begin{figure}[h]
+	\begin{subfigure}[b]{0.55\textwidth}
+		\begin{center}
+		\begin{tabular}{l|l}
+			Thread 1 & Thread 2 \\
+			\hline
+			\begin{tabular}{l}
+			\texttt{temp~=~malloc(...);} \\
+			\texttt{\hilight{brickred}{temp->foo~=~bar;}} \\
+			\\
+			\texttt{mutex\_lock(...);} \\
+			\texttt{\hilight{olivegreen}{global\_x~=~temp;}} \\
+			\texttt{mutex\_unlock(...);} \\
+			\end{tabular}
+			& \\ &
+			\begin{tabular}{l}
+			\texttt{mutex\_lock(...);} \\
+			\texttt{\hilight{olivegreen}{temp~=~global\_x;}} \\
+			\texttt{mutex\_unlock(...);} \\
+			\\
+			\texttt{\hilight{brickred}{access(temp->foo);}} \\
+			\end{tabular}
+		\end{tabular}
+		\end{center}
+		\caption{Initialization false positive.}
+		\label{fig:dra}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.40\textwidth}
+		\begin{center}
+		\begin{tabular}{l|l}
+			Thread 1 & Thread 2 \\
+			\hline
+			\\
+			\begin{tabular}{l}
+			\texttt{\hilight{brickred}{access(y->foo);}} \\
+			\texttt{\hilight{olivegreen}{free(y);}} \\
+			\end{tabular}
+			& \\ &
+			\begin{tabular}{l}
+			{\em // malloc reuses y's} \\
+			{\em // old address for z} \\
+			\texttt{\hilight{olivegreen}{z~=~malloc(...);}} \\
+			\texttt{\hilight{brickred}{z->foo~=~quux;}} \\
+			\\
+			\end{tabular}
+		\end{tabular}
+		\\
+		\end{center}
+		\caption{Free/re-malloc false positive.}
+		\label{fig:drb}
+	\end{subfigure}
+	\caption{Example code patterns that produce false positive data race reports. In both cases, the accesses to the {\tt foo} field appear concurrent because the threads' transitions can be reordered, but in such a case, the value of the pointer dereferenced would change.}
+	\label{fig:dr}
+\end{figure}
+
+In the course of making sure the new Landslide instrumentation worked correctly, we found two old problems with the data race (DR) detector that were exposed in testing C0 programs.
+Both cases follow a "message sending" pattern, where while both threads are co-enabled, reordering the threads would cause them to access separate memory locations entirely.
+This is because, although there is no concrete happens-before relation (from DPOR's perspective), a secondary pair of accesses elsewhere creates causality between the two primary accesses.
+The two patterns are shown in Figure~\ref{fig:dr}, the primary access pair (the one falsely flagged as a DR) is coloured in \hilight{brickred}{red}, and the secondary pair is coloured in \hilight{olivegreen}{green}.
+
+Originally, we thought we could suppress these false positives by classifying DR candidates as ``suspected'' or ``confirmed'', depending on whether we've observed them reordered. A DR being ``confirmed'' would indicate that the racy accesses truly can be interleaved at instruction granularity.
+However, because Landslide's testing model involves allowing threads to run several shared memory accesses before being preempted, some suspected DRs may truly be bugs, yet impossible to confirm (i.e. reorder) without more fine-grained PPs.
+In a systematic testing model where threads are preempted between all shared memory accesses, this suspected/confirmed method would work for soundly eliminating false positives.
+Of course, part of Landslide's philosophy is to test state spaces without all PPs enabled, and the whole point of integrating DR detection with systematic testing is the figure out which subsets of memory accesses to preempt on to begin with. Hence the need for heuristically eliminating these false positives.
+
+{\bf Initialization False Positives.} As shown in Figure~\ref{fig:dra}, one thread may locklessly initialize the fields of a shared data structure immediately after {\tt malloc}ing it, before publishing it to be visible to other threads. The second thread then accesses the global pointer under a lock, but then ``takes ownership'' of the pointed-to struct (e.g., by popping it off a linked list) and so does not need a lock during the dereference. If the threads were reordered, the locked access to the global pointer would return either {\tt NULL} or a different pointer instead.
+
+The Eraser paper \cite{eraser} describes a heuristic for suppressing these DR reports by waiting until the memory is accessed by 2 threads, but this introduces the possibility of false negatives.
+We think the best way of dealing with this problem is to incorporate a dataflow analysis, either static or dynamic, to track {\tt malloc}ed pointers and identify when they are first stored in a globally-visible location (i.e., not on the initializing thread's stack).
+However, in Landslide we are taking a far simpler approach for now. We provide an annotation, {\tt ignore\_dr\_function}, to identify regions of code following this initialization pattern.
+
+{\bf Free/Re-Malloc False Positives.} Figure~\ref{fig:drb} shows a similar pattern. Here, the variables each thread accesses are not even logically connected to the same data structure, and may not even be the same type. However, in the course of {\tt free}ing and {\tt malloc}ing memory, the same address is used in a later co-enabled thread transition. If the threads were reordered, {\tt malloc} would simply return a different heap chunk and the accesses would not collide. We fix these false positives as a special case by introducing a generation counter into our heap tracker module. Whenever a memory access is recorded for later data race analysis, the containing heap chunk's generation counter (if any) is stored as metadata, and later compared against the generation counters of other candidate accesses.
+
+\subsection{Test Case Design}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Evaluation}
 
