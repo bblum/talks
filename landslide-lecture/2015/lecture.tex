@@ -22,7 +22,7 @@
 \author[Ben Blum]{Ben Blum \texttt{(bblum@andrew.cmu.edu)}}
 
 \institute[CMU 15-410]{Carnegie Mellon University - 15-410}
-\date[]{2015, February 11}
+\date[]{2015, September 30}
 
 \setbeamertemplate{footline}{\hspace*{.5cm}\scriptsize{\insertauthor\hspace*{50pt} \hfill\insertframenumber\hspace*{.5cm}}} 
 
@@ -235,6 +235,7 @@
 			\item heavy burden on the programmers
 		\end{itemize}
 		\item Releasing to paying customers and worrying about correctness later
+			% Say... "and I'm hoping to prevent you from finding yourself in a future where this happens!"
 	\end{itemize}
 	\linegap
 
@@ -433,7 +434,7 @@
 \breakslide{\Huge Landslide}
 
 \begin{frame}{About The Project}
-	\textbf{About me}: 4th year graduate student, advised by Garth Gibson
+	\textbf{About me}: 5th year graduate student, advised by Garth Gibson
 	\begin{itemize}
 		\item TAed 15-410 for 3 semesters during undergrad
 		\item 1st graduate year was 5th year MS, rest in Ph.D. program
@@ -638,41 +639,105 @@
 
 \breakslide{\Huge Demo}
 
-\begin{frame}{Preliminary Evaluation}
-	We tested 22 random submitted P2s from Spring 2014.
+\begin{frame}{Test Suite}
+	Landslide ships with 6 test cases:
 	\begin{itemize}
-		\item Test cases:
-		\begin{itemize}
-			\item {\tt thr\_exit\_join}
-			\item {\tt paraguay}
-			\item {\tt rwlock\_downgrade\_read\_test}
-			\item {\tt broadcast\_test} (new)
-		\end{itemize}
-		\item Each test given CPU budget of 11 cores $\times$ 10 minutes.
+		\item {\tt thr\_exit\_join}
+		\item {\tt paraguay}
+		\item {\tt rwlock\_downgrade\_read\_test}
+		\item {\tt broadcast\_test} (new)
+		\item {\tt paradise\_lost} (new this semester)
+		\item {\tt mutex\_test} (new this semester)
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{Preliminary Results}
-	88 total tests were run (9,680 total CPU-minutes)
+%\begin{frame}{Preliminary Evaluation}
+%	We tested 22 random submitted P2s from Spring 2014.
+%	\begin{itemize}
+%		\item Test cases:
+%		\begin{itemize}
+%			\item {\tt thr\_exit\_join}
+%			\item {\tt paraguay}
+%			\item {\tt rwlock\_downgrade\_read\_test}
+%			\item {\tt broadcast\_test} (new)
+%		\end{itemize}
+%		\item Each test given CPU budget of 11 cores $\times$ 10 minutes.
+%	\end{itemize}
+%\end{frame}
+%
+%\begin{frame}{Preliminary Results}
+%%	88 total tests were run (9,680 total CPU-minutes)
+%%	\linegap
+%%
+%	Found 7 {\bf deterministic} initialization bugs (e.g. use-after-free)
+%	\linegap
+%
+%	56 tests ran to completion without finding bugs:
+%	\begin{itemize}
+%		\item 47 exhausted the CPU budget.
+%		\item 9 completed all state spaces before time ran out.
+%	\end{itemize}
+%	\linegap
+%
+%	Between 20 and 33 {\bf non-deterministic} bugs were found:
+%	\begin{itemize}
+%		\item 20 deadlock races among 12 P2s
+%		\item 10 use-after-free races among 6 P2s
+%		\item 3 misc (assert fail, segfault) among 2 P2s
+%	\end{itemize}
+%\end{frame}
+
+\begin{frame}{Last Semester}
+	Spring 2015: 7 groups signed up to use Landslide; 5 found bugs
+	%\begin{itemize}
+	%	\item (that they didn't find during stress testing)
+	%\end{itemize}
+	%%%% hopefully!
 	\linegap
 
-	Found 7 {\bf deterministic} initialization bugs (e.g. use-after-free)
-	\linegap
-
-	56 tests ran to completion without finding bugs:
+	Among all groups, 38 total tests were run
 	\begin{itemize}
-		\item 47 exhausted the CPU budget.
-		\item 9 completed all state spaces before time ran out.
-	\end{itemize}
-	\linegap
-
-	Between 20 and 33 {\bf non-deterministic} bugs were found:
-	\begin{itemize}
-		\item 20 deadlock races among 12 P2s
-		\item 10 use-after-free races among 6 P2s
-		\item 3 misc (assert fail, segfault) among 2 P2s
+		\item 21 tests ran to completion without finding bugs
+		\item 4 {\em deterministic} bugs
+		\item 13 distinct {\em non-deterministic} bugs
+			\begin{itemize}
+				\item 6 in {\tt thr\_exit\_join} \small (use-after-free, deadlock, NULL, infinite loop...)
+				\item 4 in {\tt paraguay} (deadlock, infinite loop)
+				\item 2 in {\tt broadcast\_test} (deadlock, infinite loop)
+				\item 1 in {\tt rwlock\_downgrade\_read\_test} (use-after-free)
+			\end{itemize}
+			%\begin{itemize}
+			%	\item 6 of which required data-race PPs to expose
+			%\end{itemize}
 	\end{itemize}
 \end{frame}
+
+\begin{frame}{A new treat since last semester}
+	\texttt{mutex\_test} tries to make your mutexes fail or deadlock.
+	\linegap
+
+	Landslide will look for data races inside your mutex implementation.
+	\begin{itemize}
+		\item {\tt xchg}/{\tt cmpxchg}/{\tt xadd}
+		\item {\tt mutex->owner = ...}
+	\end{itemize}
+	\linegap
+
+	Tested 77 P2s from S'14, F'14, S'15
+	\begin{itemize}
+		\item 5 unrelated deterministic bugs (use-after-free, crash, etc)
+			% TODO check these for false positives
+			% But this was run after the arbiter fp deadlock avoidance
+			% So I think it's ok
+		\item 1 ``two threads got the lock at once'' race
+			\begin{itemize}
+				\item {\em ...that the TA who graded it didn't find!}
+			\end{itemize}
+		\item 7 deadlock races
+		\item 4 other races (NULL crash, infinite loop, use-after-free)
+	\end{itemize}
+\end{frame}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -683,7 +748,7 @@
 	\begin{itemize}
 		\item Bare minimum effort: No more than 1 hour
 		\begin{itemize}
-			\item Clone a github URL, run setup script, run, answer survey questions
+			\item Clone a github URL, run setup script, run tests %, answer survey questions
 			\item Landslide will automatically report test results
 		\end{itemize}
 		\item Full study plan: 4-8 hours of active attention
@@ -744,7 +809,11 @@
 	\begin{itemize}
 		\item Review this lecture and study information sheet
 		\item Meet prerequisites of passing P2 tests
-		\item Email me ({\tt bblum@cs.cmu.edu}) for instructions, survey
+		\item Complete sign-up form online to get further instructions
+			\begin{itemize}
+				\item \url{http://tinyurl.com/landslide-p2-f15}
+			\end{itemize}
+
 		\item Use Landslide in addition to stress tests until P2 is due!
 	\end{itemize}
 	\linegap
@@ -772,10 +841,11 @@
 
 \subsection{Experimental Results}
 
-\begin{frame}{More Preliminary Results}
+\begin{frame}{More Evaluation}
 	\textbf{Is dynamically adding ``data race'' PPs effective?}
 	\begin{itemize}
-		\item 3 among reported bugs (9-15\%) required data races to expose.
+		\item 3 among preliminary bugs (9-15\%) required data races to expose.
+		\item 6 among S'15 student bugs (46\%)
 	\end{itemize}
 	\linegap
 
