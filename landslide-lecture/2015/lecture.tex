@@ -52,7 +52,7 @@
 \definecolor{olivegreen}{RGB}{0,127,0}
 
 \begin{document}
-\renewcommand{\inserttotalframenumber}{36}
+\renewcommand{\inserttotalframenumber}{39}
 \normalem
 \begin{frame}
 	\titlepage
@@ -719,7 +719,7 @@
 	Landslide will look for data races inside your mutex implementation.
 	\begin{itemize}
 		\item {\tt xchg}/{\tt cmpxchg}/{\tt xadd}
-		\item {\tt mutex->owner = ...}
+		\item {\tt mutex->whose\_turn\_is\_it = ...;}
 	\end{itemize}
 	\linegap
 
@@ -846,6 +846,7 @@
 	\begin{itemize}
 		\item 3 among preliminary bugs (9-15\%) required data races to expose.
 		\item 6 among S'15 student bugs (46\%)
+		\item 10 among {\tt mutex\_test} bugs (71\%)
 	\end{itemize}
 	\linegap
 
