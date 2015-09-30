@@ -52,7 +52,7 @@
 \definecolor{olivegreen}{RGB}{0,127,0}
 
 \begin{document}
-\renewcommand{\inserttotalframenumber}{39}
+\renewcommand{\inserttotalframenumber}{40}
 \normalem
 \begin{frame}
 	\titlepage
@@ -380,9 +380,56 @@
 			\item Makes ``no race found'' a weak claim.
 		\end{itemize}
 	\end{itemize}
+\end{frame}
+
+\begin{frame}{Preemption Point Example (remember this?)}
+	\fbox{
+	\begin{tabular}{l}
+	\texttt{boolean~want[2]~=~\{~false,~false~\};}\\
+	\\
+	\begin{tabular}{rll}
+		1 & \texttt{want[i]~=~true;} & \\
+		  & & \footnotesize (preemption point A) \\
+		2 & \texttt{while~(want[j])} & \\
+		  & & \footnotesize (preemption point B) \\
+		3 & \texttt{~~~~~~~~continue;} & \\
+		  & & \footnotesize (preemption point C) \\
+		4 & \texttt{//~...critical~section...} & \\
+		  & & \footnotesize (preemption point D) \\
+		5 & \texttt{want[i]~=~false;} & \\
+	\end{tabular}
+	\end{tabular}
+	}
 	\linegap
 
-	Is there a {\bf ``sweet spot''}?
+	{\bf Some preemption points will expose bugs. \\
+	Some preemption points don't matter.}
+
+\end{frame}
+
+\begin{frame}{Preemption Point Example (remember this?)}
+	\fbox{
+	\begin{tabular}{l}
+	\texttt{boolean~want[2]~=~\{~false,~false~\};}\\
+	\\
+	\begin{tabular}{rll}
+		1 & \texttt{want[i]~=~true;} & \\
+		  & & \footnotesize (preemption point A) \\
+		2 & \texttt{while~(want[j])} & \\
+		  & & \footnotesize ~ \\
+		3 & \texttt{~~~~~~~~continue;} & \\
+		  & & \footnotesize ~ \\
+		4 & \texttt{//~...critical~section...} & \\
+		  & & \footnotesize ~ \\
+		5 & \texttt{want[i]~=~false;} & \\
+	\end{tabular}
+	\end{tabular}
+	}
+	\linegap
+
+	Here, only preemption point A will trigger a deadlock. {\bf ~}\\
+	All other interleavings are benign.{\bf ~}
+
 \end{frame}
 
 \begin{frame}{Preemption Points}
@@ -410,20 +457,20 @@
 	%However, all these points together may still be too expensive...
 \end{frame}
 
-\begin{frame}{Challenges}
-	Parameters of systematic tests must be kept small.
-	\begin{itemize}
-		\item Test program length / number of threads
-		\item Number of preemption points used
-	\end{itemize}
-	\linegap
-
-	\begin{center}
-		\hspace{-0.25in}\includegraphics[width=0.3\textwidth]{expo.pdf} \\
-		\vspace{-1.33in}\hspace{-1.75in}{\rotatebox{90}{\small state space size}} \\
-		\vspace{0.15in}\hspace{-0.25in}{\small number of PPs}
-	\end{center}
-\end{frame}
+%\begin{frame}{Challenges}
+%	Parameters of systematic tests must be kept small.
+%	\begin{itemize}
+%		\item Test program length / number of threads
+%		\item Number of preemption points used
+%	\end{itemize}
+%	\linegap
+%
+%	\begin{center}
+%		\hspace{-0.25in}\includegraphics[width=0.3\textwidth]{expo.pdf} \\
+%		\vspace{-1.33in}\hspace{-1.75in}{\rotatebox{90}{\small state space size}} \\
+%		\vspace{0.15in}\hspace{-0.25in}{\small number of PPs}
+%	\end{center}
+%\end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -437,7 +484,7 @@
 	\textbf{About me}: 5th year graduate student, advised by Garth Gibson
 	\begin{itemize}
 		\item TAed 15-410 for 3 semesters during undergrad
-		\item 1st graduate year was 5th year MS, rest in Ph.D. program
+		\item 1st graduate year was 5th year M.S., rest in Ph.D. program
 		\begin{itemize}
 			\item \url{http://www.contrib.andrew.cmu.edu/~bblum/thesis.pdf}
 		\end{itemize}
@@ -498,7 +545,7 @@
 \end{frame}
 
 \begin{frame}{Identifying Bugs}
-	Landslide can {\em definitely discover}:
+	Landslide can {\em definitely discover:}
 	\begin{itemize}
 		\item Assertion failures % Say: note: the better your asserts are..!
 		\item Segfaults
@@ -506,7 +553,7 @@
 		\item Use-after-free / double-free
 	\end{itemize}
 	\linegap
-	Landslide can {\em reasonably suspect}:
+	Landslide can {\em reasonably suspect:}
 	\begin{itemize}
 		\item Infinite loop (halting problem)
 		\item Data race bugs
@@ -518,7 +565,7 @@
 	\begin{itemize}
 		\item At least one of the accesses is a write
 		\item The threads are not holding the same mutex
-		\item The threads can be reordered (e.g. no \texttt{cond\_signal()} in between)
+		\item The threads can be reordered (e.g., no \texttt{cond\_signal()} in between)
 	\end{itemize}
 	\pause
 	\linegap
@@ -570,7 +617,7 @@
 
 	Based on experience from past 15-410 student volunteers
 	\begin{itemize}
-		\item Students worked best with an iterative process
+		%\item Students worked best with an iterative process
 		\item ``Start small, then add more preemption points as time allows''
 		\item Landslide now automates this process
 	\end{itemize}
@@ -588,13 +635,16 @@
 	\begin{itemize}
 		\item Manages work queue of jobs with different PPs
 		\item Each job represents a new state space for Landslide to explore
-		\item Prioritizes which jobs are important / likely to finish
-		\begin{itemize}
-			\item Based on nature of PPs (data races? mutexes?)
-			\item Based on estimated completion time
-		\end{itemize}
-		\item Repeat state space explorations, adding preemption points, until time is exhausted.
+		\item Prioritizes jobs based on estimated completion time
+		%\item Prioritizes which jobs are important / likely to finish
+		%\begin{itemize}
+		%	\item Based on nature of PPs (data races? mutexes?)
+		%	\item Based on estimated completion time
+		%\end{itemize}
 	\end{itemize}
+	\linegap
+
+	Repeat state space explorations, adding preemption points, until time is exhausted.
 
 	\linegap
 	{\em Only required argument is CPU budget}
@@ -640,12 +690,19 @@
 \breakslide{\Huge Demo}
 
 \begin{frame}{Test Suite}
-	Landslide ships with 6 test cases:
+	Landslide ships with 6 approved test cases:
+	\linegap
+
+	Standard P2 tests
 	\begin{itemize}
 		\item {\tt thr\_exit\_join}
 		\item {\tt paraguay}
 		\item {\tt rwlock\_downgrade\_read\_test}
-		\item {\tt broadcast\_test} (new)
+	\end{itemize}
+
+	New tests
+	\begin{itemize}
+		\item {\tt broadcast\_test}
 		\item {\tt paradise\_lost} (new this semester)
 		\item {\tt mutex\_test} (new this semester)
 	\end{itemize}
@@ -721,6 +778,7 @@
 		\item {\tt xchg}/{\tt cmpxchg}/{\tt xadd}
 		\item {\tt mutex->whose\_turn\_is\_it = ...;}
 	\end{itemize}
+	\pause
 	\linegap
 
 	Tested 77 P2s from S'14, F'14, S'15
@@ -818,7 +876,10 @@
 	\end{itemize}
 	\linegap
 
-	Watch your email for more details!
+	{\em Really} interested?
+	\begin{itemize}
+		\item I know of an M.S. thesis topic if you want to do post-OS research.
+	\end{itemize}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -844,7 +905,7 @@
 \begin{frame}{More Evaluation}
 	\textbf{Is dynamically adding ``data race'' PPs effective?}
 	\begin{itemize}
-		\item 3 among preliminary bugs (9-15\%) required data races to expose.
+		%\item 3 among preliminary bugs (9-15\%) required data races to expose.
 		\item 6 among S'15 student bugs (46\%)
 		\item 10 among {\tt mutex\_test} bugs (71\%)
 	\end{itemize}
