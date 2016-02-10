@@ -22,7 +22,7 @@
 \author[Ben Blum]{Ben Blum \texttt{(bblum@andrew.cmu.edu)}}
 
 \institute[CMU 15-410]{Carnegie Mellon University - 15-410}
-\date[]{2015, September 30}
+\date[]{2016, February 10}
 
 \setbeamertemplate{footline}{\hspace*{.5cm}\scriptsize{\insertauthor\hspace*{50pt} \hfill\insertframenumber\hspace*{.5cm}}} 
 
@@ -52,7 +52,7 @@
 \definecolor{olivegreen}{RGB}{0,127,0}
 
 \begin{document}
-\renewcommand{\inserttotalframenumber}{40}
+\renewcommand{\inserttotalframenumber}{39}
 \normalem
 \begin{frame}
 	\titlepage
@@ -449,6 +449,7 @@
 		\item Unprotected shared memory accesses (``data races'')% Say: more on this later.
 			\begin{itemize}
 				\item May result in data structure corruption
+				\item More on this later...
 			\end{itemize}
 	\end{itemize}
 
@@ -572,7 +573,7 @@
 
 	Data races are {\em not necessarily} bugs, just highly suspicious!
 	\begin{itemize}
-		\item Bakery algorithm: Is {\tt number[i]=max(number[0],number[1])} bad?
+		\item Bakery alg: Is {\tt number[i]=max(number[0],number[1])+1} bad?
 		%\item Is unprotected {\tt foobar\_statistics\_counter++} bad?
 		\item What about unprotected {\tt next\_thread\_id++}?
 		\item ``If threads interleaved the wrong way here, it {\em might} crash later.''
@@ -654,6 +655,9 @@
 	Minimal state space includes only ``mandatory'' context switches
 	\begin{itemize}
 		\item e.g., {\tt yield()}, {\tt cond\_wait()}.
+		% Say: When the test invokes yield, the kernel scheduler will pick
+		% one thread to run next. With Landslide, we will pick ALL threads to
+		% run next, in one parallel universe at a time.
 	\end{itemize}
 	\vspace{0.29in}
 	\begin{center}
@@ -703,8 +707,8 @@
 	New tests
 	\begin{itemize}
 		\item {\tt broadcast\_test}
-		\item {\tt paradise\_lost} (new this semester)
-		\item {\tt mutex\_test} (new this semester)
+		\item {\tt paradise\_lost} %(new this semester)
+		\item {\tt mutex\_test} %(new this semester)
 	\end{itemize}
 \end{frame}
 
@@ -745,56 +749,87 @@
 %\end{frame}
 
 \begin{frame}{Last Semester}
-	Spring 2015: 7 groups signed up to use Landslide; 5 found bugs
+	%Spring 2015: 7 groups signed up to use Landslide; 5 found bugs
+	%%\begin{itemize}
+	%%	\item (that they didn't find during stress testing)
+	%%\end{itemize}
+	%%%%% hopefully!
+	%\linegap
+
+	%Among all groups, 38 total tests were run
 	%\begin{itemize}
-	%	\item (that they didn't find during stress testing)
+	%	\item 21 tests ran to completion without finding bugs
+	%	\item 4 {\em deterministic} bugs
+	%	\item 13 distinct {\em non-deterministic} bugs
+	%		\begin{itemize}
+	%			\item 6 in {\tt thr\_exit\_join} \small (use-after-free, deadlock, NULL, infinite loop...)
+	%			\item 4 in {\tt paraguay} (deadlock, infinite loop)
+	%			\item 2 in {\tt broadcast\_test} (deadlock, infinite loop)
+	%			\item 1 in {\tt rwlock\_downgrade\_read\_test} (use-after-free)
+	%		\end{itemize}
+	%		%\begin{itemize}
+	%		%	\item 6 of which required data-race PPs to expose
+	%		%\end{itemize}
 	%\end{itemize}
+	Fall 2015: 22 groups signed up to use Landslide; 21 found bugs
+	% 18 groups found races
+	\begin{itemize}
+		\item (that they didn't find during stress testing)
+	\end{itemize}
 	%%%% hopefully!
 	\linegap
 
-	Among all groups, 38 total tests were run
+	Among all groups, 185 distinct tests were run
 	\begin{itemize}
-		\item 21 tests ran to completion without finding bugs
-		\item 4 {\em deterministic} bugs
-		\item 13 distinct {\em non-deterministic} bugs
-			\begin{itemize}
-				\item 6 in {\tt thr\_exit\_join} \small (use-after-free, deadlock, NULL, infinite loop...)
-				\item 4 in {\tt paraguay} (deadlock, infinite loop)
-				\item 2 in {\tt broadcast\_test} (deadlock, infinite loop)
-				\item 1 in {\tt rwlock\_downgrade\_read\_test} (use-after-free)
-			\end{itemize}
+		\item 137 tests ran to completion without finding bugs
+		\item 21 {\em deterministic} bugs
+	\end{itemize}
+	\pause % ask: "who can tell me why landslide might find a *deterministic* bug not found during past testing? A: use-after-free
+	\linegap
+
+	38 distinct {\em non-deterministic} bugs
+	\begin{itemize}
 			%\begin{itemize}
-			%	\item 6 of which required data-race PPs to expose
+			%	\item 7 of which required data-race PPs to expose
 			%\end{itemize}
-	\end{itemize}
-\end{frame}
-
-\begin{frame}{A new treat since last semester}
-	\texttt{mutex\_test} tries to make your mutexes fail or deadlock.
-	\linegap
-
-	Landslide will look for data races inside your mutex implementation.
-	\begin{itemize}
-		\item {\tt xchg}/{\tt cmpxchg}/{\tt xadd}
-		\item {\tt mutex->whose\_turn\_is\_it = ...;}
-	\end{itemize}
-	\pause
-	\linegap
-
-	Tested 77 P2s from S'14, F'14, S'15
-	\begin{itemize}
-		\item 5 unrelated deterministic bugs (use-after-free, crash, etc)
-			% TODO check these for false positives
-			% But this was run after the arbiter fp deadlock avoidance
-			% So I think it's ok
-		\item 1 ``two threads got the lock at once'' race
+		\item 11 groups (50\%) fixed all their bugs
 			\begin{itemize}
-				\item {\em ...that the TA who graded it didn't find!}
+				\item (as verified by running Landslide again -- not a guarantee!)
 			\end{itemize}
-		\item 7 deadlock races
-		\item 4 other races (NULL crash, infinite loop, use-after-free)
+		\item 2.7 bugs ``fixed'' (see above) on average per group
+		\item Most ambitious group: 11 distinct races found + fixed!
 	\end{itemize}
 \end{frame}
+
+%\begin{frame}{A new treat} %since last semester}
+%	\texttt{mutex\_test} tries to make your mutexes fail or deadlock.
+%	\linegap
+%
+%	Landslide will look for data races inside your mutex implementation.
+%	\begin{itemize}
+%		\item {\tt xchg}/{\tt cmpxchg}/{\tt xadd}
+%		\item {\tt mutex->whose\_turn\_is\_it = ...;}
+%	\end{itemize}
+%	\pause
+%	\linegap
+%	
+%	Last semester: 12 non-determinstic bugs among 8 groups
+%	\linegap
+%
+%	%Tested 77 P2s from S'14, F'14, S'15
+%	%\begin{itemize}
+%	%	\item 5 unrelated deterministic bugs (use-after-free, crash, etc)
+%	%		% TODO check these for false positives
+%	%		% But this was run after the arbiter fp deadlock avoidance
+%	%		% So I think it's ok
+%	%	\item 7 deadlock races
+%	%	\item 4 other races (NULL crash, infinite loop, use-after-free)
+%	%	\item 1 ``two threads got the lock at once'' race
+%	%		\begin{itemize}
+%	%			\item {\em ...that the TA who graded it didn't find!}
+%	%		\end{itemize}
+%	%\end{itemize}
+%\end{frame}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -869,7 +904,7 @@
 		\item Meet prerequisites of passing P2 tests
 		\item Complete sign-up form online to get further instructions
 			\begin{itemize}
-				\item \url{http://tinyurl.com/landslide-p2-f15}
+				\item \url{http://tinyurl.com/landslide-p2-s16}
 			\end{itemize}
 
 		\item Use Landslide in addition to stress tests until P2 is due!
@@ -900,30 +935,55 @@
 
 \section{Bonus Slides}
 
-\subsection{Experimental Results}
+%\subsection{Experimental Results}
+%
+%\begin{frame}{More Evaluation}
+%	\textbf{Is dynamically adding ``data race'' PPs effective?}
+%	\begin{itemize}
+%		%\item 3 among preliminary bugs (9-15\%) required data races to expose.
+%		\item 6 among S'15 student bugs (46\%)
+%		\item 10 among {\tt mutex\_test} bugs (71\%)
+%	\end{itemize}
+%	\linegap
+%
+%	{\bf Is ``iterative deepening'' better than state-of-the-art?}
+%	\begin{itemize}
+%		\item Control experiment: Just 1 state space, same CPU time
+%		\begin{itemize}
+%			\item PPs used: \texttt{mutex\_lock()}, \texttt{mutex\_unlock()}
+%			\item 110 minutes on 1 CPU
+%		\end{itemize}
+%		\item Of 33 total bug reports, control failed to find 10 (30\%).
+%		\begin{itemize}
+%			\item 3 required data race PPs to expose
+%			\item 1 ran out of time
+%			\item 6 obscured by different bug in same state space
+%		\end{itemize}
+%	\end{itemize}
+%\end{frame}
 
-\begin{frame}{More Evaluation}
-	\textbf{Is dynamically adding ``data race'' PPs effective?}
-	\begin{itemize}
-		%\item 3 among preliminary bugs (9-15\%) required data races to expose.
-		\item 6 among S'15 student bugs (46\%)
-		\item 10 among {\tt mutex\_test} bugs (71\%)
-	\end{itemize}
+\begin{frame}{Last-last Semester}
+	Spring 2015: 7 groups signed up to use Landslide; 5 found bugs
+	%\begin{itemize}
+	%	\item (that they didn't find during stress testing)
+	%\end{itemize}
+	%%%% hopefully!
 	\linegap
 
-	{\bf Is ``iterative deepening'' better than state-of-the-art?}
+	Among all groups, 38 total tests were run
 	\begin{itemize}
-		\item Control experiment: Just 1 state space, same CPU time
-		\begin{itemize}
-			\item PPs used: \texttt{mutex\_lock()}, \texttt{mutex\_unlock()}
-			\item 110 minutes on 1 CPU
-		\end{itemize}
-		\item Of 33 total bug reports, control failed to find 10 (30\%).
-		\begin{itemize}
-			\item 3 required data race PPs to expose
-			\item 1 ran out of time
-			\item 6 obscured by different bug in same state space
-		\end{itemize}
+		\item 21 tests ran to completion without finding bugs
+		\item 4 {\em deterministic} bugs
+		\item 13 distinct {\em non-deterministic} bugs
+			\begin{itemize}
+				\item 6 in {\tt thr\_exit\_join} \small (use-after-free, deadlock, NULL, infinite loop...)
+				\item 4 in {\tt paraguay} (deadlock, infinite loop)
+				\item 2 in {\tt broadcast\_test} (deadlock, infinite loop)
+				\item 1 in {\tt rwlock\_downgrade\_read\_test} (use-after-free)
+			\end{itemize}
+			%\begin{itemize}
+			%	\item 6 of which required data-race PPs to expose
+			%\end{itemize}
 	\end{itemize}
 \end{frame}
 
