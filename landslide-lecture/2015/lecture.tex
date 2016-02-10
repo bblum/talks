@@ -342,46 +342,6 @@
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{Preemption Points}
-	\textbf{Preemption points} (PPs) are code locations where being preempted may cause different behaviour.
-	\begin{itemize}
-		\item IOW, somewhere that interesting interleavings can happen around.
-	\end{itemize}
-	\linegap
-
-	Systematic tests are {\em parameterized} by the set of PPs.
-	\begin{itemize}
-		\item If there are $n$ PPs and $k$ threads, state space size is $n^k$.
-		\item Need to choose the set of PPs very carefully for test to be effective.
-		\begin{itemize}
-			\item ``Effective'' = both comprehensive and feasible.
-		\end{itemize}
-	\end{itemize}
-\end{frame}
-
-
-\begin{frame}{Preemption Points}
-	What does ``all possible interleavings'' actually mean?
-
-	\linegap
-	{\bf One extreme}: Preempt at {\em every instruction}
-	\begin{itemize}
-		\item Good news: Will find every possible race condition.
-		\item Bad news: Runtime of test will be impossibly large.
-	\end{itemize}
-	\linegap
-
-	{\bf Other extreme}: {\em Nothing} is a preemption point
-	\begin{itemize}
-		\item Good news: Test will finish quickly.
-		\item Bad news: Only one execution was checked for bugginess.
-		\begin{itemize}
-			\item No alternative interleavings explored.
-			\item Makes ``no race found'' a weak claim.
-		\end{itemize}
-	\end{itemize}
-\end{frame}
-
 \begin{frame}{Preemption Point Example (remember this?)}
 	\fbox{
 	\begin{tabular}{l}
@@ -431,6 +391,47 @@
 	All other interleavings are benign.{\bf ~}
 
 \end{frame}
+
+\begin{frame}{Preemption Points}
+	\textbf{Preemption points} (PPs) are code locations where being preempted may cause different behaviour.
+	\begin{itemize}
+		\item IOW, somewhere that interesting interleavings can happen around.
+	\end{itemize}
+	\linegap
+
+	Systematic tests are {\em parameterized} by the set of PPs.
+	\begin{itemize}
+		\item If there are $n$ PPs and $k$ threads, state space size is $n^k$.
+		\item Need to choose the set of PPs very carefully for test to be effective.
+		\begin{itemize}
+			\item ``Effective'' = both comprehensive and feasible.
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+
+\begin{frame}{Preemption Points}
+	What does ``all possible interleavings'' actually mean?
+
+	\linegap
+	{\bf One extreme}: Preempt at {\em every instruction}
+	\begin{itemize}
+		\item Good news: Will find every possible race condition.
+		\item Bad news: Runtime of test will be impossibly large.
+	\end{itemize}
+	\linegap
+
+	{\bf Other extreme}: {\em Nothing} is a preemption point
+	\begin{itemize}
+		\item Good news: Test will finish quickly.
+		\item Bad news: Only one execution was checked for bugginess.
+		\begin{itemize}
+			\item No alternative interleavings explored.
+			\item Makes ``no race found'' a weak claim.
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
 
 \begin{frame}{Preemption Points}
 	\textbf{Sweet spot}: Insert a thread switch everywhere it ``might matter''.
@@ -513,7 +514,7 @@
 \begin{frame}{Big Picture: Execution Tree Exploration}
 	\textbf{Backtracking}
 	\begin{itemize}
-		\item At end of each branch, identify a PP to replay differently
+		\item Each time test completes, identify a PP to replay differently
 		\item Reset machine state and start over
 		\item Implemented using Simics bookmarks
 			\begin{itemize}
@@ -842,7 +843,7 @@
 		\item Bare minimum effort: No more than 1 hour
 		\begin{itemize}
 			\item Clone a github URL, run setup script, run tests %, answer survey questions
-			\item Landslide will automatically report test results
+			\item Landslide will automatically report test results (as described below)
 		\end{itemize}
 		\item Full study plan: 4-8 hours of active attention
 		\begin{itemize}
