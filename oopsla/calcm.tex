@@ -324,7 +324,7 @@
 	Most data-race analyses use {\em Pure HB} to determine simultaneity.
 	\begin{itemize}
 		\item HB is established by any synchronization (mutexes, cvars, xchg...)
-		\item Represents possiblity to threads' behaviour to change if reordered
+		\item Represents possiblity of threads' behaviour to change if reordered
 			%\begin{itemize}
 			%	\item ...that the programmers obviously intended.
 			%\end{itemize}
@@ -337,7 +337,7 @@
 	%, Serebryany '09}
 	\begin{itemize}
 		\item HB is established only when thread runnability changes (cvars).
-		\item Represents possibility to reorder accesses to occur simultaneously
+		\item Represents ability to reorder accesses to occur simultaneously
 		\item Captures accesses separated by unrelated, synchronized, logic
 		\item Will also falsely flag some {\em false positives}
 		\item Combined with lock-set analysis to increase accuracy
@@ -502,6 +502,7 @@
 				% during a specific test
 			Quicksand will eventually test an equivalent interleaving which exposes the same bug.}
 		\item Proof appeals to DPOR soundness\related{Flanagan '05} and Limited HB.
+		\item Intuition: ``Adding data-race PPs until saturation = all possible thread communication points.''
 	\end{itemize}
 \end{frame}
 
