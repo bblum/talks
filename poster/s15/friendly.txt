@@ -78,7 +78,7 @@ Support for instructional OSes from other schools
 Landslide can test Pintos kernels as well as Pebbles
 - Support for "threads" and "userprog" projects
 - Currently testing 13 submitted projects from U Chicago
-- Planning evaluation of 70+ submissions from Stanford
+- Planning evaluation of 70+ submissions from Berkeley.
 
 *Use Pintos or another teaching OS? Let me know!* ((make sure this line stands out))
 - Have students volunteer submitted code
