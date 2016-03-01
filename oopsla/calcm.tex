@@ -277,7 +277,7 @@
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{MC State of the Art}
+\begin{frame}{MC State of the Art}{(my new DJ name?)}
 	Modern stateless MC tools can {\em mitigate} exponential explosion.
 	\begin{itemize}
 		\item Dynamic Partial Order Reduction (DPOR)\related{Flanagan '05}
@@ -467,7 +467,14 @@
 
 
 \begin{frame}{Iterative Deepening}
-	If time allows, combine PPs into larger, more comprehensive state spaces, eventually converging to using all PPs at once ({\em ``maximal'' state space}).
+	If time allows, combine PPs into larger, more comprehensive state spaces.
+	\linegap
+
+	All PPs enabled = ``maximal'' state space
+	\begin{itemize}
+		\item Prior work tools test this state space only.
+	\end{itemize}
+	%eventually converging to using all PPs at once ({\em ``maximal'' state space}).
 	\begin{center}
 		\includegraphics[width=0.8\textwidth]{tree3.pdf}
 	\end{center}
@@ -479,7 +486,7 @@
 	MC can {\em totally verify} a test by testing a state space with all possible PPs.
 	\begin{itemize}
 		\item Ordinarily infeasible, but some tests are small enough
-		\item Whether a test can be totally verified can't be known in advance.
+		%\item Whether a test can be totally verified can't be known in advance.
 		\item ``Hard-coded'' PP approach\related{Musuvathi '08} sacrifices this possibility.
 	%One downside of hard-coding PPs in advance is timing out when the test is too large, but another downside is if the test is small enough, you might miss a possible full verification!
 		\item What PP strategy works for both small and large tests?
@@ -526,10 +533,9 @@
 		\item Pintos: Berkeley CS162/U. Chicago CS320 kernel project (\textasciitilde{}700 LOC)
 		\item 629 unique state spaces (i.e., project/test pairs)
 	\end{itemize}
-	\pause
-	\linegap
-
-	{\bf Quicksand experiment}: 1 hour $\times$ 10 CPUs per test
+\end{frame}
+\begin{frame}{Experimental Setup}
+	\textbf{Quicksand experiment}: 1 hour $\times$ 10 CPUs per test
 	\begin{itemize}
 		\item {\bf QS}: Data-race PPs enabled
 		\item {\bf QS-no-DRs}: Restrict iterative deepening to sync API PPs only
@@ -545,9 +551,41 @@
 	\end{itemize}
 \end{frame}
 
+\begin{frame}{1. Finding more bugs with data-race PPs}
+\end{frame}
+
+\begin{frame}{2. Finding the same bugs... slower}
+\end{frame}
+
+\begin{frame}{3. Nondeterministic data-race candidates}
+\end{frame}
+
+\begin{frame}{4. Total verification}
+\end{frame}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{End}
+\breakslide{\Huge Conclusion}
+
+\begin{frame}{Conclusion}
+	Stateless Model Checking depends on good {\bf preemption points} (PPs).
+	\linegap
+
+	MC State of the Art chooses a fixed PP set in advance.
+	\linegap
+
+	Quicksand schedules multiple tests, with different PPs, in parallel.
+	\begin{itemize}
+		\item Iterative Deepening incorporates new data-race PPs on-the-fly
+		\item Data race PPs uncover {\bf 80\% more bugs} than sync API PPs alone
+		\item Data race PPs enable {\bf total verification} when test is small enough
+	\end{itemize}
+	\linegap
+
+	OOPSLA submission soon; looking for feedback!
+\end{frame}
+
 \breakslide{\Large Questions?
 \linegap
 
