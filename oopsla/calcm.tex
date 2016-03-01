@@ -552,15 +552,49 @@
 \end{frame}
 
 \begin{frame}{1. Finding more bugs with data-race PPs}
+	\begin{center}
+		\includegraphics[width=0.6\textwidth]{eval1.pdf}
+	\end{center}
+	\begin{itemize}
+		\item 17-118 seconds: Quicksand loses on parallelization/startup overhead
+			%\begin{itemize}
+			%	\item (remember: Quicksand on 10 CPUs, control on 1)
+			%\end{itemize}
+		\item Ultimately, 180\% as many bugs in total!
+	\end{itemize}
 \end{frame}
 
 \begin{frame}{2. Finding the same bugs... slower}
+	\begin{center}
+		\includegraphics[width=0.6\textwidth]{eval2.pdf}
+	\end{center}
+	\begin{itemize}
+		\item ICB outperforms Iterative Deepening when using the same PPs
+		\item Suggests Quicksand could incorporate ICB in its scheduling strategy
+	\end{itemize}
 \end{frame}
 
 \begin{frame}{3. Nondeterministic data-race candidates}
+	Some data races come from code that executes only nondeterministically.
+	\begin{itemize}
+		\item In a single-execution data race analysis, these accesses won't be seen.
+		\item MC can uncover the racy logic, identify a new PP, and find more bugs.
+	\end{itemize}
+
+	\begin{center}
+		\includegraphics[width=0.7\textwidth]{eval3.pdf}
+	\end{center}
 \end{frame}
 
 \begin{frame}{4. Total verification}
+	\begin{center}
+		\includegraphics[width=0.6\textwidth]{eval4.pdf}
+	\end{center}
+	\begin{itemize}
+		\item If no data-race candidates, can verify with sync API PPs alone.
+		\item Data-race PPs allow total verification of 425\% as many tests!
+		\item ICB slower to verify than single-pass DPOR due to repeated work.
+	\end{itemize}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
