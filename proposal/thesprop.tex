@@ -27,6 +27,7 @@
 \usepackage{fullpage}
 \usepackage{graphicx}
 \usepackage{amsmath}
+\usepackage[charter]{mathdesign}
 \usepackage[numbers,sort]{natbib}
 \usepackage[backref,pageanchor=true,plainpages=false, pdfpagelabels, bookmarks,bookmarksnumbered,
 %pdfborder=0 0 0,  %removes outlines around hyper links in online display
@@ -81,7 +82,20 @@ Someone from a strange and faraway land
 %% into different files and input them into this file...
 
 \begin{abstract}
-A short summary.
+Concurrent programming presents a challenge to students and experts alike because of the complexity of multithreaded interactions and the difficulty to reproduce and reason about bugs.
+Stateless model checking is a concurrency testing approach which forces a program to interleave its threads in many different ways, checking for bugs each time.
+This technique is powerful, in principle capable of finding any nondeterministic bug in finite time,
+but suffers from exponential explosion as program size increases.
+Checking an exponential number of thread interleavings is not a practical or predictable approach for programmers to find concurrency bugs before their project deadlines.
+
+In this thesis, I propose to make stateless model checking more practical for human use by way of several new techniques.
+I have built Landslide, a stateless model checker for testing student projects for undergraduate operating systems classes.
+Landslide includes a novel algorithm for automatically managing
+%the exploration of
+multiple state spaces according to their estimated completion times,
+which I will show quickly finds bugs should they exist and also quickly verifies correctness otherwise.
+I will evaluate Landslide's suitability for inexpert use by presenting the results of a many-semester study giving it as a debugging aid to students in 15-410, CMU's Operating System Design and Implementation class.
+Finally, I will present several new techniques that allow stateless model checking to be practically employed on real-world programs.
 \end{abstract}
 
 \begin{acknowledgments}
@@ -93,8 +107,8 @@ But I am cooler.
 
 
 \tableofcontents
-\listoffigures
-\listoftables
+%\listoffigures
+%\listoftables
 
 \mainmatter
 
