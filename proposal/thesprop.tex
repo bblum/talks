@@ -89,13 +89,14 @@ but suffers from exponential explosion as program size increases.
 Checking an exponential number of thread interleavings is not a practical or predictable approach for programmers to find concurrency bugs before their project deadlines.
 
 In this thesis, I propose to make stateless model checking more practical for human use by way of several new techniques.
-I have built Landslide, a stateless model checker for testing student projects for undergraduate operating systems classes.
+I have built Landslide, a stateless model checker specializing in student projects for undergraduate operating systems classes.
 Landslide includes a novel algorithm for automatically managing
 %the exploration of
 multiple state spaces according to their estimated completion times,
 which I will show quickly finds bugs should they exist and also quickly verifies correctness otherwise.
-I will evaluate Landslide's suitability for inexpert use by presenting the results of a many-semester study giving it as a debugging aid to students in 15-410, CMU's Operating System Design and Implementation class.
-Finally, I will present several new techniques that allow stateless model checking to be practically employed on real-world programs.
+I will evaluate Landslide's suitability for inexpert use by presenting the results of many semesters providing it to students in 15-410, CMU's Operating System Design and Implementation class.
+%Finally, I will present several new techniques that allow stateless model checking to be practically employed on real-world programs.
+Finally, I will explore broader impact by extending Landslide to test real-world programs and to be used by students at other universities.
 \end{abstract}
 
 \begin{acknowledgments}
@@ -134,6 +135,124 @@ But I am cooler.
 
 
 \chapter{Introduction}
+
+Modern computer architectures have turned to increasing CPU core count, rather than clock speed, to improve processing power.
+%To take advantage of multiple cores, programs must be written {\em concurrently}
+To take advantage of multiple cores for performance, programmers must write software to execute {\em concurrently} --
+using multiple {\em threads} which execute multiple parts of a program's logic simultaneously.
+However, when threads access the same shared data, they may interleave in unexpected ways which change the outcomes of their execution.
+When an unexpected interleaving produces undesirable program behaviour,
+for example, by corrupting shared data structures,
+we call it a {\em concurrency bug}.
+Concurrency bugs are notoriously hard for programmers to find and debug
+because the specific thread interleaving required to trigger them arises at random during normal execution,
+and often with very low probability.
+%Concurrency bugs are notoriously hard to find and reproduce because they only appear in specific thread interleavings, which arise at random during normal program execution.
+% TODO(LAYMAN): give example of trying to open car door at same time as friend turns key to unlock it.
+
+Most commonly, a programmer searches for concurrency bugs in her code by running it many times (in parallel, in serial, or both),
+hoping that eventually, it will run according to the particular interleaving required to expose a hypothetical bug.
+This technique, known as {\em stress testing}, is unreliable,
+providing no guarantee of finding the failing interleaving in any finite amount of time, even when a bug does exist.
+It also provides no assurance of correctness:
+when finished, there is no way of knowing how much of the space of possible thread interleavings was actually tested.
+%it may by chance test only a single interleaving over and over again!
+Nevertheless, stress testing remains popular because of how easily a programmer can use it:
+she simply wraps her program in a loop, sets it to run overnight, and kills it if her patience runs out before it finds a bug.
+
+{\em Stateless model checking} \cite{verisoft} is an alternative way to test for concurrency bugs,
+or to verify their absence,
+which provides more reliable coverage, progress, and verification than stress testing.
+A stateless model checker tests a program by forcing it to execute a new unique thread interleaving on each iteration of the test,
+capturing and controlling the randomness in a finite state space of all possible interleavings.
+
+Unfortunately, the size of these state spaces is exponentially proportional to the size of the tested program.
+% TODO(LAYMAN): explain exponential explosion by relating the parable of grains of rice on a chessboard.
+For even moderately-sized programs, there may be more possible ways to interleave every thread's every instruction
+than particles in the universe.
+Accordingly, a programmer who wants her test to make reasonable progress through the state space must choose a subset of ways that her threads could interleave,
+focusing on fully testing that subset, while ignoring other possibilities she doesn't care about.
+%However, choosing this subset is a difficult trade-off for humans to make before even knowing whether a bug exists.
+However, it is difficult to choose a subset of thread interleavings that will produce a meaningful, yet feasible test.
+Until computers can automatically navigate this trade-off in some intelligent way,
+programmers will continue to fall back to the random approach of stress testing.
+
+Another problem stateless model checking suffers is that certain types of programs cannot be tested without the programmer putting forth some manual instrumentation effort.
+For example, operating system kernels implement their own sources of concurrency and their own synchronization primitives,
+so the checker needs to be told how to identify and control the execution of each thread.
+Some expert programmers may be willing to add manual annotations to their code,
+if they are already veteran concurrency research wizards,
+but required manual effort is a serious downside for anyone with a looming deadline,
+and especially so for students who are still learning basic concurrency principles.
+%We should not expect programmers to add effortful manual annotations to their code,
+%or they will abandon our fancy technique to instead simply run stress tests until their deadline tomorrow evening.
+
+This thesis will solve both problems discussed above.
+My thesis statement is as follows:
+
+\begin{center}
+	{\em my research is cool. please let me graduate.}
+\end{center}
+
+\vspace{1em}
+
+I have built Landslide \cite{landslide}, a stateless model checker for thread libraries and kernels,
+and I have developed some techniques for automatically choosing the best thread interleavings to test
+and for automatically instrumenting operating system kernels in an educational setting.
+This thesis will comprise three major contributions:
+
+\begin{itemize}
+	\item {\bf Meaningful state spaces (\ref{chap:pps}).}
+		I will present {\em Iterative Deepening}, a new algorithm for navigating the trade-off in how many preemption points to test at once.
+		Iterative Deepening incorporates state space estimation \cite{estimation} to decide on-the-fly whether each state space is worth pursuing, and uses data race analysis \cite{tsan} to find new preemption point candidates based on a program's dynamic behaviour.
+		This section will include a large evaluation of the technique, comparing its performance to three prior work approaches across 629 unique tests.
+		I will show that Iterative Deepening of preemption points outperforms prior work in terms both of finding bugs quickly and of completely verifying correctness when no bug exists.
+	\item {\bf Educational use (\ref{chap:410}).}
+		For the past three semesters, I have offered a fully-automated version of Landslide to students in 15-410, CMU's undergraduate Operating System Design and Implementation class \cite{kspec,thrlib}, for use as a debugging aid during the thread library project.
+		I will continue these user studies, and use the data to evaluate the suitability of stateless model checking in an educational setting.
+		%, investigating the following questions in particular:
+		%\begin{itemize}
+		%	\item Does Landslide improve project submission quality when used as a debugging aid?
+		%	\item Does Landslide teach students lessons in concurrent programming 
+		%\end{itemize}
+	\item {\bf Broader impact (\ref{chap:lipservice}).}:
+		Landslide includes several new techniques for testing kernels and thread libraries with little or no manual instrumentation required.
+		So far, a fully-automatic testing mode is available only for 15-410 thread library projects.
+		To prove these techniques are relevant beyond CMU's walls, I will extend Landslide to handle both Pintos kernel projects from other universities \cite{pintos} and ``real-world'' Linux programs.
+		I will conduct a user study in which students at another university test their Pintoses with Landslide,
+		and evaluate Landslide's ability to find known and/or new bugs in real-world programs.
+\end{itemize}
+
+% TODO(thesis): Other chapters of this thesis include...
+
+
+\chapter{Meaningful State Spaces}
+\label{chap:pps}
+
+\chapter{Education}
+\label{chap:410}
+
+\chapter{Broader Impact}
+\label{chap:lipservice}
+
+
+
+
+%Reduction
+%techniques such as Dynamic Partial Order Reduction \cite{dpor} and Maximal Causality Reduction \cite{mcr} expand the limits of feasible test completion,
+%and search ordering strategies such as Iterative Context Bounding \cite{chess-icb} \revision{encourage}~bugs to be found sooner in a given space should they exist.
+
+
+%Topics of thesis:
+%1. Data race preemption points / iterative deepening
+%2. Education in 410. Evaluation questions are:
+%	2a. Does P2 submission quality improve?
+%	2b. Does P3 submission quality improve correlated with students who used (got the most out of) Landslide during P2?
+%	2c. Does Landslide reach the bottom of the class? (Look at bottom-of-class P0s/P1s, see how they improve)
+%3. Broader impact
+%	3a. Real world programs (and the challenges therein?)
+%	3b. Give to pintos kids (and open-source landslide on bochs in doing so)
+
 \chapter{Conclusion}
 
 %\appendix
@@ -149,6 +268,6 @@ But I am cooler.
 %\newcommand{\bibpreamble}{This text goes between the ``Bibliography''
 %  header and the actual list of references}
 \bibliographystyle{plainnat}
-\bibliography{register} %your bib file
+\bibliography{citations} %your bib file
 
 \end{document}
