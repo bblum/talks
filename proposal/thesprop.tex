@@ -72,9 +72,9 @@ Someone from a strange and faraway land
 
 \maketitle
 
-\begin{dedication}
-	For my dog, Louie.
-\end{dedication}
+%\begin{dedication}
+%	For my dog, Louie.
+%\end{dedication}
 
 \pagestyle{plain} % for toc, was empty
 
@@ -153,7 +153,8 @@ and often with very low probability.
 Most commonly, a programmer searches for concurrency bugs in her code by running it many times (in parallel, in serial, or both),
 hoping that eventually, it will run according to the particular interleaving required to expose a hypothetical bug.
 This technique, known as {\em stress testing}, is unreliable,
-providing no guarantee of finding the failing interleaving in any finite amount of time, even when a bug does exist.
+providing no guarantee of finding the failing interleaving in any finite amount of time.
+%, even when a bug does exist.
 It also provides no assurance of correctness:
 when finished, there is no way of knowing how much of the space of possible thread interleavings was actually tested.
 %it may by chance test only a single interleaving over and over again!
@@ -180,8 +181,7 @@ programmers will continue to fall back to the random approach of stress testing.
 Another problem stateless model checking suffers is that certain types of programs cannot be tested without the programmer putting forth some manual instrumentation effort.
 For example, operating system kernels implement their own sources of concurrency and their own synchronization primitives,
 so the checker needs to be told how to identify and control the execution of each thread.
-Some expert programmers may be willing to add manual annotations to their code,
-if they are already veteran concurrency research wizards,
+Some expert concurrency research wizards may be willing to add manual annotations to their code,
 but required manual effort is a serious downside for anyone with a looming deadline,
 and especially so for students who are still learning basic concurrency principles.
 %We should not expect programmers to add effortful manual annotations to their code,
@@ -225,6 +225,7 @@ This thesis will comprise three major contributions:
 
 % TODO(thesis): Other chapters of this thesis include...
 
+\input{overview}
 
 \chapter{Meaningful State Spaces}
 \label{chap:pps}

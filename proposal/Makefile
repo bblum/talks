@@ -1,6 +1,6 @@
 .PHONY: clean
 
-thesprop: thesprop.tex cmuthesis.cls
+thesprop: thesprop.tex cmuthesis.cls citations.bib overview.tex
 	pdflatex $< ; bibtex $(<:%.tex=%) ; pdflatex $< ; pdflatex $<
 
 clean:
