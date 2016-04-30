@@ -99,11 +99,11 @@ I will evaluate Landslide's suitability for inexpert use by presenting the resul
 Finally, I will explore broader impact by extending Landslide to test real-world programs and to be used by students at other universities.
 \end{abstract}
 
-\begin{acknowledgments}
-My advisor is cool.
-
-But I am cooler.
-\end{acknowledgments}
+%\begin{acknowledgments}
+%My advisor is cool.
+%
+%But I am cooler.
+%\end{acknowledgments}
 
 
 
@@ -140,7 +140,7 @@ Modern computer architectures have turned to increasing CPU core count, rather t
 %To take advantage of multiple cores, programs must be written {\em concurrently}
 To take advantage of multiple cores for performance, programmers must write software to execute {\em concurrently} --
 using multiple {\em threads} which execute multiple parts of a program's logic simultaneously.
-However, when threads access the same shared data, they may interleave in unexpected ways which change the outcomes of their execution.
+However, when threads access the same shared data, they may interleave in unexpected ways which change the outcome of their execution.
 When an unexpected interleaving produces undesirable program behaviour,
 for example, by corrupting shared data structures,
 we call it a {\em concurrency bug}.
@@ -156,7 +156,7 @@ This technique, known as {\em stress testing}, is unreliable,
 providing no guarantee of finding the failing interleaving in any finite amount of time.
 %, even when a bug does exist.
 It also provides no assurance of correctness:
-when finished, there is no way of knowing how much of the space of possible thread interleavings was actually tested.
+when finished, there is no way of knowing how many distinct thread interleavings were actually tested.
 %it may by chance test only a single interleaving over and over again!
 Nevertheless, stress testing remains popular because of how easily a programmer can use it:
 she simply wraps her program in a loop, sets it to run overnight, and kills it if her patience runs out before it finds a bug.
@@ -190,6 +190,8 @@ and especially so for students who are still learning basic concurrency principl
 This thesis will solve both problems discussed above.
 My thesis statement is as follows:
 
+\vspace{1em}
+
 \begin{center}
 	{\em my research is cool. please let me graduate.}
 \end{center}
@@ -202,12 +204,14 @@ and for automatically instrumenting operating system kernels in an educational s
 This thesis will comprise three major contributions:
 
 \begin{itemize}
-	\item {\bf Meaningful state spaces (\ref{chap:pps}).}
+	\item {\bf Meaningful state spaces (Chapter \ref{chap:quicksand}).}
 		I will present {\em Iterative Deepening}, a new algorithm for navigating the trade-off in how many preemption points to test at once.
 		Iterative Deepening incorporates state space estimation \cite{estimation} to decide on-the-fly whether each state space is worth pursuing, and uses data race analysis \cite{tsan} to find new preemption point candidates based on a program's dynamic behaviour.
-		This section will include a large evaluation of the technique, comparing its performance to three prior work approaches across 629 unique tests.
+		This section will include a large evaluation of the technique, comparing its performance to three prior work approaches across 600+ unique tests.
 		I will show that Iterative Deepening of preemption points outperforms prior work in terms both of finding bugs quickly and of completely verifying correctness when no bug exists.
-	\item {\bf Educational use (\ref{chap:410}).}
+
+		This work is {\bf largely completed} and is currently under submission at OOPSLA 2016.
+	\item {\bf Educational use (Chapter \ref{chap:410}).}
 		For the past three semesters, I have offered a fully-automated version of Landslide to students in 15-410, CMU's undergraduate Operating System Design and Implementation class \cite{kspec,thrlib}, for use as a debugging aid during the thread library project.
 		I will continue these user studies, and use the data to evaluate the suitability of stateless model checking in an educational setting.
 		%, investigating the following questions in particular:
@@ -215,26 +219,25 @@ This thesis will comprise three major contributions:
 		%	\item Does Landslide improve project submission quality when used as a debugging aid?
 		%	\item Does Landslide teach students lessons in concurrent programming 
 		%\end{itemize}
-	\item {\bf Broader impact (\ref{chap:lipservice}).}:
+
+		This is {\bf ongoing work}; I have run the user study for 3 semesters so far and am proposing to continue them and follow them up with an evaluation.
+	\item {\bf Broader impact (Chapter \ref{chap:lipservice}).}
 		Landslide includes several new techniques for testing kernels and thread libraries with little or no manual instrumentation required.
 		So far, a fully-automatic testing mode is available only for 15-410 thread library projects.
 		To prove these techniques are relevant beyond CMU's walls, I will extend Landslide to handle both Pintos kernel projects from other universities \cite{pintos} and ``real-world'' Linux programs.
 		I will conduct a user study in which students at another university test their Pintoses with Landslide,
 		and evaluate Landslide's ability to find known and/or new bugs in real-world programs.
+
+		This will be {\bf mostly new work}, as Landslide presently supports testing Pintoses only with some manual effort,
+		and does not yet feature instrumentation to run on Linux programs.
 \end{itemize}
 
 % TODO(thesis): Other chapters of this thesis include...
 
 \input{overview}
-
-\chapter{Meaningful State Spaces}
-\label{chap:pps}
-
-\chapter{Education}
-\label{chap:410}
-
-\chapter{Broader Impact}
-\label{chap:lipservice}
+\input{quicksand}
+\input{410}
+\input{lipservice}
 
 
 
@@ -254,7 +257,23 @@ This thesis will comprise three major contributions:
 %	3a. Real world programs (and the challenges therein?)
 %	3b. Give to pintos kids (and open-source landslide on bochs in doing so)
 
-\chapter{Conclusion}
+\chapter{Conclusion and Timeline}
+
+Stateless model checking is a powerful technique for testing concurrent programs,
+capable in theory of rooting out any bug or providing total verification on any program,
+but suffers several problems which relegate that theory to fantasy land \cite{vargomax}.
+Chief among those problems is exponential explosion of state spaces,
+making it difficult to decide in advance which combinations of preemption points can be productively tested within a given time limit.
+Another major problem is the manual annotation effort required to test certain types of concurrent programs,
+which is especially relevant for operating systems students who implement their own kernels.
+In this document I have proposed a thesis which will solve both problems.
+I leave you now with a proposed timeline for bringing each project to fruition.
+
+\begin{itemize}
+	\item TODO % TODO
+\end{itemize}
+
+% TODO - make a timeline
 
 %\appendix
 %\include{appendix}
