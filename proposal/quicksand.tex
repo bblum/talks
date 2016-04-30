@@ -3,3 +3,137 @@
 
 In this chapter, I will present a new algorithm for model checkers to automatically choose which preemption points to use to test reasonably-sized state spaces.
 This is the first of the three projects I am proposing for this thesis, and has largely been completed and is under submission.
+
+\section{Motivation}
+
+This project is motivated by my experience contributing to Parrot \cite{parrot},
+a partially-determinizing runtime for multithreaded programs which allowed some nondeterminism in performance-critical sections to achieve high performance.
+We combined Parrot with dBug \cite{dbug-ssv}, a model checker, to check the correctness of the nondeterministic sections of programs which remained.
+Unfortunately, dBug was able to finish a state space for fewer than half of these programs in our evaluation in a 24-hour time limit,
+even after the reduction Parrot provided.
+In that project, our model checker was limited to a fixed set of preemption points;
+in other words, it would always test different programs with the same granularity of thread interleavings.
+Consequently, the resulting completion time for each test would vary wildly,
+unpredictably falling on one side or the other of our arbitrary time limit.
+
+I argue that this is the wrong usage model for model checkers to present to users who wish to test for concurrency bugs.
+Users want concrete bug reports (obviously), or in absence of those, they want some assurance of the program's correctness.
+However, users do not live in a $\infty$-sized fantasy land \cite{vargomax},
+and are generally willing to wait only for some fixed finite time.
+If full verification of all possible interleavings is not possible within that time,
+a {\em partial verification} guarantee for some smaller state spaces is better than an ``I don't know'' verdict for one single state space.
+
+\section{Design}
+
+Hence, I propose a more user-friendly framework for model checking, in which many different state spaces are tested,
+and higher priority is given to state spaces which appear possible to complete before the user's patience runs out or their project is due.
+At the heart of this framework is an algorithm I call {\bf Iterative Deepening},
+by analogy with the eponymous technique in chess artificial intelligence \cite{iterative-deepening-chess-ai}.
+In both chess and model checking, Iterative Deepening makes progressively ``deeper'' searches of an exponentially-sized state space,
+repeatedly increasing the size of a subset state space to be explored,
+until a prescribed time limit is exceeded.
+While in chess, the size bound is determined by a single depth parameter,
+the size of model checking state spaces is determined by any number of different combinations of preemption points being enabled or disabled.
+
+{\bf Quicksand.}
+I have built a wrapper program, called Quicksand, which manages the execution of multiple simultaneous Landslide instances.
+Quicksand relies on state space estimation \cite{estimation} to decide at runtime how to prioritize these jobs.
+Landslide can provide these estimates to a reasonable accuracy before actually testing a large fraction of interleavings for a given state space.
+Quicksand seeks to maximize completed state spaces,
+as each one serves as a guarantee that all interleavings possible with its preemption points were tested.
+Moreover, because Iterative Deepening treats the set of preemption points as mutable,
+it can add new preemption points reactively based on any runtime analysis.
+Landslide begins with a statically-coded set of synchronization API preemption points (such as used by dBug \cite{dbug-ssv}),
+and during testing, runs a dynamic data-race analysis \cite{hybriddatarace,tsan,ifrit} to identify new candidate preemption points.
+
+\newcommand\PendingJobs{\ensuremath{\mathcal{P}}}
+\newcommand\SuspendedJobs{\ensuremath{\mathcal{S}}}
+\newcommand\GetETA[1]{ETA(#1)}
+\newcommand\GetPPSet[1]{PPSet(#1)}
+
+{\bf Iterative Deepening.}
+With a limited CPU budget, Quicksand must avoid running tests that are likely to be fruitless.
+Hence, it separates the available preemption point sets into a set of {\em suspended} jobs (partially-explored state spaces with high ETAs),
+and a set of {\em pending} jobs (untested ones with unknown ETAs).
+When Landslide reports an ETA exceeding the time limit,
+Quicksand compares with other pending and suspended jobs to find another one more likely to complete in time.
+The Iterative Deepening algorithm implements this comparison, presented formally in Algorithm~\ref{alg:shouldworkblock}.
+Its main feature is understanding that when one Landslide instance is testing a superset of preemption points compared to another, the state space is correspondingly guaranteed to contain a superset of possible thread interleavings.
+%This allows it to extend estimation information for too-large state spaces to even larger state spaces
+%that if \GetPPSet{$j_1$} $\subset$ \GetPPSet{$j_2$},
+%and $j_1$ is suspended,
+%then $j_2$'s state space is guaranteed to be strictly larger, so $j_2$ will take at least as long.
+%Hence we should avoid testing $j_2$ unless $j_1$ is later resumed and its ETA improves after further execution. %over time.
+%%reveals that it might finish in time after all.
+%Similarly, whenever a job finds a bug, we cancel all pending superset jobs, as they might find only the same bug.
+
+\begin{algorithm}[t]
+        \SetKwInOut{Input}{Input}
+        %\textbf{Function} GetBestJob($j_0$, PendingJobs, SuspendedJobs): \\
+        \Input{$j_0$, the currently-running job}
+        %\Input{$eta$, $j_0$'s predicted completion time}
+        \Input{\PendingJobs, the list of pending jobs, sorted by decreasing heuristic priority}
+        \Input{\SuspendedJobs, the list of already-suspended jobs, sorted by increasing ETA}
+        \Input{$T$, the remaining time in the CPU budget}
+        \If{\GetETA{$j_0$} $<$ HeuristicETAFactor $\times$ $T$}{
+                return $j_0$ // Common case: job is expected to finish.
+        }
+        \ForEach{job $j_P \in$ \PendingJobs}{
+                // Don't run a pending job if a subset of it is already suspended; its ETA would be at least as bad. \\
+                \If {$\forall j_S \in$ \SuspendedJobs, \GetPPSet{$j_S$} $\not\subset$ \GetPPSet{$j_P$}}{
+                        return $j_P$
+                }
+        }
+        %// no pending jobs; maybe resume a suspended job \\
+        \ForEach{job $j_S \in$ \SuspendedJobs}{
+                \If{\GetPPSet{$j_0$} $\not\subset$ \GetPPSet{$j_S$}
+                        $\land$
+                        \GetETA{$j_0$} $>$ \GetETA{$j_S$}}{
+                        // If a subset of $j_S$ is also suspended, don't run the larger one first. \\
+                        \If{$\forall j_{S2} \in$ \SuspendedJobs, \GetPPSet{$j_{S2}$} $\not\subset$ \GetPPSet{$j_S$}}{
+                                return $j_S$
+                        }
+                }
+        }
+        return $j_0$ // \GetETA{$j_0$} was bad, but no other $j$ was better.
+        \caption{Suspending exploration of a state space in favour of a potentially smaller one.}
+        \label{alg:shouldworkblock}
+\end{algorithm}
+
+\newcommand\AllJobs{\ensuremath{\mathcal{J}}}
+\begin{algorithm}[t]
+        \SetKwInOut{Input}{Input}
+        \Input{$j_0$, the currently-running job}
+        \Input{\AllJobs, the set of all existing (or completed) jobs}
+        \Input{$\alpha$, an instruction reported by the MC as part of a racing access pair}
+        \If{$\forall j \in \AllJobs,$
+        \GetPPSet{$j_0$} $\cup$ $\alpha$
+        $\not\subseteq$
+        \GetPPSet{$j$}
+        }{
+                AddNewJob(\GetPPSet{$j_0$} $\cup$ $\alpha$, HeuristicPriority($\alpha$)) \\
+        }
+        \If{$\forall j \in \AllJobs,$ \GetPPSet{$j$} $\neq \{yield, \alpha\}$}{
+                AddNewJob($\{yield, \alpha\}$, HeuristicPriority($\alpha$))
+        }
+        \caption{Adding new jobs with data-race PPs.}
+        \label{alg:handledatarace}
+\end{algorithm}
+
+{\bf Data-race preemption points.}
+As mentioned, runtime data race analysis produces new potential sites at which preempting the program may produce new behaviour.
+With Iterative Deepening, this is a simple matter of creating a new state space with an additional preemption point enabled on the racing instructions by each thread, shown formally in Algorithm~\ref{alg:handledatarace}.
+The new state spaces may expose a failure, in which case Landslide reports a data-race bug,
+or complete successfully, indicating a benign or false-positive data race.
+They may also uncover a new data-race candidate entirely, %in some alternate interleaving,
+in which case Quicksand iteratively advances to a superset state space containing PPs for both racing access pairs.
+Being constrained by a CPU budget,
+time may run out before completing a data race's associated state space,
+in which case Quicksand reports a potential false positive that the user must handle.
+
+\section{Verification}
+
+\section{Evaluation}
+
+% TODO: is related work needed?
+% i can easily talk about it here but i dont' want to set a weird precedent for super weak related work in my other sections.
