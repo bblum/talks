@@ -1,0 +1,71 @@
+\chapter{Background}
+\label{chap:background}
+
+This chapter will introduce the necessary background material on concurrency, stateless model checking, data-race analysis, and the relevant undergraduate operating systems classes.
+
+\section{Concurrency Bugs}
+
+\section{Stateless Model Checking}
+
+Model checking \cite{verisoft} is a testing technique for systematically exploring the possible thread interleavings of a concurrent program.
+A model checker executes the program repeatedly, each time according to a new thread interleaving, until the state space (or the CPU budget) is exhausted.
+During each execution, it forces threads to execute serially, thereby confining the program's nondeterminism to controlled thread switches.
+Some model checkers explicitly store the set of visited program states as a means of identifying equivalent interleavings \cite{spin}.
+This approach is called {\em stateful} model checking.
+In this thesis, I focus on {\em stateless} model checking,
+which instead analyzes the sequence of execution events to avoid a prohibitive memory footprint.
+Henceforth I will abbreviate ``stateless model checking'' simply as ``model checking'' for brevity.
+
+{\bf Static versus dynamic analysis.}
+Model checking is a {\em dynamic} program analysis, meaning that it observes the operations and accesses performed by the program as its code is executed.
+In contrast, {\em static} program analyses check certain properties at the source code level.
+Static analyses are ideal for ensuring certain standards of code quality, which often correlates with correctness,
+but cannot decide for certain whether a given program will fail during execution without actually running the code.
+% TODO: cite incompleteness theorem
+Static analyses face the challenge of {\em false alarms} (or {\em false positives}):
+code patterns which look suspicious but are actually correct.
+A debugging tool which reports too many false alarms will dissuade developers from using it \cite{racerx}.
+Dynamic analysis, our approach, identifies program behaviours that are definitely wrong,
+so each bug report is accompanied by concrete evidence of the violation.
+Assertions, segfaults, use-after-free of heap memory, and deadlock are examples of such failures we check for,
+although a checker may also include arbitrary program-specific predicates.
+
+{\bf Preemption points.}
+During execution, a model checker identifies a subset of the program's operations as ``interesting'', i.e.,
+points at which interrupting the current thread to run a different one is likely to produce different behaviour.
+These points, called {\em preemption points}, may be identified by any combination of human intuition and machine analysis.
+Typical preemption points include the boundaries of synchronization APIs (e.g., {\tt mutex\_lock}) or accesses to shared variables.
+Considering that at each preemption point multiple threads exist as options to run next, the set of possible ways to execute the program can be viewed as a tree.
+% TODO: fig tree
+I show an example execution tree in Figure~\ref{fig:tree}.
+The number of preemption points in each execution define the depth of this tree, and the number of threads available to run define the branching factor.
+Hence, in a program with $n$ preemption points and $k$ threads available to run at each, the state space size is $n^k$.
+Addressing the scaling problem in this exponential relation is the central research problem for all model checkers.
+
+{\bf Reduction techniques.}
+Dynamic Partial Order Reduction \cite{dpor} (henceforth, DPOR) is the premier algorithm for mitigating the exponential explosion that arises as program size increases.
+It identifies equivalent execution sequences according to Mazurkiewicz trace theory \cite{mazurkiewicz},
+and tests at least one execution from each equivalence class.
+Intuitively, if two thread transitions between preemption points do not conflict on any shared resource access, reordering them produces an equivalent interleaving, i.e., the same program behaviour.
+% TODO: put fig dpor
+Figure~\ref{fig:dpor} shows a part of an execution tree in which the operations by threads 1 and 2 are independent, and hence only one of the subtrees need be tested.
+Over the years, researchers have developed many enhancements to DPOR, such as Optimal DPOR \cite{optimal-dpor}, parallelizable DPOR \cite{parallel-dpor}, SAT-directed model checking \cite{satcheck}, Maximal Causality Reduction \cite{mcr}, and DPOR for relaxed memory architectures \cite{tsopso}.
+
+{\bf Search heuristics.}
+However, even though DPOR can prune an exponential number of redundant interleavings, the state space size is still exponential in the number of {\em dependent} (conflicting) interleavings.
+Developers will always want to test larger and larger programs, so no matter the quality of our reduction algorithm,
+we must accept that some tests will be too large to be fully tested in a reasonable time.
+Hence, recent model checking research has turned to heuristic techniques for achieving further reduction,
+optimizing the search to try to uncover bugs faster (should they exist)
+at the expense of possibly missing other bugs,
+or missing the chance to complete a full verification.
+Iterative Context Bounding \cite{chess-icb} is a popular such technique which heuristically reorders the search to prioritize interleavings with fewer preemptions first.
+This heuristic is based on the insight that most bugs require few preemptions to uncover, so interleavings with a number of preemptions that exceeds a certain bound will be de-prioritized, only tested until after all the fewer-preemption interleavings are completed.
+Preemption sealing \cite{sealing} is another heuristic strategy which restricts the scope of the search by limiting the model checker to use only preemption points arising from certain functions in the source code.
+This allows developers to vastly reduce state space size by identifying which program modules are already trusted,
+although it requires some human intuition to correctly mark those boundaries.
+
+
+\section{Data Race Analsyis}
+
+\section{Education}
