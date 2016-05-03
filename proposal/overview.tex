@@ -4,6 +4,9 @@
 This chapter will introduce the necessary background material on concurrency, stateless model checking, data-race analysis, and the relevant undergraduate operating systems classes.
 
 \section{Concurrency Bugs}
+% TODO
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Stateless Model Checking}
 
@@ -65,7 +68,168 @@ Preemption sealing \cite{sealing} is another heuristic strategy which restricts 
 This allows developers to vastly reduce state space size by identifying which program modules are already trusted,
 although it requires some human intuition to correctly mark those boundaries.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Data Race Analsyis}
 
+\begin{figure}[t]
+        \small
+	\begin{center}
+\begin{tabular}{c}
+\begin{tabular}{rll}
+        & \multicolumn{2}{c}{\texttt{int x = 0; bool y = false; mutex\_t mx;}} \\
+        \\
+        & {\bf Thread 1} & {\bf Thread 2} \\
+        1 & \texttt{\hilight{brickred}{x++;}~// A1} & \\
+        2 & \texttt{mutex\_lock(\&mx);} & \\
+        3 & \texttt{mutex\_unlock(\&mx);} & \\
+        4 & & \texttt{mutex\_lock(\&mx);} \\
+        5 & & \texttt{mutex\_unlock(\&mx);} \\
+        6 & & \texttt{\hilight{brickred}{x++;}~// A2} \\
+\end{tabular}
+\\
+	{\normalsize (a) True potential data race.}
+\\
+\\
+\begin{tabular}{rll}
+        %& \multicolumn{2}{c}{\texttt{int x = 0; bool y = false; mutex\_t mx;}} \\
+        & {\bf Thread 1} & {\bf Thread 2} \\
+        1 & \texttt{\hilight{brickred}{x++;}~// B1} & \\
+        2 & \texttt{mutex\_lock(\&mx);} & \\
+        3 & \texttt{y = true;} & \\
+        4 & \texttt{mutex\_unlock(\&mx);} & \\
+        5 & & \texttt{mutex\_lock(\&mx);} \\
+        6 & & \texttt{bool tmp = y;} \\
+        7 & & \texttt{mutex\_unlock(\&mx);} \\
+        8 & & \texttt{if (tmp) \hilight{brickred}{x++;}~// B2} \\
+        %8 & & \texttt{if (tmp)} \\
+        %9 & & \texttt{~~~~\hilight{brickred}{x++;}~// B2} \\
+\end{tabular}
+\\
+{\normalsize (b) No data race in any interleaving.}
+\end{tabular}
+	\end{center}
+\caption{{Data-race analyses may be prone to either {\em false negatives} or {\em false positives}.
+Applying Happens-Before to program (a) will miss the potential race possible between A1/A2 in an alternate interleaving,
+while using Limited Happens-Before on (b) will produce a false alarm on B1/B2.}}
+\label{fig:hb-example}
+\end{figure}
+
+Data race analysis \cite{eraser} identifies pairs of unsynchronized memory accesses between threads.
+Two instructions are said to race if:
+\begin{enumerate}
+	\item they both access the same memory address,
+	\item at least one is a write,
+	\item the threads do not hold the same lock,
+	\item and no synchronization enforces an order on the thread transitions (the {\em Happens-Before} relation).
+\end{enumerate}
+%In Figure~\ref{fig:example}, lines 3 and 5 each race with 2 and 6, and line 6 races with 8.
+In Figure~\ref{fig:hb-example}, the pairs of lines marked with comments (A1/A2/B1/B2) race.
+
+A data race analysis may be either {\em static} (inspecting source code) \cite{racerx} or {\em dynamic} (tracking individual accesses arising at run-time) \cite{tsan}.
+This paper focuses exclusively on dynamic analysis,
+so although our example refers to numbered source lines for ease of explanation,
+in practice we are actually classifying the individual memory access events corresponding to those lines during execution.
+Actually, each {\tt x++} statement likely compiles to two separate load and store instructions, so each of those two instructions from each of the two marked source lines pairwise will race (except for the two loads, which are both reads).
+
+{\bf Variants of Happens-Before.}
+        Most prior work focuses on {\em Happens-Before} \cite{lamport-clocks} as the order relation between accesses.
+\cite{predictive-dr} and \cite{hybriddatarace} identify a problem with this approach:
+it cannot identify access pairs separated by an unrelated lock operation which could race in an alternate interleaving,
+as shown in the example program in Figure~\ref{fig:hb-example}(a).
+We call such unreported access pairs {\em false negatives}.
+\cite{hybriddatarace} introduces the {\em Limited Happens-Before} relation,
+which will report such potential races
+by considering only blocking operations like {\tt cond\_wait} to enforce the order.
+However, consider the similar program in Figure~\ref{fig:hb-example}(b),
+in which the access pair ceases to exist in the alternate interleaving.
+Limited Happens-Before will report all potential races, avoiding false negatives \cite{tsan},
+but at the cost of necessarily reporting some such {\em false positives}.
+
+%Finally, the {\em Causally-Precedes} relation \cite{predictive-dr} %strikes a middle ground,
+%extends Happens-Before to additionally report a subset of potential races while soundly avoiding false positives.
+%It tracks conflicting accesses in intervening
+%critical sections to determine whether lock events are unrelated to a potential race.
+%Causally-Precedes will identify the potential race in Figure~\ref{fig:hb-example}(a), as the two critical sections do not conflict,
+%although it can still miss true potential races in other cases.
+
+In Chapter~\ref{chap:quicksand}, we use the Limited Happens-Before relation for our analysis.
+The justification for this is that, while stand-alone data-race analyses must avoid inundating the user with false alarms \cite{racerx},
+my work incorporates data-race analysis in an internal feedback loop, and reports only directly observed failures to the user.
+Hence, I accept some overhead from false positives for the sake of more thorough testing.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \section{Education}
+
+In this thesis I will tackle Pebbles and Pintos, two different system architectures used in educational operating systems courses.
+This section describes the projects which students implement and which Landslide tests.
+
+\subsection{Pebbles}
+
+In the course of a semester, students work on five programming assignments;
+the first two are individual, and the remaining three are the products of two-person teams.
+I will focus on the third and fourth of these, the thread library and kernel,
+called ``P2'' and ``P3'' respectively (the project numbers start at 0).
+The other three (a stack-crawling backtrace utility, a bare-metal game with device drivers, and a small extension to the P3 kernel) are not of concern in this thesis.
+Both P2 and P3 are built using the {\em Pebbles} system call specification, outlined in Table~\ref{tab:syscalls}
+
+\begin{table}
+        \center
+        \begin{tabular}{|l|p{0.75\textwidth}|}
+                \hline
+                \bf System call name & \bf Summary \\
+                \hline
+                \multicolumn{2}{c}{\em Lifecycle management} \\
+                \hline
+                \texttt{fork} & Duplicates the invoking task, including all memory regions. \\
+                \texttt{thread\_fork} & Creates a new thread in the current task.\\
+                \texttt{exec} & Replaces the program currently running in the invoking task with a new one specified. \\
+                \texttt{set\_status} & Records the exit status of the current task. \\
+                \texttt{vanish} & Terminates execution of the calling thread. \\
+                \texttt{wait} & Blocks execution until another task terminates, and collects its exit status.\\
+                \texttt{task\_vanish}* & Causes all threads of a task to \texttt{vanish}. \\
+                \hline
+                \multicolumn{2}{c}{\em Thread management} \\
+                \hline
+                \texttt{gettid} & Returns the ID of the invoking thread. \\
+                \texttt{yield} & Defers execution to a specified thread. \\
+                \texttt{deschedule} & Blocks execution of the invoking thread. \\
+                \texttt{make\_runnable} & Wakes up another \texttt{deschedule}d thread. \\
+                \texttt{get\_ticks} & Gets the number of timer ticks since bootup. \\
+                \texttt{sleep} & Blocks a thread for a given number of ticks. \\
+                \texttt{swexn} & Registers a user-space function as a software exception handler.\\
+                \hline
+                \multicolumn{2}{c}{\em Memory management} \\
+                \hline
+                \texttt{new\_pages} & Allocates a specified region of memory. \\
+                \texttt{remove\_pages} & Deallocates same. \\
+                \hline
+                \multicolumn{2}{c}{\em Console I/O} \\
+                \hline
+                \texttt{getchar}* & Reads one character from keyboard input. \\
+                \texttt{readline} & Reads the next line from keyboard input. \\
+                \texttt{print} & Prints a given memory buffer to the console. \\
+                \texttt{set\_term\_color} & Sets the color for future console output. \\
+                \texttt{set\_cursor\_pos} & Sets the console cursor location. \\
+                \texttt{get\_cursor\_pos} & Retrieves the console cursor location. \\
+                \hline
+                \multicolumn{2}{c}{\em Miscellaneous} \\
+                \hline
+                \texttt{ls} & Loads a given buffer with the names of files stored in the RAM disk ``file system.'' \\
+                \texttt{halt} & Ceases execution of the operating system. \\
+                \texttt{misbehave}* & Selects among several thread-scheduling policies. \\
+                \hline
+        \end{tabular}
+        \caption{The Pebbles specifcation defines 25 system calls. Students are not required to implement ones marked with an asterisk (*), though the reference kernel provides them. }
+        \label{tab:syscalls}
+\end{table}
+
+{\bf P2.}
+% TODO
+
+{\bf P3.}
+% TODO
+
+\subsection{Pintos}
+% TODO

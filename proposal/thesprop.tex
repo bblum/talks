@@ -41,10 +41,18 @@
 %for general printing (not binding)
 \usepackage[letterpaper,twoside,vscale=.8,hscale=.75,nomarginpar,hmarginratio=1:1]{geometry}
 
-% Provides a draft mark at the top of the document. 
+% Provides a draft mark at the top of the document.
 \draftstamp{\today}{DRAFT}
 
-\begin {document} 
+\newcommand\simics{\textsc{Simics}}
+\newcommand{\sect}[1]{\S #1}
+\newcommand\hilight[2]{\color{#1}#2\color{black}}
+\definecolor{orange}{RGB}{192,96,0}
+\definecolor{olivegreen}{RGB}{0,127,0}
+\definecolor{brickred}{RGB}{192,0,0}
+\definecolor{commentblue}{RGB}{0,0,192}
+
+\begin {document}
 \frontmatter
 
 %initialize page style, so contents come out right (see bot) -mjz
@@ -120,7 +128,7 @@ Finally, I will explore broader impact by extending Landslide to test real-world
 
 % The other requirements Catherine has:
 %
-%  - avoid large margins.  She wants the thesis to use fewer pages, 
+%  - avoid large margins.  She wants the thesis to use fewer pages,
 %    especially if it requires colour printing.
 %
 %  - The thesis should be formatted for double-sided printing.  This
@@ -219,7 +227,7 @@ This thesis will comprise three major contributions:
 		%, investigating the following questions in particular:
 		%\begin{itemize}
 		%	\item Does Landslide improve project submission quality when used as a debugging aid?
-		%	\item Does Landslide teach students lessons in concurrent programming 
+		%	\item Does Landslide teach students lessons in concurrent programming
 		%\end{itemize}
 
 		This is {\bf ongoing work}; I have run the user study for 3 semesters so far and am proposing to continue them and follow them up with an evaluation.
