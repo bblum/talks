@@ -121,10 +121,10 @@ Two instructions are said to race if:
 	\item they both access the same memory address,
 	\item at least one is a write,
 	\item the threads do not hold the same lock,
-	\item and no synchronization enforces an order on the thread transitions (the {\em Happens-Before} relation).
+	\item and no synchronization enforces an order on the thread transitions (the {\em Happens-Before} relation, described below).
 \end{enumerate}
 %In Figure~\ref{fig:example}, lines 3 and 5 each race with 2 and 6, and line 6 races with 8.
-In Figure~\ref{fig:hb-example}, the pairs of lines marked with comments (A1/A2/B1/B2) race.
+In Figure~\ref{fig:hb-example}, the pairs of lines marked with comments (A1 and A2, B1 and B2) race.
 
 A data race analysis may be either {\em static} (inspecting source code) \cite{racerx} or {\em dynamic} (tracking individual accesses arising at run-time) \cite{tsan}.
 This paper focuses exclusively on dynamic analysis,
