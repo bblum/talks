@@ -1,0 +1,36 @@
+\chapter{Related Work}
+\label{chap:related}
+
+In this chapter I provide a brief tour of the related work.
+
+\section{History of Stateless Model Checking}
+
+{\bf Hall of Fame.}
+Stateless model checking dates back to Verisoft \cite{verisoft}, the 1997 tool which first attempted to exhaustively explore the possibile ways to interleave threads.
+Since then, researchers have built many tools along the same lines to test many kinds of programs.
+%list of mcs follows
+The most popular model checker, according to citation count, is Microsoft Research's CHESS \cite{chess},
+a checker for userspace C++ programs which preempts at synchronization APIs.
+%which introduced the Iterative Context Bounding technique \cite{chess-icb} for heuristically ordering the search to uncover bugs faster.
+%
+Other checkers include MaceMC \cite{macemc}, MoDist \cite{modist}, SAMC \cite{samc}, ETA \cite{dbug-retreat},
+each of which limit thread communication to the boundaries of a message-passing API;
+%
+dBug \cite{dbug-ssv}, another CMU original, similar to CHESS;
+%
+and finally SPIN \cite{spin} and Inspect \cite{inspect} which can preempt at any shared variable access.
+%
+Perhaps by now, Landslide itself deserves a spot on this list: I first introduced it in my MS thesis \cite{landslide},
+and it is most notable for testing kernel-level code through the use of a simulator.
+
+{\bf Theoretical advances.}
+% TODO
+
+\section{Search Strategies}
+
+% TODO
+%etc..
+
+\section{Educational Testing Tools}
+
+\section{Real-World Techniques}
