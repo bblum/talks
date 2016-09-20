@@ -121,8 +121,7 @@ Henceforth I will abbreviate ``stateless model checking'' simply as ``model chec
 Model checking is a {\em dynamic} program analysis, meaning that it observes the operations and accesses performed by the program as its code is executed.
 In contrast, {\em static} program analyses check certain properties at the source code level.
 Static analyses are ideal for ensuring certain standards of code quality, which often correlates with correctness,
-but cannot decide for certain whether a given program will fail during execution without actually running the code.
-% TODO: cite incompleteness theorem
+but cannot decide for certain whether a given program will fail during execution without actually running the code \cite{incompleteness}.
 Static analyses face the challenge of {\em false alarms} (or {\em false positives}):
 code patterns which look suspicious but are actually correct.
 A debugging tool which reports too many false alarms will dissuade developers from using it \cite{racerx}.
@@ -148,9 +147,16 @@ Dynamic Partial Order Reduction \cite{dpor} (henceforth, DPOR) is the premier al
 It identifies equivalent execution sequences according to Mazurkiewicz trace theory \cite{mazurkiewicz},
 and tests at least one execution from each equivalence class.
 Intuitively, if two thread transitions between preemption points do not conflict on any shared resource access, reordering them produces an equivalent interleaving, i.e., the same program behaviour.
-% TODO: put fig dpor
 Figure~\ref{fig:dpor} shows a part of an execution tree in which the operations by threads 1 and 2 are independent, and hence only one of the subtrees need be tested.
 Over the years, researchers have developed many enhancements to DPOR, such as Optimal DPOR \cite{optimal-dpor}, parallelizable DPOR \cite{parallel-dpor}, SAT-directed model checking \cite{satcheck}, Maximal Causality Reduction \cite{mcr}, and DPOR for relaxed memory architectures \cite{tsopso}.
+
+\begin{figure}[t]
+	\begin{center}
+	\includegraphics[width=0.4\textwidth]{dpor.pdf}
+	\end{center}
+	\caption{DPOR identifies independent transitions by different threads which can commute without affecting program behaviour. Here, if the transitions marked 1 and 2 have no shared memory conflicts, the states marked with the red arrow are guaranteed identical. Hence, only one of the subtrees need be explored.}
+	\label{fig:dpor}
+\end{figure}
 
 {\bf Search heuristics.}
 However, even though DPOR can prune an exponential number of redundant interleavings, the state space size is still exponential in the number of {\em dependent} (conflicting) interleavings.
@@ -186,6 +192,7 @@ although it requires some human intuition to correctly mark those boundaries.
         6 & & \texttt{\hilight{brickred}{x++;}~// A2} \\
 \end{tabular}
 \\
+\\
 	{\normalsize (a) True potential data race.}
 \\
 \\
@@ -203,6 +210,7 @@ although it requires some human intuition to correctly mark those boundaries.
         %8 & & \texttt{if (tmp)} \\
         %9 & & \texttt{~~~~\hilight{brickred}{x++;}~// B2} \\
 \end{tabular}
+\\
 \\
 {\normalsize (b) No data race in any interleaving.}
 \end{tabular}

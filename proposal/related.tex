@@ -34,6 +34,7 @@ and an extension of the algorithm to include nondeterminism arising from weak me
 Recently, SATCheck and Maximal Causality Reduction have emerged as better-performing alternatives to DPOR.
 These algorithms use SMT solvers \cite{z3} to identify additional equivalences by analyzing the values read and written by each memory access.
 
+{\bf Other theoretical advances.}
 A number of other techniques address the problem that even with DPOR, a state space may be too large.
 Iterative Context Bounding (ICB) \cite{chess-icb} is a search ordering heuristic which prioritizes interleavings with fewer preemptions,
 according to the insight that most bugs require fewer preemptions to expose.
@@ -41,9 +42,6 @@ Bounded Partial Order Reduction \cite{bpor} adapts DPOR to be soundly compatible
 Preemption Sealing \cite{sealing} allows programmers to exclude preemption points arising from trusted source code modules,
 reducing the state space by limiting the scope of the test.
 Probabilistic Concurrency Testing \cite{randomized-scheduler} eschews DPOR's depth-first approach entirely (as well as any potential for completing the state space), randomly sampling a broad cross-section of the state space and providing probabilistic bounds on uncovering bugs.
-
-{\bf Other theoretical advances.}
-% TODO
 
 \section{Educational Testing Tools}
 
