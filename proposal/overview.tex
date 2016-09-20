@@ -4,6 +4,104 @@
 This chapter will introduce the necessary background material on concurrency, stateless model checking, data-race analysis, and the relevant undergraduate operating systems classes.
 
 \section{Concurrency Bugs}
+
+\subsection{The Basics}
+
+Modern software often turns to multithreading to improve performance.
+In a multithreaded program, multiple execution units (or {\em threads}) execute the same or different sections of code simultaneously.
+
+{\bf Simultaneity.}
+This simultaneity of threads is achieved either by executing each one on a separate CPU, or by interleaving them nondeterministically (as controlled by clock interrupts) on the same CPU.
+Because clock interrupts can occur at any instruction\footnote{
+	With some exceptions in kernel-level programming, which we discuss later.
+},
+we consider single-CPU multithreading to be simultaneous at the granularity of individual instructions.
+%
+Likewise, when multiple CPUs access the same memory,
+hardware protocols generally ensure that the events of a single instruction are executed atomically from the perspective of all CPUs.
+Although there are some exceptions --
+unlocked memory-to-memory instructions,
+unaligned writes \cite{unaligned-writes},
+and weak memory consistency models \cite{memory-consistency-models} --
+we model multicore concurrency the same way as above,
+deferring these exceptions beyond the scope of this work.
+We refer to an execution trace depicting the global sequence of events as a {\em thread interleaving} or {\em schedule}.
+
+{\bf Shared state.}
+% TODO cite more languages / type theories
+When a programming language offers multithreaded parallelism but forbids access to any shared state between threads \cite{rust-language},
+the simultaneity of threads is largely irrelevant to the program's behaviour.
+However, ``thread-unsafe'' languages such as C, C++, Java, and so on remain popular,
+in which threads may access global or heap-allocated variables and data structures with no enforced access discipline.
+The behaviour of such programs is then subject to the manner in which these accesses interleave.
+
+{\bf Identifying bugs.}
+Even if a program's behaviour is nondeterministic, that does not necessarily mean it has a bug.
+After all, many programs use random number generation to intentionally generate different outputs.
+We say a {\em concurrency bug} occurs when one or more of a program's nondeterministic behaviours is both {\em unanticipated} and {\em undesired}.
+Most often, a concurrency novice who programs with shared state will consider the possible interleavings where one thread's access sequence occurs entirely before the other's, but neglect to consider intermediate outcomes in which the threads' access sequences are interleaved.
+%
+Consider the program in Figure \ref{fig:concurrency-bug}: Any output between 2 and 2000 is possible\footnote{
+	Exercise for the reader: Show why 2 is a possible output, but 1 is not!
+},
+but whether this constitutes a bug is a matter of perspective.
+Was the program written to count to 2000, or was it written to compute a randomized distribution?
+In this thesis, we make no attempt to reason about the ``intent'' of programs,
+so we further restrict {\em concurrency bug} to denote a program behaviour which is mechanically identifiable,
+according to subjective notion of what programs behaviours are always bad.
+%
+Bug conditions include assertion failures,
+memory access errors (i.e., segmentation fault or bus error),
+heap errors (i.e., use-after-free or overflow),
+deadlocks,
+and infinite loops (which must be identified heuristically \cite{entscheidungsproblem}).
+
+\begin{figure}[t]
+	\begin{tabular}{cc}
+		\begin{tabular}{p{0.45\textwidth}p{0.5\textwidth}}
+			{\footnotesize
+			\begin{tabular}{l}
+				\texttt{int x;} \\
+				\texttt{void count() \{} \\
+				\texttt{~~~~for (int i = 0; i < 1000;} \\
+				\texttt{~~~~~~~~~i++)} \\
+				\texttt{~~~~~~~~x++;} \\
+				\texttt{\}} \\
+				\texttt{void main() \{} \\
+				\texttt{~~~~tid1 = thr\_create(count);} \\
+				\texttt{~~~~tid2 = thr\_create(count);} \\
+				\texttt{~~~~thr\_join(tid1);} \\
+				\texttt{~~~~thr\_join(tid2);} \\
+				\texttt{~~~~printf("\%d\textbackslash{}n", x);} \\
+				\texttt{\}} \\
+			\end{tabular}
+			}
+			&
+			{\footnotesize \begin{tabular}{ll}
+				{\bf \normalsize Thread 1} & {\bf \normalsize Thread 2} \\
+				\hline
+				\texttt{load tmp <- x;} & \\
+				& \texttt{load tmp <- x;} \\
+				& \texttt{add tmp <- 1;} \\
+				& \texttt{store x <- tmp;} \\
+				\texttt{add tmp <- 1;} & \\
+				\texttt{store x <- tmp;} & \\
+			\end{tabular}
+			}
+			\\
+			\\
+			(a) Source listing for a multithreaded program which might count to 2000.
+			&
+			(b) Example interleaving of the compiled assembly for (a),
+			in which 2 concurrent iterations of the loop yield 1 net increment of {\tt x}.
+		\end{tabular}
+	\end{tabular}
+	\caption{Example concurrent program in which simultaneous accesses to shared state may interleave to produce unexpected results.}
+	\label{fig:concurrency-bug}
+\end{figure}
+
+\subsection{Concurrency Primitives}
+
 % TODO
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
