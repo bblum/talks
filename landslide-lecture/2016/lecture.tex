@@ -22,7 +22,7 @@
 \author[Ben Blum]{Ben Blum \texttt{(bblum@andrew.cmu.edu)}}
 
 \institute[CMU 15-410]{Carnegie Mellon University - 15-410}
-\date[]{2016, February 10}
+\date[]{2016, September 28}
 
 \setbeamertemplate{footline}{\hspace*{.5cm}\scriptsize{\insertauthor\hspace*{50pt} \hfill\insertframenumber\hspace*{.5cm}}} 
 
@@ -257,7 +257,7 @@
 	\begin{itemize}
 		\item Make educated guesses about when to preempt
 		\item Preempt enough times to run {\em every single} interleaving
-		\item Tell the story of what {\em actually happened}.
+		%\item Tell the story of what {\em actually happened}.
 		\item Overlook fewer bugs!
 	\end{itemize}
 	% Say: At the end of this lecture, I'm going to be looking for some among you...
@@ -328,7 +328,7 @@
 				\item This represents one branch of the tree.
 			\end{itemize}
 		\item At end of each branch, rewind system and restart test.
-		\item Artificially add preemptions to produce different thread interleavings.
+		\item Artificially preempt to interleave threads differently.
 		\item Intuitively: Generate many ``tabular execution traces''.
 	\end{itemize}
 	\pause
@@ -401,8 +401,8 @@
 
 	Systematic tests are {\em parameterized} by the set of PPs.
 	\begin{itemize}
-		\item If there are $n$ PPs and $k$ threads, state space size is $n^k$.
-		\item Need to choose the set of PPs very carefully for test to be effective.
+		\item $n$ PPs and $k$ threads $\Rightarrow$ state space size is $n^k$.
+		\item Need to choose PPs very carefully for test to be effective.
 		\begin{itemize}
 			\item ``Effective'' = both comprehensive and feasible.
 		\end{itemize}
@@ -437,7 +437,7 @@
 	\textbf{Sweet spot}: Insert a thread switch everywhere it ``might matter''.
 
 	\linegap
-	When do we fear being preempted?
+	When are preemptions dangerous?
 	\begin{itemize}
 		\item Threads becoming runnable (\texttt{thr\_create()}, \texttt{cond\_signal()}, etc.)
 			\begin{itemize}
@@ -483,12 +483,20 @@
 \breakslide{\Huge Landslide}
 
 \begin{frame}{About The Project}
-	\textbf{About me}: 5th year graduate student, advised by Garth Gibson
+	\textbf{About me}: 6th year graduate student, advised by Garth Gibson
 	\begin{itemize}
 		\item TAed 15-410 for 3 semesters during undergrad
-		\item 1st graduate year was 5th year M.S., rest in Ph.D. program
+		%\item 1st graduate year was 5th year M.S., rest in Ph.D. program
+		\item Landslide's publication history
 		\begin{itemize}
-			\item \url{http://www.contrib.andrew.cmu.edu/~bblum/thesis.pdf}
+			\item Master's thesis
+			\begin{itemize}
+				\item \url{http://www.contrib.andrew.cmu.edu/~bblum/thesis.pdf}
+			\end{itemize}
+			\item Conference paper (to appear in OOPSLA this november)
+			\begin{itemize}
+				\item \url{http://www.contrib.andrew.cmu.edu/~bblum/oopsla.pdf}
+			\end{itemize}
 		\end{itemize}
 	\end{itemize}
 	\pause
@@ -502,7 +510,7 @@
 				\item Every memory access read/written
 			\end{itemize}
 			% FIXME for next year -- how much slowdown is there? 20x?
-		\item Originally supported only P3s; can now test P2s fully-automated
+		%\item Originally supported only P3s; can now test P2s fully-automated
 		\item {\em Landslide} shows how your {\em Pebbles} programs may not be stable.
 	\end{itemize}
 \end{frame}
@@ -593,9 +601,9 @@
 	\pause
 	\linegap
 
-	State of the art tools hard-code a fixed set of preemption points.
+	State of the art tools choose a fixed set of preemption points.
 	\begin{itemize}
-		\item E.g., ``all thread library API calls'' or ``all kernel mutex locks/unlocks''
+		\item E.g., ``all thread API calls'' or ``all kernel mutex locks/unlocks''
 		\item Depending on length of test, completion time is unpredictable.
 		\item More often, a subset is better in terms of time/coverage. 
 	\end{itemize}
@@ -612,10 +620,10 @@
 
 \begin{frame}{Iterative Deepening of Preemption Points}
 	Goal: Run the best tests for a given CPU budget.
-	\begin{itemize}
-		\item Technique: ``Iterative Deepening''
-	\end{itemize}
-	\linegap
+	%\begin{itemize}
+	%	\item Technique: ``Iterative Deepening''
+	%\end{itemize}
+	%\linegap
 
 	Based on experience from past 15-410 student volunteers
 	\begin{itemize}
@@ -749,7 +757,7 @@
 %	\end{itemize}
 %\end{frame}
 
-\begin{frame}{Last Semester}
+\begin{frame}{Previous Semesters}
 	%Spring 2015: 7 groups signed up to use Landslide; 5 found bugs
 	%%\begin{itemize}
 	%%	\item (that they didn't find during stress testing)
@@ -772,7 +780,7 @@
 	%		%	\item 6 of which required data-race PPs to expose
 	%		%\end{itemize}
 	%\end{itemize}
-	Fall 2015: 22 groups signed up to use Landslide; 21 found bugs
+	S'15, F'15, S'16: 48 groups signed up to use Landslide; 38 found bugs
 	% 18 groups found races
 	%\begin{itemize}
 	%	\item (that they didn't find during stress testing)
@@ -780,26 +788,41 @@
 	%%%% hopefully!
 	\linegap
 
-	Among all groups, 185 distinct tests were run
-	\begin{itemize}
-		\item 137 tests ran to completion without finding bugs
-		\item 21 {\em deterministic} bugs
-	\end{itemize}
-	\pause % ask: "who can tell me why landslide might find a *deterministic* bug not found during past testing? A: use-after-free
+	44 {\em deterministic} bugs (e.g. swexn, initialization)
 	\linegap
 
-	38 distinct {\em non-deterministic} bugs
+	85 distinct {\em non-deterministic} bugs (among 32 groups)
 	\begin{itemize}
-			%\begin{itemize}
-			%	\item 7 of which required data-race PPs to expose
-			%\end{itemize}
-		\item 11 groups (50\%) fixed all their bugs
+		\item 24 groups (75\%) fixed $\ge 1$ such bug
 			\begin{itemize}
 				\item (as verified by running Landslide again -- not a guarantee!)
 			\end{itemize}
-		\item 2.7 bugs ``fixed'' (see above) on average per group
+		\item 15 groups (47\%) fixed {\em all} such bugs
 		\item Most ambitious group: 11 distinct races found + fixed!
 	\end{itemize}
+	\linegap
+	% 44 dets 85 races
+
+	%Among all groups, 185 distinct tests were run
+	%\begin{itemize}
+	%	\item 137 tests ran to completion without finding bugs
+	%	\item 21 {\em deterministic} bugs
+	%\end{itemize}
+	%\pause % ask: "who can tell me why landslide might find a *deterministic* bug not found during past testing? A: use-after-free
+	%\linegap
+
+	%38 distinct {\em non-deterministic} bugs
+	%\begin{itemize}
+	%		%\begin{itemize}
+	%		%	\item 7 of which required data-race PPs to expose
+	%		%\end{itemize}
+	%	\item 11 groups (50\%) fixed all their bugs
+	%		\begin{itemize}
+	%			\item (as verified by running Landslide again -- not a guarantee!)
+	%		\end{itemize}
+	%	\item 2.7 bugs ``fixed'' (see above) on average per group
+	%	\item Most ambitious group: 11 distinct races found + fixed!
+	%\end{itemize}
 \end{frame}
 
 %\begin{frame}{A new treat} %since last semester}
@@ -905,7 +928,7 @@
 		\item Meet prerequisites of passing P2 tests
 		\item Complete sign-up form online to get further instructions
 			\begin{itemize}
-				\item \url{http://tinyurl.com/landslide-p2-s16}
+				\item \url{http://tinyurl.com/landslide-p2-f16}
 			\end{itemize}
 		\item Optional ``Landslide clinic'' for in-person tech (or moral) support
 			\begin{itemize}
@@ -966,30 +989,30 @@
 %	\end{itemize}
 %\end{frame}
 
-\begin{frame}{Last-last Semester}
-	Spring 2015: 7 groups signed up to use Landslide; 5 found bugs
-	%\begin{itemize}
-	%	\item (that they didn't find during stress testing)
-	%\end{itemize}
-	%%%% hopefully!
-	\linegap
-
-	Among all groups, 38 total tests were run
-	\begin{itemize}
-		\item 21 tests ran to completion without finding bugs
-		\item 4 {\em deterministic} bugs
-		\item 13 distinct {\em non-deterministic} bugs
-			\begin{itemize}
-				\item 6 in {\tt thr\_exit\_join} \small (use-after-free, deadlock, NULL, infinite loop...)
-				\item 4 in {\tt paraguay} (deadlock, infinite loop)
-				\item 2 in {\tt broadcast\_test} (deadlock, infinite loop)
-				\item 1 in {\tt rwlock\_downgrade\_read\_test} (use-after-free)
-			\end{itemize}
-			%\begin{itemize}
-			%	\item 6 of which required data-race PPs to expose
-			%\end{itemize}
-	\end{itemize}
-\end{frame}
+%\begin{frame}{Last-last Semester}
+%	Spring 2015: 7 groups signed up to use Landslide; 5 found bugs
+%	%\begin{itemize}
+%	%	\item (that they didn't find during stress testing)
+%	%\end{itemize}
+%	%%%% hopefully!
+%	\linegap
+%
+%	Among all groups, 38 total tests were run
+%	\begin{itemize}
+%		\item 21 tests ran to completion without finding bugs
+%		\item 4 {\em deterministic} bugs
+%		\item 13 distinct {\em non-deterministic} bugs
+%			\begin{itemize}
+%				\item 6 in {\tt thr\_exit\_join} \small (use-after-free, deadlock, NULL, infinite loop...)
+%				\item 4 in {\tt paraguay} (deadlock, infinite loop)
+%				\item 2 in {\tt broadcast\_test} (deadlock, infinite loop)
+%				\item 1 in {\tt rwlock\_downgrade\_read\_test} (use-after-free)
+%			\end{itemize}
+%			%\begin{itemize}
+%			%	\item 6 of which required data-race PPs to expose
+%			%\end{itemize}
+%	\end{itemize}
+%\end{frame}
 
 \subsection{State Space Reduction}
 
