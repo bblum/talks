@@ -221,18 +221,356 @@
 
 \breakslide{Background: Data-Race Analysis}
 
+\begin{frame}{Data-Race Analysis}
+	\textbf{Data race:} 2 threads access the same memory, and...
+	\begin{itemize}
+		\item At least one access is a write
+		\item Threads do not hold the same lock
+		\item No {\em Happens-Before} relation between threads
+	\end{itemize}
+	\pause
+	\linegap
+
+	Variants of Happens-Before (HB)
+	\begin{itemize}
+		\item {\bf Pure HB:} Any synchronization events {\em [Lamport '78]}
+			% Say: "Or another way of putting it I heard from one of yesterday's talks that I'm stealing, one event is guaranteed to be visible to the other"
+			% Or don't, idgaf
+		\item {\bf Limited HB:} Blocking synchronization (e.g. \texttt{cond\_wait()}) enforces one ordering {\em [O'Callahan '03]}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Happens-Before Example}
+	\begin{center}
+		\begin{tabular}{ll}
+			{\bf Thread 1}	& {\bf Thread 2} \\
+			\texttt{\hilight{red}{x++;}}	& \\
+			\texttt{mutex\_lock(m);}	& \\
+			\texttt{// unrelated}		& \\
+			\texttt{mutex\_unlock(m);}	& \\
+				& \texttt{mutex\_lock(m);} \\
+				& \texttt{// unrelated} \\
+				& \texttt{mutex\_unlock(m);} \\
+				& \texttt{\hilight{red}{x++;}} \\
+		\end{tabular}
+		\linegap
+
+		No race under Pure HB; {\em true potential race} under Limited HB.
+	\end{center}
+\end{frame}
+\begin{frame}{Happens-Before Example}
+	\begin{center}
+		\begin{tabular}{ll}
+			{\bf Thread 1}	& {\bf Thread 2} \\
+			\texttt{\hilight{red}{x++;}}	& \\
+			\texttt{mutex\_lock(m);}	& \\
+			\texttt{\hilight{blue}{y = true;}}	& \\
+			\texttt{mutex\_unlock(m);}	& \\
+				& \texttt{mutex\_lock(m);} \\
+				& \texttt{\hilight{blue}{bool tmp = y;}} \\
+				& \texttt{mutex\_unlock(m);} \\
+				& \texttt{\hilight{blue}{if (tmp)}~\hilight{red}{x++;}} \\
+		\end{tabular}
+		\linegap
+
+		No race under Pure HB; {\em false positive} under Limited HB.
+	\end{center}
+\end{frame}
+
+\begin{frame}{Races, Bugs, What's the Difference?}
+	Not all data races lead to failures.
+	\begin{itemize}
+		\item C++ spec: All data races are undefined behaviour.
+		\item Many prior tools: User attention is valuable, report only {\em failing} races. {\em [Engler '03, Kasicki '12]}
+	\end{itemize}
+	\linegap
+
+	Stateless model checkers search for concrete, observable failures
+	\begin{itemize}
+		\item Assertion failures, memory errors, infinite loops
+	\end{itemize}
+	\linegap
+
+	{\bf Problem:} Classify data races as {\em failing} or {\em benign}.
+\end{frame}
+
+\begin{frame}{Example (again)}
+	\begin{center}
+	\begin{tabular}{ll}
+		Initially \texttt{x = 0;} \\
+		\\
+		{\bf Thread 1} & {\bf Thread 2} \\
+		\\
+		\texttt{\hilight{orange}{mutex\_lock}(m);} \\
+		\texttt{int tmp = x;} \\
+								& \texttt{atomic\_xadd(\&x, 1);} \\
+			`					& \texttt{\hilight{olivegreen}{yield}();} \\
+								& \texttt{atomic\_xadd(\&x, 1);} \\
+		\texttt{x = tmp + 1;} \\
+								& \texttt{\hilight{red}{assert(x >= 2);}} \\
+		\texttt{\hilight{blue}{mutex\_unlock}(m);} \\
+		\texttt{assert(x >= 1);}
+	\end{tabular}
+	\end{center}
+\end{frame}
+
+\begin{frame}{State Space (again)}
+	\begin{center}
+		\includegraphics[width=0.96\textwidth]{tree-maximal-only.pdf}
+		\linegap
+
+		None of these branches contain the necessary preemption!
+		\linegap
+
+		A {\bf data-race preemption point} is required to find the bug.
+	\end{center}
+\end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\breakslide{Contribution: Iterative Deepening}
+\breakslide{Iterative Deepening and Quicksand}
+
+\begin{frame}{Contribution}
+	\textbf{Algorithm: Iterative Deepening}
+	\begin{itemize}
+		\item Seed model checker with synchronization API PPs;
+		\item Dynamically detect new data-race candidates;
+		\item Add data-race PPs as discovered;
+		\item Iteratively advance to state spaces with new PPs;
+		\item Prioritize them with dynamic state space estimates;
+		\item ...until specified CPU budget is exhausted.
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Iterative Deepening}
+	``Minimal'' state space: mandatory thread switches only
+	\begin{itemize}
+		\item \texttt{yield()}, \texttt{cond\_wait()}, etc.
+	\end{itemize}
+	\linegap
+
+	\begin{center}
+		\includegraphics[width=0.3\textwidth]{tree0.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Iterative Deepening}
+	Different PPs can produce state spaces of different sizes.
+	\linegap
+
+	Testing them in parallel hedges our bets.
+	\linegap
+
+	\begin{center}
+		\includegraphics[width=0.48\textwidth]{tree1.pdf}
+		\quad
+		\includegraphics[width=0.48\textwidth]{tree2.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Iterative Deepening}
+	If time allows, we combine PPs to produce larger tests.
+	\linegap
+
+	All PPs enabled = ``maximal'' state space
+	\begin{itemize}
+		\item Prior work tools explore this state space only.
+	\end{itemize}
+	\linegap
+
+	\begin{center}
+		\includegraphics[width=0.8\textwidth]{tree3.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Implementation}
+	\textbf{Landslide} {\em [Blum '12]}, our simulator-based model checker
+	\begin{itemize}
+		\item Tests Pebbles thread libraries (CMU) and Pintos kernels (Berkeley, U. of Chicago, etc.)
+		\item Wind River Simics provides instruction/memory-level tracing
+		\item Features DPOR, estimation, ICB, and data-race detection
+	\end{itemize}
+	\linegap
+
+	{\bf Quicksand}, our Iterative Deepening implementation
+	\begin{itemize}
+		\item Manages queue of {\em jobs} with different PP combinations
+		\item A separate Landslide instance tests each job
+		\item Prioritizes jobs based on state space estimates
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{System Architecture}
+	% TODO
+\end{frame}
+
+\begin{frame}{Iterative Deepening Reductions}
+	If one job is a subset of another, testing either might let us skip the other.
+	% TODO
+\end{frame}
+
+\begin{frame}{Total Verification}
+	\textbf{Convergence theorem:} Testing maximal state space, after detecting all data races, $\equiv$ preempting everywhere!
+	\begin{itemize}
+		\item Insight: $\forall$ arbitrary buggy interleaving, $\exists$ equivalent interleaving % say 'under DPOR' i guess?
+			using only sync/data-race PPs.
+	\end{itemize}
+	\linegap
+
+	Hence, Iterative Deepening provides ``best of both worlds'':
+	\begin{itemize}
+		\item Provides total safety guarantee for small tests
+		\item Finds bugs quickly for large tests when completion is infeasible
+	\end{itemize}
+\end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \breakslide{Evaluation}
 
+\begin{frame}{Evaluation Questions}
+	Comparing to single-state-space (SSS) testing
+	\begin{itemize}
+		\item Do we find more bugs given fixed CPU budgets?
+		\item Do we provide more total verifications?
+		\item ...whether or not SSS chooses PPs on synchronization only, or ``everywhere''?
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Experimental Setup}
+	Testing OS projects from CMU, Berkeley, and U. Chicago
+	\begin{itemize}
+		\item CMU: 79 ``Pebbles'' thread libraries ($\times$ 6 test cases each)
+		\item Berkeley \& U. Chicago: 78 ``Pintos'' kernels ($\times$ 3 test cases each)
+		\item 629 unique tests in total
+	\end{itemize}
+	\pause
+	\linegap
+	
+	Experimental trials:
+	\begin{itemize}
+		\item Quicksand with Limited HB
+		\item Quicksand with Pure HB
+		\item SSS Landslide with ICB, mutex/yield PPs only
+		\item SSS Landslide with ICB and ``Preempt Everywhere'' strategy
+	\end{itemize}
+	\pause
+	\linegap
+
+	629 tests $\times$ 10 CPU-hours $\times$ 4 trials $\approx$ 1000 CPU-days
+\end{frame}
+
+\begin{frame}{Results (Bug-finding, CPU time)}
+	\begin{center}
+	\vspace{-0.8em}
+	\includegraphics[width=0.87\textwidth]{bugs-talk.pdf}
+	\end{center}
+\end{frame}
+\begin{frame}{Results (Bug-finding, wall-clock time)}
+	\begin{center}
+	\vspace{-0.8em}
+	\includegraphics[width=0.87\textwidth]{bugs-wallclock-talk.pdf}
+	\end{center}
+\end{frame}
+\begin{frame}{Results (Verification, CPU time)}
+	\begin{center}
+	\vspace{-0.8em}
+	\includegraphics[width=0.87\textwidth]{verifs-talk.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Takeaway}
+	Quicksand outperforms SSS after 10 CPU-hours in all cases.
+	\begin{itemize}
+		\item 108\%-125\% as many bugs found
+		\item 336\%-428\% as many verifications provided
+	\end{itemize}
+	\linegap
+
+	``Preempt Everywhere'' finds bugs best for SSS, but overhead of PPs significantly impacts completion time.
+	\linegap
+
+	Pure HB provides more verifications; when possible; \\
+	Limited HB finds more bugs, at expense of completion time.
+\end{frame}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\breakslide{Thanks \& Questions}
+
 \breakslide{Bonus Slides}
+
+\begin{frame}{More Statistics about our Test Suite}
+	Bugs by required number of preemptions to expose:
+	\begin{center}
+        	\footnotesize
+        \begin{tabular}{r|c|c}
+                {\bf Bound} & {\bf SSS-MC-ICB} & {\bf SSS-MC-Shared-Mem} \\
+                \hline
+                0       & 2     & 1     \\  
+                1       & 82    & 86    \\  
+                2       & 16        & 32    \\  
+                3       & 2     & 3     \\  
+                4+      & 0     & 0     \\  
+                \hline
+                Total   & 102       & 122   \\  
+        \end{tabular}
+	\end{center}
+	\linegap
+	
+	Bugs by type (Limited HB trial):
+	% Not actually complete, sorry. I didn't run "getbugtype" on all of the 153 bugs.
+	% Also some of them had multiple bug types and I am including those here.
+	% This is what you can see on the publically available spreadsheet.
+	\begin{itemize}
+		\item 45 heap errors (43 use-after-free, 2 other)
+		\item 32 page fault crashes %(11 kernel, 21 userspace)
+		\item 26 assertion failures %(21 kernel, 5 userspace)
+		\item 21 deadlocks
+		\item 2 infinite loops
+		\item 1 recursive mutex lock
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Results (``Nondeterministic'' Data Races)}
+	\begin{center}
+		\vspace{-0.8em}
+	\includegraphics[width=0.88\textwidth]{dr-false-negatives-poster.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{DPOR Example}
+	\begin{center}
+		\includegraphics[width=\textwidth]{undiamond1.png}
+	\end{center}
+\end{frame}
+
+\begin{frame}{References}
+	\scriptsize
+	\begin{itemize}
+		\item {\bf [Lamport '78]}: 
+			Leslie Lamport. Time, clocks, and the ordering of events in a distributed system.
+			Commun. ACM, 1978.
+		\item {\bf [Godefroid '97]}: Patrice Godefroid.
+			VeriSoft. A tool for the automatic analysis of concurrent reactive software. CAV 1997.
+		\item {\bf [Engler '03]}: Dawson Engler and Ken Ashcraft. 
+			RacerX: effective, static detection of race conditions and deadlocks. SOSP 2003.
+		\item {\bf [O'Callahan '03]}: Robert O'Callahan and Jong-Deok Choi.
+			Hybrid dynamic data race detection. PPoPP '03.
+		\item {\bf [Flanagan '05]}: Cormac Flanagan and Patrice Godefroid. Dynamic partial-order reduction for
+			model checking software. POPL 2005.
+		\item {\bf [Musuvathi '08]}: Madanlal Musuvathi et al. Finding and Reproducing Heisenbugs in Concurrent
+			Programs. OSDI 2008.
+		\item {\bf [Simsa '12]}: Jiri Simsa. Runtime Estimation and Resource Allocation for
+			Concurrency Testing. CMU-PDL-12-113. December 2012.
+		\item {\bf [Blum '12]}: Ben Blum. Landslide: Systematic Dynamic Race Detection in Kernel
+			Space. CMU-CS-12-118. May 2012.
+		\item {\bf [Kasicki '12]}: Baris Kasicki. Data races vs. data race bugs: telling the difference with Portend. ASPLOS '12.
+		\item {\bf [Huang '15]}: Jeff Huang. Stateless model checking concurrent programs with maximal causality reduction. PLDI '15.
+
+	\end{itemize}
+\end{frame}
+
 
 \end{document}
 
