@@ -20,7 +20,7 @@
 
 \title[Quicksand]{{\bf Stateless Model Checking \\ with Data-Race Preemption Points}}
 %\subtitle[]{CALCM group seminar}
-\author[Ben Blum]{Ben Blum \texttt{(bblum@cs.cmu.edu)}}
+\author[Ben Blum]{{\bf Ben Blum}, Garth Gibson} %\textsf{bblum@cs.cmu.edu} \\ Garth Gibson \textsf{garth@cs.cmu.edu}}
 
 \institute[]{Carnegie Mellon University \\ Pittsburgh, PA, USA}
 \date[]{2016, November 03}
@@ -101,7 +101,7 @@
 		\texttt{\hilight{orange}{mutex\_lock}(m);} \\
 		\texttt{int tmp = x;} \\
 								& \texttt{atomic\_xadd(\&x, 1);} \\
-			`					& \texttt{\hilight{olivegreen}{yield}();} \\
+								& \texttt{\hilight{olivegreen}{yield}();} \\
 								& \texttt{atomic\_xadd(\&x, 1);} \\
 		\texttt{x = tmp + 1;} \\
 								& \texttt{\hilight{red}{assert(x >= 2);}} \\
@@ -195,13 +195,13 @@
 	\begin{itemize}
 		\item Guesses completion time in advance based on existing progress
 	\end{itemize}
-	\pause
-	\linegap
+	%\pause
+	%\linegap
 
-	Maximal Causality Reduction {\em [Huang '15]}
-	\begin{itemize}
-		\item Upgrades/replaces DPOR using constraint solving
-	\end{itemize}
+	%Maximal Causality Reduction {\em [Huang '15]}
+	%\begin{itemize}
+	%	\item Upgrades/replaces DPOR using constraint solving
+	%\end{itemize}
 \end{frame}
 
 \begin{frame}{Challenge}
@@ -303,7 +303,7 @@
 		\texttt{\hilight{orange}{mutex\_lock}(m);} \\
 		\texttt{int tmp = x;} \\
 								& \texttt{atomic\_xadd(\&x, 1);} \\
-			`					& \texttt{\hilight{olivegreen}{yield}();} \\
+								& \texttt{\hilight{olivegreen}{yield}();} \\
 								& \texttt{atomic\_xadd(\&x, 1);} \\
 		\texttt{x = tmp + 1;} \\
 								& \texttt{\hilight{red}{assert(x >= 2);}} \\
@@ -387,6 +387,7 @@
 	\begin{itemize}
 		\item Tests Pebbles thread libraries (CMU) and Pintos kernels (Berkeley, U. of Chicago, etc.)
 		\item Wind River Simics provides instruction/memory-level tracing
+			% Say "although the same thing could be achieved with compiler instrumentation"
 		\item Features DPOR, estimation, ICB, and data-race detection
 	\end{itemize}
 	\linegap
@@ -531,6 +532,36 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \breakslide{Thanks \& Questions}
+
+% Anticipating questions:
+
+% Q: What's with all the 'unknowns' in wait-simple for SSSMC-Everywhere?
+
+% A: Those test cases weren't able to compute a state space estimate because
+% they couldn't even reach the end of the first execution to be tested. Unlike
+% the other 8 tests, wait-simple is testing both kernel and userspace code at
+% once, which compounds the effect of putting a PP on every single memory access.
+
+% Q: Inconsistencies between QS/Everywhere on verified vs bug-found tests,
+% doesn't that serve as a counterexample to your soundness of verification?
+
+% A: I need to look into those, but to make a guess, there are a few heuristics
+% at play which could introduce some unsoundness in either trial. For example,
+% our heuristic infinite loop check looks at the structure of the execution
+% tree, comparing the number of PPs against past branches, which could be
+% falsely tripped by all the PPs which Everywhere adds. On the other hand,
+% SSSMC-Everywhere excludes threads' memory accesses to their own stacks, which
+% could potentially be data races depending on the implementation of certain
+% sync primitives.
+
+% Q: MCR?
+
+% A: MCR is a DPOR alternative which upgrades its ability to find reductions.
+% It's still a strategy for exploring a single state space, so it's perfectly
+% compatible with Quicksand. Whether or not the performance improvements are
+% orthogonal is a matter for future work.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \breakslide{Bonus Slides}
 
