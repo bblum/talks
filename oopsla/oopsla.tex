@@ -484,9 +484,9 @@
 	
 	Experimental trials:
 	\begin{itemize}
-		\item Quicksand with Limited HB
+		\item Quicksand with Limited HB (10 CPUs $\times$ 1 hour)
 		\item Quicksand with Pure HB
-		\item SSS Landslide with ICB, mutex/yield PPs only
+		\item SSS Landslide with ICB, mutex/yield PPs only (1 CPU $\times$ 10 hours)
 		\item SSS Landslide with ICB and ``Preempt Everywhere'' strategy
 	\end{itemize}
 	\pause
@@ -570,7 +570,7 @@
 	\begin{center}
         	\footnotesize
         \begin{tabular}{r|c|c}
-                {\bf Bound} & {\bf SSS-MC-ICB} & {\bf SSS-MC-Shared-Mem} \\
+		{\bf Bound} & {\bf SSS (sync PPs only)} & {\bf SSS (preempt everywhere)} \\
                 \hline
                 0       & 2     & 1     \\  
                 1       & 82    & 86    \\  
