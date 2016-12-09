@@ -23,9 +23,9 @@
 \author[Ben Blum]{{\bf Ben Blum}, Garth Gibson} %\textsf{bblum@cs.cmu.edu} \\ Garth Gibson \textsf{garth@cs.cmu.edu}}
 
 \institute[]{Carnegie Mellon University \\ Pittsburgh, PA, USA}
-\date[]{2016, November 03}
+\date[]{2016, November 07}
 
-\setbeamertemplate{footline}{\hspace*{.5cm}\scriptsize{\insertauthor\hspace*{50pt} \hfill\insertframenumber\hspace*{.5cm}}} 
+\setbeamertemplate{footline}{\hspace*{.5cm}\scriptsize{\insertauthor\hspace*{50pt} \hfill\insertframenumber\hspace*{.5cm}}}
 
 \usecolortheme{seahorse}
 \usecolortheme{rose}
@@ -111,10 +111,11 @@
 	\end{center}
 \end{frame}
 
+% Say, "As the first sentence of any related paper in this field will tell you, "concurrency bugs are notoriously hard to find and debug", so stateless MC is a technique to make it less painful."
 \begin{frame}{Stateless Model Checking}
 	Stateless Model Checking {\em [Godefroid '97]}
 	\begin{itemize}
-		\item Execution-based concurrency testing technique
+		\item Dynamic concurrency testing technique
 		\item Test framework controls thread scheduling
 		\item Each test iteration, test a different interleaving
 		\item Goal: Exhaustively check all possible program behaviours
@@ -129,7 +130,7 @@
 \begin{frame}{Stateless Model Checking}
 	Stateless Model Checking {\em [Godefroid '97]}
 	\begin{itemize}
-		\item Execution-based concurrency testing technique
+		\item Dynamic concurrency testing technique
 		\item Test framework controls thread scheduling
 		\item Each test iteration, test a different interleaving
 		\item Goal: Exhaustively check all possible program behaviours
@@ -155,7 +156,7 @@
 
 	Possible interleavings represented as a tree
 	\begin{itemize}
-		\item Node: Intermediate execution state 
+		\item Node: Intermediate execution state
 		\item Edge: State transition from executing a thread
 	\end{itemize}
 \end{frame}
@@ -172,7 +173,7 @@
 	\linegap
 
 	Prior model checkers hard-code a fixed set of PPs, committing to one state space in advance.
-	% say: "...then attempt to cope with the resulting exponentially sized problem"
+	% say: "...then attempt to cope with the resulting exponentially sized problem, however big it may be"
 \end{frame}
 
 \begin{frame}{Coping techniques}
@@ -181,14 +182,14 @@
 	\begin{itemize}
 		\item Identifies independent (commuting) transitions to prune
 	\end{itemize}
-	\pause
+	%\pause
 	\linegap
 
 	Iterative Context Bounding (ICB) {\em [Musuvathi '08]}
 	\begin{itemize}
 		\item Heuristically orders search to prioritize fewer preemptions
 	\end{itemize}
-	\pause
+	%\pause
 	\linegap
 
 	State space estimation {\em [Simsa '12]}
@@ -205,10 +206,10 @@
 \end{frame}
 
 \begin{frame}{Challenge}
-	Given fixed PPs, testing time is unpredictable.
+	Given fixed PPs, resulting state space can be inappropriate
 	\begin{itemize}
-		\item Even small code changes can have drastic impact
 		\item Choosing PPs statically makes tests infeasible, insufficient, or both!
+		\item Even small code changes can have drastic impact
 	\end{itemize}
 	\linegap
 
@@ -385,7 +386,7 @@
 \begin{frame}{Implementation}
 	\textbf{Landslide} {\em [Blum '12]}, our simulator-based model checker
 	\begin{itemize}
-		\item Tests Pebbles thread libraries (CMU) and Pintos kernels (Berkeley, U. of Chicago, etc.)
+		\item Targets Pebbles thread libraries (CMU) and Pintos kernels (Berkeley, U. of Chicago, etc.)
 		\item Wind River Simics provides instruction/memory-level tracing
 			% Say "although the same thing could be achieved with compiler instrumentation"
 		\item Features DPOR, estimation, ICB, and data-race detection
@@ -572,29 +573,38 @@
         \begin{tabular}{r|c|c}
 		{\bf Bound} & {\bf SSS (sync PPs only)} & {\bf SSS (preempt everywhere)} \\
                 \hline
-                0       & 2     & 1     \\  
-                1       & 82    & 86    \\  
-                2       & 16        & 32    \\  
-                3       & 2     & 3     \\  
-                4+      & 0     & 0     \\  
+                0       & 2     & 1     \\
+                1       & 82    & 86    \\
+                2       & 16        & 32    \\
+                3       & 2     & 3     \\
+                4+      & 0     & 0     \\
                 \hline
-                Total   & 102       & 122   \\  
+                Total   & 102       & 122   \\
         \end{tabular}
 	\end{center}
 	\linegap
 	
-	Bugs by type (Limited HB trial):
-	% Not actually complete, sorry. I didn't run "getbugtype" on all of the 153 bugs.
-	% Also some of them had multiple bug types and I am including those here.
-	% This is what you can see on the publically available spreadsheet.
+	Bugs by type (Pure HB trial):
 	\begin{itemize}
-		\item 45 heap errors (43 use-after-free, 2 other)
-		\item 32 page fault crashes %(11 kernel, 21 userspace)
-		\item 26 assertion failures %(21 kernel, 5 userspace)
-		\item 21 deadlocks
-		\item 2 infinite loops
+		\item 56 deadlocks
+		\item 49 heap errors (47 use-after-free)
+		\item 35 assertion failures
+		\item 31 page fault crashes
+		\item 1 infinite loop
 		\item 1 recursive mutex lock
 	\end{itemize}
+	% Limited HB results below
+	% % Not actually complete, sorry. I didn't run "getbugtype" on all of the 153 bugs.
+	% % Also some of them had multiple bug types and I am including those here.
+	% % This is what you can see on the publically available spreadsheet.
+	% \begin{itemize}
+	% 	\item 45 heap errors (43 use-after-free, 2 other)
+	% 	\item 32 page fault crashes %(11 kernel, 21 userspace)
+	% 	\item 26 assertion failures %(21 kernel, 5 userspace)
+	% 	\item 21 deadlocks
+	% 	\item 2 infinite loops
+	% 	\item 1 recursive mutex lock
+	% \end{itemize}
 \end{frame}
 
 \begin{frame}{Results (``Nondeterministic'' Data Races)}
@@ -613,12 +623,12 @@
 \begin{frame}{References}
 	\scriptsize
 	\begin{itemize}
-		\item {\bf [Lamport '78]}: 
+		\item {\bf [Lamport '78]}:
 			Leslie Lamport. Time, clocks, and the ordering of events in a distributed system.
 			Commun. ACM, 1978.
 		\item {\bf [Godefroid '97]}: Patrice Godefroid.
 			VeriSoft. A tool for the automatic analysis of concurrent reactive software. CAV 1997.
-		\item {\bf [Engler '03]}: Dawson Engler and Ken Ashcraft. 
+		\item {\bf [Engler '03]}: Dawson Engler and Ken Ashcraft.
 			RacerX: effective, static detection of race conditions and deadlocks. SOSP 2003.
 		\item {\bf [O'Callahan '03]}: Robert O'Callahan and Jong-Deok Choi.
 			Hybrid dynamic data race detection. PPoPP '03.
