@@ -1,0 +1,75 @@
+graph htmdpor {
+	// root -- first1 [label = "1A"];
+	//   first1 -- second1a [label = "1B"];
+	//     second1a -- third2a [label = "2A"];
+	//       third2a -- fourth2a [label = "2B"];
+	//   first1 -- second2a [label = "2A"];
+	//     second2a -- third1b [label = "1B"];
+	//       third1b -- fourth2b [label = "2B"];
+	//     second2a -- third2b [label = "2B"];
+	//       third1b -- fourth1b [label = "1B"];
+	// root -- first2 [label = "2A"];
+
+	root          [style = "filled" fillcolor="#cccccc" label = ""];
+	// foo nobes
+	first1txn     [style = "filled" fillcolor="#cccccc" label = ""];
+	second1txna   [style = "filled" fillcolor="#ffff88" label = "5"];
+	second1txnb   [style = "filled" fillcolor="#884400" label = "7"];
+	// abort nobes: 1
+	first1abort   [style = "filled" fillcolor="#cccccc" label = ""];
+	second1aborta [style = "filled" fillcolor="#440088" label = "6"];
+	second1abortb [style = "filled" fillcolor="#88ffff" label = "8"];
+	// bar nobes
+	second2txna   [style = "filled" fillcolor="#ffff88" label = "1"];
+	second2txnb   [style = "filled" fillcolor="#880044" label = "3"];
+	first2txn     [style = "filled" fillcolor="#cccccc" label = ""];
+	// abort nobes: 2
+	second2aborta [style = "filled" fillcolor="#004488" label = "2"];
+	second2abortb [style = "filled" fillcolor="#88ffff" label = "4"];
+	first2abort   [style = "filled" fillcolor="#cccccc" label = ""];
+
+	root -- first1txn              [fontcolor="#cc0000" label = <<B>1A</B>>]
+	  first1txn -- second2txna     [fontcolor="#0000ff" label = <<I>2A</I>>]
+	  first1txn -- second2aborta   [fontcolor="#0088ff" label = <<B>2B</B>>]
+	root -- first1abort            [fontcolor="#884400" label = <<B>1B</B>>]
+	  first1abort -- second2txnb   [fontcolor="#0000ff" label = <<B>2A</B>>]
+	  first1abort -- second2abortb [fontcolor="#0088ff" label = <<I>2B</I>>]
+	root -- first2txn              [fontcolor="#0000ff" label = <<B>2A</B>>]
+	  first2txn -- second1txna     [fontcolor="#cc0000" label = <<I>1A</I>>]
+	  first2txn -- second1aborta   [fontcolor="#884400" label = <<B>1B</B>>]
+	root -- first2abort            [fontcolor="#0088ff" label = <<B>2B</B>>]
+	  first2abort -- second1txnb   [fontcolor="#cc0000" label = <<B>1A</B>>]
+	  first2abort -- second1abortb [fontcolor="#884400" label = <<I>1B</I>>]
+
+	// ranksep=0.5;
+	// a[fontsize=16 label = "NORTH SHORE" fontname = "OldNewspaperTypes" ordering = "out" ]
+	// b[fontsize=16 label = "EAST END" fontname = "OldNewspaperTypes" ordering = "out" ]
+	// c[fontsize=16 label = "SOVTH SIDE" fontname = "OldNewspaperTypes" ]
+	// //a -- b; // 32nd
+
+	// a -- c [fontsize=13 weight = 3 fontname = "OldNewspaperTypes" label = "MKR"]; // mckees rocks
+	// a -- c [fontsize=13 weight = 1 fontname = "OldNewspaperTypes" label = "WE"]; // west end
+
+	// a -- b [fontsize=13 fontname = "OldNewspaperTypes" label = "FtD"]; // ft pitt
+	// a -- b [fontsize=13 fontname = "OldNewspaperTypes" label = "RoC"]; // the other twin
+	// a -- b [fontsize=13 fontname = "OldNewspaperTypes" label = "AW"]; // clemente
+	// a -- b [fontsize=13 fontname = "OldNewspaperTypes" label = "RaC"]; // carson
+	// a -- b [fontsize=13 fontname = "OldNewspaperTypes" label = "16"]; // 16th
+
+	// a -- b [fontsize=13 fontname = "OldNewspaperTypes" label = "40"]; // 40th st
+	// a -- b [fontsize=13 fontname = "OldNewspaperTypes" label = "62"]; // 5xth st
+	// a -- b [fontsize=13 fontname = "OldNewspaperTypes" label = "HP"]; // highland
+
+	// c -- b [fontsize=13 fontname = "OldNewspaperTypes" label = "FtP"]; // ft duquesne
+	// c -- b [fontsize=13 fontname = "OldNewspaperTypes" label = "SF"]; // smithfield
+	// c -- b [fontsize=13 fontname = "OldNewspaperTypes" label = "10"]; // 10th st
+	// c -- b [fontsize=13 fontname = "OldNewspaperTypes" label = "Lib"]; // libiberty
+	// c -- b [fontsize=13 fontname = "OldNewspaperTypes" label = "BH"]; // birmingham
+	// c -- b [fontsize=13 fontname = "OldNewspaperTypes" label = "HMS"]; // hot metal saint
+	// c -- b [fontsize=13 fontname = "OldNewspaperTypes" label = "GF"]; // greenfield
+	// c -- b [fontsize=13 fontname = "OldNewspaperTypes" label = "HSG"]; // homestead
+
+	// { rank=min; a }
+	// { rank=max; c }
+}
+
