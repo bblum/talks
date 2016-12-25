@@ -108,7 +108,7 @@ multiple state spaces according to their estimated completion times,
 which I will show quickly finds bugs should they exist and also quickly verifies correctness otherwise.
 I will evaluate Landslide's suitability for inexpert use by presenting the results of many semesters providing it to students in 15-410, CMU's Operating System Design and Implementation class.
 %Finally, I will present several new techniques that allow stateless model checking to be practically employed on real-world programs.
-Finally, I will explore broader impact by extending Landslide to test real-world programs and to be used by students at other universities.
+Finally, I will explore broader impact by extending Landslide to test some real-world programs and to be used by students at other universities.
 \end{abstract}
 
 %\begin{acknowledgments}
@@ -236,12 +236,14 @@ This thesis will comprise three major contributions:
 	\item {\bf Broader impact (Chapter \ref{chap:lipservice}).}
 		Landslide includes several new techniques for testing kernels and thread libraries with little or no manual instrumentation required.
 		So far, a fully-automatic testing mode is available only for 15-410 thread library projects.
-		To prove these techniques are relevant beyond CMU's walls, I will extend Landslide to handle both Pintos kernel projects from other universities \cite{pintos} and ``real-world'' Linux programs.
-		I will conduct a user study in which students at another university test their Pintoses with Landslide,
-		and evaluate Landslide's ability to find known and/or new bugs in real-world programs.
+		To prove these techniques are relevant beyond CMU's walls, I will extend Landslide to handle Pintos kernel projects from other universities \cite{pintos}. %and ``real-world'' Linux programs.
+		%I will conduct a user study in which students at another university test their Pintoses with Landslide,
+		%and evaluate Landslide's ability to find known and/or new bugs in real-world programs.
+		I will also extend Landslide's concurrency model to support Hardware Transactional Memory (HTM), a new concurrent programming technique \cite{transactional-memory}, and test several ``real-world'' HTM programs.
 
 		This will be {\bf mostly new work}, as Landslide presently supports testing Pintoses only with some manual effort,
-		and does not yet feature instrumentation to run on Linux programs.
+		%and does not yet feature instrumentation to run on Linux programs.
+		and will need its concurrency model extended to incorporate the HTM programming model.
 \end{itemize}
 
 % TODO(thesis): Other chapters of this thesis include...

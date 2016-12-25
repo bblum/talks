@@ -104,6 +104,25 @@ and infinite loops (which must be identified heuristically \cite{entscheidungspr
 
 % TODO
 
+\subsection{Transactional Memory}
+
+Critical sections of code must be protected from concurrent access, even when it's not known in advance whether the shared memory accesses between threads will actually conflict on the same memory addresses.
+The concurrency primitives discussed above take a pessimistic approach, imposing a uniform performance penalty (associated with the primitives' implementation logic) on all critical sections, whether or not a conflict is likely.
+Some implementations may be optimized for ``fast paths'' in the absence of contention, but must still access shared memory in which the primitive's state resides.
+
+Transactional memory \cite{transactional-memory} offers a more optimistic approach: critical sections of code are marked as ``transactions'', analogously to locking a mutex, and allowed to speculatively execute with no protection.
+If a conflict between transactions is detected, the program state is rolled back to the beginning of the transaction, and a backup code path may optionally be taken.
+Consequently, no intermediate state of a transacting thread is ever visible to other threads; all changes to memory within a transaction become globally visible ``all at once'' (or not at all).
+This method optimizes for a common no-contention case of little-to-no overhead, pushing extra both code and implementation complexity to handling conflicts.
+
+Transactional memory may be implemented either in hardware, using special instructions and existing cache coherence algorithms, or in software, via library calls and a log-based commit approach.
+Software transactions (STM) \cite{stm-pldi06} can be used on any commodity processor, but must impose some runtime overhead associated with the logs.
+Hardware transactions (HTM) \cite{htm-experience, htm-performance} achieve better performance by reusing existing cache coherence logic to detect conflicts, but require explicit support from the CPU, which is not yet widespread.
+Haswell \cite{htm-haswell} is the first x86 architecture to support HTM,
+offering three new instructions: \texttt{xbegin}, \texttt{xend}, and \texttt{xabort}, to begin, commit, and fail a transaction, respectively.
+
+In this thesis, we will focus on HTM as our platform for testing transactional programs, to highlight the importance of researching advanced testing techniques in anticipation of upcoming hardware features. In principle, however, our treatment is agnostic to whether a transactional interface is backed by HTM or STM, so will apply in theory to both.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Stateless Model Checking}
