@@ -42,11 +42,17 @@ As with Pebbles student experiments, however, I intend the students to encounter
 It would be a Ph.D. unto itself to automatically ensure stable determinized execution of arbitrary student code.
 Actually, probably outright impossible.
 
+{\bf New emulation platform.}
+Most importantly, I will need to free Landslide from its dependence on Simics, which requires paid licenses for use beyond CMU's walls.
+Other candidate emulation (simulation or virtualization) platforms for Landslide include Bochs, QEMU, VMWare, and Xen.
+I am presently studying which of these will most suit Landslide's needs,
+but so far Bochs seems like the best bet, which happens to be the simulator used at Berkeley, Stanford, and U. of Chicago anyway.
+
 {\bf Experimental goals.}
 Having only one semester (ideally; or two, if my timeline ends up delayed) to test Landslide with Pintos students,
-I'll not be able to assemble as comprehensive a dataset as I have with 15-410 at CMU.
-This project will serve more as a proof-of-concept, demonstrating that model checking can realistically replace stress testing in operating systems courses worldwide.
-Nevertheless, I intend also to analyze what little data I can gather, comparing the incidences and types of concurrency bugs found between Pebbles and Pintos populations.
+I'll be unable to gather as comprehensive a dataset as I have with 15-410 at CMU.
+This will serve more as a proof-of-concept, demonstrating that MC can realistically replace stress testing in operating systems courses worldwide.
+Nevertheless, I intend also to analyze what little data I can gather, comparing the incidences and types of bugs found between Pebbles and Pintos populations.
 This will perhaps shed light on the advantages and/or shortcomings of either project,
 leading to recommendations for improving either project's educational value (independently of using MC).
 
