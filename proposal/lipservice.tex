@@ -8,6 +8,49 @@ The project will have two parts: adding support for Pintos \cite{pintos}, and ad
 
 \section{Pintos}
 
+The Pintos architecture \cite{pintos}, outlined in Section~\ref{sec:overview-pintos}, provides an opportunity to test Landslide's pedagogical mettle beyond CMU's walls.
+For the experiments in Chapter~\ref{chap:quicksand}, I already implemented rudimentary support to test Pintos kernels.
+Because Pintos provides substantially more basecode than Pebbles, most if not all of Landslide's kernel instrumentation can be done automatically,
+using the names of the core scheduler functions already provided.
+
+{\bf Stuff I already did.}
+The existing Pintos support includes
+a new set of annotations (e.g., {\tt mutex\_lock} in Pebbles is now called {\tt sema\_down};
+handling several quirks of the basecode's scheduling behaviour (ask me if you really care to know);
+extending the heap tracker to handle Pintos's page allocator {\tt palloc} as well as the kernel {\tt malloc},
+as well as the fact that kernel memory is not direct-mapped like in Pebbles;
+new thread-liveness code to detect when a test case terminates;
+skipping some busy-wait loops in the boot sequence used for device communication,
+a complicated fall-back case in Landslide's timer injection algorithm the workings of which I don't even remember anymore,
+and extending the lock-set analysis to include Pintos's interrupt-disabling infrastructure (which was actually pretty tricky when using vector clocks for pure-HB).
+All these features apply to behaviours included with the stock base-code, so should apply generally to all but the most adventurous student implementations.
+
+{\bf Stuff I still need to do.}
+However, as you might have guessed, there are still a few cases where the existing instrumentation is not fully general.
+When preparing Chapter~\ref{chap:quicksand}'s experiments, I needed to adjust some student submissions to be compatible with Landslide's existing annotation process.
+In order to distribute Landslide for student use beyond CMU, it will need to support these cases automatically.
+These include:
+\begin{itemize}
+	\item Allowing for the priority scheduler's runqueues to be implemented as an array of queues, rather than the single queue head as provided in the basecode.
+	\item Insert the {\tt tell\_landslide\_sleeping} annotation more intelligently than looking for a {\tt list\_insert\_ordered} call (a basecode function which most, but not all, students use).
+	\item Some versions of the basecode distribute a {\tt sema\_up} implementation which {\tt yield}s unconditionally, which Landslide must bypass.
+	\item Some students use {\tt timer\_sleep} or {\tt while (!flag) continue} when they should use {\tt yield}, which can lead to false-positive deadlocks if not automatically replaced.
+	\item I'm sure I've forgotten some less-common ones, which I expect to handle on-the-fly when students email me Landslide crash reports.
+\end{itemize}
+When fixing my sample of Pintoses by hand, there were also myriad deterministic bugs, such as use-after-frees e.g.~arising from unsafe {\tt strlen} calls.
+As with Pebbles student experiments, however, I intend the students to encounter such bug reports and fix them on their own, despite not being concurrency bugs.
+It would be a Ph.D. unto itself to automatically ensure stable determinized execution of arbitrary student code.
+Actually, probably outright impossible.
+
+{\bf Experimental goals.}
+Having only one semester (ideally; or two, if my timeline ends up delayed) to test Landslide with Pintos students,
+I'll not be able to assemble as comprehensive a dataset as I have with 15-410 at CMU.
+This project will serve more as a proof-of-concept, demonstrating that model checking can realistically replace stress testing in operating systems courses worldwide.
+Nevertheless, I intend also to analyze what little data I can gather, comparing the incidences and types of concurrency bugs found between Pebbles and Pintos populations.
+This will perhaps shed light on the advantages and/or shortcomings of either project,
+leading to recommendations for improving either project's educational value (independently of using MC).
+
+
 \section{Transactional Memory}
 
 Transactional Memory (TM) is a mechanism by which programmers may avoid conventional concurrency primitives, optimizing for performance in the common case when threads do not conflict.
