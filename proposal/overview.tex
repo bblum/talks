@@ -3,6 +3,8 @@
 
 This chapter will introduce the necessary background material on concurrency, stateless model checking, data-race analysis, and the relevant undergraduate operating systems classes.
 
+Thesis proposal note: I've written this section with the intent of reusing it in the thesis. The other chapters, being necessarily more impermanent, are aimed directly at you (my thesis committee) as the audience. This section is written with the intention for programmers of any level to read.
+
 \section{Concurrency Bugs}
 
 \subsection{The Basics}
@@ -13,7 +15,7 @@ In a multithreaded program, multiple execution units (or {\em threads}) execute 
 {\bf Simultaneity.}
 This simultaneity of threads is achieved either by executing each one on a separate CPU, or by interleaving them nondeterministically (as controlled by clock interrupts) on the same CPU.
 Because clock interrupts can occur at any instruction\footnote{
-	With some exceptions in kernel-level programming, which we discuss later.
+	With some exceptions in kernel-level programming, which I discuss later.
 },
 we consider single-CPU multithreading to be simultaneous at the granularity of individual instructions.
 %
@@ -28,7 +30,6 @@ deferring these exceptions beyond the scope of this work.
 We refer to an execution trace depicting the global sequence of events as a {\em thread interleaving} or {\em schedule}.
 
 {\bf Shared state.}
-% TODO cite more languages / type theories
 When a programming language offers multithreaded parallelism but forbids access to any shared state between threads \cite{rust-language},
 the simultaneity of threads is largely irrelevant to the program's behaviour.
 However, ``thread-unsafe'' languages such as C, C++, Java, and so on remain popular,
@@ -48,7 +49,7 @@ but whether this constitutes a bug is a matter of perspective.
 Was the program written to count to 2000, or was it written to compute a randomized distribution?
 In this thesis, we make no attempt to reason about the ``intent'' of programs,
 so we further restrict {\em concurrency bug} to denote a program behaviour which is mechanically identifiable,
-according to subjective notion of what programs behaviours are always bad.
+according to commonly-accepted notions of what programs behaviours are always bad.
 %
 Bug conditions include assertion failures,
 memory access errors (i.e., segmentation fault or bus error),
@@ -115,13 +116,16 @@ If a conflict between transactions is detected, the program state is rolled back
 Consequently, no intermediate state of a transacting thread is ever visible to other threads; all changes to memory within a transaction become globally visible ``all at once'' (or not at all).
 This method optimizes for a common no-contention case of little-to-no overhead, pushing extra both code and implementation complexity to handling conflicts.
 
-Transactional memory may be implemented either in hardware, using special instructions and existing cache coherence algorithms, or in software, via library calls and a log-based commit approach.
-Software transactions (STM) \cite{stm-pldi06} can be used on any commodity processor, but must impose some runtime overhead associated with the logs.
+Transactional memory (TM) may be implemented either in hardware, using special instructions and existing cache coherence algorithms,
+or in software, via library calls and a log-based commit approach.
+Software transactions (STM) \cite{stm-pldi06} can be used on any commodity processor, but must impose runtime overhead associated with logging.
 Hardware transactions (HTM) \cite{htm-experience, htm-performance} achieve better performance by reusing existing cache coherence logic to detect conflicts, but require explicit support from the CPU, which is not yet widespread.
 Haswell \cite{htm-haswell} is the first x86 architecture to support HTM,
 offering three new instructions: \texttt{xbegin}, \texttt{xend}, and \texttt{xabort}, to begin, commit, and fail a transaction, respectively.
 
-In this thesis, we will focus on HTM as our platform for testing transactional programs, to highlight the importance of researching advanced testing techniques in anticipation of upcoming hardware features. In principle, however, our treatment is agnostic to whether a transactional interface is backed by HTM or STM, so will apply in theory to both.
+In this thesis, I will focus on HTM as my platform for testing transactional programs, to highlight the importance of researching advanced testing techniques in anticipation of upcoming hardware features.
+My treatment of TM will be largely agnostic to whether a transactional interface is backed by HTM or STM,
+and I will extend it to cover STM as well, as discussed in Section~\ref{sec:tm}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
