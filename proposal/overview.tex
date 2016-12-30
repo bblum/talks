@@ -417,11 +417,57 @@ Both P2 and P3 are built using the {\em Pebbles} system call specification, outl
         \label{tab:syscalls}
 \end{table}
 
-{\bf P2.}
-% TODO
+\subsubsection{P2}
+The thread library project \cite{thrlib} has two main components: implementing concurrency primitives, and implementing thread lifecycle and management routines.
+The required concurrency primitives are as follows:
+\begin{itemize}
+	\item Mutexes, with the interface {\tt mutex\_lock(mp)} and {\tt mutex\_unlock(mp)}, whose functionality is described earlier this chapter. Students may use any x86 atomic instruction(s) they desire, such as {\tt xchg}, {\tt xadd}, or {\tt cmpxchg}, and/or the {\tt deschedule}/ {\tt make\_runnable} system calls offered by the reference kernel.
+	\item Condition variables, with the interface {\tt cond\_wait(cvp, mp)}, {\tt cond\_signal} {\tt (cvp)}, and {\tt cond\_broadcast(cvp)}. {\tt cond\_wait} blocks the invoking thread, ``simultaneously'' releasing a mutex which protects some associated state (atomically, with respect to other calls to signal or broadcast under that mutex).
+		{\tt cond\_signal} and {\tt cond\_broadcast} wake one or all waiting threads.
+		Students must use the {\tt deschedule} and {\tt make\_runnable} system calls to implement blocking (busy-waiting is forbidden), and typically include an internal mutex to protect the condition variable's state as well.
+		The primary challenge of this exercise is ensuring the aforementioned atomicity between {\tt cond\_wait}'s unlock and deschedule, with respect to the rest of the interface.
+	\item Semaphores, with the interface {\tt sem\_wait(sp)} and {\tt sem\_signal(sp)} (sometimes called {\em proberen} and {\em verhogen} in other literature). The semaphore can be initialized to any integer value; if initialized to 1, it behaves like a mutex.
+		Students typically implement semaphores using mutexes and condition variables, not using atomic instructions or system calls directly.
+	\item Reader-writer locks (rwlocks), with the interface {\tt rwlock\_lock(rwp, mode)} and {\tt rwlock\_unlock(rwp)}. {\tt mode} may be either {\tt RWLOCK\_READ} or {\tt RWLOCK\_}- {\tt WRITE}.
+		Behaves as mutexes, but multiple readers may access the critical section simultaneously.
+		Students typically implement rwlocks using mutexes and condition variables, not using atomic instructions or system calls directly.
+\end{itemize}
+The interface to each also includes an associated {\tt \_init()} and {\tt \_destory()} function.
 
-{\bf P3.}
-% TODO
+The thread lifecycle/management routines are as follows:
+\begin{itemize}
+	\item {\tt thr\_init(stack\_size)} initializes the thread library, setting a default stack size to be allocated to new threads.
+	\item {\tt thr\_create(child\_func, child\_arg)} spawns a new thread to run the specified function with the specified argument. There is a semantic gap between this function and the {\tt thread\_fork} system call (which takes no parameters, makes no changes to the user's address space, and cannot meaningfully be invoked from C code) which students must bridge.
+		Returns an integer thread ID of the newly created thread.
+	\item {\tt thr\_exit(status)} aborts execution of the calling thread, recording an exit status value.
+		The main challenge of this function is to allow another thread to free the memory used for the exiting thread's stack,
+		without risking any corruption as long as the exiting thread continues to run.
+	\item {\tt thr\_join(tid, statusp)} blocks the calling thread until the thread with the specified thread ID exits, then returns, collecting its exit status.
+\end{itemize}
+Other than {\tt thr\_init} (which is necessarily single-threaded), several concurrency errors between any two (or all three) of these functions are very common in student submissions.
+
+Finally, students also implement automatic stack growth using the {\tt swexn} system call, which is not relevant to this thesis.
+
+\subsubsection{P3}
+In P3, students implement a kernel which provides the same system calls shown in Table~\ref{tab:syscalls}, previously provided by the reference kernel.
+Although the internal interfaces are not mandated like they were in P2, all Pebbles kernels must necessarily contain the same abstract components. These include:
+\begin{itemize}
+	\item A round-robin scheduler, including context switching, timer handling, and runqueue management;
+	\item Some approach to locking, often analogous to P2's concurrency primitives (henceforth referred to as ``kernel mutexes''), 
+		and some approach to blocking threads indefinitely;
+	\item A virtual memory implementation, including a program loader;
+	\item Lifecycle management code for creation and destruction of kernel threads and processes;
+	\item Other miscellany such as a suite of fault handlers to ensure no user program can cause the kernel itself to crash.
+\end{itemize}
+Because any combination of system calls or fault handlers can be invoked by user programs simultaneously,
+concurrency bugs can arise from the interaction of any subset of kernel components with each other.
+The most common bugs students face arise from the interaction of some component with itself (e.g., concurrent invocations of {\tt new\_pages}/{\tt remove\_pages} in the same process),
+or from the interaction between an exiting thread and some other thread trying to communicate with it ({\tt vanish} versus, well, anything else, really).
+The most difficult concurrency problem in P3 is that of coordinating a parent and a child task that simultaneously exit:
+when a task completes, live children and exited zombies must be handed off to the task's parent or to the {\tt init} process,
+when the task's parent may itself be exiting;
+meanwhile, threads in tasks that receive new children may need to be awakened from {\tt wait}.
+Careless solutions to this problem are prone to data races or deadlocks.
 
 \subsection{Pintos}
 \label{sec:overview-pintos}
