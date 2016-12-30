@@ -103,7 +103,70 @@ and infinite loops (which must be identified heuristically \cite{entscheidungspr
 
 \subsection{Concurrency Primitives}
 
-% TODO
+To prevent unexpected interleavings such as the example in Figure~\ref{fig:concurrency-bug}(b),
+most concurrent programs use {\em concurrency primitives} to control which interleavings are possible.
+Controlling nondeterminism is not typically provided by any features of programming languages themselves;
+rather, it is achieved via special atomicity mechanisms provided by the CPU and/or operating system -- hence the term ``primitive''.
+For example, x86 CPUs provide the {\tt xchg} instruction, which performs both a read and subsequent write to some shared memory, with no possibility for other logic to interleave in between.
+Using such atomic instructions as building blocks, concurrency libraries provide abstractions for controlling nondeterminism in several commonly-desired ways.
+These include {\em locks}, {\em descheduling}, {\em condition variables}, {\em semaphores}, {\em reader-writer locks}, and {\em message-passing}.
+
+\begin{figure}[t]
+	\begin{tabular}{p{0.45\textwidth}p{0.5\textwidth}}
+		{\footnotesize
+		\begin{tabular}{l}
+			\texttt{typedef struct mutex \{} \\
+			\texttt{~~~~volatile int held;} \\
+			\texttt{~~~~int owner;} \\
+			\texttt{\} mutex\_t;} \\
+			\texttt{void mutex\_lock(mutex\_t *mp) \{}\\
+			\texttt{~~~~while (xchg(mp->held, 1))} \\
+			\texttt{~~~~~~~~yield(mp->owner);} \\
+			\texttt{~~~~mp->owner = gettid();} \\
+			\texttt{\}} \\
+			\texttt{void mutex\_unlock(mutex\_t *mp) \{}\\
+			\texttt{~~~~mp->owner = -1;} \\
+			\texttt{~~~~mp->held = 0;} \\
+			\texttt{\}} \\
+		\end{tabular}
+		}
+		&
+		{\footnotesize
+		\begin{tabular}{l}
+			\texttt{int x;} \\
+			\texttt{mutex\_t m;} \\
+			\texttt{void count() \{} \\
+			\texttt{~~~~for (int i = 0; i < 1000;} \\
+			\texttt{~~~~~~~~~i++)} \\
+			\texttt{~~~~~~~~mutex\_lock(\&m);} \\
+			\texttt{~~~~~~~~x++;} \\
+			\texttt{~~~~~~~~mutex\_unlock(\&m);} \\
+			\texttt{\}} \\
+		\end{tabular}
+		}
+		\\
+		(a) A simple mutual exclusion lock built using the {\tt xchg} instruction. %(accessed using a GCC compiler intrinsic).
+		&
+		(b) The {\tt count} function from Figure~\ref{fig:concurrency-bug}, adjusted to use a mutex to ensure each increment of {\tt x} is uninterruptible.
+	\end{tabular}
+	\caption{Using a locking primitive to protect accesses to shared state.}
+	\label{fig:mutex}
+\end{figure}
+
+Each such abstraction provides certain semantics about what thread interleavings can arise surrounding their use.
+When building a tool for testing concurrent programs,
+one may include some computational understanding of the behaviour of any, or all, of these abstractions.
+Annotating a certain abstraction's semantics treats it as a trusted concurrency primitive in its own right,
+and allows the testing tool to reduce the possible space of interleavings (or the set of false positive data-race candidates reported, etc.),
+at the cost of increasing the implementation and theoretical complexity of the analysis.
+In this thesis, I will consider locks and descheduling to be the only concurrency primitives,
+and assume the others listed above are implemented using those as building blocks (an exercise for the reader \cite{thrlib}).
+
+Locks (or {\em mutexes}, short for ``mutual exclusion locks'') are objects, shared by multiple threads, which allow the programmer to mark certain {\em critical sections} of code that must not interleave with each other.
+When one thread completes a call to {\tt mutex\_lock(mp)}, all invocations by other threads on the same {\tt mp} will wait (or ``block'') until the corresponding {\tt mutex\_unlock(mp)}.
+Figure~\ref{fig:mutex}(a) shows how a yielding mutex (not the best implementation, but the simplest) may be implemented using {\tt xchg},
+and (b) shows how a mutex may be used to fix the example from Figure~\ref{fig:concurrency-bug}.
+
 
 \subsection{Transactional Memory}
 
@@ -361,4 +424,5 @@ Both P2 and P3 are built using the {\em Pebbles} system call specification, outl
 % TODO
 
 \subsection{Pintos}
+\label{sec:overview-pintos}
 % TODO
