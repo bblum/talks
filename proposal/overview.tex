@@ -471,4 +471,34 @@ Careless solutions to this problem are prone to data races or deadlocks.
 
 \subsection{Pintos}
 \label{sec:overview-pintos}
-% TODO
+
+The Pintos kernel architecture \cite{pintos} is used at several universities, including Berkeley, Stanford, and the University of Chicago.
+The Pintos basecode implements a rudimentary kernel, consisting of a context switcher, round-robin scheduler, locking primitives, and program loader.
+upon which students add more features in several projects.
+Most relevant to this thesis, the basecode provides the following functions/libraries, among others:
+\begin{itemize}
+	\item Semaphores (the basic concurrency primitive, implemented using direct scheduler calls): {\tt sema\_up}, {\tt sema\_down}, {\tt sema\_try\_down};
+	\item Locks (which simply wrap a semaphore initialized to 1), {\tt lock\_acquire}, {\tt lock\_}- {\tt release}, {\tt lock\_try\_acquire};
+	\item Condition variables (also implemented using scheduler calls): {\tt cond\_wait}, {\tt cond\_}- {\tt signal}, {\tt cond\_broadcast}, with the same semantics as Pebbles P2 condvars;
+	\item Basic round-robin scheduling facilities: {\tt thread\_block} (a kernel-level analogue to Pebbles's {\tt deschedule}), {\tt thread\_yield}
+	\item Kernel thread lifecycle management, {\tt thread\_create} and {\tt thread\_exit}, including stack space memory management;
+	\item Interrupt and fault handlers;
+	\item A page allocator, {\tt palloc\_get\_page}, {\tt palloc\_get\_multiple}, {\tt palloc\_}- {\tt free\_page}, {\tt palloc\_free\_multiple}
+\end{itemize}
+Both Pebbles and Pintos basecodes offer a standard C library including {\tt malloc}, string-formatting, printing, etc.
+
+Although there is some variety in supplemental assignments, all Pintos courses include three core projects building on the Pintos basecode:
+\begin{itemize}
+	\item {\em Threads}: Students must implement an ``alarm clock'' (analogous to Pebbles's {\tt sleep} system call),
+		a priority scheduling algorithm, and a multi-level feedback queue scheduler.
+		% TODO: Later. Talk about how concurrency testing can only test certain parts of this crap.
+	\item {\em Userprog}: Provided with rudimentary virtual memory and ELF loader implementations, students must implement argument passing and several system calls associated with userspace programs, including {\tt exec}, {\tt exit}, {\tt wait}, and file descriptor management.
+	\item {\em Filesys}: Provided with a simple ``flat'' filesystem implementation, students must extend it with a buffer cache, extensible files, and subdirectories.
+\end{itemize}
+
+Some schools further offer a virtual memory project, extending the provided VM with a frame table and supplemental page table and fault handler \cite{standford-cs140,uchicago-cs230}, or supplemental HTTP server and {\tt malloc} assignments \cite{berkeley-cs162}.
+Being largely architectural/algorithmic projects rather than concurrency-oriented ones, I am not concerned with these assignments in this thesis.
+The main concurrency challenges in Pintos projects arise from the threads and userprog assignments:
+implementing a correct {\tt alarm} routine,
+ensuring the priority scheduler remains safe in the presence of concurrent threads of the same priority,
+and designing correct interactions between the {\tt wait} and {\tt exit} system calls.
