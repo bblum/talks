@@ -2,12 +2,15 @@
 \label{chap:quicksand}
 
 In this chapter, I will present a new algorithm for model checkers to automatically choose which preemption points to use to test reasonably-sized state spaces.
-This is the first of the three projects I am proposing for this thesis, and has largely been completed and is under submission.
+This is the first of the three projects I am proposing for this thesis, and has already been published at OOPSLA 2016 \cite{quicksand}.
+The thesis will largely restate the paper, and also go into more detail on some ideas which didn't make it into the paper, such as measuring the variance in each experimental data series.
+Here in the proposal I will simply summarize the content of the paper.
 
 \section{Motivation}
+\label{sec:qs-motivation}
 
 This project is motivated by my experience contributing to Parrot \cite{parrot},
-a partially-determinizing runtime for multithreaded programs which allowed some nondeterminism in performance-critical sections to achieve high performance.
+a (partially) determinizing runtime for multithreaded programs which allowed some nondeterminism in performance-critical sections to achieve high performance.
 We combined Parrot with dBug \cite{dbug-ssv}, a model checker, to check the correctness of the nondeterministic sections of programs which remained.
 Unfortunately, dBug was able to finish a state space for fewer than half of these programs in our evaluation in a 24-hour time limit,
 even after the reduction Parrot provided.
@@ -67,7 +70,7 @@ Its main feature is understanding that when one Landslide instance is testing a 
 %%reveals that it might finish in time after all.
 %Similarly, whenever a job finds a bug, we cancel all pending superset jobs, as they might find only the same bug.
 
-\begin{algorithm}[t]
+\begin{algorithm}[h]
         \SetKwInOut{Input}{Input}
         %\textbf{Function} GetBestJob($j_0$, PendingJobs, SuspendedJobs): \\
         \Input{$j_0$, the currently-running job}
@@ -101,7 +104,7 @@ Its main feature is understanding that when one Landslide instance is testing a 
 \end{algorithm}
 
 \newcommand\AllJobs{\ensuremath{\mathcal{J}}}
-\begin{algorithm}[t]
+\begin{algorithm}[h]
         \SetKwInOut{Input}{Input}
         \Input{$j_0$, the currently-running job}
         \Input{\AllJobs, the set of all existing (or completed) jobs}
@@ -132,6 +135,34 @@ time may run out before completing a data race's associated state space,
 in which case Quicksand reports a potential false positive that the user must handle.
 
 \section{Verification}
+
+\subsection{Convergence of Iterative Deepening}
+When the a test's state spaces are small enough that Quicksand can exhaustively check all of them within a given CPU budget,
+the resulting verification claim turns out to be equivalent to a na\"{i}model checker which preempts on every memory access.
+In this way, the Iterative Deepening algorithm provides the ``best of both worlds'' for the tradeoff mentioned in Section~\ref{sec:qs-motivation}:
+when tests are too large, Quicksand falls back on prioritization heuristics to find bugs quickly;
+when tests are tractable, Quicksand's verification is equal to the strongest from any single-state-space technique.
+
+The theorem statement is as follows:
+
+\begin{theorem}[Convergence]
+	If a bug can be exposed by any
+thread interleaving possible by preempting on all instructions during a specific test, Iterative Deepening will eventually test an equivalent interleaving which exposes the same bug.
+\end{theorem}
+
+The proof is available at \cite{quicksand-soundness}.
+
+\subsection{Pruning false-positive data-race candidates}
+I have also proved a (somewhat less remarkable) theorem concerning the soundness of a new tactic for pruning certain types of false-positive data race candidates (under Limited HB).
+A ``malloc-recycle'' false positive occurs when two threads seem to race on the same memory address, but only because the {\tt malloc}ed block containing that address was {\tt free}d and reallocated in between.
+If the transitions of the two threads were reordered, the address collision would disappear and there would be no race.
+The proof is available at \cite{quicksand-soundness}; the theorem statement is:
+
+\begin{theorem}[Soundness of eliminating malloc-recycle candidates]
+	If a malloc-recycle candidate is not a false positive,
+	DPOR will test an alternate thread interleaving in which the
+	accesses can race without fitting the malloc-recycle pattern.
+\end{theorem}
 
 \section{Evaluation}
 
