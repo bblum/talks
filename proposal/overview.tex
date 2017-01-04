@@ -462,7 +462,7 @@ Although the internal interfaces are not mandated like they were in P2, all Pebb
 \end{itemize}
 Because any combination of system calls or fault handlers can be invoked by user programs simultaneously,
 concurrency bugs can arise from the interaction of any subset of kernel components with each other.
-The most common bugs students face arise from the interaction of some component with itself (e.g., concurrent invocations of {\tt new\_pages}/{\tt remove\_pages} in the same process),
+The most common bugs studence face arise from the interaction of some component with itself (e.g., concurrent invocations of {\tt new\_pages}/{\tt remove\_pages} in the same process),
 or from the interaction between an exiting thread and some other thread trying to communicate with it ({\tt vanish} versus, well, anything else, really).
 The most difficult concurrency problem in P3 is that of coordinating a parent and a child task that simultaneously exit:
 when a task completes, live children and exited zombies must be handed off to the task's parent or to the {\tt init} process,
