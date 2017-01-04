@@ -289,11 +289,28 @@ making it difficult to decide in advance which combinations of preemption points
 Another major problem is the manual annotation effort required to test certain types of concurrent programs,
 which is especially relevant for operating systems students who implement their own kernels.
 In this document I have proposed a thesis which will solve both problems.
+
 I leave you now with a proposed timeline for bringing each project to fruition.
+Bear in mind that for the first half of 2017, I'll be working with a full-time research assistant,
+David Vernet, on the transactional memory and porting Landslide projects.
 
 \begin{itemize}
-	\item TODO % TODO
+	\item 2017 January: Submit thesis proposal, begin work on TM project (Section~\ref{sec:tm}). Also submit revised IRB proposal for planned user studies.
+	\item 2017 ???uary: Present thesis proposal (whenever the committee is free).
+	\item 2017 February: Develop ``grading'' TA user study and deploy it in 15-410 (Section~\ref{sec:grading}).
+	\item 2017 March-April: Finish implementation/evaluation of TM; write a paper about it.
+	\item 2017 April-June: Begin ``port Landslide to VMware or Bochs'' project (Section~\ref{sec:pintos-todo}).
+	\item 2017 June-July: Resubmit paper about 410 user studies (Section~\ref{sec:studence}) (previously rejected from SIGCSE). Also run ``variance'' Quicksand experiments (Section~\ref{chap:quicksand}).
+	\item 2017 August-October: Polish and deploy Pintos user study (Section~\ref{sec:pintos-todo}).
+	\item 2017 September-December: Write thesis. Also deploy 410 TA grading study once more for more data.
+	\item 2017 December: Defend \& graduate.
 \end{itemize}
+
+For pretty much any reason (much like hardware transactions),
+I may need to delay the timeline by a semester, defending instead in 2018 June.
+For example, the above plan to deploy a Pintos user study within one semester's time of finishing the open-source Landslide port is quite ambitious,
+assuming among other things smooth negotiations with the OS course staff at another university.
+Anyway, this is my optimistic proposal. Thanks for reading.
 
 % TODO - make a timeline
 
