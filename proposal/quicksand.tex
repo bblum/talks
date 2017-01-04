@@ -26,6 +26,8 @@ and are generally willing to wait only for some fixed finite time.
 If full verification of all possible interleavings is not possible within that time,
 a {\em partial verification} guarantee for some smaller state spaces is better than an ``I don't know'' verdict for one single state space.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \section{Design}
 
 Hence, I propose a more user-friendly framework for model checking, in which many different state spaces are tested,
@@ -134,6 +136,8 @@ Being constrained by a CPU budget,
 time may run out before completing a data race's associated state space,
 in which case Quicksand reports a potential false positive that the user must handle.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \section{Verification}
 
 \subsection{Convergence of Iterative Deepening}
@@ -164,7 +168,87 @@ The proof is available at \cite{quicksand-soundness}; the theorem statement is:
 	accesses can race without fitting the malloc-recycle pattern.
 \end{theorem}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \section{Evaluation}
 
-% TODO: is related work needed?
-% i can easily talk about it here but i dont' want to set a weird precedent for super weak related work in my other sections.
+I evaluated Quicksand on the product of the following two questions: For an arbitrary fixed CPU budget...
+
+\begin{itemize}
+	\item ...does Quicksand find more bugs than a single-state-space (SSS-MC) approach...
+	\item ...does Quicksand provide more total verifications than SSS-MC...
+\end{itemize}
+...where the SSS-MC control is configured to preempt...
+\begin{itemize}
+	\item ...on synchronization API boundaries only?
+	\item ...on every single shared memory access?
+\end{itemize}
+
+I also conducted a separate experiment focused on the issue of {\em nondeterministic} data-races:
+candidates that require model checking to expose in the first place, which would be
+false-negatives during a single-execution analysis.
+
+I also also ran several different configurations of Quicksand in each of these experiments,
+alternately using Limited Happens-Before or Pure Happens-Before for its data-race analysis.
+Both of these cases outperformed all the other cases of SSS-MC, so this was mostly useful for comparing the two techniques against each other.
+
+\subsection{Setup and Test Suite}
+
+The test suite for all these experiments was 157 student projects: 79 P2 thread libraries from CMU, and 78 Pintos kernels from Berkeley and the University of Chicago (Section~\ref{sec:overview-edu}).
+I paired each submission with several test cases, 6 for each P2 and 3 for each Pintos.
+In total there were 629 unique pairs of a test case and a student project, henceforth called simply ``tests''.
+(Savvy mathematicians will note that doesn't quite add up -- some of the Pintoses were incomplete, and could only run 1 or 2 tests.)
+
+For each of the 629 tests, I ran Quicksand and SSS-MC for 10 CPU-hours each in each of the configurations named above.
+Quicksand, being inherently parallel, was given 10 CPUs for 1 wall-clock hour,
+while SSS-MC control experiments were given 10 wall-clock hours on 1 CPU
+(which is being charitable: comparing CPU-time gives the controls perfectly efficient hypothetical scaling from parallelization).
+
+\subsection{Results}
+
+The results are shown in Figure~\ref{fig:graphs}.
+The first 3 graphs all plot a cumulative distribution of their respective achievements,
+with elapsed time on the X-axis (as a log scale, to emphasize detail in the ``easy'' tests).
+The captions largely explain each result.
+To summarize, Quicksand outperforms the state-of-the-art on all metrics, excepting the impact of parallelization start-up overhead for very small CPU-time limits.
+The Limited HB data-race strategy generally finds bugs faster when they exist,
+but suffers on total verifications compared to Pure HB,
+because of its false positives which create excess redundant state spaces for Landslide to check.
+
+\begin{figure}[h]
+	\begin{tabular}{cc}
+		\begin{tabular}{p{0.48\textwidth}p{0.48\textwidth}}
+			\includegraphics[width=0.48\textwidth]{dowefindbugsfaster-v2.pdf}
+		&
+			\includegraphics[width=0.48\textwidth]{dowefindbugsfaster-wallclock-v2.pdf}
+		\\
+			(a)
+			Bugs found as a function of elapsed CPU time. After the break-even point at
+			\textasciitilde{}200 seconds, Quicksand outperforms all control experiments.
+		&
+			(b)
+			Bugs found by elapsed wall-clock time.
+			This presentation emphasizes that the ``break-even'' point in (a)
+			is just an artifact of parallelization start-up overhead.
+			Quicksand is parallelized tenfold; the vertical line indicates its 1 hour limit.
+		\\
+			\includegraphics[width=0.48\textwidth]{totalverifs-v2.pdf}
+		&
+			\includegraphics[width=0.48\textwidth]{nondets.pdf}
+		\\
+			(c)
+			Total verifications provided as a function of CPU time.
+			The lines for SSS-MC-ICB and SSS-MC-DPOR are artificially penalized to exclude tests with data races,
+			as preempting on sync APIs alone is not sufficient to verify those.
+			SSS-MC-Shared-Mem, however, is not penalized thus;
+			its failure here is due to the massive computational overhead from so many preemption points.
+		&
+			(d)
+			Plot of how many data-race bugs were found using ``single-pass'' data-race candidates versus ``nondeterministic'' ones.
+			With both Limited and Pure HB approaches, the MC's ability to find new data-race candidates in obscure thread interleavings led to more bugs found in all test cases.
+			Between Limited and Pure HB, Pure HB is more reliant on this phenomenon, as Limited HB can often find more potential races on the first pass.
+		\end{tabular}
+	\end{tabular}
+	\caption{Results.}
+	\label{fig:graphs}
+\end{figure}
