@@ -359,6 +359,7 @@ In this thesis I will tackle Pebbles and Pintos, two different system architectu
 This section describes the projects which students implement and which Landslide tests.
 
 \subsection{Pebbles}
+\label{sec:pebbles}
 
 In the course of a semester, students work on five programming assignments;
 the first two are individual, and the remaining three are the products of two-person teams.
@@ -469,6 +470,8 @@ when a task completes, live children and exited zombies must be handed off to th
 when the task's parent may itself be exiting;
 meanwhile, threads in tasks that receive new children may need to be awakened from {\tt wait}.
 Careless solutions to this problem are prone to data races or deadlocks.
+
+% TODO: Talk about the hurdle (both for p2 and p3).
 
 \subsection{Pintos}
 \label{sec:overview-pintos}

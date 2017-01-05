@@ -4,10 +4,91 @@
 This chapter proposes my plan to evaluate Landslide's effectiveness as a debugging aid for students in an educational setting.
 This is the second of the three projects I am proposing for this thesis, and is currently ongoing work.
 
-\subsection{Landslide as a Debugging Tool}
+\section{Motivation}
+
+In my MS thesis \cite{landslide}, I solicited students at CMU's Operating Systems Design and Implementation class
+(henceforth, ``15-410'')
+to volunteer at the end of the P3 project to annotate their kernels and try debugging them with Landslide.
+However, the annotation burden undermined Landslide's purpose:
+the only students willing to spend free time on manual instrumentation were biased to be those who were already doing well in the class,
+and hence least likely to benefit from Landslide's debugging potential.
+(Actually, even the best 15-410 students still have concurrency bugs,
+but in principle, an educational tool must reach the more struggling students,
+the so-called ``middle'' and/or ``bottom'' of the class.)
+%
+Requiring annotations hurts Landslide's case as a grading tool, as well:
+TAs need to understand the kernel to begin with in order to annotate correctly,
+and while achieving such understanding they may as well grade it by hand, as before.
+
+Since then, I've extended Landslide to support testing P2 thread libraries (Section~\ref{sec:pebbles}) as well.
+Because P2 mandates specific function names for the project's internal APIs
+-- most importantly, for the concurrency primitives --
+Landslide can automatically annotate arbitrary student implementations with no manual effort required of the user (whether student or TA).
+The addition of Quicksand and Iterative Deepening (Chapter~\ref{chap:quicksand}) partly fulfills this purpose,
+freeing student attention from the issue of which state spaces to test.
+This chapter will detail my further techniques and evaluation which are specific to educational use.
+
+\section{Implementation Details}
+
+Every stateless model checker must make some assumptions about the tested programs' concurrency model \cite{chess,inspect,dbug-ssv}.
+However, arbitrary programs may break conventional disciplines of concurrent programs, while still being bug-free.
+For example, thread communication via ad-hoc {\tt yield} loops may appear as an infinite loop, livelock, or deadlock.
+This is especially true of student code,
+written by people who are just learning concurrent programming discipline for the first time,
+and/or written under the time pressure of a project deadline.
+To be an effective tool for struggling students,
+a model checker must somehow coax adversarial programs to fit its concurrency model, to effectively test for real bugs,
+rather than rejecting them outright on some stylistic or disciplinary grounds.
+
+Fully-automatic instrumentation of student P2s has been no walk in the park.
+I have equipped Landslide with several powerful algorithms and heuristics for handling the most common anti-patterns in student submissions.
+
+% TODO
+\begin{itemize}
+	\item 
+	\item 
+	\item 
+\end{itemize}
+
+However, some of the less common offenses are both more difficult to handle algorithmically, and also more worrying from a pedagogical point of view.
+%After some collaboration with David Eckhardt (15-410 professor and member of this thesis committee),
+For the following cases, we configured Landslide to abort, and warn the student that they must find a better solution before it could test their code.
+
+\begin{itemize}
+	\item Busy-wait loops containing neither {\tt yield} nor {\tt xchg} (nor any other atomic instruction), such as {\tt while (!other\_thread\_ready) continue;}.
+		This blurs the line between anti-pattern and concurrency bug:
+		because it does not yield the CPU, a uni-processor machine must wait for the next timer tick (several milliseconds!) before making any progress;
+		also, because it does not use atomic instructions, an optimizing compiler may reorder or even delete the loop's accesses.
+		%
+		Landslide also cannot easily identify it as similar to message-passing,
+		appearing indistinguishable
+		% not really? there would be dpor conflix, at least
+		from a thread-local infinite computation,
+		which is of course impossible to judge for halting \cite{entscheidungsproblem}.
+
+		In such a case, Landslide will issue a bug report with the special message:
+		{\em I have run a loop in [function name] an alarming number of times.
+		This version of Landslide cannot distinguish between this loop being infinite versus merely undesirable.
+		Please refer to the ``Synchronization (2)'' lecture.}
+	\item Recursive mutex use (i.e., locking the same mutex twice in the same thread, then subsequently unlocking it twice).
+		While it would not be difficult for Landslide's lock-sets to support recursive locking (using a nesting counter instead of a boolean flag),
+		that would assume the corresponding mutex implementation provides the same semantics,
+		which is risky business with student code. % ;)
+		Furthermore, recursive locking is not an obvious solution to any of P2's challenges;
+		far more often, it arises when a student's mutex tries to {\tt malloc} some internal state,
+		which itself requires a mutex for safe allocation, which can lead to stack overflow and a crash.
+
+		In such a case, Landslide will issue a bug report with the special message:
+		{\em This version of Landslide cannot debug recursive implementations of mutex\_lock.
+		Please examine this stack trace and determine for yourself whether it indicates a bug.}
+\end{itemize}
+
+\section{Landslide as a Debugging Tool}
 \label{sec:studence}
 
-\subsection{Landslide as a Grading Tool}
+TODO
+
+\section{Landslide as a Grading Tool}
 \label{sec:grading}
 
 TODO
