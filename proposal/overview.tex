@@ -225,7 +225,7 @@ Considering that at each preemption point multiple threads exist as options to r
 % TODO: fig tree
 I show an example execution tree in Figure~\ref{fig:tree}.
 The number of preemption points in each execution define the depth of this tree, and the number of threads available to run define the branching factor.
-Hence, in a program with $n$ preemption points and $k$ threads available to run at each, the state space size is $n^k$.
+Hence, in a program with $n$ preemption points and $k$ threads available to run at each, the state space size is $O(n^k)$.
 Addressing the scaling problem in this exponential relation is the central research problem for all model checkers.
 
 {\bf Reduction techniques.}
@@ -322,7 +322,7 @@ A data race analysis may be either {\em static} (inspecting source code) \cite{r
 This paper focuses exclusively on dynamic analysis,
 so although our example refers to numbered source lines for ease of explanation,
 in practice we are actually classifying the individual memory access events corresponding to those lines during execution.
-Actually, each {\tt x++} statement likely compiles to two separate load and store instructions, so each of those two instructions from each of the two marked source lines pairwise will race (except for the two loads, which are both reads).
+Actually, each {\tt x++} statement likely compiles to two separate load or store instructions, so each of those two instructions from each of the two marked source lines pairwise will race (except for the two loads, which are both reads).
 
 {\bf Variants of Happens-Before.}
         Most prior work focuses on {\em Happens-Before} \cite{lamport-clocks} as the order relation between accesses.
