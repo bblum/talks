@@ -156,7 +156,7 @@ thread interleaving possible by preempting on all instructions during a specific
 
 The proof is available at \cite{quicksand-soundness}.
 
-\subsection{Pruning false-positive data-race candidates}
+\subsection{Pruning False Positives} % data-race candidates}
 I have also proved a (somewhat less remarkable) theorem concerning the soundness of a new tactic for pruning certain types of false-positive data race candidates (under Limited HB).
 A ``malloc-recycle'' false positive occurs when two threads seem to race on the same memory address, but only because the {\tt malloc}ed block containing that address was {\tt free}d and reallocated in between.
 If the transitions of the two threads were reordered, the address collision would disappear and there would be no race.
