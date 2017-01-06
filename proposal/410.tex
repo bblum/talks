@@ -3,6 +3,7 @@
 
 This chapter proposes my plan to evaluate Landslide's effectiveness as a debugging aid for students in an educational setting.
 This is the second of the three projects I am proposing for this thesis, and is currently ongoing work.
+What remains to be done is detailed in Section~\ref{sec:grading}.
 
 \section{Motivation}
 
@@ -167,7 +168,102 @@ For the following cases, we configured Landslide to abort, and warn the student 
 \section{Landslide as a Debugging Tool}
 \label{sec:studence}
 
-TODO
+In the Spring 2015, Fall 2015, and Spring 2016 semesters,
+I've made Landslide (with Quicksand) available to 15-410 students during the last week of P2.
+I introduced stateless model checking in a guest lecture given to the class,
+and required students to pass the thread library hurdle \cite{thrlib}
+to ensure a minimum of basic functionality necessary to use Landslide.
+
+To analyze its effectiveness as a debugging tool for students,
+I configured it to record a snapshot of the results of each use by the students:
+which options were used (test program and time limit),
+a snapshot of the student’s code, and the result of the test
+(completed, timed out, bug found, or ctrl-C’ed).
+I manually interpreted the snapshots to determine:
+\begin{itemize}
+	\item How many unique bugs the student found (discounting multiple runs that produced ``the same'' bug);
+	\item How many of those bugs were deterministic versus concurrency bugs (did Landslide find the bug on the first interleaving or did it need to test multiple);
+	\item How many of each category of bug the students fixed (determined when a subsequent run of Landslide on the test case failed to find the bug again).
+\end{itemize}
+
+{\bf Results -- bugs found.}
+Of 90 two-student groups in those 3 semesters, 47 tested their thread libraries with Landslide.
+Table~\ref{tab:this-table-sucks-but-it's-the-best-i-got} shows
+that Landslide found in total 44 deterministic bugs and 85 concurrency bugs.
+It found at least one concurrency bug for 32 groups (68\%),
+24 of whom (51\%) were able to fix at least one, verifying their update
+with a succesful re-run of the same test.
+
+The table's data presentation is somewhat confusing:
+the dependent columns count the number of {\em groups}, categorized by how many bugs they found, not the raw number of {\em bugs},
+which I instead indicate in the ``Total bugs'' row at the bottom.
+So, the number of total bugs is equal to the sum of the products between each cell in that column and its corresponding number of bugs,
+e.g., $44 = 27\times0 + 6\times1 + 9\times2 + 2\times3 + 1\times4 + 2\times5$.
+Sorry about that; I'll try to find a better way to present this data in the thesis.
+
+\begin{table}[h]
+	\begin{center}
+	\begin{tabular}{r|cc|cc}
+	%det bugs found det bugs fixed  races fixed     races found
+	& \multicolumn{4}{c}{Number of groups} \\
+	Number & \multicolumn{2}{c|}{Deterministic bugs} & \multicolumn{2}{c}{Concurrency bugs} \\
+	of bugs & found & fixed & found & fixed \\
+	\hline
+	0       & 27    & 32    & 15    & 23    \\
+	1       & 6     & 5     & 7     & 11    \\
+	2       & 9     & 6     & 12    & 8     \\
+	3       & 2     & 1     & 7     & 2     \\
+	4       & 1     & 1     & 3     & 1     \\
+	5       & 2     & 2     & 2     & 1     \\
+	11      &       &       & 1     & 1     \\
+	\hline
+	%Total groups
+	%       & 47    & 47    & 47    & 47    \\
+	Total bugs
+	        & 44    & 34    & 85    & 53    \\
+	\end{tabular}
+	\end{center}
+	\caption{Summary of how many bugs were found and/or fixed by how many groups.
+	Each column counts how many groups found/fixed the number of bugs in each row;
+	for instance, two groups found 5 concurrency bugs, one of which fixed all 5.}
+	\label{tab:this-table-sucks-but-it's-the-best-i-got}
+\end{table}
+
+{\bf Results -- impact on grades.}
+Next, I investigated the impact Landslide ultimately had on students' performance.
+I collected the ultimate P2 and P3 grades from the last 6 semesters, forming three categories:
+students from the past 3 semesters who volunteered to use Landslide,
+students from those semesters who opted out,
+and students from the other 3 semesters, for whom Landslide was not available at all.
+I hoped to measure a correlation between use of Landslide and ultimate P2 grades,
+which would show that it helps students submit more correct P2s,
+and/or a correlation with ultimate P3 grades,
+which would (tentatively) show that it teaches better ways of thinking that students retain for future projects (i.e., measuring actual learning).
+
+Unfortunately, this turned out to be a negative result, as shown in Figure~\ref{fig:grade-distribution}.
+The distribution of Landslide users' ultimate grades is indistinguishable from that of students for whom Landslide was unavailable.
+While there was a 3\% increase in P2 grades between opt-out-ers and Landslide users, it's prone to selection bias:
+perhaps those who opted out of Landslide were already the worst of the class who simply didn't have any free time for it.
+The distribution of P3 grades is indistinguishable as well.
+In the thesis, I will discuss possible factors contributing to this failure, and how they might be controlled for in future work,
+although I am not planning to run any further experiments in the limited time I have.
+
+\begin{figure}[h]
+	\begin{center}
+	\includegraphics[width=0.96\textwidth]{p2-p3-distribution.pdf}
+	\end{center}
+	\caption{Distribution of P2 (thrlib) and P3 (kernel) grades among students who did or didn't use Landslide.}
+	\label{fig:grade-distribution}
+\end{figure}
+
+
+{\bf Future work.}
+One evaluation question remains which I will answer in the thesis:
+what is the accuracy of Landslide's automation heuristics (see previous section)?
+In other words, were false-positive infinite loops or deadlocks ever reported
+where Landslide failed to recognize an ad-hoc synchronization?
+(I expect a near 100\% success rate,
+having tuned the heuristics by hand on an (independent) set of P2 submissions already.)
 
 \section{Landslide as a Grading Tool}
 \label{sec:grading}
