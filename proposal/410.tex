@@ -30,7 +30,7 @@ This chapter will detail my further techniques and evaluation which are specific
 
 \section{Implementation Details}
 
-Every stateless model checker must make some assumptions about the tested programs' concurrency model \cite{chess,inspect,dbug-ssv}.
+Every stateless model checker must make some assumptions about the tested programs' concurrency model \cite{chess}.
 However, arbitrary programs may break conventional disciplines of concurrent programs, while still being bug-free.
 For example, thread communication via ad-hoc {\tt yield} loops may appear as an infinite loop, livelock, or deadlock.
 This is especially true of student code,
@@ -43,11 +43,92 @@ rather than rejecting them outright on some stylistic or disciplinary grounds.
 Fully-automatic instrumentation of student P2s has been no walk in the park.
 I have equipped Landslide with several powerful algorithms and heuristics for handling the most common anti-patterns in student submissions.
 
-% TODO
 \begin{itemize}
-	\item 
-	\item 
-	\item 
+	\item {\bf Yield-blocking.}
+		Landslide recognizes open-coded busy-wait loops used for ad-hoc synchronization,
+		and is able to treat threads as blocked (or ``disabled'' in model-checking parlance),
+		avoiding getting stuck in an infinitely-long interleaving (or ``cyclic state space'')
+		which should never arise during normal execution.
+		The heuristically-driven algorithm is as follows:
+		\begin{itemize}
+			\llitem Whenever a thread performs a {\tt yield}, {\tt xchg}, or other atomic instruction,
+				Landslide increments a per-thread counter to track its (supposed) busy-wait loop iterations.
+				A thread's counter is reset any time it performs some ``interesting'' activity not likely to appear in a true busy-wait loop:
+				any condvar, semaphore, or rwlock invocation (but not mutexes),
+				and the beginning or end of any thread library function (create, join, or exit).
+				\footnote{Implemented in {\tt check\_user\_yield\_activity} and {\tt check\_user\_xchg} in {\tt user\_sync.c}.}
+				% TODO: Wow, what happened to KEEP_RUNNING_YIELDING_THREADS?? I swear I had some logic in arbiter.c about that.
+			\llitem When a thread's loop counter reaches some heuristic limit (10 for {\tt yield}s, 100 for {\tt xchg}s),
+				% Or 20 for xchgs which end up being data-race PPs.
+				Landslide marks the thread blocked (or ``disabled'', in model-checking parlance),
+				just as though it had invoked {\tt deschedule}.
+				It also retroactively disables that thread at all preceding {\tt yield}s/{\tt xchg}s in that sequence,
+				which prevents DPOR from trying to use each as a preemption point,
+				and avoids a state space explosion (by a factor of the heuristic yield limit).
+				% Well, only the whole state space will explode if this yield-block *always* happens.
+				% Otherwise it's (heuristic limit) * (size of subtree) * (number of yield-block occurrences).
+				% Tbf, I guess it's very likely for that to be half, or more, of the whole space.
+				\footnote{Implemented in {\tt update\_blocked\_transition} in {\tt user\_sync.c}.}
+			\llitem When retroactively disabling a thread across all its preceding loop iterations,
+				Landslide's state space estimator must account for the ``pruning'' of duplicate subtrees at those (now disabled) preemption points.
+				% TODO: Yeah, thinking about this again, I'm pretty sure untag_blocked_branch is deadcode.
+				If in any previous thread interleaving, DPOR tagged the now-yield-blocked thread to interleave at another thread's preemption point,
+				the estimator would have included that potential subtree in its computation of how much unexplored state space exists.
+				Accordingly, in this case Landslide will invert the estimation algorithm,
+				including propagating the reduced subtree size all the way to the state space's root.
+				\footnote{Implemented in {\tt untag\_blocked\_branch} in {\tt estimate.c}.}
+			\llitem Landslide can precisely identify when another thread may trigger the yield-blocking one to fall out of its loop,
+				by analyzing the shared memory conflicts involving only accesses performed in the loop.
+				At any such memory conflict, Landslide will reenable the yielding thread.
+				(If the other thread's access does not fulfill the yielding thread's wait condition,
+				the latter will just re-trigger the heuristic and become blocked again.)
+				% Hmm.... if two threads are in a deadlock between two ad-hoc loops,
+				% and each has some spurious access which kicks the other,
+				% it will show up as an infinite loop instead. I guess that's ok?
+				\footnote{Implemented in {\tt check\_unblock\_yield\_loop} in {\tt user\_sync.c}.}
+		\end{itemize}
+		This approach is similar to the Fair-Bounded Search algorithm in \cite{bpor},
+		although it avoids a major assumption of the latter (threads {\tt yield} if and only if not making progress),
+		and also avoids the need to iteratively deepen the yield bound by fixing it as a heuristic constant.
+		% Actually, I don't think that's true. Using DPOR to unblock a yield-looping thread at any conflict covers this.
+		%The cost of this heuristic is that falsely identifying threads as blocked can lead to unsoundness (...)
+	\item {\bf False-positive deadlock avoidance.}
+		In contrast to its treatment of data races, Landslide must never report a false-positive {\em bug}.
+		If its heuristics falsely identify a thread as blocked, and all other threads are truly blocked,
+		waiting on some progress from that thread, Landslide would report a deadlock bug,
+		and confuse students horribly.
+
+		The yield-loop heuristic assumes that ``too many'' yields or atomics should not arise during normal, non-looping execution of thread library routines.
+		Though extremely rare, this assumption can be violated by an adversarial student submission.
+		More often, Landslide can falsely block threads in the special case of {\tt mutex\_test} (see \cite{quicksand}),
+		where it uses preemption points within the implementation of {\tt mutex\_lock} itself.
+		False deadlocks can also arise from the heuristic blocking of ICB \cite{chess-icb}
+		(used in Quicksand's control experiments, Section~\ref{sec:quicksand-eval}).
+
+		When a deadlock arises under conditions where one or more threads are heuristically blocked,
+		Landslide attempts to refute it as a false positive by artificially unblocking all heuristically-blocked threads%
+		\footnote{If any threads are ICB-blocked, I prioritize waking those before trying to wake any yield-blocked threads.
+		% Hmm... I don't remember exactly why.
+		Waking all threads at once here can lead to unsoundness.}
+		If the deadlock is true, each thread will immediately trigger the yield-blocking heuristic again,
+		bringing the system back into deadlocked state.
+		Landslide then repeats this process a heuristic constant number of times (128),
+		allowing the program that many chances to make progress before proclaiming deadlock.
+		(Note that this heuristic cannot miss true deadlocks as false negatives.)
+		\footnote{Implemented in {\tt try\_avoid\_fp\_deadlock} in {\tt arbiter.c}.}
+	\item {\bf Lock hand-off.}
+		A common, though discouraged, idiom for implementing thread destruction involves one thread ``handing off'' ownership of a mutex to another.
+		That thread will then release the lock with no corresponding acquire in its own execution.
+		% In this case, some other thread communication enforces an ordering ... hmm,, pure vs limited hb?
+		Although Landslide cannot easily recognize at what point the latter thread's accesses are protected by that lock for the sake of data-race analysis,
+		potentially leading to false positive races,
+		it must release the lock in its bookkeeping to avoid false {\em negatives} if any later access that should be protected by that lock isn't.
+		When releasing a lock, if absent from the current thread's lockset, Landslide searches the locksets of all other existing threads, and releases it there.
+		Landslide can instead optionally be configured to treat lock hand-off as an outright bug, as a matter of discipline.
+		\footnote{Implemented in {\tt lockset\_remove} in {\tt lockset.c}.}
+
+	% Not really research.
+	%\item Other small engineering fixes, such as: recognizing when a system call's access to user memory constitutes a ``communication back-channel'' for user threads that should be considered for DPOR;
 \end{itemize}
 
 However, some of the less common offenses are both more difficult to handle algorithmically, and also more worrying from a pedagogical point of view.
