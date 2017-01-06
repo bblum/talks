@@ -268,4 +268,19 @@ having tuned the heuristics by hand on an (independent) set of P2 submissions al
 \section{Landslide as a Grading Tool}
 \label{sec:grading}
 
-TODO
+Beginning in 2017, I will recruit 15-410 Teaching Assistants (TAs) for my user study rather than students.
+The modified user study will evaluate Landslide as a grading tool,
+alternative to the ``Fritz'' stress-testing infrastructure which 15-410 currently employs,
+and possibly substituting as well for the human process of reading student code looking for concurrency bugs by hand.
+The intent is not for Landslide to ultimately replace 15-410's manual grading process,
+but rather to demonstrate that comparably-rigorous grading could be deployed automatedly at other schools wishing to adopt the 15-410 curriculum.
+
+I will pursue the following evaluation questions:
+
+\begin{itemize}
+	\item Provided appropriate test cases, can Landslide find the most common ``deep'' concurrency bugs in student submissions?
+	\item How does Landslide's bug-finding compare to that of Fritz, the class's stress tester?
+	\item How does Landslide's bug-finding compare to that of TAs grading by hand?
+\end{itemize}
+
+Finally, I will conclude this chapter in the thesis by discussing how future work could adapt Pebbles's interface to support fully-automatic model checking without compromising the educational value of P3.
