@@ -67,7 +67,7 @@ while \cite{learning-concurrency} investigates how students form cognitive patte
 Both of these studies could help optimize Landslide's bug reports for clarity and student enlightenment.
 
 
-\section{Other Techniques}
+\section{Other Concurrency Techniques}
 
 Data race analysis, originating with the lockset-only analysis of Eraser \cite{eraser},
 has since grown into a mature field.
@@ -93,8 +93,15 @@ although its verification properties are not as strong as Quicksand's.
 Transactional memory (TM), first introduced in \cite{transactional-memory},
 has received renewed attention in recent years with the announcement of Intel's Haswell architecture \cite{htm-haswell},
 which promises to support hardware transactions using new {\tt x86} instructions.
+Because hardware transactions can fail for any reason, not just on memory conflicts,
+software TM remains relevant,
+and recent works such as \cite{hybrid-htm-stm} and \cite{stm-relaxed-memory} enhance it to be nested with hardware transactions, or to be used on weak memory architectures, respectively;
+which in turn produce ever more complicated concurrency models for people like me to tackle.
 %
-The combination of TM and testing in the literature is sparse so far.
+Testing approaches to TM are sparsely represented in the literature so far.
+%The Weakest Reasonable Condition
+\cite{specifying-verifying-tm} introduces several conditions to help specify/verify the correctness of TM {\em implementations},
+but not that of client programs which use TM.
 {\em Learning from Mistakes} \cite{learning-from-mistakes} is a study of the characteristics of many different types of concurrency bugs;
 it found that TM could potentially fix some, but not all, of the studied bugs,
 although in some cases it must be combined with other concurrency primitives,
