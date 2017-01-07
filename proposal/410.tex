@@ -137,7 +137,7 @@ However, some of the less common offenses are both more difficult to handle algo
 For the following cases, we configured Landslide to abort, and warn the student that they must find a better solution before it could test their code.
 
 \begin{itemize}
-	\item Busy-wait loops containing neither {\tt yield} nor {\tt xchg} (nor any other atomic instruction), such as {\tt while (!other\_thread\_ready) continue;}.
+	\item {\bf Busy-wait loops} containing neither {\tt yield} nor {\tt xchg} (nor any other atomic instruction), such as {\tt while (!other\_thread\_ready) continue;}.
 		This blurs the line between anti-pattern and concurrency bug:
 		because it does not yield the CPU, a uni-processor machine must wait for the next timer tick (several milliseconds!) before making any progress;
 		also, because it does not use atomic instructions, an optimizing compiler may reorder or even delete the loop's accesses.
@@ -152,7 +152,7 @@ For the following cases, we configured Landslide to abort, and warn the student 
 		{\em I have run a loop in [function name] an alarming number of times.
 		This version of Landslide cannot distinguish between this loop being infinite versus merely undesirable.
 		Please refer to the ``Synchronization (2)'' lecture.}
-	\item Recursive mutex use (i.e., locking the same mutex twice in the same thread, then subsequently unlocking it twice).
+	\item {\bf Recursive mutex use} (i.e., locking the same mutex twice in the same thread, then subsequently unlocking it twice).
 		While it would not be difficult for Landslide's lock-sets to support recursive locking (using a nesting counter instead of a boolean flag),
 		that would assume the corresponding mutex implementation provides the same semantics,
 		which is risky business with student code. % ;)
@@ -177,8 +177,8 @@ to ensure a minimum of basic functionality necessary to use Landslide.
 To analyze its effectiveness as a debugging tool for students,
 I configured it to record a snapshot of the results of each use by the students:
 which options were used (test program and time limit),
-a snapshot of the student’s code, and the result of the test
-(completed, timed out, bug found, or ctrl-C’ed).
+a snapshot of the student's code, and the result of the test
+(completed, timed out, bug found, or ctrl-C'ed).
 I manually interpreted the snapshots to determine:
 \begin{itemize}
 	\item How many unique bugs the student found (discounting multiple runs that produced ``the same'' bug);

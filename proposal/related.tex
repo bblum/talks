@@ -1,7 +1,7 @@
 \chapter{Related Work}
 \label{chap:related}
 
-In this chapter I provide a brief tour of the related work.
+This chapter provides a brief tour of the related work.
 
 \section{History of Stateless Model Checking}
 
@@ -92,7 +92,7 @@ although its verification properties are not as strong as Quicksand's.
 
 Transactional memory (TM), first introduced in \cite{transactional-memory},
 has received renewed attention in recent years with the announcement of Intel's Haswell architecture \cite{htm-haswell},
-which promises to support hardware transactions using new {\tt x86} instructions.
+which promises to support hardware transactions using new x86 instructions.
 Because hardware transactions can fail for any reason, not just on memory conflicts,
 software TM remains relevant,
 and recent works such as \cite{hybrid-htm-stm} and \cite{stm-relaxed-memory} enhance it to be nested with hardware transactions, or to be used on weak memory architectures, respectively;
@@ -100,7 +100,7 @@ which in turn produce ever more complicated concurrency models for people like m
 %
 Testing approaches to TM are sparsely represented in the literature so far.
 %The Weakest Reasonable Condition
-\cite{specifying-verifying-tm} introduces several conditions to help specify/verify the correctness of TM {\em implementations},
+\cite{specifying-verifying-tm} introduces several conditions to help specify/verify the correctness of TM implementations,
 but not that of client programs which use TM.
 {\em Learning from Mistakes} \cite{learning-from-mistakes} is a study of the characteristics of many different types of concurrency bugs;
 it found that TM could potentially fix some, but not all, of the studied bugs,
