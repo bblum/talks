@@ -98,11 +98,17 @@ software TM remains relevant,
 and recent works such as \cite{hybrid-htm-stm} and \cite{stm-relaxed-memory} enhance it to be nested with hardware transactions, or to be used on weak memory architectures, respectively;
 which in turn produce ever more complicated concurrency models for people like me to tackle.
 %
-Testing approaches to TM are sparsely represented in the literature so far.
+Testing approaches for transactional programs are sparsely represented in the literature so far.
 %The Weakest Reasonable Condition
-\cite{specifying-verifying-tm} introduces several conditions to help specify/verify the correctness of TM implementations,
+Several related works \cite{tm-correctness,tm-completeness,specifying-verifying-tm} are building up to formal proofs of the correctness of TM {\em implementations},
 but not that of client programs which use TM.
-{\em Learning from Mistakes} \cite{learning-from-mistakes} is a study of the characteristics of many different types of concurrency bugs;
+Getting closer, McRT STM \cite{mc-tm-with-spin} uses SPIN \cite{spin} to model check an STM implementation
+up to 2 threads running 1 transaction each with up to 3 memory accesses.
+This kind of verification is an important stepping stone for trusting the results Landslide will provide.
+% TODO: make this point once you've added discussion of mutex_test to chap:quicksand.
+% This kind of verification is analogous to the {\tt mutex\_test}
+%
+{\em Learning from Mistakes} \cite{learning-from-mistakes} studies the characteristics of many types of concurrency bugs;
 it found that TM could potentially fix some, but not all, of the studied bugs,
 although in some cases it must be combined with other concurrency primitives,
 which indicates a major need for verifying transactional code with model checking.
