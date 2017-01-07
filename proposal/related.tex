@@ -21,7 +21,7 @@ dBug \cite{dbug-ssv}, another CMU original, similar to CHESS;
 and finally SPIN \cite{spin} and Inspect \cite{inspect} which can preempt at any shared variable access.
 %
 Perhaps by now, Landslide itself deserves a spot on this list: I first introduced it in my MS thesis \cite{landslide},
-and it is most notable for testing kernel-level code through the use of a simulator.
+and it is most notable for checking all shared memory accesses and supporting kernel-level code through the use of a simulator.
 
 {\bf Search Strategies}
 To date a number of techniques have been proposed to mitigate exponential explosion, the Sisyphean rock of stateless model checkers.
@@ -43,6 +43,59 @@ Preemption Sealing \cite{sealing} allows programmers to exclude preemption point
 reducing the state space by limiting the scope of the test.
 Probabilistic Concurrency Testing \cite{randomized-scheduler} eschews DPOR's depth-first approach entirely (as well as any potential for completing the state space), randomly sampling a broad cross-section of the state space and providing probabilistic bounds on uncovering bugs.
 
-\section{Educational Testing Tools}
+\section{Concurrency in Education}
 
-\section{Real-World Techniques}
+I built Landslide upon the Pebbles \cite{kspec} curriculum and concurrency model, naturally, as it is closest to home. % but also, it's the best.
+Pintos \cite{pintos} has recently emerged as the most popular educational kernel
+(by count of top CS schools in the USA who teach by it);
+it trades off the prevalence of its concurrency challenges to cover various OS topics more broadly,
+especially advanced scheduling algorithms.
+Pintos is the stand-alone evolution of its predecessor, Nachos \cite{nachos}, which originally ran as a UNIX process with simulated device drivers.
+%
+Xv6 \cite{xv6}, from MIT, is another major educational kernel, which is also UNIX-like and runs in QEMU,
+and a natural target for model checking in future work.
+Recently, Columbia introduced a new Android-focused OS course \cite{teaching-android},
+which perhaps highlights the importance of related work on model-checking event-driven applications \cite{r4}.
+
+To my knowledge, this is the first study of model checking in an educational setting, although teaching concurrency is not itself an unstudied problem.
+\cite{towards-a-framework} presents a promising framework for testing concurrent programs,
+which can incorporate model checking as well as static analysis, resource exhaustion, data-race analysis, and coverage analysis.
+However, it lacks an evaluation, and makes mention of its educational value only in its future work remarks.
+%
+\cite{how-studence} presents a survey of how students think about concurrent program behaviour and debugging,
+while \cite{learning-concurrency} investigates how students form cognitive patterns about concurrent programming that could either aid or stunt their reasoning.
+Both of these studies could help optimize Landslide's bug reports for clarity and student enlightenment.
+
+
+\section{Other Techniques}
+
+Data race analysis, originating with the lockset-only analysis of Eraser \cite{eraser},
+has since grown into a mature field.
+Race detectors are largely distinguished by their particular flavour of the Happens-Before (HB) relation:
+some tools \cite{fasttrack,djit} soundly avoid false positives using ``Pure'' HB in the Lamport sense \cite{lamport-clocks};
+others \cite{tsan,hybriddatarace} introduced the ``Limited'' HB relation to find more potential races in a single pass.
+I implemented both approaches in Landslide and evaluated their trade-offs in Section~\ref{sec:quicksand-eval}.
+%
+Recently, the Causally-Precedes relation \cite{predictive-dr} emerged as a refinement of Limited HB which avoids the most common cases of false positives; it would be a welcome enhancement in Landslide.
+
+Replay analysis extends single-pass data-race analysis to apply model checking (in limited quantities) to classify data-race candidates by their impact on program behaviour.
+It was first introduced in \cite{recordreplaydrs}, which compares the program states immediately after the access pair for differences, preferring still to err on the side of false positives.
+RaceFuzzer \cite{racefuzzer} avoids false positives by requiring an actual failure be exhibited, as we do,
+although it uses random schedule fuzzing rather than model checking.
+%
+Portend \cite{portend} is closest in spirit to Quicksand:
+it tests alternate executions based on single-pass data-race candidates to classify them in a taxonomy of likely severity.
+It uses symbolic execution to test input nondeterminism as well as schedule nondeterminism,
+although its verification properties are not as strong as Quicksand's.
+
+% TODO: Devote a paragraph to symbolic execution, including mention of e.g. concolic testing. Cite klee, z3, etc.
+
+Transactional memory (TM), first introduced in \cite{transactional-memory},
+has received renewed attention in recent years with the announcement of Intel's Haswell architecture \cite{htm-haswell},
+which promises to support hardware transactions using new {\tt x86} instructions.
+%
+The combination of TM and testing in the literature is sparse so far.
+{\em Learning from Mistakes} \cite{learning-from-mistakes} is a study of the characteristics of many different types of concurrency bugs;
+it found that TM could potentially fix some, but not all, of the studied bugs,
+although in some cases it must be combined with other concurrency primitives,
+which indicates a major need for verifying transactional code with model checking.

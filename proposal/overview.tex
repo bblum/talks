@@ -366,6 +366,7 @@ the first two are individual, and the remaining three are the products of two-pe
 I will focus on the third and fourth of these, the thread library and kernel,
 called ``P2'' and ``P3'' respectively (the project numbers start at 0).
 The other three (a stack-crawling backtrace utility, a bare-metal game with device drivers, and a small extension to the P3 kernel) are not of concern in this thesis.
+The course's prerequisite is Introduction to Computer Systems \cite{sigcse01:CSaPP}.
 Both P2 and P3 are built using the {\em Pebbles} system call specification, outlined in Table~\ref{tab:syscalls}
 
 \begin{table}
@@ -452,6 +453,9 @@ Finally, students also implement automatic stack growth using the {\tt swexn} sy
 
 \subsubsection{P3}
 In P3, students implement a kernel which provides the same system calls shown in Table~\ref{tab:syscalls}, previously provided by the reference kernel.
+Pebbles adopts the Mach \cite{DBLP:conf/usenix/AccettaBBGRTY86} distinction between {\em tasks}, which are resource containers, and {\em threads}, each of which executes within a single task.
+This requires less implementation complexity than the more featureful Plan 9's {\tt rfork} \cite{Pike90plan9} or Linux's {\tt clone} models.
+
 Although the internal interfaces are not mandated like they were in P2, all Pebbles kernels must necessarily contain the same abstract components. These include:
 \begin{itemize}
 	\item A round-robin scheduler, including context switching, timer handling, and runqueue management;
