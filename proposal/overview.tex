@@ -185,6 +185,36 @@ Software transactions (STM) \cite{stm-pldi06} can be used on any commodity proce
 Hardware transactions (HTM) \cite{htm-experience, htm-performance} achieve better performance by reusing existing cache coherence logic to detect conflicts, but require explicit support from the CPU, which is not yet widespread.
 Haswell \cite{htm-haswell} is the first x86 architecture to support HTM,
 offering three new instructions: \texttt{xbegin}, \texttt{xend}, and \texttt{xabort}, to begin, commit, and fail a transaction, respectively.
+The example program in Figure~\ref{fig:htm-example} demonstrates how these instructions can be used to synchronize a simple shared access without locking overhead in the common case,
+using GCC's compiler intrinsics \cite{htm-gcc}.
+
+\begin{figure}[h]
+	\begin{center}
+		\begin{tabular}{l}
+		\textbf{(All threads)} \\
+		\hline
+		\texttt{if ((status = \_xbegin()) == \_XBEGIN\_STARTED) \{} \\
+		\texttt{~~~~if (too\_much(foo)) \{} \\
+		\texttt{~~~~~~~~\_xabort();} \\
+		\texttt{~~~~\} else \{} \\
+		\texttt{~~~~~~~~foo++;} \\
+		\texttt{~~~~~~~~\_xend();} \\
+		\texttt{~~~~\}} \\
+		\texttt{\} else if (status != \_XABORT\_EXPLICIT) \{} \\
+		\texttt{~~~~mutex\_lock(\&m);} \\
+		\texttt{~~~~foo++;} \\
+		\texttt{~~~~mutex\_unlock(\&m);} \\
+		\texttt{\}} \\
+		\end{tabular}
+	\end{center}
+	\caption{An example program demonstrating the various HTM primitives.
+		If the transaction in the top branch aborts,
+		whether from a conflict or from the programmer's intention,
+		execution will revert to the return of {\tt \_xbegin},
+		and {\tt status} will be assigned an error code indicating the abort reason.
+		The programmer can then use explicit synchronization, such as a mutex, to resolve the conflict.}
+	\label{fig:htm-example}
+\end{figure}
 
 In this thesis, I will focus on HTM as my platform for testing transactional programs, to highlight the importance of researching advanced testing techniques in anticipation of upcoming hardware features.
 My treatment of TM will be largely agnostic to whether a transactional interface is backed by HTM or STM,
