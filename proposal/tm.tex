@@ -74,7 +74,7 @@ rather than relying on the platform providing accurate TM emulation.
 
 \subsection{Abort Nondeterminism}
 Next, I will extend the concurrency model to support the nondeterminism arising from transaction aborts.
-During execution, Landslide inject a failure to force threads to branch into backup code paths.
+During execution, Landslide will inject a failure to force threads to branch into backup code paths.
 Failure injections add an extra ``dimension'' of non-determinism:
 at each {\tt xbegin} operation which is a preemption point, Landslide may force a normal context switch to re-interleave threads, or it may inject a transaction abort to test the backup code.
 (This also avoids the need to speculatively execute and/or roll-back failing transactions.)
