@@ -232,7 +232,7 @@ This thesis will comprise three major contributions:
 		I will show that Iterative Deepening of preemption points outperforms prior work in terms both of finding bugs quickly and of completely verifying correctness when no bug exists.
 
 		This work is {\bf completed} and was published at OOPSLA 2016.
-	\item {\bf Educational use (Chapter \ref{chap:410}).}
+	\item {\bf Educational use (Chapters \ref{chap:410} and \ref{chap:pintos}).}
 		For the past three semesters, I have offered a fully-automated version of Landslide to students in 15-410, CMU's undergraduate Operating System Design and Implementation class \cite{kspec,thrlib}, for use as a debugging aid during the thread library project.
 		I will continue these user studies, and use the data to evaluate the suitability of stateless model checking in an educational setting.
 		%, investigating the following questions in particular:
@@ -241,18 +241,24 @@ This thesis will comprise three major contributions:
 		%	\item Does Landslide teach students lessons in concurrent programming
 		%\end{itemize}
 
-		This is {\bf ongoing work}; I have run the user study for 4 semesters so far and am proposing to continue them and follow them up with an evaluation.
-	\item {\bf Broader impact (Chapter \ref{chap:lipservice}).}
-		Landslide includes several new techniques for testing kernels and thread libraries with little or no manual instrumentation required.
-		So far, a fully-automatic testing mode is available only for 15-410 thread library projects.
-		To prove these techniques are relevant beyond CMU's walls, I will extend Landslide to handle Pintos kernel projects from other universities \cite{pintos}. %and ``real-world'' Linux programs.
-		%I will conduct a user study in which students at another university test their Pintoses with Landslide,
-		%and evaluate Landslide's ability to find known and/or new bugs in real-world programs.
-		I will also extend Landslide's concurrency model to support Hardware Transactional Memory (HTM), a new concurrent programming technique \cite{transactional-memory}, and test several ``real-world'' HTM programs.
+		So far, the fully-automatic testing mode is available only for 15-410 thread library projects.
+		To prove these techniques are relevant beyond CMU's walls, I will extend Landslide to handle Pintos kernel projects from other universities \cite{pintos}.
+		I will then collaborate with those schools to deploy Landslide to their operating systems students.
 
-		This will be {\bf mostly new work}, as Landslide presently supports testing Pintoses only with some manual effort,
+		This is {\bf ongoing work}; I have run the user study for 4 semesters so far and am proposing to continue them
+		and extend the existing evaluation,
+		as well as deploy a Pintos port.
+	\item {\bf Transactional Memory (Chapter \ref{chap:tm}).}
+		Transactional Memory (TM) is a relatively new concurrent programming technique \cite{transactional-memory}
+		which is not yet addressed by modern model checkers.
+		I will extend Landslide's concurrency model to support both hardware (HTM) and software (STM) variants of TM,
+		and test several ``real-world'' TM programs.
+
+		This will be {\bf new work},
+		involving some implementation effort, some proofs, and designing a new evaluation.
+		%, as Landslide presently supports testing Pintoses only with some manual effort,
 		%and does not yet feature instrumentation to run on Linux programs.
-		and will need its concurrency model extended to incorporate the HTM programming model.
+		%and will need its concurrency model extended to incorporate the HTM programming model.
 \end{itemize}
 
 % TODO(thesis): Other chapters of this thesis include...
@@ -260,11 +266,9 @@ This thesis will comprise three major contributions:
 \input{overview}
 \input{quicksand}
 \input{410}
-\input{lipservice}
+\input{pintos}
+\input{tm}
 \input{related}
-
-
-
 
 %Reduction
 %techniques such as Dynamic Partial Order Reduction \cite{dpor} and Maximal Causality Reduction \cite{mcr} expand the limits of feasible test completion,
@@ -297,9 +301,9 @@ I leave you now with a proposed timeline for bringing each project to fruition.
 	\item 2017 January: Submit thesis proposal, submit revised IRB proposal for planned user studies.
 	\item 2017 ???uary: Present thesis proposal (whenever the committee is free).
 	\item 2017 February-March: Develop ``grading'' TA user study and deploy it in 15-410 (Section~\ref{sec:grading}).
-	\item 2017 March-August: Port Landslide to Bochs for use in Pintos OS classes (Section~\ref{sec:pintos-todo}).
+	\item 2017 March-August: Port Landslide to Bochs for use in Pintos OS classes (Section~\ref{chap:pintos}).
 	\item 2017 March-August: Implement, evaluate, and write paper about transactional memory project (Section~\ref{sec:tm}).
-	\item 2017 August-October: Polish and deploy Pintos user study (Section~\ref{sec:pintos-todo}).
+	\item 2017 August-October: Polish and deploy Pintos user study (Section~\ref{chap:pintos}).
 	\item 2017 ???ember: Resubmit paper about 410 user studies (Section~\ref{sec:studence}) (previously rejected from SIGCSE) (whenever an appropriate conference deadline arises).
 	\item 2017 October-November: Deploy 410 TA grading study again for more data.
 	\item 2017 December: Begin writing thesis.
