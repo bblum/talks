@@ -18,15 +18,18 @@ For the experiments in Chapter~\ref{chap:quicksand}, I already implemented rudim
 
 \section{Existing Progress}
 
-The existing Pintos support includes
-a new set of annotations (e.g., {\tt mutex\_lock} in Pebbles is now called {\tt sema\_down};
-handling several quirks of the basecode's scheduling behaviour; %(ask me if you really care to know);
-extending the heap tracker to handle Pintos's page allocator {\tt palloc} as well as the kernel {\tt malloc},
-as well as the fact that kernel memory is not direct-mapped like in Pebbles;
-new thread-liveness code to detect when a test case terminates;
-skipping some busy-wait loops in the boot sequence used for device communication,
-an extra fall-back case in Landslide's timer injection algorithm, %the workings of which I don't even remember anymore,
-and extending the lock-set and vector-clock analyses to include disabling interrupts.
+So far, just enough Pintos support exists to have run Chapter \ref{chap:quicksand}'s experiments. This includes:
+%The existing Pintos support includes
+\begin{itemize}
+	\item a new set of annotations (e.g., {\tt mutex\_lock} in Pebbles is now called {\tt sema\_down};
+	\item handling several quirks of the basecode's scheduling behaviour; %(ask me if you really care to know);
+	\item extending the heap tracker to handle Pintos's page allocator {\tt palloc} as well as the kernel {\tt malloc},
+		as well as the fact that kernel memory is not direct-mapped like in Pebbles;
+	\item new thread-liveness code to detect when a test case terminates;
+	\item skipping some busy-wait loops in the boot sequence used for device communication;
+	\item an extra fall-back case in Landslide's timer injection algorithm; %the workings of which I don't even remember anymore,
+	\item and extending the lock-set and vector-clock analyses to include disabling interrupts.
+\end{itemize}
 %(which was actually pretty tricky when using vector clocks for pure-HB).
 All these features apply to behaviours included with the stock base-code, so should apply generally to all but the most adventurous student implementations.
 
@@ -55,16 +58,25 @@ Automatically ensuring stable determinized execution of arbitrary student code i
 Most practically, I will need to free Landslide from its dependence on Simics,
 which requires paid licenses for its use. %beyond CMU's walls.
 Other candidate emulation (simulation or virtualization) platforms for Landslide include Bochs, QEMU, VMWare, and Xen.
-I am presently studying which of these will most suit Landslide's needs,
-but so far Bochs seems like the best bet,
+%I am presently studying which of these will most suit Landslide's needs,
+%but so far Bochs seems like the best bet,
+I have begun work porting Landslide to Bochs, which is open-source and provides both instruction and memory tracing, and
 which the Berkeley, Stanford, and U. of Chicago classes already use as their simulator.
 
 \subsection{Experimental goals}
 
-Having only two semesters to test Landslide with Pintos students,
-I'll be unable to gather as comprehensive a dataset as I have with 15-410 at CMU.
-This will serve more as a proof-of-concept, demonstrating that MC can realistically replace stress testing in operating systems courses worldwide.
-Nevertheless, I intend also to analyze what little data I can gather, comparing the incidences and types of bugs found between Pebbles and Pintos populations.
-This will perhaps shed light on the advantages and/or shortcomings of either project,
-leading to recommendations for improving either project's educational value (independently of using MC).
+%Having only two semesters to test Landslide with Pintos students,
+%I'll be unable to gather as comprehensive a dataset as I have with 15-410 at CMU.
+%This will serve more as a proof-of-concept, demonstrating that MC can realistically replace stress testing in operating systems courses worldwide.
+%Nevertheless, I intend also to analyze what little data I can gather, comparing the incidences and types of bugs found between Pebbles and Pintos populations.
+%This will perhaps shed light on the advantages and/or shortcomings of either project,
+%leading to recommendations for improving either project's educational value (independently of using MC).
 
+I aim to run a similar user study with Pathos students as I've done so far with Pebbles.
+After finding one or more Pintos-using classes at other schools to collaborate with,
+I will distribute Landslide to the students during the 'threads' and 'userprog' projects,
+have them run a similar suite of tests to those in Chapter \ref{chap:quicksand}'s experiments,
+and collect and analyze the results.
+I plan to analyze the overall incidences and types of bugs found between Pebbles and Pintos populations,
+which will perhaps shed light on the advantages and/or shortcomings of either project,
+and lead to recommendations for improving either project's educational value (whether by incorporating MC or otherwise).

@@ -8,7 +8,7 @@ TM is a mechanism by which programmers may avoid conventional concurrency primit
 A transactional program surrounds its critical section(s) with transaction begin/end statements, which ensure that no other thread can observe an intermediate state during the transaction.
 If a conflict is observed, the transaction {\em aborts}, rolling the program back to the transaction's initial state, and executing an optional back-up code path.
 The programmer may also explicitly abort the transaction using an abort statement.
-An example transactional program is shown in Figure~\ref{fig:txn-example}.
+An example transactional program is shown in Figure~\ref{fig:txn-example} (slightly extended from the prior example in Section \ref{sec:overview-tm}).
 
 \begin{figure}[t]
 	\begin{center}
@@ -48,7 +48,8 @@ An example transactional program is shown in Figure~\ref{fig:txn-example}.
 	\end{center}
 	\caption{Example transactional program, written using GCC's transactional memory compiler intrinsics \cite{htm-gcc}.
 	%The x86 assembly instructions are named {\tt xbegin}, {\tt xend}, and {\tt xabort}; I have named the functions of this imaginary C interface the same.
-	Different behaviours are possible depending whether the transactions are backed by HTM or STM.}
+	%Different behaviours are possible depending whether the transactions are backed by HTM or STM.}
+	These transactions would only abort if backed by HTM, while under STM their disjoint memory accesses guarantee them to succeed.}
 	\label{fig:txn-example}
 \end{figure}
 
@@ -56,11 +57,18 @@ TM may be implemented either in hardware (HTM) \cite{htm-haswell}, or in softwar
 Though their interfaces to the programmer are similar, their semantics demand a slightly different treatment from Landslide's perspective.
 The key difference is that HTM transactions may fail for any reason, beyond the scope of the program's behaviour, such as the CPU's cache being too full.
 STM transactions, on the other hand, will fail only if an actual conflict is observed from another thread.
-
 Consider again the example program: The transactions of the two threads do not conflict, so they may abort only under HTM.
 However, when they abort for a reason other than a conflict on {\tt foo} or {\tt bar}, the assertions in the backup code will fail.
 Hence, some programs which are correct under STM may contain bugs under HTM.
-Supporting TM in Landslide will consist of several steps, extending the concurrency model to incorporate failure injections and extending DPOR to determine when transaction aborts are possible depending on the underlying TM mechanism.
+
+Supporting TM in Landslide will consist of two major steps:
+extending the concurrency model to incorporate failure injections
+and extending DPOR to determine when transaction aborts are possible.
+Failure injections can model the semantics of transaction aborts, as each {\tt \_xbegin()} call can nondeterministically return either success ({\tt \_XBEGIN\_STARTED}) or some abort failure code (such as {\tt \_XABORT\_CONFLICT} or {\tt \_XABORT\_CAPACITY}).
+Moreover, the extent of this nondeterminism depends on the underlying TM mechanism, which I will discuss shortly.
+%in STM, only {\tt \_XABORT\_CONFLICT} may arise, and only when
+(The {\tt \_XABORT\_EXPLICIT} code is never generated nondeterministically but rather by a user invocation of {\tt \_xabort()} from within the success path.)
+
 
 \section{HTM}
 
@@ -68,7 +76,10 @@ Supporting TM in Landslide will consist of several steps, extending the concurre
 When modelling TM in Landslide, we do not care about fidelity to performance characteristics or non-observable roll-back semantics.
 The goal of model checking is to exercise all observable program behaviours,
 so Landslide can model the execution of transactional programs using existing primitives if possible.
-In the first stage of the project, I will prove that a transactional program using is equivalent to one with a global mutex swapped for its {\tt xbegin}s and {\tt xend}s (assuming a retry-only policy for handling aborts).
+In the first stage of the project, I will prove that a transactional program using is equivalent
+to one with a global mutex swapped for its {\tt xbegin}s and {\tt xend}s. %(assuming a retry-only policy for handling aborts).
+Here I will assume a retry-only policy for handling aborts;
+in other words, transaction aborts could never direct the program to execute a different logic branch entirely.
 This will allow Landslide to test all observable TM behaviours using its existing infrastructure for mutexes,
 rather than relying on the platform providing accurate TM emulation.
 
@@ -77,15 +88,24 @@ Next, I will extend the concurrency model to support the nondeterminism arising 
 During execution, Landslide will inject a failure to force threads to branch into backup code paths.
 Failure injections add an extra ``dimension'' of non-determinism:
 at each {\tt xbegin} operation which is a preemption point, Landslide may force a normal context switch to re-interleave threads, or it may inject a transaction abort to test the backup code.
-(This also avoids the need to speculatively execute and/or roll-back failing transactions.)
-Because HTM transactions can fail for any reason, outside of the programmer's control, Landslide's DPOR implementation will consider failure injections always ``enabled''.
+(This also avoids the need to speculatively execute and/or roll-back failing transactions.
+Being not testing the TM implementation itself, I'll assume it correctly rolls-back failed transactions non-observably.)
+
+HTM transactions can fail for several reasons outside of a programmer's control,
+including cache evictions,
+false sharing (disjoint simultaneous accesses which nevertheless share the same cache line),
+and page faults or interrupts \cite{si-tm}.
+For example, in Figure \ref{fig:txn-example}, the globals {\tt foo} and {\tt bar} are likely to share the same cache-line and lead to false sharing conflicts.
+Accordingly, Landslide's DPOR implementation will consider failure injections always ``enabled'' under HTM.
 
 \subsection{Reduction Challenge}
 \label{sec:tm-reduction-challenge}
-I've identified a case under abort nondeterminism in which the current implementation of DPOR will fail to achieve a possible reduction.
-Let $1A$, $1B$, $2A$, and $2B$ denote the transitions which execute the {\tt if} and {\tt else} branches by each thread, respectively.
-Note that $1A$ conflicts with $2B$, and $1B$ with $2A$, but $1A$ and $2A$ are independent, as are $1B$ and $2B$.
+I've identified at least one case under abort nondeterminism in which the current implementation of DPOR will fail to achieve a possible reduction.
+Let $1A$, $1B$, $2A$, and $2B$ denote the transitions which execute the {\tt if} and {\tt else} branches by each thread in Figure~\ref{fig:txn-example} respectively.
+Note that $1A$ conflicts with $2B$ (thread 1 writes {\tt foo}; thread 2 reads). and $1B$ with $2A$ (same for {\tt bar}).
+Meanwhile, $1A$ and $2A$ are independent (disjint writes to {\tt foo} or {\tt bar} only), as are $1B$ and $2B$ (reads versus reads).
 Figure~\ref{fig:txn-graph} provides a visual aid.
+
 There are two possible reductions: pruning $2A,1A$ after testing $1A,2A$, and pruning $2B,1B$ after testing $1B,2B$;
 in other words, branches 5 and 8 can be skipped.
 However, %if we simply extended DPOR to always inject failures when possible,
@@ -108,7 +128,8 @@ the tag to explore the $2A$ or $2B$ subtree must include an annotation to rememb
 
 \section{STM}
 
-STM transactions abort only when multiple threads conflict.
+% TODO: Verify doesn't include false sharing of cache lines.
+STM transactions abort only when multiple threads conflict directly on the same memory address(es) -- the same sense of conflict that DPOR already considers.
 Because Landslide already computes memory conflicts among each pair of transitions, it will be natural to extend DPOR to consult the conflict set when deciding whether to exercise a failure injection.
 I will extend Landslide in this manner, and even support programs with both types of transactions, as long as the different {\tt xbegin} invocations are suitably annotated.
 
@@ -118,7 +139,8 @@ A recent paper \cite{hybrid-htm-stm} introduced several ways of combining HTM an
 It presented several semantics for such transactions transactions, the most interesting of which being ``open nesting'', in which a nested transaction's state becomes visible to other threads even during a containing transaction.
 That state can then be rolled back if the latter aborts.
 I plan to develop a theoretical model for how such transactions would affect Landslide's concurrency model,
-although I expect to relegate any implementation thereof to future work.
+and justify its correctness as an extension of the HTM or STM models alone.
+%although I expect to relegate any implementation thereof to future work.
 
 \section{Evaluation Plan}
 
@@ -128,7 +150,7 @@ I don't expect any prior work will exist for a direct performance comparison.
 Nevertheless, I would pose two main questions to evaluate Landslide's proposed TM support:
 \begin{itemize}
 	\item Does Landslide model TM concurrency accurately enough to find all the bugs and verify all the correct programs in a benchmark suite?
-	\item To what degree can DPOR reduce these programs' state spaces? Assuming I achieve the reduction challenge (Section \ref{sec:tm-reduction-challenge}), how much benefit is conferred, and how commonly across different types of programs?
+	\item To what degree can an improved DPOR reduce these programs' state spaces? Assuming I achieve the reduction challenge (Section \ref{sec:tm-reduction-challenge}), how much benefit is conferred, and how commonly across different types of programs?
 \end{itemize}
 
 Part of this work will be assembling a benchmark suite itself.

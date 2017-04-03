@@ -169,6 +169,7 @@ and (b) shows how a mutex may be used to fix the example from Figure~\ref{fig:co
 
 
 \subsection{Transactional Memory}
+\label{sec:overview-tm}
 
 Critical sections of code must be protected from concurrent access, even when it's not known in advance whether the shared memory accesses between threads will actually conflict on the same memory addresses.
 The concurrency primitives discussed above take a pessimistic approach, imposing a uniform performance penalty (associated with the primitives' implementation logic) on all critical sections, whether or not a conflict is likely.

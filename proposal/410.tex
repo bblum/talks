@@ -14,14 +14,14 @@ However, the annotation burden undermined Landslide's purpose:
 the only students willing to spend free time on manual instrumentation were biased to be those who were already doing well in the class,
 and hence least likely to benefit from Landslide's debugging potential.
 (Actually, even the best 15-410 students still have concurrency bugs,
-but in principle, an educational tool must reach the more struggling students,
+but in principle, an educational tool should reach the more struggling students,
 the so-called ``middle'' and/or ``bottom'' of the class.)
 %
 Requiring annotations hurts Landslide's case as a grading tool, as well:
 TAs need to understand the kernel to begin with in order to annotate correctly,
 and while achieving such understanding they may as well grade it by hand, as before.
 
-Since then, I've extended Landslide to support testing P2 thread libraries (Section~\ref{sec:pebbles}) as well.
+Since then, I've extended Landslide to support testing Project 2 (P2) thread libraries (Section~\ref{sec:pebbles}) as well.
 Because P2 mandates specific function names for the project's internal APIs
 -- most importantly, for the concurrency primitives --
 Landslide can automatically annotate arbitrary student implementations with no manual effort required of the user (whether student or TA).
@@ -33,12 +33,13 @@ This chapter will detail my further techniques and evaluation which are specific
 
 Every stateless model checker must make some assumptions about the tested programs' concurrency model \cite{chess}.
 However, arbitrary programs may break conventional disciplines of concurrent programs, while still being bug-free.
-For example, thread communication via ad-hoc {\tt yield} loops may appear as an infinite loop, livelock, or deadlock.
+For example, thread communication via ad-hoc {\tt yield} loops may appear to automated tools as a possible
+infinite loop, livelock, or deadlock.
 This is especially true of student code,
 written by people who are just learning concurrent programming discipline for the first time,
 and/or written under the time pressure of a project deadline.
 To be an effective tool for struggling students,
-a model checker must somehow coax adversarial programs to fit its concurrency model, to effectively test for real bugs,
+a model checker should somehow coax adversarial programs to fit its concurrency model, to effectively test for real bugs,
 rather than rejecting them outright on some stylistic or disciplinary grounds.
 
 Fully-automatic instrumentation of student P2s has been no walk in the park.
@@ -58,10 +59,12 @@ I have equipped Landslide with several powerful algorithms and heuristics for ha
 				any condvar, semaphore, or rwlock invocation (but not mutexes),
 				and the beginning or end of any thread library function (create, join, or exit).
 				\footnote{Implemented in {\tt check\_user\_yield\_activity} and {\tt check\_user\_xchg} in {\tt user\_sync.c}.}
+				The consequence of any this heuristic's inaccuracy is
+				that an unusual wait-loop might be classified as an infinite loop bug anyway.
 				% TODO: Wow, what happened to KEEP_RUNNING_YIELDING_THREADS?? I swear I had some logic in arbiter.c about that.
 			\llitem When a thread's loop counter reaches some heuristic limit (10 for {\tt yield}s, 100 for {\tt xchg}s),
 				% Or 20 for xchgs which end up being data-race PPs.
-				Landslide marks the thread blocked (or ``disabled'', in model-checking parlance),
+				Landslide speculatively marks the thread blocked (or ``disabled'', in model-checking parlance),
 				just as though it had invoked {\tt deschedule}.
 				It also retroactively disables that thread at all preceding {\tt yield}s/{\tt xchg}s in that sequence,
 				which prevents DPOR from trying to use each as a preemption point,
@@ -90,7 +93,7 @@ I have equipped Landslide with several powerful algorithms and heuristics for ha
 		\end{itemize}
 		This approach is similar to the Fair-Bounded Search algorithm in \cite{bpor},
 		although it avoids a major assumption of the latter (threads {\tt yield} if and only if not making progress),
-		and also avoids the need to iteratively deepen the yield bound by fixing it as a heuristic constant.
+		and also avoids the need to iteratively deepen the yield bound by instead fixing it as a heuristic constant.
 		% Actually, I don't think that's true. Using DPOR to unblock a yield-looping thread at any conflict covers this.
 		%The cost of this heuristic is that falsely identifying threads as blocked can lead to unsoundness (...)
 	\item {\bf False-positive deadlock avoidance.}
@@ -107,16 +110,16 @@ I have equipped Landslide with several powerful algorithms and heuristics for ha
 		(used in Quicksand's control experiments, Section~\ref{sec:quicksand-eval}).
 
 		When a deadlock arises under conditions where one or more threads are heuristically blocked,
-		Landslide attempts to refute it as a false positive by artificially unblocking all heuristically-blocked threads%
+		Landslide attempts to refute it as a false positive by artificially unblocking all heuristically-blocked threads.
 		\footnote{If any threads are ICB-blocked, I prioritize waking those before trying to wake any yield-blocked threads.
 		% Hmm... I don't remember exactly why.
 		Waking all threads at once here can lead to unsoundness.}
-		If the deadlock is true, each thread will immediately trigger the yield-blocking heuristic again,
-		bringing the system back into deadlocked state.
 		Landslide then repeats this process a heuristic constant number of times (128),
 		allowing the program that many chances to make progress before proclaiming deadlock.
-		(Note that this heuristic cannot miss true deadlocks as false negatives.)
 		\footnote{Implemented in {\tt try\_avoid\_fp\_deadlock} in {\tt arbiter.c}.}
+		Note that this heuristic cannot miss true deadlocks as false negatives:
+		if the deadlock is true, each thread will immediately trigger the yield-blocking heuristic again,
+		bringing the system back into deadlocked state as many times as necessary to exhaust the heuristic limit.
 	\item {\bf Lock hand-off.}
 		A common, though discouraged, idiom for implementing thread destruction involves one thread ``handing off'' ownership of a mutex to another.
 		That thread will then release the lock with no corresponding acquire in its own execution.
@@ -125,7 +128,7 @@ I have equipped Landslide with several powerful algorithms and heuristics for ha
 		potentially leading to false positive races,
 		it must release the lock in its bookkeeping to avoid false {\em negatives} if any later access that should be protected by that lock isn't.
 		When releasing a lock, if absent from the current thread's lockset, Landslide searches the locksets of all other existing threads, and releases it there.
-		Landslide can instead optionally be configured to treat lock hand-off as an outright bug, as a matter of discipline.
+		Landslide can instead optionally be configured to treat lock hand-off as a style warning or as an outright bug, as a matter of discipline.
 		\footnote{Implemented in {\tt lockset\_remove} in {\tt lockset.c}.}
 
 	% Not really research.
@@ -134,7 +137,7 @@ I have equipped Landslide with several powerful algorithms and heuristics for ha
 
 However, some of the less common offenses are both more difficult to handle algorithmically, and also more worrying from a pedagogical point of view.
 %After some collaboration with David Eckhardt (15-410 professor and member of this thesis committee),
-For the following cases, we configured Landslide to abort, and warn the student that they must find a better solution before it could test their code.
+For the following cases, I configured Landslide to abort, and warn the student that they must find a better solution before it could test their code (in other words, I promoted these patterns to be treated as bugs).
 
 \begin{itemize}
 	\item {\bf Busy-wait loops} containing neither {\tt yield} nor {\tt xchg} (nor any other atomic instruction), such as {\tt while (!other\_thread\_ready) continue;}.
@@ -175,7 +178,7 @@ and required students to pass the thread library hurdle \cite{thrlib}
 to ensure a minimum of basic functionality necessary to use Landslide.
 
 To analyze its effectiveness as a debugging tool for students,
-I configured it to record a snapshot of the results of each use by the students:
+I configured Landslide to record a snapshot of the inputs and results of each use by the students:
 which options were used (test program and time limit),
 a snapshot of the student's code, and the result of the test
 (completed, timed out, bug found, or ctrl-C'ed).
@@ -191,15 +194,16 @@ Of 90 two-student groups in those 3 semesters, 47 tested their thread libraries 
 Table~\ref{tab:this-table-sucks-but-it's-the-best-i-got} shows
 that Landslide found in total 44 deterministic bugs and 85 concurrency bugs.
 It found at least one concurrency bug for 32 groups (68\%),
-24 of whom (51\%) were able to fix at least one, verifying their update
+24 of whom (51\%) were able to fix at least one bug, verifying their update
 with a succesful re-run of the same test.
-
-The table's data presentation is somewhat confusing:
+\footnote{The table's data presentation is somewhat confusing:
 the dependent columns count the number of {\em groups}, categorized by how many bugs they found, not the raw number of {\em bugs},
-which I instead indicate in the ``Total bugs'' row at the bottom.
-So, the number of total bugs is equal to the sum of the products between each cell in that column and its corresponding number of bugs,
+instead indicated in the ``Total bugs'' row at the bottom.
+So, the number of total bugs is the sum of the products between each cell in that column and its corresponding number of bugs,
 e.g., $44 = 27\times0 + 6\times1 + 9\times2 + 2\times3 + 1\times4 + 2\times5$.
-Sorry about that; I'll try to find a better way to present this data in the thesis.
+%Sorry about that;
+I'll try to find a better way to present this data in the thesis.}
+I view this as a positive result -- among other statistics, Landslide was able to help the majority of students debug, among those who found concurrency bugs at all -- although it is difficult to control for the amount of time students spent with Landslide that would otherwise have been spent on old-fashioned stress testing.
 
 \begin{table}[h]
 	\begin{center}
@@ -245,8 +249,8 @@ The distribution of Landslide users' ultimate grades is indistinguishable from t
 While there was a 3\% increase in P2 grades between opt-out-ers and Landslide users, it's prone to selection bias:
 perhaps those who opted out of Landslide were already the worst of the class who simply didn't have any free time for it.
 The distribution of P3 grades is indistinguishable as well.
-In the thesis, I will discuss possible factors contributing to this failure, and how they might be controlled for in future work,
-although I am not planning to run any further experiments in the limited time I have.
+In the thesis, I will discuss possible factors contributing to this failure, and how they might be controlled for in future work.
+%although I am not planning to run any further experiments in the limited time I have.
 
 \begin{figure}[h]
 	\begin{center}
@@ -264,23 +268,23 @@ In other words, were false-positive infinite loops or deadlocks ever reported
 where Landslide failed to recognize an ad-hoc synchronization?
 (I expect a near 100\% success rate,
 having tuned the heuristics by hand on an (independent) set of P2 submissions already.)
-
-\section{Landslide as a Grading Tool}
-\label{sec:grading}
-
-Beginning in 2017, I will recruit 15-410 Teaching Assistants (TAs) for my user study rather than students.
-The modified user study will evaluate Landslide as a grading tool,
-alternative to the ``Fritz'' stress-testing infrastructure which 15-410 currently employs,
-and possibly substituting as well for the human process of reading student code looking for concurrency bugs by hand.
-The intent is not for Landslide to ultimately replace 15-410's manual grading process,
-but rather to demonstrate that comparably-rigorous grading could be deployed automatedly at other schools wishing to adopt the 15-410 curriculum.
-
-I will pursue the following evaluation questions:
-
-\begin{itemize}
-	\item Provided appropriate test cases, can Landslide find the most common ``deep'' concurrency bugs in student submissions?
-	\item How does Landslide's bug-finding compare to that of Fritz, the class's stress tester?
-	\item How does Landslide's bug-finding compare to that of TAs grading by hand?
-\end{itemize}
-
+%
+%\section{Landslide as a Grading Tool}
+%\label{sec:grading}
+%
+%Beginning in 2017, I will recruit 15-410 Teaching Assistants (TAs) for my user study rather than students.
+%The modified user study will evaluate Landslide as a grading tool,
+%alternative to the ``Fritz'' stress-testing infrastructure which 15-410 currently employs,
+%and possibly substituting as well for the human process of reading student code looking for concurrency bugs by hand.
+%The intent is not for Landslide to ultimately replace 15-410's manual grading process,
+%but rather to demonstrate that comparably-rigorous grading could be deployed automatedly at other schools wishing to adopt the 15-410 curriculum.
+%
+%I will pursue the following evaluation questions:
+%
+%\begin{itemize}
+%	\item Provided appropriate test cases, can Landslide find the most common ``deep'' concurrency bugs in student submissions?
+%	\item How does Landslide's bug-finding compare to that of Fritz, the class's stress tester?
+%	\item How does Landslide's bug-finding compare to that of TAs grading by hand?
+%\end{itemize}
+%
 Finally, I will conclude this chapter in the thesis by discussing how future work could adapt Pebbles's interface to support fully-automatic model checking without compromising the educational value of P3.

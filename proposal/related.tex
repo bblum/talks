@@ -58,12 +58,12 @@ Recently, Columbia introduced a new Android-focused OS course \cite{teaching-and
 which perhaps highlights the importance of related work on model-checking event-driven applications \cite{r4}.
 
 To my knowledge, this is the first study of model checking in an educational setting, although teaching concurrency is not itself an unstudied problem.
-\cite{towards-a-framework} presents a promising framework for testing concurrent programs,
+Eytani et al.~\cite{towards-a-framework} present a promising framework for testing concurrent programs,
 which can incorporate model checking as well as static analysis, resource exhaustion, data-race analysis, and coverage analysis.
 However, it lacks an evaluation, and makes mention of its educational value only in its future work remarks.
 %
-\cite{how-studence} presents a survey of how students think about concurrent program behaviour and debugging,
-while \cite{learning-concurrency} investigates how students form cognitive patterns about concurrent programming that could either aid or stunt their reasoning.
+L\"{o}nnberg et al.~\cite{how-studence} present a survey of how students think about concurrent program behaviour and debugging,
+while Kolikant \cite{learning-concurrency} investigates how students form cognitive patterns about concurrent programming that could either aid or stunt their reasoning.
 Both of these studies could help optimize Landslide's bug reports for clarity and student enlightenment.
 
 
@@ -79,7 +79,7 @@ I implemented both approaches in Landslide and evaluated their trade-offs in Sec
 Recently, the Causally-Precedes relation \cite{predictive-dr} emerged as a refinement of Limited HB which avoids the most common cases of false positives; it would be a welcome enhancement in Landslide.
 
 Replay analysis extends single-pass data-race analysis to apply model checking (in limited quantities) to classify data-race candidates by their impact on program behaviour.
-It was first introduced in \cite{recordreplaydrs}, which compares the program states immediately after the access pair for differences, preferring still to err on the side of false positives.
+It was first introduced by Narayanasamy et al.~\cite{recordreplaydrs}, which compares the program states immediately after the access pair for differences, preferring still to err on the side of false positives.
 RaceFuzzer \cite{racefuzzer} avoids false positives by requiring an actual failure be exhibited, as we do,
 although it uses random schedule fuzzing rather than model checking.
 %
@@ -93,18 +93,19 @@ although its verification properties are not as strong as Quicksand's.
 \section{Transactional Memory}
 \label{sec:related-tm}
 
-Transactional memory (TM), first introduced in \cite{transactional-memory},
+Transactional memory (TM), first introduced in 1993 \cite{transactional-memory},
 has received renewed attention in recent years with the announcement of Intel's Haswell architecture \cite{htm-haswell},
-which promises to support hardware transactions using new x86 instructions.
+which supports hardware transactions using new x86 instructions.
 Because hardware transactions can fail for any reason, not just on memory conflicts,
 software TM remains relevant,
-and recent works such as \cite{hybrid-htm-stm} and \cite{stm-relaxed-memory} enhance it to be nested with hardware transactions, or to be used on weak memory architectures, respectively;
+and recent works \cite{hybrid-htm-stm,stm-relaxed-memory} enhance it to be nested with hardware transactions, or to be used on weak memory architectures, respectively;
 which in turn produce ever more complicated concurrency models for people like me to tackle.
 %
 Testing approaches for transactional programs are sparsely represented in the literature so far.
 %The Weakest Reasonable Condition
 Several related works \cite{tm-correctness,tm-completeness,specifying-verifying-tm} are building up to formal proofs of the correctness of TM {\em implementations},
 but not that of client programs which use TM.
+SI-TM \cite{si-tm} introduces techniques for reducing HTM's abort rates, but without fully eliminating aborts, MCs must still consider them possible anywhere.
 Getting closer, McRT STM \cite{mc-tm-with-spin} uses SPIN \cite{spin} to model check an STM implementation
 up to 2 threads running 1 transaction each with up to 3 memory accesses.
 This kind of verification is an important stepping stone for trusting the results Landslide will provide.
