@@ -219,7 +219,7 @@ using GCC's compiler intrinsics \cite{htm-gcc}.
 
 In this thesis, I will focus on HTM as my platform for testing transactional programs, to highlight the importance of researching advanced testing techniques in anticipation of upcoming hardware features.
 My treatment of TM will be largely agnostic to whether a transactional interface is backed by HTM or STM,
-and I will extend it to cover STM as well, as discussed in Section~\ref{sec:tm}.
+and I will extend it to cover STM as well, as discussed in Section~\ref{chap:tm}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -254,7 +254,7 @@ These points, called {\em preemption points}, may be identified by any combinati
 Typical preemption points include the boundaries of synchronization APIs (e.g., {\tt mutex\_lock}) or accesses to shared variables.
 Considering that at each preemption point multiple threads exist as options to run next, the set of possible ways to execute the program can be viewed as a tree.
 % TODO: fig tree
-I show an example execution tree in Figure~\ref{fig:tree}.
+%I show an example execution tree in Figure~\ref{fig:tree}.
 The number of preemption points in each execution define the depth of this tree, and the number of threads available to run define the branching factor.
 Hence, in a program with $n$ preemption points and $k$ threads available to run at each, the state space size is $O(n^k)$.
 Addressing the scaling problem in this exponential relation is the central research problem for all model checkers.
