@@ -69,22 +69,103 @@
 \section{Introduction}
 \subsection{Motivation}
 
-\begin{frame}{Thesis Statement}
-	Thanks to the new algorithms, heuristics, and concurrency models I have developed,
-	stateless model checking is an appropriate and accessible concurrency testing technique
-	for programmers in both educational and real-world settings.
+\begin{frame}{Concurrency!}
+	\begin{center}
+	\begin{tabular}{ll}
+		Initially \texttt{x = 0;} \\
+		\\
+		{\bf Thread 1} & {\bf Thread 2} \\
+		\\
+		\texttt{\hilight{orange}{mutex\_lock}(m);}      & \texttt{atomic\_xadd(\&x, 1);} \\
+		\texttt{x++;}				   & \texttt{\hilight{olivegreen}{yield}();} \\
+		\texttt{\hilight{blue}{mutex\_unlock}(m);}      & \texttt{atomic\_xadd(\&x, 1);} \\
+		\texttt{assert(x >= 1);}			& \texttt{assert(x >= 2);} \\
+		\\
+		\\
+		\\
+		\\
+		\\
+	\end{tabular}
+	\end{center}
+\end{frame}
+\begin{frame}{Concurrency!}
+	\begin{center}
+	\begin{tabular}{ll}
+		Initially \texttt{x = 0;} \\
+		\\
+		{\bf Thread 1} & {\bf Thread 2} \\
+		\\
+		\texttt{\hilight{orange}{mutex\_lock}(m);} \\
+		\texttt{int tmp = x;} \\
+								& \texttt{atomic\_xadd(\&x, 1);} \\
+								& \texttt{\hilight{olivegreen}{yield}();} \\
+								& \texttt{atomic\_xadd(\&x, 1);} \\
+		\texttt{x = tmp + 1;} \\
+								& \texttt{\hilight{red}{assert(x >= 2);}} \\
+		\texttt{\hilight{blue}{mutex\_unlock}(m);} \\
+		\texttt{assert(x >= 1);}
+	\end{tabular}
+	\end{center}
 \end{frame}
 
-\begin{frame}{Outline}
-	guess i should outline my talk huh
+\begin{frame}{Stateless Model Checking}
+	Stateless Model Checking {\em [Godefroid '97]} (MC)
+	\begin{itemize}
+		\item Test framework controls thread scheduling
+		\item Each test iteration, test a different interleaving
+		\item Goal: Exhaustively check all possible program behaviours
+	\end{itemize}
+	\pause
+	\linegap
+
+	\begin{center}
+		\includegraphics[width=0.25\textwidth]{../../oopsla/exponential-curve.pdf}
+	\end{center}
 \end{frame}
 
+\begin{frame}{State Space Example}
+	\begin{center}
+		\includegraphics[width=0.96\textwidth]{../../oopsla/tree-maximal-only.pdf}
+	\end{center}
+	\linegap
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	Possible interleavings represented as a tree
+	\begin{itemize}
+		\item Node: Intermediate execution state
+		\item Edge: State transition from executing a thread
+	\end{itemize}
+	%\linegap
 
-\section{some kinda introductory}
+	%State space size depends on which {\bf preemption points} are used.
+\end{frame}
+
+\begin{frame}{Challenges} %\& Existing Coping Techniques}
+	Unpredictable state space explosion
+	\begin{itemize}
+		\item Equivalence reductions: DPOR {\em [Flanagan '05]}, MCR {\em [Huang '15]}
+		\item Heuristic search ordering: ICB {\em [Musuvathi '08]}, PCT {\em [Burckhardt '10]}
+		\item There will always be a {\bf bigger test case}!
+	\end{itemize}
+	\pause
+	\linegap
+
+	Too much manual intervention for non-expert use
+	\begin{itemize}
+		\item Manual kernel annotations: Landslide {\em [Blum '12]} {\tiny that's me!}
+		\item State space size estimation {\em [Simsa '12]}
+		\item Widespread adoption requires {\bf fully automated instrumentation}!
+	\end{itemize}
+	\pause
+	\linegap
+
+	Limited sources of nondeterminism
+	\begin{itemize}
+		\item Timer-driven schedule nondeterminism (all prior work)
+		\item Weak memory nondeterminism {\em [Zhang '15]}
+		\item Event-driven applications {\em [Jensen '15]}
+		\item {\bf Transactional concurrency}?
+	\end{itemize}
+\end{frame}
 
 %\begin{frame}{overview of state of art}
 %	\begin{itemize}
@@ -93,6 +174,194 @@
 %		\item see what all bugs come out
 %	\end{itemize}
 %\end{frame}
+
+\begin{frame}{Thesis Statement}
+	Thanks to the new algorithms, heuristics, and concurrency models I have developed,
+	stateless model checking is an appropriate and accessible concurrency testing technique
+	for programmers in both educational and real-world settings.
+\end{frame}
+
+\definecolor{gray}{RGB}{128,128,128}
+
+\begin{frame}{Thesis Statement}
+	The Iterative Deepening algorithm makes MC appropriate for both educational and real-world programs.
+	\vspace{4.14em}
+
+	Ad-hoc synchronization heuristics make MC accessible to student programmers.
+	\vspace{4.14em}
+
+	A new transactional concurrency model keeps MC applicable to the latest real-world techniques.
+	\vspace{4.14em}
+\end{frame}
+\begin{frame}{Outline}
+	\hilight{gray}{The Iterative Deepening algorithm makes MC appropriate for both educational and real-world programs.} \\
+	\begin{itemize}
+		\item {\bf Quicksand and Iterative Deepening}
+		\begin{itemize}
+			\item Algorithm overview \& data-race preemption points
+			\item Verification \& experimental results
+		\end{itemize}
+	\end{itemize}
+	\hilight{gray}{Ad-hoc synchronization heuristics make MC accessible to student programmers.} \\
+	\begin{itemize}
+		\item {\bf Educational use}
+		\begin{itemize}
+			\item Pebbles \& 15-410 user study
+			\item Pintos \& upcoming plans
+		\end{itemize}
+	\end{itemize}
+
+	\hilight{gray}{A new transactional concurrency model keeps MC applicable to the latest real-world techniques.} \\
+	\begin{itemize}
+		\item {\bf Transactional memory}
+		\begin{itemize}
+			\item Example \& challenges
+			\item Equivalence \& failure injection
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+%\begin{frame}{Outline}
+%	guess i should outline my talk huh
+%\end{frame}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Quicksand}
+
+\breakslide{\Large Iterative Deepening of State Spaces}
+
+\begin{frame}{Preemption Points}
+	The burning question: ``Which {\bf preemption points} (PPs) are important?''
+	\linegap
+
+	State space of interleavings is {\em parameterized} by PPs.
+	\begin{itemize}
+		\item Too few PPs: Many bugs will go undetected
+		\item Preempt everywhere: Completion is often infeasible % say: "for some programs"
+	\end{itemize}
+	\linegap
+
+	Prior model checkers hard-code a fixed set of PPs, committing to one state space in advance.
+	% say: "...then attempt to cope with the resulting exponentially sized problem, however big it may be"
+\end{frame}
+
+\begin{frame}{Example (Revisited)}
+	\begin{center}
+	\begin{tabular}{ll}
+		Initially \texttt{x = 0;} \\
+		\\
+		{\bf Thread 1} & {\bf Thread 2} \\
+		\\
+		\texttt{\hilight{orange}{mutex\_lock}(m);} \\
+		\texttt{int tmp = x;} \\
+								& \texttt{atomic\_xadd(\&x, 1);} \\
+								& \texttt{\hilight{olivegreen}{yield}();} \\
+								& \texttt{atomic\_xadd(\&x, 1);} \\
+		\texttt{x = tmp + 1;} \\
+								& \texttt{\hilight{red}{assert(x >= 2);}} \\
+		\texttt{\hilight{blue}{mutex\_unlock}(m);} \\
+		\texttt{assert(x >= 1);}
+	\end{tabular}
+	\end{center}
+\end{frame}
+
+\begin{frame}{State Space (Revisited)}
+	\begin{center}
+		\includegraphics[width=0.96\textwidth]{../../oopsla/tree-maximal-only.pdf}
+		\linegap
+
+		None of these branches contain the necessary preemption!
+		\linegap
+
+		A {\bf data-race preemption point} is required to find the bug.
+	\end{center}
+\end{frame}
+
+\begin{frame}{Iterative Deepening (in Pictures)}
+	\begin{center}
+	\vspace{-0.88em}
+	\includegraphics[width=0.86\textwidth]{../../oopsla/dr-jobs-1.pdf}
+	\end{center}
+\end{frame}
+\begin{frame}{Iterative Deepening (in Pictures)}
+	\begin{center}
+	\vspace{-0.88em}
+	\includegraphics[width=0.86\textwidth]{../../oopsla/dr-jobs-2.pdf}
+	\end{center}
+\end{frame}
+\begin{frame}{Iterative Deepening (in Pictures)}
+	\begin{center}
+	\vspace{-0.88em}
+	\includegraphics[width=0.86\textwidth]{../../oopsla/dr-jobs-3.pdf}
+	\end{center}
+\end{frame}
+\begin{frame}{Iterative Deepening (in Pictures)}
+	\begin{center}
+	\vspace{-0.88em}
+	\includegraphics[width=0.86\textwidth]{../../oopsla/dr-jobs-4.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Total Verification}
+	\textbf{Convergence theorem:} Testing maximal state space, after detecting all data races, $\equiv$ preempting everywhere!
+	\begin{itemize}
+		\item Insight: $\forall$ arbitrary buggy interleaving, $\exists$ equivalent interleaving % say 'under DPOR' i guess?
+			using only sync/data-race PPs.
+	\end{itemize}
+	\linegap
+
+	Hence, Iterative Deepening provides ``best of both worlds'':
+	\begin{itemize}
+		\item Provides total safety guarantee for small tests
+		\item Finds bugs quickly for large tests when completion is infeasible
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Evaluation}
+	79 ``P2'' thread libraries from CMU, 78 ``Pintos'' kernels from U. Chicago \& Stanford
+	\linegap
+
+	%629 pairs of \{P2 or Pintos\} + test case
+	629 pairs of P2 or Pintos + test case
+	\linegap
+
+	Each tested for 10 CPU-hours with
+	\begin{itemize}
+		\item Quicksand, finding data-race candidates with...
+			\begin{itemize}
+				\item ...``Pure'' Happens-Before analysis {\em [Lamport '78]}
+				\item ...``Limited'' Happens-Before analysis {\em [O'Callahan '03]}
+			\end{itemize}
+		\item Stand-alone Landslide using ICB {\em [Musuvathi '08]}, preempting at...
+			\begin{itemize}
+				\item ...synchronization APIs only {\em [Simsa '10]}
+				\item ...all shared memory accesses {\em [Holzmann '97]}
+			\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Results - Bugs found}
+	\begin{center}
+		\includegraphics[width=0.8\textwidth]{../../oopsla/bugs-talk.pdf}
+	\end{center}
+\end{frame}
+\begin{frame}{Results - Full verifications}
+	\begin{center}
+		\includegraphics[width=0.8\textwidth]{../../oopsla/verifs-talk.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Deliverables}
+	In the thesis, I will:
+	\begin{itemize}
+		\item Restate the paper {\large \smiley}
+		\item Study variance of repeated Quicksand experiment trials
+	\end{itemize}
+\end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -275,15 +544,11 @@
 	\begin{itemize}
 		\item Simulate TM, interleaving transactions, rolling-back upon conflicts
 			\begin{itemize}
-					% TODO: need a bonus slide to justify why this
-					% imagine a pair of transactions each with multiple conflicting accesses
-					% they should be treated as atomic
 				\item slow; invites state space explosion
 			\end{itemize}
 		\item Enforce atomicity via scheduler, anticipate aborts via analysis
 			\begin{itemize}
 				\item (under HTM, all transactions might abort)
-					% TODO: need a bonus slide on finding when a STM txn may abort.
 			\end{itemize}
 		\item Suffices to enumerate all {\em observationally-equivalent} schedules.
 	\end{itemize}
@@ -356,6 +621,35 @@
 
 \section{Bonus Slides}
 
+\breakslide{\Large Bonus Slides}
+
+\begin{frame}{15-410: Summary of bugs found}
+	\begin{center}
+	\begin{tabular}{r|cc|cc}
+	%det bugs found det bugs fixed  races fixed     races found
+	& \multicolumn{4}{c}{Number of groups} \\
+	Number & \multicolumn{2}{c|}{Deterministic bugs} & \multicolumn{2}{c}{Concurrency bugs} \\
+	of bugs & found & fixed & found & fixed \\
+	\hline
+	0       & 27    & 32    & 15    & 23    \\
+	1       & 6     & 5     & 7     & 11    \\
+	2       & 9     & 6     & 12    & 8     \\
+	3       & 2     & 1     & 7     & 2     \\
+	4       & 1     & 1     & 3     & 1     \\
+	5       & 2     & 2     & 2     & 1     \\
+	11      &       &       & 1     & 1     \\
+	\hline
+	%Total groups
+	%       & 47    & 47    & 47    & 47    \\
+	Total bugs
+		& 44    & 34    & 85    & 53    \\
+	\end{tabular}
+	\end{center}
+	%\linegap
+
+	%E.g.: 11 groups fixed 1 bug + 8 fixed 2 + 2 $\times$ 3 + 1 $\times$ 4 + 1 $\times$ 5 + 1 overachieving group who fixed 11 = 11 + 16 + 6 + 4 + 5 + 11 = 53.
+\end{frame}
+
 \begin{frame}{HTM: Even more dimensions of nondeterminism}
 	% The gotcha: When xbegin can fail, it can emit diff error codes, which depend on what happened within.
 	\begin{center}
@@ -394,5 +688,177 @@
 		\item {\tt \_XABORT\_NESTED} - Transaction abort in a inner nested transaction 
 	\end{itemize}
 \end{frame}
+
+\begin{frame}{Interleaving t'xns non-atomically $\rightarrow$ state space explosion}
+					% TODO: need a bonus slide to justify why this
+					% imagine a pair of transactions each with multiple conflicting accesses
+					% they should be treated as atomic
+\end{frame}
+
+\begin{frame}{STM: Judging when aborts are possible}
+	% TODO
+\end{frame}
+
+%%%%
+
+\breakslide{\Large Super Extra Bonus Slides Copy-Pasted from OOPSLA}
+
+\begin{frame}{Data-Race Definitions}
+	\textbf{Data race:} 2 threads access the same memory, and...
+	\begin{itemize}
+		\item At least one access is a write
+		\item Threads do not hold the same lock
+		\item No {\em Happens-Before} relation between threads
+	\end{itemize}
+	\pause
+	\linegap
+
+	Variants of Happens-Before (HB)
+	\begin{itemize}
+		\item {\bf Pure HB:} Any synchronization events {\em [Lamport '78]}
+			% Say: "Or another way of putting it I heard from one of yesterday's talks that I'm stealing, one event is guaranteed to be visible to the other"
+			% Or don't, idgaf
+		\item {\bf Limited HB:} Blocking synchronization (e.g. \texttt{cond\_wait()}) enforces one ordering {\em [O'Callahan '03]}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Happens-Before Example}
+	\begin{center}
+		\begin{tabular}{ll}
+			{\bf Thread 1}  & {\bf Thread 2} \\
+			\texttt{\hilight{red}{x++;}}    & \\
+			\texttt{mutex\_lock(m);}	& \\
+			\texttt{// unrelated}	   & \\
+			\texttt{mutex\_unlock(m);}      & \\
+				& \texttt{mutex\_lock(m);} \\
+				& \texttt{// unrelated} \\
+				& \texttt{mutex\_unlock(m);} \\
+				& \texttt{\hilight{red}{x++;}} \\
+		\end{tabular}
+		\linegap
+
+		No race under Pure HB; {\em true potential race} under Limited HB.
+	\end{center}
+\end{frame}
+\begin{frame}{Happens-Before Example}
+	\begin{center}
+		\begin{tabular}{ll}
+			{\bf Thread 1}  & {\bf Thread 2} \\
+			\texttt{\hilight{red}{x++;}}    & \\
+			\texttt{mutex\_lock(m);}	& \\
+			\texttt{\hilight{blue}{y = true;}}      & \\
+			\texttt{mutex\_unlock(m);}      & \\
+				& \texttt{mutex\_lock(m);} \\
+				& \texttt{\hilight{blue}{bool tmp = y;}} \\
+				& \texttt{mutex\_unlock(m);} \\
+				& \texttt{\hilight{blue}{if (tmp)}~\hilight{red}{x++;}} \\
+		\end{tabular}
+		\linegap
+
+		No race under Pure HB; {\em false positive} under Limited HB.
+	\end{center}
+\end{frame}
+
+\begin{frame}{Iterative Deepening Reductions}
+	If one job is a subset of another, testing either might let us skip the other.
+	\begin{center}
+		\includegraphics[width=\textwidth]{../../oopsla/reduction-nothing.png}
+	\end{center}
+\end{frame}
+\begin{frame}{Iterative Deepening Reductions}
+	If one job is a subset of another, testing either might let us skip the other.
+	\begin{center}
+		\includegraphics[width=\textwidth]{../../oopsla/reduction-deferred.png}
+	\end{center}
+\end{frame}
+\begin{frame}{Iterative Deepening Reductions}
+	If one job is a subset of another, testing either might let us skip the other.
+	\begin{center}
+		\includegraphics[width=\textwidth]{../../oopsla/reduction-complete.png}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Quicksand results - Bugs found by CPU time}
+	\begin{center}
+		\includegraphics[width=0.8\textwidth]{../../oopsla/bugs-talk.pdf}
+	\end{center}
+\end{frame}
+\begin{frame}{Quicksand results - Bugs found by wall-clock time}
+	\begin{center}
+		\includegraphics[width=0.8\textwidth]{../../oopsla/bugs-wallclock-talk.pdf}
+	\end{center}
+\end{frame}
+\begin{frame}{Quicksand results - Tests fully verified (CPU time)}
+	\begin{center}
+		\includegraphics[width=0.8\textwidth]{../../oopsla/verifs-talk.pdf}
+	\end{center}
+\end{frame}
+\begin{frame}{Quicksand results - MC + DR vs single-pass DR}
+	\begin{center}
+		\includegraphics[width=0.8\textwidth]{../../oopsla/dr-false-negatives-poster.pdf}
+	\end{center}
+\end{frame}
+\begin{frame}{Quicksand results - Representative of real-world programs?}
+	Bugs by required number of preemptions to expose:
+	\begin{center}
+		\footnotesize
+	\begin{tabular}{r|c|c}
+		{\bf Bound} & {\bf SSS (sync PPs only)} & {\bf SSS (preempt everywhere)} \\
+		\hline
+		0       & 2     & 1     \\
+		1       & 82    & 86    \\
+		2       & 16    & 32    \\
+		3       & 2     & 3     \\
+		4+      & 0     & 0     \\
+		\hline
+		Total   & 102   & 122   \\
+	\end{tabular}
+	\end{center}
+	\linegap
+
+	Bugs by type (Pure HB trial):
+	\begin{itemize}
+		\item 56 deadlocks
+		\item 49 heap errors (47 use-after-free)
+		\item 35 assertion failures
+		\item 31 page fault crashes
+		\item 1 infinite loop
+		\item 1 recursive mutex lock
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{References}
+	\small
+	\begin{itemize}
+		\item {\bf [Lamport '78]}:
+			Leslie Lamport. Time, clocks, and the ordering of events in a distributed system.
+			Commun. ACM, 1978.
+		\item {\bf [Godefroid '97]}: Patrice Godefroid.
+			VeriSoft. A tool for the automatic analysis of concurrent reactive software. CAV 1997.
+		\item {\bf [Holzmann '97]}: The model checker SPIN. TOSE 1997.
+		\item {\bf [Engler '03]}: Dawson Engler and Ken Ashcraft.
+			RacerX: effective, static detection of race conditions and deadlocks. SOSP 2003.
+		\item {\bf [O'Callahan '03]}: Robert O'Callahan and Jong-Deok Choi.
+			Hybrid dynamic data race detection. PPoPP '03.
+		\item {\bf [Flanagan '05]}: Cormac Flanagan and Patrice Godefroid. Dynamic partial-order reduction for
+			model checking software. POPL 2005.
+		\item {\bf [Musuvathi '08]}: Madanlal Musuvathi et al. Finding and Reproducing Heisenbugs in Concurrent
+			Programs. OSDI 2008.
+	\end{itemize}
+\end{frame}
+\begin{frame}{References}
+	\small
+	\begin{itemize}
+		\item {\bf [Buckhardt '10]}: A randomized scheduler with probabilistic guarantees of finding bugs. ASPLOS 2010.
+		\item {\bf [Simsa '12]}: Jiri Simsa. Runtime Estimation and Resource Allocation for
+			Concurrency Testing. CMU-PDL-12-113. December 2012.
+		\item {\bf [Blum '12]}: Ben Blum. Landslide: Systematic Dynamic Race Detection in Kernel
+			Space. CMU-CS-12-118. May 2012.
+		\item {\bf [Kasicki '12]}: Baris Kasicki. Data races vs. data race bugs: telling the difference with Portend. ASPLOS '12.
+		\item {\bf [Huang '15]}: Jeff Huang. Stateless model checking concurrent programs with maximal causality reduction. PLDI '15.
+		\item {\bf [Jensen '15]}: Stateless Model Checking of Event-Driven Applications. OOPSLA 2015.
+	\end{itemize}
+\end{frame}
+
 
 \end{document}
