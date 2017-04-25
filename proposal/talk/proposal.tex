@@ -53,7 +53,7 @@
 \definecolor{olivegreen}{RGB}{0,127,0}
 
 \begin{document}
-\renewcommand{\inserttotalframenumber}{38}
+\renewcommand{\inserttotalframenumber}{39}
 \normalem
 \begin{frame}
 	\titlepage
@@ -134,9 +134,9 @@
 		\item Node: Intermediate execution state
 		\item Edge: State transition from executing a thread
 	\end{itemize}
-	%\linegap
+	\linegap
 
-	%State space size depends on which {\bf preemption points} are used.
+	State space size depends on which {\bf preemption points} are used.
 \end{frame}
 
 \begin{frame}{Challenges} %\& Existing Coping Techniques}
@@ -379,7 +379,7 @@
 	\begin{itemize}
 		%\item UNIX-like educational kernel specification
 		\item Students implement scheduler, synchronization, VM %from scratch %% trying not to be too arrogant ._.
-		\item UNIX-like process lifecycle ({\tt fork}, {\tt exec}, {\tt vanish}, {\tt wait})
+		\item UNIX-like process lifecycle ({\tt fork}, {\tt exec}, {\tt exit}, {\tt wait})
 		%\item Teams of 2
 		\item Testing with MC requires manual annotation {\em [Blum '12]}
 	\end{itemize}
@@ -409,6 +409,7 @@
 	\begin{itemize}
 		\item 47/90 groups volunteered
 		\item 85 concurrency bugs found; 53 which students then fixed
+		\item 32/47 found $\ge 1$ concurrency bug, 22/47 fixed $\ge 1$
 		\item No visible impact on ultimate grades...
 	\end{itemize}
 \end{frame}
@@ -427,8 +428,8 @@
 
 	Kernel (``threads'')
 	\begin{itemize}
-		\item Students implement priority scheduling, sleep
 		\item Basecode provides round-robin scheduler, synchronization
+		\item Students implement priority scheduling, sleep
 	\end{itemize}
 	\linegap
 
@@ -445,8 +446,10 @@
 \begin{frame}{Pintos \& Landslide}
 	Existing support:
 	\begin{itemize}
-		\item Lockset/vector-clock analyses extended to interrupt-disabling
-		\item Automatically inserting (most) kernel annotations
+		\item Data-race analysis
+			%Lockset/vector-clock analyses
+			extended to interrupt-disabling
+		\item Automatically inserts (most) kernel annotations
 		%\item (various engineering challenges) % palloc heap, non-direct-mapped kernelspace, skipping driver init loops
 		\item Often requires manual intervention
 	\end{itemize}
@@ -546,10 +549,11 @@
 			\begin{itemize}
 				\item slow; invites state space explosion
 			\end{itemize}
-		\item Enforce atomicity via scheduler, anticipate aborts via analysis
-			\begin{itemize}
-				\item (under HTM, all transactions might abort)
-			\end{itemize}
+		\item Enforce atomicity via scheduler, anticipate aborts on every transaction
+			%via analysis
+			%\begin{itemize}
+			%	\item (under HTM, all transactions might abort)
+			%\end{itemize}
 		\item Suffices to enumerate all {\em observationally-equivalent} schedules.
 	\end{itemize}
 \end{frame}
@@ -698,18 +702,21 @@
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{Interleaving t'xns non-atomically $\rightarrow$ state space explosion}
-					% TODO: need a bonus slide to justify why this
-					% imagine a pair of transactions each with multiple conflicting accesses
-					% they should be treated as atomic
-\end{frame}
+%\begin{frame}{Interleaving t'xns non-atomically $\rightarrow$ state space explosion}
+%	% imagine a pair of transactions each with multiple conflicting accesses
+%	% they should be treated as atomic
+%\end{frame}
 
-\begin{frame}{STM: Judging when aborts are possible}
-	% TODO
-\end{frame}
+%\begin{frame}{STM: Judging when aborts are possible}
+%\end{frame}
 
 \begin{frame}{HTM: Sources of Benchmarks}
-	% TODO
+	\begin{itemize}
+		\item Shamay, https://github.com/cmpxchg16/tsx.me, 2014
+		\item Dehesa-Azuara and Stanley, http://www.contrib.andrew.cmu.edu/\textasciitilde{}mdehesaa/, 2016
+		\item Chapman et al., Hybrid STM/HTM for nested transactions on OpenJDK, OOPSLA 2016
+		\item Wang et al., Eunomia: Scaling Concurrent Search Trees under Contention Using HTM, PPoPP 2017
+	\end{itemize}
 \end{frame}
 
 %%%%
@@ -842,6 +849,10 @@
 	\end{itemize}
 \end{frame}
 
+\begin{frame}{Don't you need \texttt{if (mutex\_held(\&foo\_lock)) \_xabort();} in that transaction on slide 31?}
+	Yes.
+\end{frame}
+
 \begin{frame}{References}
 	\small
 	\begin{itemize}
@@ -874,6 +885,5 @@
 		\item {\bf [Jensen '15]}: Stateless Model Checking of Event-Driven Applications. OOPSLA 2015.
 	\end{itemize}
 \end{frame}
-
 
 \end{document}
