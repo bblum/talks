@@ -53,7 +53,7 @@
 \definecolor{olivegreen}{RGB}{0,127,0}
 
 \begin{document}
-%\renewcommand{\inserttotalframenumber}{39}
+\renewcommand{\inserttotalframenumber}{38}
 \normalem
 \begin{frame}
 	\titlepage
@@ -462,21 +462,21 @@
 \end{frame}
 
 \begin{frame}{Deliverables}
-	Pebbles
+	In the thesis, I will:
 	\begin{itemize}
-		\item Discuss factors keeping Landslide from improving grades
-		%\item Discuss how to make P3 and Landslide compromise to work together
-		\item Study accuracy of automation heuristics
+		\item Pebbles
+		\begin{itemize}
+			\item Discuss factors keeping Landslide from improving grades
+			%\item Discuss how to make P3 and Landslide compromise to work together
+			\item Study accuracy of automation heuristics
+		\end{itemize}
+		\item Pintos
+		\begin{itemize}
+			\item Open-source port of Landslide to Bochs
+			\item 2 semesters of user study in Pintos class(es)
+			\item Compare incidence/nature of bugs found to Pebbles
+		\end{itemize}
 	\end{itemize}
-	\linegap
-
-	Pintos
-	\begin{itemize}
-		\item Open-source port of Landslide to Bochs
-		\item 2 semesters of user study in Pintos class(es)
-		\item Compare incidence/nature of bugs found to Pebbles
-	\end{itemize}
-	\linegap
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -564,7 +564,9 @@
 			\pause
 		\item Simultaneous transactions succeed only if no conflicts
 		\begin{itemize}
-			\item Equivalent (modulo performance) to serialize independent transactions
+			\item Equivalent
+				%(modulo performance)
+				to serialize independent transactions
 		\end{itemize}
 			\pause
 		\item Failing transactions' effects rolled-back with no trace
@@ -575,7 +577,14 @@
 \end{frame}
 
 \begin{frame}{Failure Injection - 2 dimensions of concurrency}
-	% TODO - pict of mario man
+	\begin{center}
+		\includegraphics[width=\textwidth]{failure-injection-0.pdf}
+	\end{center}
+\end{frame}
+\begin{frame}{Failure Injection - 2 dimensions of concurrency}
+	\begin{center}
+		\includegraphics[width=\textwidth]{failure-injection-2.pdf}
+	\end{center}
 \end{frame}
 
 \begin{frame}{Deliverables}
@@ -596,8 +605,8 @@
 
 \begin{frame}{Timeline}
 	\begin{itemize}
-		\item 2017 Mar-Aug: Port Landslide to Bochs for Pintos
-		\item 2017 Mar-Aug: Transactional memory
+		\item 2017 Apr-Aug: Port Landslide to Bochs for Pintos
+		\item 2017 Apr-Aug: Transactional memory
 		\item 2017 Aug-Oct: Pintos user study
 		\item 2017 Oct-Nov: Pebbles user study (again)
 		\item 2017 Dec:     Start writing thesis
@@ -699,7 +708,13 @@
 	% TODO
 \end{frame}
 
+\begin{frame}{HTM: Sources of Benchmarks}
+	% TODO
+\end{frame}
+
 %%%%
+
+\section{Warp Zone}
 
 \breakslide{\Large Super Extra Bonus Slides Copy-Pasted from OOPSLA}
 
