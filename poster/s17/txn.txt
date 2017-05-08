@@ -1,0 +1,81 @@
+Systematic Testing for Transactional Concurrency
+Ben Blum and Garth Gibson
+
+==== Background ====
+
+Attempting a transaction
+- Code between _xbegin() and _xend() provisionally executed
+- All writes kept in cache until _xend()
+- _xend() commits changes atomically
+
+Transaction failure
+- Memory conflict, false sharing, random interrupt, ...
+  - AKA: possible any time beyond programmer control
+- All changes discarded, _xbegin() returns failure
+
+Example [1]
+
+    if ((status = _xbegin()) == _XBEGIN_STARTED) {
+        foo++;
+        _xend();
+    } else {
+        mutex_lock(&foo_lock);
+        foo++;
+        mutex_unlock(&foo_lock);
+    }
+
+Motivation
+- Hardware TM recently commercially available [2]
+- Related work focuses on performance (abort rates) [3]
+- Want to verify correctness of TM client programs
+
+How can we verify TM *client* programs
+
+==== New Concurrency Model ====
+
+Model checking approach
+- Transaction atomicity
+  -> Represent as an abstract global mutex
+- Transactions can abort for any reason
+  -> Treat each _xabort() as a failure injection point
+
+[ figure: failure-injection.pdf ]
+
+==== Challenges ====
+
+Possible _xabort error codes [1]
+- _XABORT_EXPLICIT: user called _xabort
+- _XABORT_CONFLICT: memory conflict
+- _XABORT_CAPACITY: too much memory (cache eviction)
+- (etc.)
+
+Hence, even more dimensions of nondeterminism:
+
+    if ((status = _xbegin()) == _XBEGIN_STARTED) {
+        if (foo < 100)
+            _xabort();
+        foo++;
+        _xend();
+    } else if (status != _XABORT_EXPLICIT) {
+        mutex_lock(&foo_lock);
+        foo++;
+        mutex_unlock(&foo_lock);
+    }
+
+Other flavors of TM
+- Weak vs strong abort semantics (I'll explain this out loud)
+  - Different policies for data-race preemption points
+- Software TM (aborts only when memory conflicts) [4]
+  - DPOR can analyze on-the-fly when aborts are possible
+- Hybrid HTM/STM [5]
+
+** Curating a test suite - know any OSS TM algorithms/benchmarks[5,6]? Let me know! **
+
+==== References ====
+
+[1] X86 transaction memory intrinsics. GCC manual 4.8.2
+[2] Haswell: The 4th-gen Intel core processor. IEEE Micro '14
+[3] SI-TM: Reducing TM abort rates. ASPLOS '14
+[4] Compiler and runtime support for STM. PLDI '06
+[5] Hybrid STM/HTM for nested transactions, OOPSLA '16
+[6] Eunomia: HTM Concurrent Search Trees, PPoPP '17
