@@ -1,0 +1,132 @@
+\documentclass{article}
+%\usepackage{amsmath,amsthm,amssymb,fullpage,yfonts,graphicx,proof,subfig,wrapfig,appendix,hyperref,mdwlist,wasysym}
+\usepackage{amsmath,amsthm,amssymb,fullpage,yfonts,graphicx,proof,appendix,hyperref,mdwlist,wasysym}
+\usepackage{upgreek}
+%\usepackage{times}
+\usepackage[charter]{mathdesign}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{multirow}
+\usepackage[usenames,dvipsnames]{xcolor}
+%\usepackage{epsfig}
+\usepackage[bottom]{footmisc}
+%\usepackage{mjz-titlepage}
+\usepackage{framed}
+\usepackage{setspace}
+%\setstretch{1.05}
+\usepackage{subfig}
+\usepackage{changebar}
+\usepackage{colortbl}
+\usepackage{wrapfig}
+
+\newcommand\true{\;\textit{true}}
+\newcommand\false{\;\textit{false}}
+
+\newcommand\alpher\alpha
+\newcommand\beter\beta
+\newcommand\gammer\gamma
+\newcommand\delter\delta
+\newcommand\zeter\zeta
+\newcommand\Sigmer\Sigma
+
+\newcommand\NN{\mathbb{N}}
+\newcommand\QQ{\mathbb{Q}}
+\newcommand\RR{\mathbb{R}}
+\newcommand\ZZ{\mathbb{Z}}
+
+\begin{document}
+%\captionsetup{width=.75\textwidth,font=small,labelfont=bf}
+
+\title{\bf Landslide: Systematic Testing in 15-410 \\ User Guide}
+\author{Ben Blum}
+\date{}
+\maketitle
+
+\section{Introduction}
+
+You should have received a document titled {\em User Study Information Sheet} that describes your rights as a study
+participant and our confidentiality procedures. If you are missing this, please contact me immediately. My email
+address is {\tt bblum@cs.cmu.edu} and my phone number is 412-304-4294; email is preferred.
+\\
+
+\noindent Likewise, please make sure you have read and understand the lecture slides on systematic testing, which are
+available on the 15-410 course website. If you have any questions about the research background I would be
+happy to answer them.
+
+\section{Instructions}
+
+We encourage you to use Landslide on the GHC cluster or UNIX pool machines ({\tt ghcXX.ghc.andrew.cmu.edu}
+or {\tt unix.andrew.cmu.edu}). Landslide has not been tested with other configurations and will probably fail
+mysteriously on your personal laptop, and we cannot promise to be of any help.
+
+\begin{enumerate}
+	\item Clone the repository - {\tt git clone https://github.com/bblum/landslide.git} - this will be your workspace.
+	\item Run {\tt ./p2-setup.sh PATH}, where {\tt PATH} is the absolute path to your p2 implementation.
+		\begin{itemize}
+			\item This command will import your p2 into {\tt ./pebsim/p2-basecode/} and then attempt to build it.
+				Whenever you update your p2 code, please do so in its original {\tt PATH}
+				and then run {\tt p2-setup.sh} again.
+			\item {\tt PATH} should be the path with {\tt 410kern}, {\tt 410user}, {\tt user/libthread}, etc as subdirectories, not the {\tt user/libthread} directory itself.
+		\end{itemize}
+	\item Run {\tt ./landslide OPTIONS} to run tests with Landslide, for various values of {\tt OPTIONS}:
+		\begin{itemize}
+			\item Use ./landslide -h to view command line options. The most important ones are -t , max testing
+time, and -p , which test program to run.
+			\item Landslide's bug reports will show up as HTML files.
+				\begin{itemize}
+					\item If you are using a cluster machine in person, you can view them by pointing a browser to \\
+						{\tt file:///PATH/TO/landslide/FILENAME.html}
+					\item For remote usage, move the html file to {\tt ~/www} in your AFS, and view it at \\
+						{\tt http://www.contrib.andrew.cmu.edu/~YOUR\_ANDREWID/FILENAME.html}.
+						Note the www in the URL is mandatory;
+						note also that this will allow the world to see it,
+						so be careful to clean up any traces in {\tt ~/www} when you're done!
+				\end{itemize}
+			\item Suggested test configurations to run are as follows.
+				You can, of course, change the time limits or test programs as you see fit.
+				For the longer-running configurations,
+				we recommend running them inside of a {\tt screen} or {\tt tmux} session.
+				\begin{itemize}
+					\item \texttt{./landslide -t 30m -p thr\_exit\_join}
+					\item \texttt{./landslide -t 30m -p mutex\_test}
+					\item \texttt{./landslide -t 30m -p paradise\_lost}
+					\item \texttt{./landslide -t 30m -p broadcast\_test}
+					\item \texttt{./landslide -t 30m -p paraguay}
+					\item \texttt{./landslide -t 30m -p rwlock\_downgrade\_read\_test}
+						\\
+					\item \texttt{./landslide -t 3h -p thr\_exit\_join}
+					\item \texttt{./landslide -t 3h -p mutex\_test}
+					\item \texttt{./landslide -t 3h -p paradise\_lost}
+					\item \texttt{./landslide -t 3h -p broadcast\_test}
+					\item \texttt{./landslide -t 3h -p paraguay}
+					\item \texttt{./landslide -t 3h -p rwlock\_downgrade\_read\_test}
+						\\
+					\item \texttt{./landslide -t 12h -p thr\_exit\_join}
+					\item \texttt{./landslide -t 12h -p mutex\_test}
+					\item \texttt{./landslide -t 12h -p paradise\_lost}
+					\item \texttt{./landslide -t 12h -p broadcast\_test}
+					\item \texttt{./landslide -t 12h -p paraguay}
+					\item \texttt{./landslide -t 12h -p rwlock\_downgrade\_read\_test}
+				\end{itemize}
+			\item To build your own custom test case for use with Landslide,
+				put it in {\tt pebsim/p2-basecode/user/progs}
+				and edit the {\tt STUDENTTESTS} line in {\tt pebsim/p2-basecode/config-incomplete.mk}
+				(note: NOT {\tt config.mk}; the setup script auto-generates that file).
+				Then run {\tt ./p2-setup.sh} again.
+		\end{itemize}
+	\item After fixing any found bugs, re-run Landslide with the same test options to confirm that your fix works.
+\end{enumerate}
+
+\noindent {\bf If something goes wrong:} If you find a Landslide bug, such as an assertion/crash, or such as a
+bug report that you think is actually a bug in Landslide rather than a bug in your P2, or such as it getting stuck
+and not exiting in the given time limit, please create a tarball of your workspace, just as you would to report
+a reference kernel bug, but send it to Ben ({\tt bblum@cs.cmu.edu}) instead of 410 staff. For any other technical
+issues getting it to work, or if you have difficulty understanding a bug report, send email to Ben.
+\\
+
+\noindent However, we cannot provide help on how to understand why your bug happened or how to fix it. The point of
+the study is that Landslide's automation plus your own brain should be enough! On the other hand, if you have
+a design question while deciding between potential ways to fix a bug, send it to 410 course staff as usual.
+
+\end{document}
