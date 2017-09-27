@@ -18,11 +18,11 @@
 \setbeamertemplate{navigation symbols}{}
 
 \title[Landslide]{{\bf Landslide: A New Race-Finding Tool for 15-410}}
-\subtitle[]{ {\em more clever than } ``\texttt{mandelbrot}'' {\em since 2011.}}
+\subtitle[]{ {\em more clever than } ``\texttt{agility\_drill}'' {\em since 2011.}}
 \author[Ben Blum]{Ben Blum \texttt{(bblum@andrew.cmu.edu)}}
 
 \institute[CMU 15-410]{Carnegie Mellon University - 15-410}
-\date[]{2017, February 20}
+\date[]{2017, September 27}
 
 \setbeamertemplate{footline}{\hspace*{.5cm}\scriptsize{\insertauthor\hspace*{50pt} \hfill\insertframenumber\hspace*{.5cm}}} 
 
@@ -69,7 +69,7 @@
 \subsection{Introduction}
 
 \begin{frame}{Outline}
-	\textbf{Theory: Seeing race conditions in a new way}
+	\textbf{Theory: Seeing concurrency bugs in a new way}
 	\begin{itemize}
 		\item Case study (example)
 		\item Tabular execution traces
@@ -484,7 +484,7 @@
 \breakslide{\Huge Landslide}
 
 \begin{frame}{About The Project}
-	\textbf{About me}: 6th year graduate student, advised by Garth Gibson
+	\textbf{About me}: Final(?) year graduate student, advised by Garth Gibson
 	\begin{itemize}
 		\item TAed 15-410 for 3 semesters during undergrad
 		%\item 1st graduate year was 5th year M.S., rest in Ph.D. program
@@ -619,27 +619,27 @@
 	{\em Stress testing allows user to choose total run time -- can we offer this too?}
 \end{frame}
 
-\begin{frame}{Iterative Deepening of Preemption Points}
-	Goal: Run the best tests for a given CPU budget.
-	%\begin{itemize}
-	%	\item Technique: ``Iterative Deepening''
-	%\end{itemize}
-	\linegap
-
-	Based on experience from past 15-410 student volunteers
-	\begin{itemize}
-		%\item Students worked best with an iterative process
-		\item ``Start small, then add more preemption points as time allows''
-		\item Landslide now automates this process
-	\end{itemize}
-	\linegap
-
-	Named after analogous technique in chess AI.
-	\begin{itemize}
-		\item Chess search is DFS limited by max number of moves (ply).
-		\item Chess AIs repeat DFS, increasing ply, until timeout.
-	\end{itemize}
-\end{frame}
+%\begin{frame}{Iterative Deepening of Preemption Points}
+%	Goal: Run the best tests for a given CPU budget.
+%	%\begin{itemize}
+%	%	\item Technique: ``Iterative Deepening''
+%	%\end{itemize}
+%	\linegap
+%
+%	Based on experience from past 15-410 student volunteers
+%	\begin{itemize}
+%		%\item Students worked best with an iterative process
+%		\item ``Start small, then add more preemption points as time allows''
+%		\item Landslide now automates this process
+%	\end{itemize}
+%	\linegap
+%
+%	Named after analogous technique in chess AI.
+%	\begin{itemize}
+%		\item Chess search is DFS limited by max number of moves (ply).
+%		\item Chess AIs repeat DFS, increasing ply, until timeout.
+%	\end{itemize}
+%\end{frame}
 
 \begin{frame}{Iterative Deepening in Landslide}
 	Landslide automatically iterates through different configurations of PPs.
@@ -722,6 +722,32 @@
 	\end{itemize}
 \end{frame}
 
+\begin{frame}{What makes a Landslide-friendly test}
+	``Why not {\tt largetest}, {\tt juggle}, {\tt cyclone}, {\tt agility\_drill}...?''
+	\linegap
+
+	Sample code from {\tt cyclone}: % abbreviated
+	\begin{center}
+	\begin{tabular}{l}
+		\texttt{for (i = 0; i < MAX\_MISBEHAVE /* 64 */; i++) \{} \\
+		\texttt{~~~~misbehave(i);} \\
+		\texttt{~~~~tid = thr\_create(child\_fn, i);} \\
+		\texttt{~~~~thr\_join(tid, \&status);} \\
+		\texttt{\}}
+	\end{tabular}
+	\end{center}
+	\pause
+	\linegap
+
+	Stress tests expose various interleavings using big loops/many threads;
+	\linegap
+
+	Landslide finds many interleavings itself; even if the test case has no loops.
+	\vspace{0.01in}
+
+	How long do you think Landslide would take to test {\tt cyclone}..?
+\end{frame}
+
 %\begin{frame}{Preliminary Evaluation}
 %	We tested 22 random submitted P2s from Spring 2014.
 %	\begin{itemize}
@@ -759,71 +785,27 @@
 %\end{frame}
 
 \begin{frame}{Previous Semesters}
-	%Spring 2015: 7 groups signed up to use Landslide; 5 found bugs
-	%%\begin{itemize}
-	%%	\item (that they didn't find during stress testing)
-	%%\end{itemize}
-	%%%%% hopefully!
-	%\linegap
-
-	%Among all groups, 38 total tests were run
-	%\begin{itemize}
-	%	\item 21 tests ran to completion without finding bugs
-	%	\item 4 {\em deterministic} bugs
-	%	\item 13 distinct {\em non-deterministic} bugs
-	%		\begin{itemize}
-	%			\item 6 in {\tt thr\_exit\_join} \small (use-after-free, deadlock, NULL, infinite loop...)
-	%			\item 4 in {\tt paraguay} (deadlock, infinite loop)
-	%			\item 2 in {\tt broadcast\_test} (deadlock, infinite loop)
-	%			\item 1 in {\tt rwlock\_downgrade\_read\_test} (use-after-free)
-	%		\end{itemize}
-	%		%\begin{itemize}
-	%		%	\item 6 of which required data-race PPs to expose
-	%		%\end{itemize}
-	%\end{itemize}
-	S'15, F'15, S'16: 48 groups signed up to use Landslide; 38 found bugs
-	% 18 groups found races
-	%\begin{itemize}
-	%	\item (that they didn't find during stress testing)
-	%\end{itemize}
-	%%%% hopefully!
+	%% S'15, F'15, S'16: 48 groups signed up to use Landslide; 38 found bugs
+	S'15, F'15, S'16, F'16, S'17: 79 groups signed up to use Landslide; 59 found bugs
 	\linegap
 
-	44 {\em deterministic} bugs (e.g. swexn, initialization)
+	%%44 {\em deterministic} bugs (e.g. swexn, initialization)
+	91 {\em deterministic} bugs (e.g. swexn, initialization)
 	\linegap
 
-	85 distinct {\em non-deterministic} bugs (among 32 groups)
+	%%85 distinct {\em non-deterministic} bugs (among 32 groups)
+	113 distinct {\em non-deterministic} bugs (among 44 groups)
 	\begin{itemize}
-		\item 24 groups (75\%) fixed $\ge 1$ such bug
+		\item 33 groups (75\%) fixed $\ge 1$ such bug
+		%%\item 24 groups (75\%) fixed $\ge 1$ such bug
 			\begin{itemize}
 				\item (as verified by running Landslide again -- not a guarantee!)
 			\end{itemize}
-		\item 15 groups (47\%) fixed {\em all} such bugs
+		\item 24 groups (55\%) fixed {\em all} such bugs
+		%%\item 15 groups (47\%) fixed {\em all} such bugs
 		\item Most ambitious group: 11 distinct races found + fixed!
 	\end{itemize}
 	\linegap
-	% 44 dets 85 races
-
-	%Among all groups, 185 distinct tests were run
-	%\begin{itemize}
-	%	\item 137 tests ran to completion without finding bugs
-	%	\item 21 {\em deterministic} bugs
-	%\end{itemize}
-	%\pause % ask: "who can tell me why landslide might find a *deterministic* bug not found during past testing? A: use-after-free
-	%\linegap
-
-	%38 distinct {\em non-deterministic} bugs
-	%\begin{itemize}
-	%		%\begin{itemize}
-	%		%	\item 7 of which required data-race PPs to expose
-	%		%\end{itemize}
-	%	\item 11 groups (50\%) fixed all their bugs
-	%		\begin{itemize}
-	%			\item (as verified by running Landslide again -- not a guarantee!)
-	%		\end{itemize}
-	%	\item 2.7 bugs ``fixed'' (see above) on average per group
-	%	\item Most ambitious group: 11 distinct races found + fixed!
-	%\end{itemize}
 \end{frame}
 
 %\begin{frame}{A new treat} %since last semester}
@@ -929,20 +911,22 @@
 		\item Meet prerequisites of passing P2 tests
 		\item Complete sign-up form online to get further instructions
 			\begin{itemize}
-				\item \url{http://tinyurl.com/landslide-p2-s17}
+				\item (watch your email for the link)
+				%\item \url{http://tinyurl.com/landslide-p2-s17}
 			\end{itemize}
 		\item Optional ``Landslide clinic'' for in-person tech (or moral) support
 			\begin{itemize}
-				\item Later this week, room and time TBD
+				\item Next week, room and time TBD
 			\end{itemize}
 		%\item Use Landslide in addition to stress tests until P2 is due!
 	\end{itemize}
-	\linegap
+	%% im out of time :<<
+	%\linegap
 
-	{\em Really} interested?
-	\begin{itemize}
-		\item I know of an M.S. thesis topic if you want to do post-OS research.
-	\end{itemize}
+	%{\em Really} interested?
+	%\begin{itemize}
+	%	\item I know of an M.S. thesis topic if you want to do post-OS research.
+	%\end{itemize}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
