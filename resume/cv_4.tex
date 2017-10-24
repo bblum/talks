@@ -1,0 +1,122 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Medium Length Professional CV
+% LaTeX Template
+% Version 2.0 (8/5/13)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% Original author:
+% Trey Hunner (http://www.treyhunner.com/)
+%
+% Important note:
+% This template requires the resume.cls file to be in the same directory as the
+% .tex file. The resume.cls file provides the resume style used for structuring the
+% document.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass{resume} % Use the custom resume.cls style
+
+\usepackage[left=0.6in,top=0.6in,right=0.6in,bottom=0.6in]{geometry} % Document margins
+\usepackage[charter]{mathdesign}
+
+\name{Ben Blum} % Your name
+\address{5000 Forbes Ave \\ Gates-Hillman 9009 \\ Pittsburgh, PA 15213}
+\address{\texttt{bblum@cs.cmu.edu} \\ \texttt{https://github.com/bblum}} % Your phone number and email
+\address{6704 Thomas Blvd Apt 2L \\ Pittsburgh, PA 15208}
+
+\begin{document}
+
+%----------------------------------------------------------------------------------------
+%	EDUCATION SECTION
+%----------------------------------------------------------------------------------------
+
+\begin{rSection}{Education}
+
+{\bf Carnegie Mellon University} \hfill {\em June 2011} \\ 
+B.S. in Computer Science
+
+{\bf Carnegie Mellon University} \hfill {\em June 2012} \\ 
+M.S. in Computer Science
+
+{\bf Carnegie Mellon University} \hfill {\em 2018 (expected)} \\ 
+Ph.D. in Computer Science
+
+
+\end{rSection}
+
+%----------------------------------------------------------------------------------------
+%	WORK EXPERIENCE SECTION
+%----------------------------------------------------------------------------------------
+
+\begin{rSection}{Experience}
+
+\begin{rSubsection}{Carnegie Mellon University}{Summer 2011 - Present}{Graduate Student}{Pittsburgh, PA}
+\item Developed Landslide, a systematic concurrency testing framework for low-level userspace and kernel systems
+\item Conducted educational user studies offering Landslide to students during operating systems class projects
+\end{rSubsection}
+
+\begin{rSubsection}{Mozilla}{Summers 2012 \& 2013}{Research Intern}{Mountain View, CA}
+\item Helped develop the Rust language runtime (green-thread scheduler, stack management, concurrency primitives)
+\item Developed an API for type-safe, race-free mutable shared state between threads using Rust's borrow checker
+\item Contributed to the design of a sound type system for Rust's closures
+\end{rSubsection}
+
+\begin{rSubsection}{Google}{Summers 2009 \& 2010}{Software Engineering Intern}{Mountain View, CA}
+\item Implemented atomic per-process migration algorithm for Linux kernel cgroups
+\end{rSubsection}
+
+\begin{rSubsection}{Carnegie Mellon University}{Spring 2009 - Fall 2012}{Teaching Assistant and Instructor}{Pittsburgh, PA}
+\item TA for 15-213, Introduction to Computer Systems (3 semesters)
+\item TA for 15-410, Operating System Design and Implementation (3 semesters)
+\item Instructor for 98-172, Great Practical Ideas in Computer Science (1 semester)
+\end{rSubsection}
+
+\end{rSection}
+
+%----------------------------------------------------------------------------------------
+%	TECHNICAL STRENGTHS SECTION
+%----------------------------------------------------------------------------------------
+
+\begin{rSection}{Publications}
+
+\textbf{Stateless Model Checking with Data-Race Preemption Points.} Ben Blum and Garth Gibson. OOPSLA 2016.
+%ACM SIGPLAN International Conference on Object-Oriented Programming, Systems, Languages, and Applications (OOPSLA) 2016.
+
+\textbf{Parrot: A Practical Runtime for Deterministic, Stable Threads.} Heming Cui et al. (5th author). SOSP 2013.
+%ACM Symposium on Operating Systems Principles (SOSP) 2013.
+
+\textbf{Soundness Proofs for Iterative Deepening.} Ben Blum. Tech report CMU-PDL-16-103.
+
+\textbf{Landslide: Systematic Dynamic Race Detection in Kernel Space.} Ben Blum. MS thesis CMU-CS-12-118.
+
+\end{rSection}
+
+\begin{rSection}{Skills}
+
+\begin{tabular}{ @{} >{\bfseries}l @{\hspace{6ex}} l }
+	Languages (proficient) & C, Rust, Haskell, x86 assembly, Bash, LaTeX \\
+	Languages (familiar) & C++, SML, Python, Lua \\
+	Tools & git, vim, GNU toolchain, simics, bochs
+\end{tabular}
+
+\end{rSection}
+
+%----------------------------------------------------------------------------------------
+%	EXAMPLE SECTION
+%----------------------------------------------------------------------------------------
+
+%\begin{rSection}{Section Name}
+
+%Section content\ldots
+
+%\end{rSection}
+
+%----------------------------------------------------------------------------------------
+
+\end{document}
