@@ -24,7 +24,7 @@
 % makefiles.
 
 % some useful packages
-\usepackage{times}
+\usepackage[charter]{mathdesign}
 \usepackage{fullpage}
 \usepackage{graphicx}
 \usepackage{amsmath}
@@ -49,17 +49,19 @@
 \pagestyle{empty}
 
 \title{ %% {\it \huge Thesis Proposal}\\
-{\bf Awesome Work in Computer Science}}
-\author{Me}
-\date{January 3006}
-\Year{3006}
+{\bf Practical Concurrency Testing} \\
+\normalsize \vspace{1em}
+{\em or, How I Learned to Stop Worrying and Love the Exponential Explosion}}
+\author{Ben Blum}
+\date{Decembruary 2018}
+\Year{2018}
 \trnumber{}
 
 \committee{
-Nearly Divine Personage, Chair \\
-Someone else \\
-Yet another person \\
-Someone from a strange and faraway land
+Garth Gibson, Chair \\
+David A. Eckhardt \\
+Brandon Lucia \\
+Haryadi Gunawi, University of Chicago
 }
 
 \support{}
@@ -68,12 +70,12 @@ Someone from a strange and faraway land
 % copyright notice generated automatically from Year and author.
 % permission added if \permission{} given.
 
-\keywords{Stuff, More Stuff}
+\keywords{landslide terminal, baggage claim, ground transportation, ticketing}
 
 \maketitle
 
 \begin{dedication}
-For my dog
+For Elsie, Margie, Johnny, Mel, Eve, and David, who brought me here today.
 \end{dedication}
 
 \pagestyle{plain} % for toc, was empty
@@ -82,13 +84,40 @@ For my dog
 %% into different files and input them into this file...
 
 \begin{abstract}
-A short summary.
+Concurrent programming presents a challenge to students and experts alike because of the complexity of multithreaded interactions and the difficulty to reproduce and reason about bugs.
+Stateless model checking is a concurrency testing approach which forces a program to interleave its threads in many different ways, checking for bugs each time.
+This technique is powerful, in principle capable of finding any nondeterministic bug in finite time,
+but suffers from exponential explosion as program size increases.
+Checking an exponential number of thread interleavings is not a practical or predictable approach for programmers to find concurrency bugs before their project deadlines.
+
+In this thesis, I develop several new techniques to make stateless model checking more practical for human use.
+I have built Landslide, a stateless model checker specializing in undergraduate operating systems class projects.
+Landslide extends the traditional model checking algorithm with a new framework for automatically managing
+%the exploration of
+multiple state spaces according to their estimated completion times,
+which I show quickly finds bugs should they exist and also quickly verifies correctness otherwise.
+I evaluate Landslide's suitability for inexpert use by presenting the results of many semesters providing it to students in 15-410, CMU's Operating System Design and Implementation class,
+and more recently, students in the operating systems classes at the University of Chicago and Berkeley.
+%Finally, I will present several new techniques that allow stateless model checking to be practically employed on real-world programs.
+%Finally, I will explore broader impact by extending Landslide to test some real-world programs and to be used by students at other universities.
+Finally, I extend Landslide with a new concurrency model for hardware transactional memory,
+and evaluate several real-world transactional benchmarks to show that stateless model checking can keep up with the developing concurrency demands of real-world programs.
 \end{abstract}
 
 \begin{acknowledgments}
-My advisor is cool.
+I thank the online Android: Netrunner community Stimhack.
+\\
+
+Please hold on. This thesis will be departing shortly for the Landslide terminal, baggage claim, ground transportation, and ticketing.
 \end{acknowledgments}
 
+\newpage
+\begin{figure}[h]
+	\vspace{12em}
+	\begin{center}
+		\includegraphics[width=0.5\textwidth]{how-i-learned.png}
+	\end{center}
+\end{figure}
 
 
 \tableofcontents
@@ -117,10 +146,77 @@ My advisor is cool.
 %
 % Other than that, just make it look good...
 
+\newcommand{\inspirationallinebreak}{\vspace{0.25em}}
+\newcommand\inspirationalquote[2]{\begin{flushright}
+	\vspace{-1em}
+	\fontfamily{pzc}\selectfont
+	{\em #1}
+	\inspirationallinebreak
+
+	---{#2}
+	\fontfamily{mdbch}\selectfont
+	\vspace{2em}
+\end{flushright}}
 
 \chapter{Introduction}
-\chapter{Conclusion}
 
+\chapter{Background}
+
+\chapter{410} % rename
+\inspirationalquote{Knowing the students might one day
+%find a way to
+fix their concurrency bugs...
+it fills you with determination.}{Undertale (paraphrased)}
+
+\chapter{Related Work}
+\inspirationalquote{I see now that none of us are yet ready. The cycle exists so that we may
+improve ourselves. But \\
+the one who reaches the summit is not our superior, for
+they stand on our shoulders to reach it.}
+{The Shepherd v82.6.0174, The Talos Principle}
+
+
+\chapter{Conclusion}
+\inspirationalquote{
+%	``If you are a god, Zeus, as the stories claim, then why did you create evolution?
+%	Why did you make \\ a world that can only grow through cruelty and pain?''
+%	\inspirationallinebreak
+%
+%For a moment--surely this meant death was near--she thought she heard him answer:
+%``My child, I \\
+%was shaped by the gods that came before me, as you were shaped by me.
+%The choice I had was be- \\
+%tween creation and oblivion, life and death.
+%And I chose life, because any life is better than no life, \\
+%because as long as there is life, there is hope--if not for us, then for some generation to come.''
+%	\inspirationallinebreak
+%
+%``Then how are you a god, if you can offer so little?'' she whispered, feeling death creep closer.
+%	\inspirationallinebreak
+%
+%``I am a god because I take upon myself the burden of creation,'' the statue replied.
+%	\inspirationallinebreak
+%
+%``Then we are all gods,'' Alexandra said, and pushed the button.}
+	\begin{tabular}{p{0.875\textwidth}}
+	``If you are a god, Zeus, as the stories claim, then why did you create evolution?
+	Why did you make a world that can only grow through cruelty and pain?''
+	\\
+	For a moment--surely this meant death was near--she thought she heard him answer:
+	``My child, I was shaped by the gods that came before me, as you were shaped by me.
+	The choice I had was between creation and oblivion, life and death.
+	And I chose life, because any life is better than no life,
+	because as long as there is life, there is hope--if not for us, then for some generation to come.''
+	\\
+	``Then how are you a god, if you can offer so little?'' she whispered, feeling death creep closer.
+	\\
+	``I am a god because I take upon myself the burden of creation,'' the statue replied.
+	\\
+	``Then we are all gods,'' Alexandra said, and pushed the button.
+	\end{tabular}}
+{The Talos Principle (Road to Gehenna)}
+
+asdfasdasdf
 %\appendix
 %\include{appendix}
 
@@ -130,10 +226,12 @@ My advisor is cool.
 
 % By default \bibsection is \chapter*, but we really want this to show
 % up in the table of contents and pdf bookmarks.
-\renewcommand{\bibsection}{\chapter{\bibname}}
+\renewcommand{\bibsection}{\chapter{\bibname}
+\inspirationalquote{Only a doctor of philosophy, Darth.}{Robert Marsh, via Twitter}
+}
 %\renewcommand{\bibpreamble}{This text goes between the ``Bibliography''
 %  header and the actual list of references}
-\bibliographystyle{plainnat}
+\bibliographystyle{plainnat} % plain n'at
 \bibliography{register} %your bib file
 
 \end{document}
