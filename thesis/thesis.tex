@@ -39,10 +39,10 @@
 %for general printing (not binding)
 \usepackage[letterpaper,twoside,vscale=.8,hscale=.75,nomarginpar,hmarginratio=1:1]{geometry}
 
-% Provides a draft mark at the top of the document. 
+% Provides a draft mark at the top of the document.
 \draftstamp{\today}{DRAFT}
 
-\begin {document} 
+\begin{document}
 \frontmatter
 
 %initialize page style, so contents come out right (see bot) -mjz
@@ -97,7 +97,7 @@ Landslide extends the traditional model checking algorithm with a new framework 
 multiple state spaces according to their estimated completion times,
 which I show quickly finds bugs should they exist and also quickly verifies correctness otherwise.
 I evaluate Landslide's suitability for inexpert use by presenting the results of many semesters providing it to students in 15-410, CMU's Operating System Design and Implementation class,
-and more recently, students in the operating systems classes at the University of Chicago and Berkeley.
+and more recently, students in similar classes at the University of Chicago and Berkeley.
 %Finally, I will present several new techniques that allow stateless model checking to be practically employed on real-world programs.
 %Finally, I will explore broader impact by extending Landslide to test some real-world programs and to be used by students at other universities.
 Finally, I extend Landslide with a new concurrency model for hardware transactional memory,
@@ -105,24 +105,29 @@ and evaluate several real-world transactional benchmarks to show that stateless 
 \end{abstract}
 
 \begin{acknowledgments}
-I thank the online Android: Netrunner community Stimhack.
-\\
+% things to thank
+% stimhack
+% csd bgames
+% undergrad frenz
+% new frenz
+%
+% \\
 
 Please hold on. This thesis will be departing shortly for the Landslide terminal, baggage claim, ground transportation, and ticketing.
 \end{acknowledgments}
 
-\newpage
-\begin{figure}[h]
-	\vspace{12em}
-	\begin{center}
-		\includegraphics[width=0.5\textwidth]{how-i-learned.png}
-	\end{center}
-\end{figure}
-
-
 \tableofcontents
 \listoffigures
 \listoftables
+
+\cleardoublepage
+\pagestyle{empty}
+\begin{center}
+\begin{tabular}{c}
+\vspace{12em} \\
+\includegraphics[width=0.55\textwidth]{how-i-learned.png}
+\end{tabular}
+\end{center}
 
 \mainmatter
 
@@ -131,7 +136,7 @@ Please hold on. This thesis will be departing shortly for the Landslide terminal
 
 % The other requirements Catherine has:
 %
-%  - avoid large margins.  She wants the thesis to use fewer pages, 
+%  - avoid large margins.  She wants the thesis to use fewer pages,
 %    especially if it requires colour printing.
 %
 %  - The thesis should be formatted for double-sided printing.  This
@@ -145,6 +150,19 @@ Please hold on. This thesis will be departing shortly for the Landslide terminal
 %  - Use a nice serif font, such as Times Roman.  Sans serif looks bad.
 %
 % Other than that, just make it look good...
+
+\newcommand\simics{\textsc{Simics}}
+\newcommand{\sect}[1]{\S #1}
+\newcommand\hilight[2]{\color{#1}#2\color{black}}
+\definecolor{orange}{RGB}{192,96,0}
+\definecolor{olivegreen}{RGB}{0,127,0}
+\definecolor{brickred}{RGB}{192,0,0}
+\definecolor{commentblue}{RGB}{0,0,192}
+
+\newtheorem{theorem}{Theorem}
+
+\newcommand\llama[1]{\includegraphics[width=#1]{llama.pdf}}
+\newcommand\llitem{\item[\llama{1.2em}]}
 
 \newcommand{\inspirationallinebreak}{\vspace{0.25em}}
 \newcommand\inspirationalquote[2]{\begin{flushright}
@@ -160,7 +178,7 @@ Please hold on. This thesis will be departing shortly for the Landslide terminal
 
 \chapter{Introduction}
 
-\chapter{Background}
+\input{overview}
 
 \chapter{410} % rename
 \inspirationalquote{Knowing the students might one day
@@ -232,6 +250,6 @@ asdfasdasdf
 %\renewcommand{\bibpreamble}{This text goes between the ``Bibliography''
 %  header and the actual list of references}
 \bibliographystyle{plainnat} % plain n'at
-\bibliography{register} %your bib file
+\bibliography{citations}
 
 \end{document}
