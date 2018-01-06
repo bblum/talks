@@ -8,8 +8,8 @@ the one who reaches the summit is not our superior, for they stand on our should
 {The Shepherd v82.6.0174, The Talos Principle}
 
 This chapter will introduce the necessary background material on concurrency, stateless model checking, data-race analysis, and the relevant undergraduate operating systems classes.
-
-Thesis proposal note: I've written this section with the intent of reusing it in the thesis. The other chapters, being necessarily more impermanent, are aimed directly at you (my thesis committee) as the audience. This section is written with the intention for programmers of any level to read.
+It is intended to be approachable by any intermediate programmer
+already familiar with C programming.
 
 \section{Concurrency Bugs}
 
@@ -201,7 +201,7 @@ using GCC's compiler intrinsics \cite{htm-gcc}.
 		\textbf{(All threads)} \\
 		\hline
 		\texttt{if ((status = \_xbegin()) == \_XBEGIN\_STARTED) \{} \\
-		\texttt{~~~~if (too\_much(foo)) \{} \\
+		\texttt{~~~~if (bad\_value\_of\_foo(foo)) \{} \\
 		\texttt{~~~~~~~~\_xabort();} \\
 		\texttt{~~~~\} else \{} \\
 		\texttt{~~~~~~~~foo++;} \\
@@ -218,14 +218,20 @@ using GCC's compiler intrinsics \cite{htm-gcc}.
 		If the transaction in the top branch aborts,
 		whether from a conflict or from the programmer's intention,
 		execution will revert to the return of {\tt \_xbegin},
-		and {\tt status} will be assigned an error code indicating the abort reason.
+		{\tt status} will be assigned an error code indicating the abort reason,
+		and control will drop into the {\tt else} branch.
 		The programmer can then use explicit synchronization, such as a mutex, to resolve the conflict.}
 	\label{fig:htm-example}
 \end{figure}
 
-In this thesis, I will focus on HTM as my platform for testing transactional programs, to highlight the importance of researching advanced testing techniques in anticipation of upcoming hardware features.
-My treatment of TM will be largely agnostic to whether a transactional interface is backed by HTM or STM,
-and I will extend it to cover STM as well, as discussed in Section~\ref{chap:tm}.
+Concerning possible execution patterns,
+the main difference between STM and HTM is the circumstances under which a transaction may abort.
+A software-backed transaction will abort if and only if a memory conflict occurs therein with another thread.
+HTM, however, is backed by the CPU's cache, and is therefore subject to other circumstances such as cache capacity or interrupt-triggered cache flushes which may force an abort even when no memory conflict occurs.
+I will explore the consequences of this difference further in Chapter~\ref{chap:tm}.
+
+In this thesis, I will focus on HTM as my platform for testing transactional programs,
+to highlight the importance of researching advanced testing techniques in anticipation of upcoming hardware features.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
