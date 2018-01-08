@@ -240,6 +240,28 @@ to highlight the importance of researching advanced testing techniques in antici
 Model checking \cite{verisoft} is a testing technique for systematically exploring the possible thread interleavings of a concurrent program.
 A model checker executes the program repeatedly, each time according to a new thread interleaving, until the state space (or the CPU budget) is exhausted.
 During each execution, it forces threads to execute serially, thereby confining the program's nondeterminism to controlled thread switches.
+Using a single iteration of the {\tt x++;} loop from Figure~\ref{fig:concurrency-bug} as an example,
+Figure~\ref{fig:tree}(a) shows all possible execution interleavings of the compiled code between 2 threads.
+
+\begin{figure}[p]
+	\begin{tabular}{c}
+		\includegraphics[width=\textwidth]{statespace-list.pdf}
+		\\
+		(a) Interleavings visualized individually, as a list.
+		\\
+		\\
+		\includegraphics[width=\textwidth]{statespace-tree.pdf}
+		\\
+		(b) Interleavings (same order as in (a)), with common prefixes \\
+		combined as ``preemption points'', forming a tree.
+	\end{tabular}
+	\caption{Visualization of interleaving state space for the program in Figure~\ref{fig:concurrency-bug}.
+	Thread 1 is represented by blue ovals, thread 2 by orange squares, and time flows from top to bottom.
+	As the two threads execute the same code, without loss of generality thread 1 is fixed to run first --
+	the full state space is twice the size, and the other half is symmetric to the one shown.}
+	\label{fig:tree}
+\end{figure}
+
 Some model checkers explicitly store the set of visited program states as a means of identifying equivalent interleavings \cite{spin}.
 This approach is called {\em stateful} model checking.
 In this thesis, I focus on {\em stateless} model checking,
@@ -261,19 +283,22 @@ although a checker may also include arbitrary program-specific predicates.
 
 {\bf Preemption points.}
 During execution, a model checker identifies a subset of the program's operations as ``interesting'', i.e.,
-points at which interrupting the current thread to run a different one is likely to produce different behaviour.
-These points, called {\em preemption points}, may be identified by any combination of human intuition and machine analysis.
+where interrupting the current thread to run a different one is likely to produce different behaviour.
+These so-called {\em preemption points} may be identified by any combination of human intuition and machine analysis.
 Typical preemption points include the boundaries of synchronization APIs (e.g., {\tt mutex\_lock}) or accesses to shared variables.
-Considering that at each preemption point multiple threads exist as options to run next, the set of possible ways to execute the program can be viewed as a tree.
-% TODO: fig tree
-%I show an example execution tree in Figure~\ref{fig:tree}.
-The number of preemption points in each execution define the depth of this tree, and the number of threads available to run define the branching factor.
+Considering that at each preemption point multiple threads exist as options to run next,
+the set of possible ways to execute the program can be viewed as a tree.
+Figure~\ref{fig:tree}(b) shows a visualization of the corresponding tree from our example program.
+
+The number of preemption points in each execution defines the depth of this tree,
+and the number of threads available to run defines the branching factor.
 Hence, in a program with $n$ preemption points and $k$ threads available to run at each, the state space size is $O(n^k)$.
+Nevertheless, to fully test all of a program's possible behaviours, we must check the executions corresponding to every branch of the tree.
 Addressing the scaling problem in this exponential relation is the central research problem for all model checkers.
 
 {\bf Reduction techniques.}
 Dynamic Partial Order Reduction \cite{dpor} (henceforth, DPOR) is the premier algorithm for mitigating the exponential explosion that arises as program size increases.
-It identifies equivalent execution sequences according to Mazurkiewicz trace theory \cite{mazurkiewicz},
+Technically speaking, it identifies equivalent execution sequences according to Mazurkiewicz trace theory \cite{mazurkiewicz},
 and tests at least one execution from each equivalence class.
 Intuitively, if two thread transitions between preemption points do not conflict on any shared resource access, reordering them produces an equivalent interleaving, i.e., the same program behaviour.
 Figure~\ref{fig:dpor} shows a part of an execution tree in which the operations by threads 1 and 2 are independent, and hence only one of the subtrees need be tested.
