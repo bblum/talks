@@ -70,7 +70,7 @@ mysteriously on your personal laptop, and we cannot promise to be of any help.
 			\item {\tt PATH} should be the path with {\tt 410kern}, {\tt 410user}, {\tt user/libthread}, etc as subdirectories, not the {\tt user/libthread} directory itself.
 		\end{itemize}
 	\item Run {\tt ./landslide OPTIONS} to run tests with Landslide, for various values of {\tt OPTIONS}:
-		\begin{itemize}
+		\begin{enumerate}
 			\item Use ./landslide -h to view command line options. The most important ones are -t , max testing
 time, and -p , which test program to run.
 			\item Landslide's bug reports will show up as HTML files.
@@ -114,9 +114,14 @@ time, and -p , which test program to run.
 				and edit the {\tt STUDENTTESTS} line in {\tt pebsim/p2-basecode/config-incomplete.mk}
 				(note: NOT {\tt config.mk}; the setup script auto-generates that file).
 				Then run {\tt ./p2-setup.sh} again.
-		\end{itemize}
+		\end{enumerate}
 	\item After fixing any found bugs, re-run Landslide with the same test options to confirm that your fix works.
 \end{enumerate}
+
+\noindent {\bf Note on simultaneous Landslides:} Landslide does not support running multiple tests at once;
+it needs to create some temporary files to annotate your code, and multiple instances of Landslide can step on each other's toes by clobbering those files.
+If you want to try multiple tests at once, simply {\tt git clone} the repository again in a different directory, and run one instance of Landslide in each.
+\\
 
 \noindent {\bf If something goes wrong:} If you find a Landslide bug, such as an assertion/crash, or such as a
 bug report that you think is actually a bug in Landslide rather than a bug in your P2, or such as it getting stuck

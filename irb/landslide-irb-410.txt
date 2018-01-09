@@ -1,0 +1,37 @@
+Landslide is a testing tool for concurrent programs such as the thread libraries and kernels that students implement in our undergraduate operating systems class. To debug their code, students currently use stress testing, a conventional method of testing for concurrency bugs which is somewhat random, unreliable, and produces poor diagnostic output. Landslide implements systematic concurrency testing, which guarantees to find bugs in a bounded amount of time should they exist, and produces a full preemption trace with which students can diagnose the concurrent buggy execution.
+
+We propose to offer Landslide to our students during the thread library project of 15-410, and to record and study their activity and bug-finding success with the tool. The tool will automatically capture snapshots of the code the students are testing, and we will survey students on their experience after the project is submitted.
+
+---
+
+Ben Blum will serve as PI and will conduct all aspects of the study, from the consent process to analyzing the collected data. He is a 6th year Ph.D. student and has conducted this study five times already.
+
+Garth Gibson is Ben's advisor in the Ph.D. program. He will help with survey design and interpreting the results.
+
+David Eckhardt is a member of Ben's thesis committee, and is the professor of the operating systems class in which the study will be conducted. To prevent any conflict of interest with regard to student grades, he will not have access to any study data, such as which students volunteer for the study or the results of their debugging experience.
+
+---
+
+If the tool works as intended, it may find bugs in the students' projects and help them diagnose and fix them before the submission deadline, resulting in higher grades.
+
+If the tool works as intended, it will also provide an educational experience to the students they might not otherwise get from using conventional stress testing.
+
+If the tool fails to provide any benefit over conventional stress testing, for example by producing confusing or misleading error reports, it will consume time that the students would otherwise have to work on the projects normally.
+
+We have designed the tool to require as little manual effort as possible on the part of the student. We expect that using the tool will be no more difficult or time-intensive than using the conventional stress-testing framework.
+
+---
+
+We will analyze the snapshots of Landslide usage sessions and count the number of times Landslide was run, the number of bugs found, classify the different kinds of bugs, count how many times bugs were fixed in a subsequent session, etc.
+
+---
+
+Only Ben Blum (PI) and Garth Gibson (advisor). As Dave Eckhardt is the course instructor, he will not have access to any such data until after final grades for the semester are submitted.
+
+---
+
+Landslide debugging results and snapshots of student code will be stored on AFS space accessible only to Ben and Garth. Student survey results will be collected in a private Google Doc accessible only to Ben and Garth.
+
+---
+
+The study information sheet attached in the previous section includes a paragraph suggesting the students to contact the IRB with any concerns.

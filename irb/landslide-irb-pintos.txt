@@ -1,0 +1,85 @@
+Landslide is a testing tool for concurrent programs such as the thread libraries and kernels that students implement in our undergraduate operating systems class. To debug their code, students currently use stress testing, a conventional method of testing for concurrency bugs which is somewhat random, unreliable, and produces poor diagnostic output. Landslide implements systematic concurrency testing, which guarantees to find bugs in a bounded amount of time should they exist, and produces a full preemption trace with which students can diagnose the concurrent buggy execution.
+
+We propose to offer Landslide to our students during the thread library project of 15-410, and to record and study their activity and bug-finding success with the tool. The tool will automatically capture snapshots of the code the students are testing, and we will survey students on their experience after the project is submitted.
+
+---
+
+Ben Blum will serve as PI and will conduct all aspects of the study, from the consent process to analyzing the collected data. He is a 6th year Ph.D. student and has conducted this study five times already.
+
+Garth Gibson is Ben's advisor in the Ph.D. program. He will help with survey design and interpreting the results.
+
+David Eckhardt is a member of Ben's thesis committee, and is the professor of the operating systems class in which the study will be conducted. To prevent any conflict of interest with regard to student grades, he will not have access to any study data, such as which students volunteer for the study or the results of their debugging experience.
+
+---
+
+The study will focus on an alternative testing technique for grading and providing feedback to students of operating systems classes using the Pintos kernel architecture. Normally such classes use stress testing for finding concurrency errors, a particular class of bug. We will offer Landslide, a systematic testing tool we have built, to the TAs to help grade student submissions, and it will provide debugging feedback to the students in turn. This will be an opportunity to explore a new testing technique and to find and fix bugs in their code that would otherwise go undetected. We will collect information on how many bugs were found during grading, and survey students to evaluate how helpful they found Landslide's debugging output.
+
+---
+
+We will provide the tool to TAs during the grading period for each of the Pintos kernel projects, accompanied by a brief user guide. TAs will supplement their usual grading procedure with Landslide, and provide students with Landslide's debugging output. We will then survey the students on the usefulness of said output.
+
+---
+
+Participants will be engaged remotely via the internet. TAs and students will conduct student activities wherever they normally work.
+
+---
+
+For TAs, we estimate between 1 to 4 hours will be required. For students, anywhere between 0 and several hours depending on what kind of debugging feedback they receive and whether they choose to investigate the bugs.
+
+---
+
+Students enrolled in the operating systems classes at U. Chicago and Berkeley.
+
+---
+
+(on adding collaborator locations)
+
+The professor of the operating systems class and their TAs will collaborate to run Landslide on their students' submitted projects and distribute debugging feedback and surveys.
+
+---
+
+We will hold regular biweekly advisor meetings to ensure the study remains compliant.
+
+---
+
+Comparing to the number of students required by our other study for CMU's operating systems class.
+
+---
+
+We will seek volunteers from students in the OS classes at U. Chicago and Berkeley. No further distinction will be made among those student bodies.
+
+---
+
+Course staff at U. Chicago and Berkeley will send an email or in-class announcement to the students that Landslide debugging feedback is available for students who volunteer.
+
+---
+
+They will receive the announcement described above.
+
+---
+
+Students who receive debugging feedback may perhaps learn to fix similar bugs in future projects before submission.
+
+If the tool works as intended, it will provide an educational experience to the students they might not otherwise get from using conventional stress testing.
+
+If the tool fails to provide any benefit over conventional stress testing, for example by producing confusing or misleading error reports, it will consume time that the students would otherwise have to work on the projects normally.
+
+We have designed the tool to require as little manual effort as possible on the part of the students and TAs. We expect that using the tool will be no more difficult or time-intensive than using the conventional stress-testing framework for the TAs, and the bug reports should likely be user-friendly and easy to interpret by the students.
+
+---
+
+We will analyze the snapshots of Landslide usage sessions and count the number of times Landslide was run, the number of bugs found, classify the different kinds of bugs, count how many times bugs were fixed in a subsequent session, etc.
+
+---
+
+Only Ben Blum (PI) and Garth Gibson (advisor). As Dave Eckhardt is the course instructor, he will not have access to any such data until after final grades for the semester are submitted.
+
+---
+
+Landslide debugging results and snapshots of student code will be stored on AFS space accessible only to Ben and Garth. Student survey results will be collected in a private Google Doc accessible only to Ben and Garth.
+
+---
+
+The study information sheet attached in the previous section includes a paragraph suggesting the students to contact the IRB with any concerns.
+
+

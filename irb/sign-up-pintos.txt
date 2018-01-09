@@ -1,0 +1,30 @@
+Dear students,
+
+This semester, as part of a collaboration with researchers at Carnegie Mellon
+University, we have the opportunity to use a special concurrency testing tool
+called Landslide to test your submissions. In contrast to stress testing,
+Landslide implements systematic testing, a technique which exercises different
+thread interleavings sequentially in an attempt to exhaust the state space of
+all possible interleavings. This technique reproduces bugs in a bounded amount
+of time, and offers more detailed debugging feedback should bugs be found.
+
+Students who volunteer will have their submitted projects tested by Landslide
+in addition to the usual test suite. Concurrency bugs found by Landslide will
+not count against your grade. However, if Landslide finds bugs in your code,
+we will provide you with the debugging output, with which you may attempt to
+diagnose and fix your bug. Although there will be no extra credit for doing
+so, you may be alerted to similar bugs in future projects before they come
+due.
+
+Students who volunteer will also be asked to complete a brief survey about
+whether they found the Landslide debugging report useful (one survey for each
+class project tested). If you choose not to receive Landslide debugging
+reports of your submissions, it will not negatively affect your standing in
+this class or with the university. Your professor will not know which students
+agreed to the use of Landslide and which did not.
+
+If you wish to receive bug reports from Landslide, please reply yes to this
+email.
+
+Students who are interested to learn more about the research technique may
+visit Landslide's project webpage at http://www.pdl.cmu.edu/Landslide/index.shtml
