@@ -28,6 +28,8 @@
 *.mtc0
 *.dia~
 
+proposal/todo.txt
+proposal/thesprop.pdf
 proposal/talk/proposal.pdf
 irb/infosheet.pdf
 irb/infosheet-uchicago.pdf
