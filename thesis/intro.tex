@@ -5,6 +5,8 @@ Please hold on. This thesis will be departing shortly for the Landslide terminal
 \end{tabular}}
 {Pittsburgh International Airport (paraphrased)}
 
+\subsection{Motivation}
+
 Modern computer architectures have turned to increasing CPU core count, rather than clock speed, to improve processing power \cite{mooreslaw}.
 To take advantage of multiple cores for performance, programmers must write software to execute {\em concurrently} --
 using multiple {\em threads} which execute multiple parts of a program's logic simultaneously.
@@ -52,6 +54,8 @@ and especially so for students who are still learning basic concurrency principl
 %We should not expect programmers to add effortful manual annotations to their code,
 %or they will abandon our fancy technique to instead simply run stress tests until their deadline tomorrow evening.
 
+\subsection{Contribution}
+
 This thesis will solve both problems discussed above.
 My thesis statement is as follows:
 
@@ -71,7 +75,7 @@ and I have developed some techniques for automatically choosing the best thread 
 and for automatically instrumenting operating system kernels in an educational setting.
 This thesis will comprise three major contributions:
 
-\begin{itemize}
+\begin{enumerate}
 	\item {\bf Meaningful state spaces (Chapter \ref{chap:quicksand}).}
 		I will present {\em Iterative Deepening}, a new algorithm for navigating the trade-off in how many preemption points to test at once.
 		Iterative Deepening incorporates state space estimation \cite{estimation} to decide on-the-fly whether each state space is worth pursuing, and uses data race analysis \cite{tsan} to find new preemption point candidates based on a program's dynamic behaviour.
@@ -95,7 +99,29 @@ This thesis will comprise three major contributions:
 		This section will discuss the theoretical techniques I used to model the new form of concurrency,
 		present associated correctness proofs of my approach,
 		and show the testing results.
-\end{itemize}
+\end{enumerate}
+
+\subsection{Organization}
 
 The rest of this dissertation is organized as follows.
-% TODO(thesis):
+
+\begin{itemize}
+	\item {\bf Background:} Chapter~\ref{chap:background} will present the requisite background material on concurrent programming, stateless model checking, and the various types of programs targeted by Landslide.
+
+		{\bf Special personal note for the curious reader:} I have taken special care to write this chapter to be approachable by any intermediate programmer familiar with basic C programming concepts.
+		My committee members obviously do not require such treatment, but I hope the rare reader who happens upon this work from outside my circle of research collaborators shall also not find the barrier to entry here too high.
+		Concurrency analysis and verification is often very abstract,
+		requiring strong intuition for certain concepts to understand the next algorithm that builds upon them, and so on;
+		and I'd hate for any reader to get left behind off the bat for not knowing what a mutex is.
+		%Abstract as the field is, it's also quite difficult to make good visual aids, unlike for example in graphics research, but I have done my best.
+		Should you find any of my explanations insufficiently illuminating, no matter how far in the future you come from, please do get in touch.
+	\item {\bf Landslide:} Chapter~\ref{chap:landslide} explains the design and implementation of Landslide,
+		the core of my stateless model checking framework,
+		and all the special features it's been equipped with over the years.
+	\item {\bf Quicksand:} Chapter~\ref{chap:quicksand} presents the Iterative Deepening framework I've developed to more intelligently choose which state spaces to test, corresponding to contribution 1 above.
+	\item {\bf Pebbles:} Chapter~\ref{chap:410} discusses my evaluation of Landslide in CMU's 15-410 class environment using the Pebbles kernel.
+	\item {\bf Pintos:} Chapter~\ref{chap:410} discusses my evaluation of Landslide in the University of Chicago's and Berkeley's OS class environments using the Pintos kernel.
+	\item {\bf Transactional Memory:} Chapter~\ref{chap:tm} presents my extension of Landslide's concurrency model to handle transactional concurrency and the evaluation thereof.
+	\item {\bf Related Work:} Chapter~\ref{chap:relatedwork} honors my ancestors and neighbours in research spirit.
+	\item {\bf Conclusion:} Chapter~\ref{chap:conclusion} hopes to leave you with thoughts on the future of this field.
+\end{itemize}
