@@ -1,6 +1,7 @@
 *.aux
 *.bbl
 *.blg
+*.brf
 *.dvi
 *.fdb_latexmk
 *.glg
@@ -33,4 +34,6 @@ irb/infosheet-uchicago.pdf
 irb/infosheet-berkeley.pdf
 irb/survey.pdf
 irb/landslide-guide-p2.pdf
-
+landslide-lecture/*/lecture.pdf
+landslide-lecture/lecture.pdf
+pdl-retreat/*/pdl-talk.pdf

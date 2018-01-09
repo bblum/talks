@@ -1,0 +1,84 @@
+title: Systematic Testing with Data-Race Preemption Points
+authors: Ben Blum and Garth Gibson
+
+==== frame 1: What's Wrong with Preemption Points? ====
+
+State space size depends on preemption points (PPs) chosen in advance.
+- Too few PPs: poor coverage
+- Too many PPs: completion is infeasible
+- Can't know in advance whether resulting state space fits in CPU budget.
+
+Most related work [1,2] hard-codes a fixed set of PPs.
+- Fixed PPs miss unprotected memory accesses ("data races" [3])
+
+Past Landslide experiments [4] let users turn PPs on/off.
+
+*Goal*: /Automatically/ find the best set of PPs for a given CPU budget.
+*Goal*: Preempt threads during data-race accesses to find new bugs.
+
+==== frame 3: Iterative Deepening ====
+
+*Iterative Deepening* of PPs
+- Explore a minimal state space, and add more PPs until time runs out.
+- Estimations decide whether to explore or defer each test.
+- Completion time is controlled
+  -- (at expense of predicting which PPs can be tested)
+
+[Figure 1: trees.svg]
+
+Advantages:
+- User does not have to configure PP set; needs only supply a time limit.
+  -- Good for use by students and TAs!
+- Tests data races as new PPs, avoiding false positives
+- Theorem: If time allows, testing all data-race PPs = total verification!
+
+Limitations:
+- Repeats redundant work from smaller "subset" state spaces
+- Relies on imperfect estimation [5] to guide search
+
+==== frame 4: Evaluation ====
+
+Experiment 1: Testing OS projects from CMU, Berkeley, U. Chicago
+- 79 "P2" thread libraries; 6 tests each
+- 78 "Pintos" kernels, 3 tests each
+- Compared Landslide to state-of-the-art "control"
+  -- Control 1: ICB [6] on just 1 state space, sync API PPs only
+  -- Control 2: "Preempt Everywhere", on *all* shared memory accesses
+
+[ Figure 2: bugs-poster.svg ]
+[ Figure 3: verifs-poster.svg ]
+
+Experiment 2: Comparing to stand-alone data-race testing
+- Augmenting with Landslide finds 128%-191% as many bugs
+
+[ Figure 4: dr-false-negatives-poster.svg ]
+
+Experiment 3: Giving Landslide to students (2015-2016)
+- 29 groups signed up to use Landslide during P2
+
+[ Table - results ]
+------------------------------------------------------
+                          | Exp. 1 | Control | Exp. 2
+------------------------------------------------------
+total tests run           | 629    | 629     | 248
+timeout/complete (no bug) | 472    | 527     | 158
+nondeterministic bugs     | 157    | 102     | 51
+data race bugs            |  69    | N/A     | 22
+------------------------------------------------------
+
+==== frame 5: Ongoing Work ====
+
+Support for instructional OSes from other schools
+
+Landslide can test Pintos kernels as well as Pebbles
+- *Use Pintos or another teaching OS? Let me know!*
+- I plan to give Landslide to Pintos students soon
+
+==== frame 5: References ====
+
+[1] Jiri Simsa. dBug, SSV 2010.
+[2] Heming Cui et al. PARROT, SOSP 2013.
+[3] Stefan Savage. Eraser, ACM TOCS 1997.
+[4] Ben Blum. Landslide, MS thesis, CMU CS TR 12-118.
+[5] Jiri Simsa, Runtime estimation, CMU PDL TR 12-113.
+[6] Madan Musuvathi et al. CHESS, PLDI 2007.

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/PR-SVG-20010719/DTD/svg10.dtd">
+<svg width="42cm" height="26cm" viewBox="38 18 823 503" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <g>
+    <rect style="fill: #ffffff" x="40" y="20" width="820" height="500"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #ffffff" x="40" y="20" width="820" height="500"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="450" y="273.6">
+      <tspan x="450" y="273.6"></tspan>
+    </text>
+  </g>
+  <text font-size="20.32" style="fill: #800000;text-anchor:start;font-family:monospace;font-style:normal;font-weight:700" x="60" y="80">
+    <tspan x="60" y="80">if (xbegin() ...) {</tspan>
+    <tspan x="60" y="105.4"></tspan>
+    <tspan x="60" y="130.8"></tspan>
+    <tspan x="60" y="156.2">}</tspan>
+  </text>
+  <text font-size="20.32" style="fill: #000000;text-anchor:start;font-family:monospace;font-style:normal;font-weight:700" x="60" y="40">
+    <tspan x="60" y="40">Thread 1</tspan>
+  </text>
+  <text font-size="20.32" style="fill: #004fbf;text-anchor:start;font-family:monospace;font-style:normal;font-weight:700" x="600" y="80">
+    <tspan x="600" y="80">if (xbegin() ...) {</tspan>
+    <tspan x="600" y="105.4"></tspan>
+    <tspan x="600" y="130.8"></tspan>
+    <tspan x="600" y="156.2">}</tspan>
+  </text>
+  <text font-size="20.32" style="fill: #000000;text-anchor:start;font-family:monospace;font-style:normal;font-weight:700" x="600" y="40">
+    <tspan x="600" y="40">Thread 2</tspan>
+  </text>
+  <g>
+    <ellipse style="fill: #bfbfbf" cx="427.067" cy="223.534" rx="27.0673" ry="23.5336"/>
+    <ellipse style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" cx="427.067" cy="223.534" rx="27.0673" ry="23.5336"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="427.067" y="227.134">
+      <tspan x="427.067" y="227.134"></tspan>
+    </text>
+  </g>
+  <g>
+    <ellipse style="fill: #bf0030" cx="347.067" cy="323.534" rx="27.0673" ry="23.5336"/>
+    <ellipse style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" cx="347.067" cy="323.534" rx="27.0673" ry="23.5336"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="347.067" y="327.134">
+      <tspan x="347.067" y="327.134"></tspan>
+    </text>
+  </g>
+  <g>
+    <ellipse style="fill: #007fbf" cx="507.067" cy="323.534" rx="27.0673" ry="23.5336"/>
+    <ellipse style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" cx="507.067" cy="323.534" rx="27.0673" ry="23.5336"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="507.067" y="327.134">
+      <tspan x="507.067" y="327.134"></tspan>
+    </text>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="443.146" y1="243.633" x2="484.906" y2="295.832"/>
+    <polygon style="fill: #000000" points="489.591,301.689 479.44,297.003 484.906,295.832 487.249,290.757 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="489.591,301.689 479.44,297.003 484.906,295.832 487.249,290.757 "/>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="410.988" y1="243.633" x2="369.228" y2="295.832"/>
+    <polygon style="fill: #000000" points="364.543,301.689 366.886,290.757 369.228,295.832 374.695,297.003 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="364.543,301.689 366.886,290.757 369.228,295.832 374.695,297.003 "/>
+  </g>
+  <g>
+    <ellipse style="fill: #bf0030" cx="487.067" cy="443.534" rx="27.0673" ry="23.5336"/>
+    <ellipse style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" cx="487.067" cy="443.534" rx="27.0673" ry="23.5336"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="487.067" y="447.134">
+      <tspan x="487.067" y="447.134"></tspan>
+    </text>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="503.022" y1="347.806" x2="492.713" y2="409.658"/>
+    <polygon style="fill: #000000" points="491.48,417.056 488.192,406.37 492.713,409.658 498.056,408.014 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="491.48,417.056 488.192,406.37 492.713,409.658 498.056,408.014 "/>
+  </g>
+  <g>
+    <ellipse style="fill: #007fbf" cx="307.067" cy="443.534" rx="27.0673" ry="23.5336"/>
+    <ellipse style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" cx="307.067" cy="443.534" rx="27.0673" ry="23.5336"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="307.067" y="447.134">
+      <tspan x="307.067" y="447.134"></tspan>
+    </text>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="339.235" y1="347.03" x2="317.978" y2="410.801"/>
+    <polygon style="fill: #000000" points="315.606,417.916 314.025,406.848 317.978,410.801 323.512,410.011 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="315.606,417.916 314.025,406.848 317.978,410.801 323.512,410.011 "/>
+  </g>
+  <text font-size="20.32" style="fill: #004fbf;text-anchor:start;font-family:monospace;font-style:normal;font-weight:700" x="640" y="80">
+    <tspan x="640" y="80"></tspan>
+    <tspan x="640" y="105.4">count++;</tspan>
+    <tspan x="640" y="130.8">xend();</tspan>
+  </text>
+  <text font-size="20.32" style="fill: #800000;text-anchor:start;font-family:monospace;font-style:normal;font-weight:700" x="100" y="80">
+    <tspan x="100" y="80"></tspan>
+    <tspan x="100" y="105.4">count++;</tspan>
+    <tspan x="100" y="130.8">xend();</tspan>
+  </text>
+</svg>
