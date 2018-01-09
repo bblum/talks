@@ -49,7 +49,7 @@ We say a {\em concurrency bug} occurs when one or more of a program's nondetermi
 Most often, a concurrency novice who programs with shared state will consider the possible interleavings where one thread's access sequence occurs entirely before the other's, but neglect to consider intermediate outcomes in which the threads' access sequences are interleaved.
 %
 Consider the program in Figure \ref{fig:concurrency-bug}: Any output between 2 and 2000 is possible\footnote{
-	Exercise for the reader: Show why 2 is a possible output, but 1 is not!
+	Fun exercise for the reader: Show why 2 is a possible output, but 1 is not!
 },
 but whether this constitutes a bug is a matter of perspective.
 Was the program written to count to 2000, or was it written to compute a randomized distribution?
@@ -192,31 +192,32 @@ Software transactions (STM) \cite{stm-pldi06} can be used on any commodity proce
 Hardware transactions (HTM) \cite{htm-experience, htm-performance} achieve better performance by reusing existing cache coherence logic to detect conflicts, but require explicit support from the CPU, which is not yet widespread.
 Haswell \cite{htm-haswell} is the first x86 architecture to support HTM,
 offering three new instructions: \texttt{xbegin}, \texttt{xend}, and \texttt{xabort}, to begin, commit, and fail a transaction, respectively.
-The example program in Figure~\ref{fig:htm-example} demonstrates how these instructions can be used to synchronize a simple shared access without locking overhead in the common case,
+The example program in Figure~\ref{fig:htm-example} demonstrates how these primitives can be used to synchronize a simple shared access without locking overhead in the common case\footnote{
+	The solution presented here is actually incomplete; stay tuned until Chapter~\ref{chap:tm} for the surprising twist!
+},
 using GCC's compiler intrinsics \cite{htm-gcc}.
 
 \begin{figure}[h]
 	\begin{center}
 		\begin{tabular}{l}
-		\textbf{(All threads)} \\
-		\hline
-		\texttt{if ((status = \_xbegin()) == \_XBEGIN\_STARTED) \{} \\
-		\texttt{~~~~if (bad\_value\_of\_foo(foo)) \{} \\
-		\texttt{~~~~~~~~\_xabort();} \\
-		\texttt{~~~~\} else \{} \\
-		\texttt{~~~~~~~~foo++;} \\
-		\texttt{~~~~~~~~\_xend();} \\
+		\texttt{void count() \{} \\
+		\texttt{~~~~for (int i = 0; i < 1000; i++) \{} \\
+		\texttt{~~~~~~~~if ((status = \_xbegin()) == \_XBEGIN\_STARTED) \{} \\
+		\texttt{~~~~~~~~~~~~x++;} \\
+		\texttt{~~~~~~~~~~~~\_xend();} \\
+		\texttt{~~~~~~~~\} else \{} \\
+		\texttt{~~~~~~~~~~~~mutex\_lock(\&m);} \\
+		\texttt{~~~~~~~~~~~~x++;} \\
+		\texttt{~~~~~~~~~~~~mutex\_unlock(\&m);} \\
+		\texttt{~~~~~~~~\}} \\
 		\texttt{~~~~\}} \\
-		\texttt{\} else if (status != \_XABORT\_EXPLICIT) \{} \\
-		\texttt{~~~~mutex\_lock(\&m);} \\
-		\texttt{~~~~foo++;} \\
-		\texttt{~~~~mutex\_unlock(\&m);} \\
 		\texttt{\}} \\
 		\end{tabular}
 	\end{center}
-	\caption{An example program demonstrating the various HTM primitives.
+	\caption{The example {\tt count} routine from Figure~\ref{fig:mutex}, rewritten to use HTM.
 		If the transaction in the top branch aborts,
-		whether from a conflict or from the programmer's intention,
+		whether from a memory conflict or random system interrupt,
+		%from the programmer's intention,
 		execution will revert to the return of {\tt \_xbegin},
 		{\tt status} will be assigned an error code indicating the abort reason,
 		and control will drop into the {\tt else} branch.
@@ -236,6 +237,8 @@ to highlight the importance of researching advanced testing techniques in antici
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Stateless Model Checking}
+
+\subsection{Overview}
 
 Model checking \cite{verisoft} is a testing technique for systematically exploring the possible thread interleavings of a concurrent program.
 A model checker executes the program repeatedly, each time according to a new thread interleaving, until the state space (or the CPU budget) is exhausted.
@@ -296,11 +299,14 @@ Hence, in a program with $n$ preemption points and $k$ threads available to run 
 Nevertheless, to fully test all of a program's possible behaviours, we must check the executions corresponding to every branch of the tree.
 Addressing the scaling problem in this exponential relation is the central research problem for all model checkers.
 
+\subsection{On State Space Explosion}
+
 {\bf Reduction techniques.}
 Dynamic Partial Order Reduction \cite{dpor} (henceforth, DPOR) is the premier algorithm for mitigating the exponential explosion that arises as program size increases.
 Technically speaking, it identifies equivalent execution sequences according to Mazurkiewicz trace theory \cite{mazurkiewicz},
 and tests at least one execution from each equivalence class.
-Intuitively, if two thread transitions between preemption points do not conflict on any shared resource access, reordering them produces an equivalent interleaving, i.e., the same program behaviour.
+More intuitively, if two thread transitions between preemption points do not conflict on any shared resource access, reordering them produces an equivalent interleaving, i.e., the same program behaviour.
+% TODO: make a better fiugre based on the tree
 Figure~\ref{fig:dpor} shows a part of an execution tree in which the operations by threads 1 and 2 are independent, and hence only one of the subtrees need be tested.
 Over the years, researchers have developed many enhancements to DPOR, such as Optimal DPOR \cite{optimal-dpor}, parallelizable DPOR \cite{parallel-dpor}, SAT-directed model checking \cite{satcheck}, Maximal Causality Reduction \cite{mcr}, and DPOR for relaxed memory architectures \cite{tsopso}.
 
