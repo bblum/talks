@@ -536,9 +536,9 @@
 \begin{frame}{Model Checking Transactional Programs}
 	What does it mean to MC a program?
 	\begin{itemize}
-		\item Capture all sites of nondeterminism as ``branch points'' %in a state space
+		\item Capture all sites of nondeterminism as preemption points
 		\item Control nondeterminism to force each possibility at each point
-		\item (Identify equivalences to prune unnecessary branch points)
+		\item (Identify equivalences to prune unnecessary preemption points)
 	\end{itemize}
 	\pause
 	\linegap
@@ -564,6 +564,7 @@
 		\item Transactional writes, if successful, appear atomically %to other threads
 		\begin{itemize}
 			\item Equivalent to a lock protecting that state
+				% note that also inserting DR PPs within a transaction is not allowed
 		\end{itemize}
 			\pause
 		\item Simultaneous transactions succeed only if no conflicts

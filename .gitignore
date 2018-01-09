@@ -25,3 +25,6 @@
 *.maf
 *.mtc
 *.mtc0
+*.dia~
+
+proposal/talk/proposal.pdf

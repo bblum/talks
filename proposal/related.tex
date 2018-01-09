@@ -90,6 +90,13 @@ although its verification properties are not as strong as Quicksand's.
 
 % TODO: Devote a paragraph to symbolic execution, including mention of e.g. concolic testing. Cite klee, z3, etc.
 
+% Thesis TODO:
+% Pensieve:
+% + reconstructs execution (input?) sequence given a failing trace
+% + partners with "dynamic verification" (what type? SE only, or SMC too?) to determine timing constrinats, etc
+% - vulnerable to complex input requirements, esp. data structures; analogous to LS's weakness to test case design
+% - just like us, the question of identifying what constitutes a bug is open; basically relies on asserts; further vulnerable to error messages which do not uniquely characterise a failure (the more specific the message, the more it can prune its search)
+
 \section{Transactional Memory}
 \label{sec:related-tm}
 
