@@ -17,14 +17,16 @@ and I'd hate for any reader to get left behind off the bat for not knowing what 
 %Abstract as the field is, it's also quite difficult to make good visual aids, unlike for example in graphics research, but I have done my best.
 Should you find any of my explanations insufficiently illuminating, please do get in touch.
 
-\section{Concurrency Bugs}
+\section{Concurrency}
 
 \subsection{The Basics}
 
 Modern software often turns to multithreading to improve performance.
 In a multithreaded program, multiple execution units (or {\em threads}) execute the same or different sections of code simultaneously.
+This can provide speedups up to a factor of the number of threads running in parallel,
+but may also provide surprising execution results.
 
-{\bf Simultaneity.}
+\subsubsection{Simultaneity}
 This simultaneity of threads is achieved either by executing each one on a separate CPU, or by interleaving them nondeterministically (as controlled by clock interrupts) on the same CPU.
 Because clock interrupts can occur at any instruction\footnote{
 	With some exceptions in kernel-level programming, which I discuss later.
@@ -41,19 +43,20 @@ we model multicore concurrency the same way as above,
 deferring these exceptions beyond the scope of this work.
 We refer to an execution trace depicting the global sequence of events as a {\em thread interleaving} or {\em schedule}.
 
-{\bf Shared state.}
+\subsubsection{Shared state}
 When a programming language offers multithreaded parallelism but forbids access to any shared state between threads \cite{rust-language},
 the simultaneity of threads is largely irrelevant to the program's behaviour.
 However, ``thread-unsafe'' languages such as C, C++, Java, and so on remain popular,
 in which threads may access global or heap-allocated variables and data structures with no enforced access discipline.
 The behaviour of such programs is then subject to the manner in which these accesses interleave.
 
-{\bf Identifying bugs.}
+\subsection{Identifying bugs}
+
 Even if a program's behaviour is nondeterministic, that does not necessarily mean it has a bug.
 After all, many programs use random number generation to intentionally generate different outputs.
 We say a {\em concurrency bug} occurs when one or more of a program's nondeterministic behaviours is both {\em unanticipated} and {\em undesired}.
 Most often, a concurrency novice who programs with shared state will consider the possible interleavings where one thread's access sequence occurs entirely before the other's, but neglect to consider intermediate outcomes in which the threads' access sequences are interleaved.
-%
+
 Consider the program in Figure \ref{fig:concurrency-bug}: Any output between 2 and 2000 is possible\footnote{
 	Fun exercise for the reader: Show why 2 is a possible output, but 1 is not!
 },
@@ -244,7 +247,7 @@ to highlight the importance of researching advanced testing techniques in antici
 
 \section{Stateless Model Checking}
 
-\subsection{Overview}
+\subsection{The state space}
 
 Model checking \cite{verisoft} is a testing technique for systematically exploring the possible thread interleavings of a concurrent program.
 A model checker executes the program repeatedly, each time according to a new thread interleaving, until the state space (or the CPU budget) is exhausted.
@@ -277,7 +280,8 @@ In this thesis, I focus on {\em stateless} model checking,
 which instead analyzes the sequence of execution events to avoid a prohibitive memory footprint.
 Henceforth I will abbreviate ``stateless model checking'' simply as ``model checking'' for brevity.
 
-{\bf Static versus dynamic analysis.}
+\subsubsection{Static versus dynamic analysis}
+
 Model checking is a {\em dynamic} program analysis, meaning that it observes the operations and accesses performed by the program as its code is executed.
 In contrast, {\em static} program analyses check certain properties at the source code level.
 Static analyses are ideal for ensuring certain standards of code quality, which often correlates with correctness,
@@ -290,7 +294,8 @@ so each bug report is accompanied by concrete evidence of the violation.
 Assertions, segfaults, use-after-free of heap memory, and deadlock are examples of such failures we check for,
 although a checker may also include arbitrary program-specific predicates.
 
-{\bf Preemption points.}
+\subsubsection{Preemption points}
+
 During execution, a model checker identifies a subset of the program's operations as ``interesting'', i.e.,
 where interrupting the current thread to run a different one is likely to produce different behaviour.
 These so-called {\em preemption points} may be identified by any combination of human intuition and machine analysis.
@@ -305,13 +310,25 @@ Hence, in a program with $n$ preemption points and $k$ threads available to run 
 Nevertheless, to fully test all of a program's possible behaviours, we must check the executions corresponding to every branch of the tree.
 Addressing the scaling problem in this exponential relation is the central research problem for all model checkers.
 
-\subsection{On State Space Explosion}
+\subsection{On the size of state spaces}
 
-{\bf Reduction techniques.}
+At its essence, stateless model checking research is a perpetual struggle to become more and more efficient in order to test and verify bigger and bigger programs.
+But whence this efficiency?
+Techniques for coping with the exponential explosion fall into two categories:
+(1) removing redundant interleavings from the state space when we can prove they are equivalent to some interleaving already tested,
+or {\bf reduction techniques},
+and
+(2) prioritizing interleavings judged as more likely to contain bugs should bugs exist
+in case we are unable to exhaustively test all interleavings after all,
+or {\bf search heuristics}.
+
+\subsubsection{Reduction techniques}
+
 Dynamic Partial Order Reduction \cite{dpor} (henceforth, DPOR) is the premier algorithm for mitigating the exponential explosion that arises as program size increases.
 Technically speaking, it identifies equivalent execution sequences according to Mazurkiewicz trace theory \cite{mazurkiewicz},
 and tests at least one execution from each equivalence class.
 More intuitively, if two thread transitions between preemption points do not conflict on any shared resource access, reordering them produces an equivalent interleaving, i.e., the same program behaviour.
+
 % TODO: make a better fiugre based on the tree
 Figure~\ref{fig:dpor} shows a part of an execution tree in which the operations by threads 1 and 2 are independent, and hence only one of the subtrees need be tested.
 Over the years, researchers have developed many enhancements to DPOR, such as Optimal DPOR \cite{optimal-dpor}, parallelizable DPOR \cite{parallel-dpor}, SAT-directed model checking \cite{satcheck}, Maximal Causality Reduction \cite{mcr}, and DPOR for relaxed memory architectures \cite{tsopso}.
@@ -324,7 +341,8 @@ Over the years, researchers have developed many enhancements to DPOR, such as Op
 	\label{fig:dpor}
 \end{figure}
 
-{\bf Search heuristics.}
+\subsubsection{Search heuristics}
+
 However, even though DPOR can prune an exponential number of redundant interleavings, the state space size is still exponential in the number of {\em dependent} (conflicting) interleavings.
 Developers will always want to test larger and larger programs, so no matter the quality of our reduction algorithm,
 we must accept that some tests will be too large to be fully tested in a reasonable time.
@@ -332,11 +350,13 @@ Hence, recent model checking research has turned to heuristic techniques for ach
 optimizing the search to try to uncover bugs faster (should they exist)
 at the expense of possibly missing other bugs,
 or missing the chance to complete a full verification.
+
 Iterative Context Bounding \cite{chess-icb} is a popular such technique which heuristically reorders the search to prioritize interleavings with fewer preemptions first.
 This heuristic is based on the insight that most bugs require few preemptions to uncover, so interleavings with a number of preemptions that exceeds a certain bound will be de-prioritized, only tested until after all the fewer-preemption interleavings are completed.
 Preemption sealing \cite{sealing} is another heuristic strategy which restricts the scope of the search by limiting the model checker to use only preemption points arising from certain functions in the source code.
 This allows developers to vastly reduce state space size by identifying which program modules are already trusted,
 although it requires some human intuition to correctly mark those boundaries.
+Iterative Deepening, presented in Chapter~\ref{chap:quicksand}, is another such search heuristic.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -387,6 +407,8 @@ while using Limited Happens-Before on (b) will produce a false alarm on B1/B2.}}
 \label{fig:hb-example}
 \end{figure}
 
+\subsection{Definition}
+
 Data race analysis \cite{eraser} identifies pairs of unsynchronized memory accesses between threads.
 Two instructions are said to race if:
 \begin{enumerate}
@@ -404,12 +426,20 @@ so although our example refers to numbered source lines for ease of explanation,
 in practice we are actually classifying the individual memory access events corresponding to those lines during execution.
 Actually, each {\tt x++} statement likely compiles to two separate load or store instructions, so each of those two instructions from each of the two marked source lines pairwise will race (except for the two loads, which are both reads).
 
-{\bf Variants of Happens-Before.}
-        Most prior work focuses on {\em Happens-Before} \cite{lamport-clocks} as the order relation between accesses.
+\subsection{Happens-Before}
+
+Condition 4 of the above definition expresses the notion that the access pair can be executed concurrently,
+regardless of whether the hardware actually carries out the operations in the same physical instant.
+Several approaches exist to formally representing this condition.
+
+\begin{itemize}
+	\item Most prior work focuses on {\em Happens-Before} \cite{lamport-clocks} as the order relation between accesses.
 \cite{predictive-dr} and \cite{hybriddatarace} identify a problem with this approach:
 it cannot identify access pairs separated by an unrelated lock operation which could race in an alternate interleaving,
 as shown in the example program in Figure~\ref{fig:hb-example}(a).
 We call such unreported access pairs {\em false negatives}.
+
+\item
 \cite{hybriddatarace} introduces the {\em Limited Happens-Before} relation,
 which will report such potential races
 by considering only blocking operations like {\tt cond\_wait} to enforce the order.
@@ -418,17 +448,21 @@ in which the access pair ceases to exist in the alternate interleaving.
 Limited Happens-Before will report all potential races, avoiding false negatives \cite{tsan},
 but at the cost of necessarily reporting some such {\em false positives}.
 
-%Finally, the {\em Causally-Precedes} relation \cite{predictive-dr} %strikes a middle ground,
-%extends Happens-Before to additionally report a subset of potential races while soundly avoiding false positives.
-%It tracks conflicting accesses in intervening
-%critical sections to determine whether lock events are unrelated to a potential race.
-%Causally-Precedes will identify the potential race in Figure~\ref{fig:hb-example}(a), as the two critical sections do not conflict,
-%although it can still miss true potential races in other cases.
+\item
+In recent work, the {\em Causally-Precedes} relation \cite{predictive-dr} %strikes a middle ground,
+extends Happens-Before to additionally report a subset of potential races while soundly avoiding false positives.
+It tracks conflicting accesses in intervening
+critical sections to determine whether lock events are unrelated to a potential race.
+Causally-Precedes will identify the potential race in Figure~\ref{fig:hb-example}(a), as the two critical sections do not conflict,
+although it can still miss true potential races in other cases.
+\end{itemize}
 
-In Chapter~\ref{chap:quicksand}, we use the Limited Happens-Before relation for our analysis.
-The justification for this is that, while stand-alone data-race analyses must avoid inundating the user with false alarms \cite{racerx},
-my work incorporates data-race analysis in an internal feedback loop, and reports only directly observed failures to the user.
-Hence, I accept some overhead from false positives for the sake of more thorough testing.
+Landslide implements both Happens-Before (henceforth referred to as {\em Pure Happens-Before} for clarity) and Limited Happens-Before.
+Chapter~\ref{chap:quicksand} includes a comparison of the two approaches for the purpose of finding new preemption points for model checking.
+%, we use the Limited Happens-Before relation for our analysis.
+%The justification for this is that, while stand-alone data-race analyses must avoid inundating the user with false alarms \cite{racerx},
+%my work incorporates data-race analysis in an internal feedback loop, and reports only directly observed failures to the user.
+%Hence, I accept some overhead from false positives for the sake of more thorough testing.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
