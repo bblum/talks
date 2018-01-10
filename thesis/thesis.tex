@@ -24,7 +24,6 @@
 % makefiles.
 
 % some useful packages
-\usepackage[charter]{mathdesign}
 \usepackage{fullpage}
 \usepackage{graphicx}
 \usepackage{amsmath}
@@ -33,6 +32,23 @@
 %pdfborder=0 0 0,  %removes outlines around hyper links in online display
 ]{hyperref}
 \usepackage{subfigure}
+\usepackage{xspace}
+
+%% custom fonts
+
+\usepackage{fontspec}
+\usepackage{xeCJK}
+
+\setmainfont{XCharter}
+%\setmainfont{Utopia}[
+%	Path = ./fonts/,
+%	UprightFont = UtopiaStd-Regular.otf,
+%	BoldFont = UtopiaStd-Semibold.otf,
+%	ItalicFont = UtopiaStd-Italic.otf,
+%	BoldItalicFont = UtopiaStd-SemiboldIt.otf
+%	]
+
+\setCJKmainfont{HeiseiMinStd-W5}[Path = ./fonts/]
 
 % Approximately 1" margins, more space on binding side
 %\usepackage[letterpaper,twoside,vscale=.8,hscale=.75,nomarginpar]{geometry}
@@ -157,14 +173,16 @@ I thank my dog, Louie.
 \newcommand\llitem{\item[\llama{1.2em}]}
 
 \newcommand{\inspirationallinebreak}{\vspace{0.25em}}
+\newcommand{\inspirationalhyphen}{-\hspace{-0.15em}-\xspace}
 \newcommand\inspirationalquote[2]{\begin{flushright}
 	\vspace{-1em}
-	\fontfamily{pzc}\selectfont
+	{
+	\fontspec[Path=./fonts/]{AlexaStd}
 	{\em #1}
 	\inspirationallinebreak
 
-	---{#2}
-	\fontfamily{mdbch}\selectfont
+	-\hspace{-0.15em}-\hspace{-0.15em}-{#2}
+	}
 	\vspace{2em}
 \end{flushright}}
 
@@ -182,50 +200,30 @@ it fills you with determination.}{Undertale (paraphrased)}
 
 \chapter{Related Work}
 \inspirationalquote{
-\begin{tabular}{p{0.6\textwidth}}
+\begin{tabular}{p{0.58\textwidth}}
 To test if your paper makes a genuine contribution to its discipline,
-see if you can afford a generous tone in the ``Related Work'' section.
+see if you can afford a generous tone in the "Related Work" section.
 \end{tabular}}
 {Conor McBride, via Twitter}
 
 
 \chapter{Conclusion}
 \inspirationalquote{
-%	``If you are a god, Zeus, as the stories claim, then why did you create evolution?
-%	Why did you make \\ a world that can only grow through cruelty and pain?''
-%	\inspirationallinebreak
-%
-%For a moment--surely this meant death was near--she thought she heard him answer:
-%``My child, I \\
-%was shaped by the gods that came before me, as you were shaped by me.
-%The choice I had was be- \\
-%tween creation and oblivion, life and death.
-%And I chose life, because any life is better than no life, \\
-%because as long as there is life, there is hope--if not for us, then for some generation to come.''
-%	\inspirationallinebreak
-%
-%``Then how are you a god, if you can offer so little?'' she whispered, feeling death creep closer.
-%	\inspirationallinebreak
-%
-%``I am a god because I take upon myself the burden of creation,'' the statue replied.
-%	\inspirationallinebreak
-%
-%``Then we are all gods,'' Alexandra said, and pushed the button.}
-	\begin{tabular}{p{0.875\textwidth}}
-	``If you are a god, Zeus, as the stories claim, then why did you create evolution?
-	Why did you make a world that can only grow through cruelty and pain?''
+	\begin{tabular}{p{0.84\textwidth}}
+	"If you are a god, Zeus, as the stories claim, then why did you create evolution?
+	Why did you make a world that can only grow through cruelty and pain?"
 	\\
-	For a moment--surely this meant death was near--she thought she heard him answer:
-	``My child, I was shaped by the gods that came before me, as you were shaped by me.
+	For a moment\inspirationalhyphen{}surely this meant death was near\inspirationalhyphen{}she thought she heard him answer:
+	"My child, I was shaped by the gods that came before me, as you were shaped by me.
 	The choice I had was between creation and oblivion, life and death.
 	And I chose life, because any life is better than no life,
-	because as long as there is life, there is hope--if not for us, then for some generation to come.''
+	because as long as there is life, there is hope\inspirationalhyphen{}if not for us, then for some generation to come."
 	\\
-	``Then how are you a god, if you can offer so little?'' she whispered, feeling death creep closer.
+	"Then how are you a god, if you can offer so little?" she whispered, feeling death creep closer.
 	\\
-	``I am a god because I take upon myself the burden of creation,'' the statue replied.
+	"I am a god because I take upon myself the burden of creation," the statue replied.
 	\\
-	``Then we are all gods,'' Alexandra said, and pushed the button.
+	"Then we are all gods," Alexandra said, and pushed the button.
 	\end{tabular}}
 {The Talos Principle: Road to Gehenna}
 
