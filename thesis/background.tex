@@ -8,8 +8,14 @@ the one who reaches the summit is not our superior, for they stand on our should
 {The Shepherd v82.6.0174, The Talos Principle}
 
 This chapter will introduce the necessary background material on concurrency, stateless model checking, data-race analysis, and the relevant undergraduate operating systems classes.
-It is intended to be approachable by any intermediate programmer
-already familiar with C programming.
+
+{\bf Special personal note for the curious reader:} I have taken special care to write this chapter to be approachable by any intermediate programmer familiar with basic C programming concepts.
+My committee members obviously do not require such treatment, but I hope the rare reader from outside this relatively narrow field shall also not find the barrier to entry here too high.
+Concurrency analysis and verification is often very abstract,
+requiring strong intuition for certain concepts to understand the next algorithm that builds upon them, and so on;
+and I'd hate for any reader to get left behind off the bat for not knowing what a mutex is.
+%Abstract as the field is, it's also quite difficult to make good visual aids, unlike for example in graphics research, but I have done my best.
+Should you find any of my explanations insufficiently illuminating, please do get in touch.
 
 \section{Concurrency Bugs}
 

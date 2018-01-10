@@ -107,21 +107,22 @@ The rest of this dissertation is organized as follows.
 
 \begin{itemize}
 	\item {\bf Background:} Chapter~\ref{chap:background} will present the requisite background material on concurrent programming, stateless model checking, and the various types of programs targeted by Landslide.
-
-		{\bf Special personal note for the curious reader:} I have taken special care to write this chapter to be approachable by any intermediate programmer familiar with basic C programming concepts.
-		My committee members obviously do not require such treatment, but I hope the rare reader who happens upon this work from outside my circle of research collaborators shall also not find the barrier to entry here too high.
-		Concurrency analysis and verification is often very abstract,
-		requiring strong intuition for certain concepts to understand the next algorithm that builds upon them, and so on;
-		and I'd hate for any reader to get left behind off the bat for not knowing what a mutex is.
-		%Abstract as the field is, it's also quite difficult to make good visual aids, unlike for example in graphics research, but I have done my best.
-		Should you find any of my explanations insufficiently illuminating, no matter how far in the future you come from, please do get in touch.
-	\item {\bf Landslide:} Chapter~\ref{chap:landslide} explains the design and implementation of Landslide,
-		the core of my stateless model checking framework,
+	\item {\bf Landslide:} Chapter~\ref{chap:landslide} explains the design and implementation of Landslide
+		%the core of my stateless model checking framework,
 		and all the special features it's been equipped with over the years.
-	\item {\bf Quicksand:} Chapter~\ref{chap:quicksand} presents the Iterative Deepening framework I've developed to more intelligently choose which state spaces to test, corresponding to contribution 1 above.
-	\item {\bf Pebbles:} Chapter~\ref{chap:410} discusses my evaluation of Landslide in CMU's 15-410 class environment using the Pebbles kernel.
-	\item {\bf Pintos:} Chapter~\ref{chap:410} discusses my evaluation of Landslide in the University of Chicago's and Berkeley's OS class environments using the Pintos kernel.
-	\item {\bf Transactional Memory:} Chapter~\ref{chap:tm} presents my extension of Landslide's concurrency model to handle transactional concurrency and the evaluation thereof.
-	\item {\bf Related Work:} Chapter~\ref{chap:relatedwork} honors my ancestors and neighbours in research spirit.
-	\item {\bf Conclusion:} Chapter~\ref{chap:conclusion} hopes to leave you with thoughts on the future of this field.
+	\item {\bf Quicksand:} Chapter~\ref{chap:quicksand} presents the Iterative Deepening framework which more intelligently chooses which state spaces to test, corresponding to contribution 1 above.
+	\item {\bf Pebbles:} Chapter~\ref{chap:410} discusses my evaluation of Landslide in CMU's 15-410 class environment using the Pebbles kernel, corresponding to contribution 2 above.
+	\item {\bf Pintos:} Chapter~\ref{chap:410} discusses my evaluation of Landslide in the University of Chicago's and Berkeley's OS class environments using the Pintos kernel, corresponding to contribution 2 above.
+	\item {\bf Transactional Memory:} Chapter~\ref{chap:tm} presents my extension of Landslide's concurrency model to handle transactional concurrency and the evaluation thereof, corresponding to contribution 3 above.
+	\item {\bf Related Work:} Chapter~\ref{chap:relatedwork} honors my neighbours and ancestors in research spirit.
+	\item {\bf Conclusion:} Chapter~\ref{chap:conclusion} provides some thoughts on the future of the field.
 \end{itemize}
+
+\newpage
+\thispagestyle{empty}
+\begin{center}
+\begin{tabular}{c}
+\vspace{12em} \\
+\includegraphics[width=0.55\textwidth]{how-i-learned.png}
+\end{tabular}
+\end{center}
