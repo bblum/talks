@@ -2,5 +2,49 @@
 \inspirationalquote{Somewhere is the promise of an uncharted trail, with 700 branching limbs and 700 ways to fail.}
 {ThouShaltNot, "Cardinal Directions"}
 
-% list of features todo
-% todo.. write this todo list
+Landslide is a model checker implemented as a plug-in module for x86 full-system simulators.
+The program to be tested runs in a simulated environment,
+and Landslide uses its access to the simulator's internal state to inspect and manipulate the memory and thread scheduling of the program as it executes.
+As of this thesis's writing, Landslide supports the use of two possible simulators:
+
+\begin{itemize}
+	\item {\bf Simics} \cite{simics}, a proprietary simulator licensed commercially by Wind River, used at CMU in 15-410 to run Pebbles thread libraries and kernels, and
+	\item {\bf Bochs} \cite{bochs}, an open-source (LGPL) simulator used at the University of Chicago, Berkeley, and other schools to run Pintos kernels.
+\end{itemize}
+
+% TODO: update this linkerino (repository name)
+% TODO: add some backup linkeroos
+The Bochs port of Landslide is likewise open-source and available at \url{https://github.com/bblum/bochs}.
+% TODO: refresh
+The HEAD commit at the time of writing is 8984021.
+
+This chapter will discuss Landslide's outer and inner workings for both aspiring users and aspiring developers in all gory detail. Strap in.
+
+\section{User interface}
+
+asdfadsf
+
+\section{Architecture}
+
+\subsection{Scheduler}
+\subsection{Memory analysis}
+\subsection{Machine state manipulation}
+\subsection{State space traversal}
+% time travel, explore, arbiter
+\subsection{Debugging output}
+% symtable stuff goes here
+% stack tracing goes here
+% foundabug goes here
+\subsection{Pebbles-specific features}
+\subsection{Pintos-specific features}
+\subsection{Handy scripts}
+
+\section{Algorithms of note}
+
+\subsection{Kernel annotations}
+\subsection{Bug identification}
+\subsection{Data race analysis}
+\subsection{Preemption point identification}
+\subsection{State space estimation}
+\subsection{Dynamic Partial Order Reduction}
+\subsection{Heuristic loop, deadlock, and synchronization detection}
