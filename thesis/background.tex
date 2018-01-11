@@ -427,6 +427,7 @@ in practice we are actually classifying the individual memory access events corr
 Actually, each {\tt x++} statement likely compiles to two separate load or store instructions, so each of those two instructions from each of the two marked source lines pairwise will race (except for the two loads, which are both reads).
 
 \subsection{Happens-Before}
+\label{sec:background-hb}
 
 Condition 4 of the above definition expresses the notion that the access pair can be executed concurrently,
 regardless of whether the hardware actually carries out the operations in the same physical instant.

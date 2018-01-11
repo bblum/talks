@@ -17,12 +17,107 @@ As of this thesis's writing, Landslide supports the use of two possible simulato
 The Bochs port of Landslide is likewise open-source and available at \url{https://github.com/bblum/bochs}.
 % TODO: refresh
 The HEAD commit at the time of writing is 8984021.
+The Simics port is available upon request.
 
 This chapter will discuss Landslide's outer and inner workings for both aspiring users and aspiring developers in all gory detail. Strap in.
 
 \section{User interface}
 
-asdfadsf
+This section describes the features of Landslide the average student user should expect to interact with.
+% TODO: make more specific section reference
+Separate user guides also exist, described in Chapter~\ref{chap:410}.
+
+\subsection{Setup}
+
+Two setup scripts are provided, one for each supported kernel architecture: {\tt p2-setup.sh} and {\tt pintos-setup.sh}.
+The user should supply the directory containing their project implementation.
+The latter script also supports arguments specifying which of the Pintos projects to target.
+For example:
+\begin{itemize}
+	\item {\tt ./p2-setup.sh /path/to/my/p2}
+	\item {\tt ./pintos-setup.sh /path/to/my/threads} (2nd argument defaults to ``{\tt threads}'')
+	\item {\tt ./pintos-setup.sh /path/to/my/userprog userprog}
+\end{itemize}
+
+These scripts accomplish the following setup tasks (among other trivialities):
+\begin{itemize}
+	\item Copy the user's code into {\tt pebsim/p2-basecode/} or {\tt pebsim/pintos/},
+		which contain a pre-annotated Pebbles reference kernel binary or pre-annotated Pintos basecode, respectively.
+	\item Build the code in its new location.
+	\item Run the instrumentation script on the resulting binary to let Landslide know where all the important functions are
+		(see \sect{\ref{sec:landslide-glue}}).
+\end{itemize}
+
+\subsection{Running Landslide through Quicksand}
+
+The preferred method of invoking Landslide is through Quicksand, the Iterative Deepening wrapper program which has all of Chapter~\ref{chap:quicksand} to itself.
+% TODO: add quicksand symlink
+This is done via the {\tt ./landslide} script in the top-level directory, which:
+\begin{itemize}
+	\item Checks if the user needs to run {\tt *-setup.sh} again, in case of their source code being more recently updated than the existing annotated build (a common mistake),
+	\item Passes its arguments through to {\tt id/landslide-id}, the Quicksand binary,
+		and
+	\item (If during the student user study,) compresses the resulting log files,
+		creates a snapshot tarball of them and the current version of the user's code,
+		and sends it to me for nefarious research purposes.
+\end{itemize}
+
+\subsubsection{Command-line argments}
+
+The following command line arguments are recommended for the average user.
+
+\begin{itemize}
+	\item {\tt -p PROGRAM}: the name of the test case to invoke
+	\item {\tt -t TIME}: wall-clock time limit, in seconds; or suffixed with one of {\tt ydhms} for years, days, hours, minutes, or seconds respectively (default 1h)
+	\item {\tt -c CPUS}: maximum number of Landslide instances to run in parallel (defaults to half the number of system CPUs)
+	\item {\tt -i INTERVAL}: interval of time between printing progress reports (default 10s)
+	\item {\tt -d TRACEDIR}: directory for resulting bug traces (default current directory)
+	\item {\tt -v}: verbose mode (issues output for each executed interleaving by each instance of landslide, makes progress reports more detailed, etc)
+	\item {\tt -l}: leave Landslide log files from completed state spaces even when no bug was found (deleted automatically by default)
+	\item {\tt -h}: print help text and exit immediately
+\end{itemize}
+
+The following ``secret'' arguments also exist, primarily for my own use in running experiments or debugging.
+
+\begin{itemize}
+	\item {\tt -C}: enable ``control experiment'' mode, i.e., run only 1 instance of Landslide, with all (non-data-race) preemption points enabled in advance
+		% TODO: put a section reference here
+	\item {\tt -I}: enable Iterative Context Bounding (requires {\tt -C}, although future work may relax this restriction);
+		this generally causes bugs to be found faster should they exist, but degrades completion time
+	\item {\tt -0}: enable Preempt-Everywhere mode (see \sect{\ref{sec:quicksand-eval}}, requires {\tt -C})
+	\item {\tt -H}: use Limited Happens-Before for data-race analysis (see \sect{\ref{sec:background-hb}})
+	\item {\tt -V}: use vector-clock-based Pure Happens-Before for data-race analysis (see \sect{\ref{sec:background-hb}})
+	\item {\tt -X}: support transactional memory (see Chapter~\ref{chap:tm})
+		% TODO: make a more specific section reference
+	\item {\tt -A}: support multiple abort codes during transaction failure (see Chapter~\ref{chap:tm});
+		required for testing programs which behave differently under different abort circumstances,
+		but impacts the state space size
+	\item {\tt -P}: support Pintos architecture (enabled automatically when {\tt pintos-setup.sh} is run)
+	\item {\tt -4}: support Pebbles architecture (enabled automatically when {\tt p2-setup.sh} is run)
+	\item {\tt -e ETAFACTOR}: configure heuristic state space ETA deferring factor (described in detail in {\tt id/option.c}
+	\item {\tt -E ETATHRESH}: configure heuristic threshold of state space progress for judging ETA stability (described in detail in {\tt id/option.c}
+\end{itemize}
+
+Quicksand will automatically generate configuration files and invoke Landslide according to the process described in the next section.
+
+\subsection{Running Landslide directly}
+
+Rather than letting Quicksand juggle multiple instances of Landslide,
+the user may run a single instance directly, optionally configuring the preemption points by hand.
+This is recommended only for enthusiastic users who are annotating their own kernel.
+
+The script {\tt pebsim/landslide} invokes Landslide thus.
+It should be run from within the {\tt pebsim/} directory.
+When supplied no arguments, it reads configuration options from {\tt pebsim/config.landslide}
+(a bash script expected to define certain variables as described in \sect{\ref{sec:landslide-glue}}).
+The user may optionally specify a file containing additional config directives
+% , such as custom preemption points,
+as an argument.
+Such supported options are as follows.
+
+% TODO
+
+\subsection{Bug reports}
 
 \section{Architecture}
 
@@ -38,6 +133,7 @@ asdfadsf
 \subsection{Pebbles-specific features}
 \subsection{Pintos-specific features}
 \subsection{Handy scripts}
+\label{sec:landslide-glue}
 
 \section{Algorithms of note}
 
