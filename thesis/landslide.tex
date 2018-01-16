@@ -54,7 +54,7 @@ The preferred method of invoking Landslide is through Quicksand, the Iterative D
 % TODO: add quicksand symlink
 This is done via the {\tt ./landslide} script in the top-level directory, which:
 \begin{itemize}
-	\item Checks if the user needs to run {\tt *-setup.sh} again, in case of their source code being more recently updated than the existing annotated build (a common mistake),
+	\item Checks if the user needs to run {\tt *-setup.sh} again, in case their source code was more recently updated than the existing annotated build (a common mistake),
 	\item Passes its arguments through to {\tt id/landslide-id}, the Quicksand binary,
 		and
 	\item (If during the student user study,) compresses the resulting log files,
@@ -94,8 +94,8 @@ The following ``secret'' arguments also exist, primarily for my own use in runni
 		but impacts the state space size
 	\item {\tt -P}: support Pintos architecture (enabled automatically when {\tt pintos-setup.sh} is run)
 	\item {\tt -4}: support Pebbles architecture (enabled automatically when {\tt p2-setup.sh} is run)
-	\item {\tt -e ETAFACTOR}: configure heuristic state space ETA deferring factor (described in detail in {\tt id/option.c}
-	\item {\tt -E ETATHRESH}: configure heuristic threshold of state space progress for judging ETA stability (described in detail in {\tt id/option.c}
+	\item {\tt -e ETAFACTOR}: configure heuristic state space ETA deferring factor (described in detail in {\tt id/option.c})
+	\item {\tt -E ETATHRESH}: configure heuristic threshold of state space progress for judging ETA stability (described in detail in {\tt id/option.c})
 \end{itemize}
 
 Quicksand will automatically generate configuration files and invoke Landslide according to the process described in the next section.
@@ -112,10 +112,53 @@ When supplied no arguments, it reads configuration options from {\tt pebsim/conf
 (a bash script expected to define certain variables as described in \sect{\ref{sec:landslide-glue}}).
 The user may optionally specify a file containing additional config directives
 % , such as custom preemption points,
-as an argument.
+as an argument\footnote{
+Quicksand actually supplies two such files as arguments: one ``static'' config file and one ''dynamic'' config file.
+The former contains options which require recompiling Landslide (e.g., whether or not to use ICB is controlled by an {\tt \#ifdef} in Landslide's code),
+while the latter contains options which Landslide interprets at runtime (e.g., which preemption points to use).
+The static options do not change between Landslide instances in a single Quicksand run,
+avoiding long Landslide start-up times.
+	}.
 Such supported options are as follows.
 
-% TODO
+\subsubsection{Dynamic configuration options}
+First, the following options may be changed without triggering a recompile of Landslide.
+
+\begin{itemize}
+	\item {\tt within\_function} % TODO
+	\item {\tt within\_user\_function} - as above but finds the function in the userspace test program rather than the kernel code.
+	\item {\tt without\_function} % TODO
+	\item {\tt without\_user\_function} - difference to one above same as stated two above.
+	\item {\tt data\_race ADDR TID LAST\_CALL CURRENT\_SYSCALL} - specifies a data-race preemption point.
+		\begin{itemize}
+			\item {\tt ADDR} shall be the code address (in hex) of the racing address,
+			{\em before} the execution of which a preemption will be issued.
+			\item {\tt TID} indicates a thread ID required to be running for this data race.
+				To specify data race PPs across all threads at once, set {\tt FILTER\_DRS\_BY\_TID=0} (see next section).
+			\item {\tt LAST\_CALL} indicates a code address required to be the site of the last {\tt call} instruction executed
+				(similar to specifying a stack trace, but using a full stack trace here degrades performance too much),
+				or 0 to not use this feature.
+				From personal experience I found this option rather useless and recommend always supplying 0.
+				% TODO: fix this section ref
+				For further discussion see \sect{\ref{sec:quicksand-pps}}.
+			\item {\tt CURRENT\_SYSCALL} indicates the system call number if a user-space data race comes from within a kernel system call which accesses user memory (Pebbles only).
+				Usually 0 (i.e., not in kernel code) but {\tt deschedule}'s system call number is common as well.
+		\end{itemize}
+	\item {\tt input\_pipe FILENAME} - FIFO file used for receiving messages from Quicksand (e.g. to suspend or resume execution).
+		Requires {\tt id\_magic} option to be set (next section below).
+		The odds a human user will find success using this option by hand are infinitesimal.
+	\item {\tt output\_pipe FILENAME} - as above but for sending messages.
+\end{itemize}
+
+\subsubsection{Static configuration options}
+
+Next, configuration options which affect an {\tt \#ifdef} in Landslide and will trigger a recompile upon changing.
+Unless otherwise specified these are boolean flags (1 or 0) and the example value shown indicates the default used if unspecified.
+
+\begin{itemize}
+	\item {\tt FILTER\_DRS\_BY\_TID=1} - configures whether to use the {\tt TID} parameter of {\tt data\_race} described above.
+	\item % TODO moar
+\end{itemize}
 
 \subsection{Bug reports}
 
