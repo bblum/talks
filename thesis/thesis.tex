@@ -27,6 +27,7 @@
 \usepackage{fullpage}
 \usepackage{graphicx}
 \usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage[numbers,sort]{natbib}
 \usepackage[backref,pageanchor=true,plainpages=false, pdfpagelabels, bookmarks,bookmarksnumbered,
 %pdfborder=0 0 0,  %removes outlines around hyper links in online display
@@ -67,7 +68,9 @@
 \title{ %% {\it \huge Thesis Proposal}\\
 {\bf Practical Concurrency Testing} \\
 \normalsize \vspace{1em}
-{\em or, How I Learned to Stop Worrying and Love the Exponential Explosion}}
+\begin{tabular}{c}
+{\em or, How I Learned to Stop Worrying and Love the Exponential Explosion}
+\end{tabular}}
 \author{Ben Blum}
 \date{Decembruary 2018}
 \Year{2018}
@@ -126,6 +129,8 @@ and evaluate several real-world transactional benchmarks to show that stateless 
 % csd bgames
 % undergrad frenz
 % new frenz
+% 410 ta community
+% emarhavil
 %
 % \\
 
@@ -191,8 +196,17 @@ I thank my dog, Louie.
 \input{landslide}
 
 \chapter{Quicksand}
+%\inspirationalquote{
+%\begin{tabular}{p{0.55\textwidth}}
+%There are awful, horrible things in this world; I know that now.
+%But there are a lot of things worth protecting, too.
+%\end{tabular}}
+%{Kaname Madoka, Mahou Shoujo Madoka{\raisebox{0.1em}{$\scriptstyle \bigstar$}}Magica}
+\inspirationalquote{Always, somewhere, someone is fighting for you.
+As long as you remember her, you are not alone.}
+{Mahou Shoujo Madoka{\raisebox{0.1em}{$\scriptstyle \bigstar$}}Magica}
 
-\chapter{410} % rename
+\chapter{Education}
 \inspirationalquote{Knowing the students might one day
 %find a way to
 fix their concurrency bugs...
@@ -204,7 +218,23 @@ it fills you with determination.}{Undertale (paraphrased)}
 To test if your paper makes a genuine contribution to its discipline,
 see if you can afford a generous tone in the "Related Work" section.
 \end{tabular}}
-{Conor McBride, via Twitter}
+{Conor McBride}
+
+\chapter{Future Work}
+% TODO: ask for permission for this one
+% https://twitter.com/Poem4your_sprog/status/878747092788838400
+\inspirationalquote{
+\begin{tabular}{p{0.54\textwidth}}
+A little bit of being kind,
+a tiny open door; \\
+A nicer slice of peace of mind
+begets a little more. \\
+It won't correct the world tonight,
+nor change tomorrow too; \\
+But maybe if you do it right,
+you'll find it changes *you*.
+\end{tabular}}
+{Sam "Poem\_for\_your\_sprog" Garland}
 
 
 \chapter{Conclusion}
@@ -225,7 +255,7 @@ see if you can afford a generous tone in the "Related Work" section.
 	\\
 	"Then we are all gods," Alexandra said, and pushed the button.
 	\end{tabular}}
-{The Talos Principle: Road to Gehenna}
+{Galatea, The Talos Principle}
 
 asdfasdasdf
 %\appendix
@@ -238,7 +268,7 @@ asdfasdasdf
 % By default \bibsection is \chapter*, but we really want this to show
 % up in the table of contents and pdf bookmarks.
 \renewcommand{\bibsection}{\chapter{\bibname}
-\inspirationalquote{Only a doctor of philosophy, Darth.}{Robert Marsh, via Twitter}
+\inspirationalquote{Only a doctor of philosophy, Darth.}{Robert Marsh}
 }
 %\renewcommand{\bibpreamble}{This text goes between the ``Bibliography''
 %  header and the actual list of references}

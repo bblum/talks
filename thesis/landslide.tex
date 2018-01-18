@@ -64,7 +64,7 @@ This is done via the {\tt ./landslide} script in the top-level directory, which:
 
 \subsubsection{Command-line argments}
 
-The following command line arguments are recommended for the average user.
+The following command line arguments are recommended for the common user.
 
 \begin{itemize}
 	\item {\tt -p PROGRAM}: the name of the test case to invoke
@@ -86,7 +86,9 @@ The following ``secret'' arguments also exist, primarily for my own use in runni
 		this generally causes bugs to be found faster should they exist, but degrades completion time
 	\item {\tt -0}: enable Preempt-Everywhere mode (see \sect{\ref{sec:quicksand-eval}}, requires {\tt -C})
 	\item {\tt -H}: use Limited Happens-Before for data-race analysis (see \sect{\ref{sec:background-hb}})
+		(default for Pebbles kernelspace mode)
 	\item {\tt -V}: use vector-clock-based Pure Happens-Before for data-race analysis (see \sect{\ref{sec:background-hb}})
+		(default for P2 userspace and Pintos modes)
 	\item {\tt -X}: support transactional memory (see Chapter~\ref{chap:tm})
 		% TODO: make a more specific section reference
 	\item {\tt -A}: support multiple abort codes during transaction failure (see Chapter~\ref{chap:tm});
