@@ -325,12 +325,35 @@ or {\bf search heuristics}.
 \subsubsection{Reduction techniques}
 
 Dynamic Partial Order Reduction \cite{dpor} (henceforth, DPOR) is the premier algorithm for mitigating the exponential explosion that arises as program size increases.
-Technically speaking, it identifies equivalent execution sequences according to Mazurkiewicz trace theory \cite{mazurkiewicz},
-and tests at least one execution from each equivalence class.
-More intuitively, if two thread transitions between preemption points do not conflict on any shared resource access, reordering them produces an equivalent interleaving, i.e., the same program behaviour.
 
-% TODO: make a better fiugre based on the tree
-Figure~\ref{fig:dpor} shows a part of an execution tree in which the operations by threads 1 and 2 are independent, and hence only one of the subtrees need be tested.
+{\bf Abstractly speaking:}
+Let {\em independent transitions} denote a pair of executions of two threads, each from one preemption point to the next,
+in which there are no read/write or write/write access pairs to the same memory between threads.
+DPOR reduces a state space, originally exponentially-sized in the number of thread transitions,
+to an equivalent one
+(i.e., testing which suffices to check all program behaviours that could arise in the original state space)
+exponentially-sized in the number of {\em dependent} thread transitions.
+%More intuitively, if two thread transitions between preemption points do not conflict on any shared resource access,
+%reordering them produces an equivalent interleaving, i.e., the same program behaviour.
+More technically, it identifies equivalent execution sequences according to Mazurkiewicz trace theory \cite{mazurkiewicz},
+and tests at least one execution from each equivalence class.
+
+{\bf Concretely speaking:}
+Figure~\ref{fig:dpor} highlights part of an execution tree where the execution ordering of threads 1 and 2 are swapped,
+and each interleaving has a respective ``subtree'' (i.e., possible interleavings given the fixed execution prefix leading up to it).
+The specifics of execution before the thread 1/thread 2 sequence,
+other possible threads to run instead of threads 1 or 2,
+and what logic the program executes in those subtrees
+are all presumably arbitrary.
+In these two highlighted branches,
+if the transitions of threads 1 and 2 are {\em independent},
+%if the operations performed by threads 1 and 2 are independent
+%(i.e., no write/read or write/write access pairs to the same memory),
+DPOR deduces that the subsequent program states (indicated by the red arrow) are equivalent.
+Thence, only one of the two interleavings and its respective subtree needs to be executed
+in order to check all possible program states.
+I explain how DPOR implements such a deduction in more detail in \sect{\ref{sec:landslide-dpor}}.
+
 Over the years, researchers have developed many enhancements to DPOR, such as Optimal DPOR \cite{optimal-dpor}, parallelizable DPOR \cite{parallel-dpor}, SAT-directed model checking \cite{satcheck}, Maximal Causality Reduction \cite{mcr}, and DPOR for relaxed memory architectures \cite{tsopso}.
 
 \begin{figure}[t]

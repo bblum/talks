@@ -49,6 +49,7 @@ These scripts accomplish the following setup tasks (among other trivialities):
 \end{itemize}
 
 \subsection{Running Landslide through Quicksand}
+\label{sec:landslide-quicksand-options}
 
 The preferred method of invoking Landslide is through Quicksand, the Iterative Deepening wrapper program which has all of Chapter~\ref{chap:quicksand} to itself.
 % TODO: add quicksand symlink
@@ -84,14 +85,15 @@ The following ``secret'' arguments also exist, primarily for my own use in runni
 		% TODO: put a section reference here
 	\item {\tt -I}: enable Iterative Context Bounding (requires {\tt -C}, although future work may relax this restriction);
 		this generally causes bugs to be found faster should they exist, but degrades completion time
-	\item {\tt -0}: enable Preempt-Everywhere mode (see \sect{\ref{sec:quicksand-eval}}, requires {\tt -C})
-	\item {\tt -H}: use Limited Happens-Before for data-race analysis (see \sect{\ref{sec:background-hb}})
+		(\sect{\ref{sec:landslide-icb}})
+	\item {\tt -0}: enable Preempt-Everywhere mode (\sect{\ref{sec:quicksand-eval}}, requires {\tt -C})
+	\item {\tt -H}: use Limited Happens-Before for data-race analysis (\sect{\ref{sec:background-hb}})
 		(default for Pebbles kernelspace mode)
-	\item {\tt -V}: use vector-clock-based Pure Happens-Before for data-race analysis (see \sect{\ref{sec:background-hb}})
+	\item {\tt -V}: use vector-clock-based Pure Happens-Before for data-race analysis (\sect{\ref{sec:background-hb}})
 		(default for P2 userspace and Pintos modes)
-	\item {\tt -X}: support transactional memory (see Chapter~\ref{chap:tm})
+	\item {\tt -X}: support transactional memory (Chapter~\ref{chap:tm})
 		% TODO: make a more specific section reference
-	\item {\tt -A}: support multiple abort codes during transaction failure (see Chapter~\ref{chap:tm});
+	\item {\tt -A}: support multiple abort codes during transaction failure (Chapter~\ref{chap:tm});
 		required for testing programs which behave differently under different abort circumstances,
 		but impacts the state space size
 	\item {\tt -P}: support Pintos architecture (enabled automatically when {\tt pintos-setup.sh} is run)
@@ -125,12 +127,13 @@ Such supported options are as follows.
 
 \subsubsection{Dynamic configuration options}
 First, the following options may be changed without triggering a recompile of Landslide.
+They are implemented as bash functions defined in {\tt pebsim/build.sh}.
 
 \begin{itemize}
-	\item {\tt within\_function} % TODO
-	\item {\tt within\_user\_function} - as above but finds the function in the userspace test program rather than the kernel code.
-	\item {\tt without\_function} % TODO
-	\item {\tt without\_user\_function} - difference to one above same as stated two above.
+	\item {\tt within\_function FUNC} - adds {\tt FUNC} to a whitelist of functions required to appear in the current stack trace before identifying a preemption point (see \sect{\ref{sec:landslide-pps}})
+	\item {\tt without\_function FUNC} - as above, but a blacklist instead of a whitelist
+	\item {\tt within\_user\_function FUNC} - as two above but finds the function in the userspace test program rather than the kernel code.
+	\item {\tt without\_user\_function FUNC} - difference to two above same as stated one above.
 	\item {\tt data\_race ADDR TID LAST\_CALL CURRENT\_SYSCALL} - specifies a data-race preemption point.
 		\begin{itemize}
 			\item {\tt ADDR} shall be the code address (in hex) of the racing address,
@@ -148,7 +151,7 @@ First, the following options may be changed without triggering a recompile of La
 		\end{itemize}
 	\item {\tt input\_pipe FILENAME} - FIFO file used for receiving messages from Quicksand (e.g. to suspend or resume execution).
 		Requires {\tt id\_magic} option to be set (next section below).
-		The odds a human user will find success using this option by hand are infinitesimal.
+		The odds that a human user will find spiritual enlightenment through using this option by hand are infinitesimal.
 	\item {\tt output\_pipe FILENAME} - as above but for sending messages.
 \end{itemize}
 
@@ -158,7 +161,15 @@ Next, configuration options which affect an {\tt \#ifdef} in Landslide and will 
 Unless otherwise specified these are boolean flags (1 or 0) and the example value shown indicates the default used if unspecified.
 
 \begin{itemize}
+	\item {\tt TEST\_CASE} - configure the name of the test program to run (mandatory; no default)
+	\item {\tt VERBOSE=0} - enable more verbose output
 	\item {\tt FILTER\_DRS\_BY\_TID=1} - configures whether to use the {\tt TID} parameter of {\tt data\_race} described above.
+	\item {\tt ICB=0} - enable Iterative Context Bounding (\sect{\ref{sec:landslide-icb}});
+		corresponds to {\tt -I} in \sect{\ref{sec:landslide-quicksand-options}}.
+	\item {\tt PREEMPT\_EVERYWHERE=0} - enable Preempt-Everywhere mode (\sect{\ref{sec:quicksand-eval}});
+		corresponds to {\tt -0} in \sect{\ref{sec:landslide-quicksand-options}}.
+	\item {\tt PURE\_HAPPENS\_BEFORE=1} - select Pure Happens-Before (1) or Limited Happens-Before (2) (\sect{\ref{sec:background-hb}});
+		corresponds to {\tt -V}/{\tt -H} in \sect{\ref{sec:landslide-quicksand-options}}.
 	\item % TODO moar
 \end{itemize}
 
@@ -171,7 +182,7 @@ Unless otherwise specified these are boolean flags (1 or 0) and the example valu
 \subsection{Machine state manipulation}
 \subsection{State space traversal}
 % time travel, explore, arbiter
-\subsection{Debugging output}
+\subsection{Bug-finding output}
 % symtable stuff goes here
 % stack tracing goes here
 % foundabug goes here
@@ -186,6 +197,11 @@ Unless otherwise specified these are boolean flags (1 or 0) and the example valu
 \subsection{Bug identification}
 \subsection{Data race analysis}
 \subsection{Preemption point identification}
+\label{sec:landslide-pps}
+% TODO: talk about how w/in func and w/out func are processed
 \subsection{State space estimation}
 \subsection{Dynamic Partial Order Reduction}
+\label{sec:landslide-dpor}
+\subsection{Iterative Context Bounding}
+\label{sec:landslide-icb}
 \subsection{Heuristic loop, deadlock, and synchronization detection}
