@@ -98,6 +98,7 @@ The following ``secret'' arguments also exist, primarily for my own use in runni
 		but impacts the state space size
 	\item {\tt -P}: support Pintos architecture (enabled automatically when {\tt pintos-setup.sh} is run)
 	\item {\tt -4}: support Pebbles architecture (enabled automatically when {\tt p2-setup.sh} is run)
+		% TODO: put a section reference
 	\item {\tt -e ETAFACTOR}: configure heuristic state space ETA deferring factor (described in detail in {\tt id/option.c})
 	\item {\tt -E ETATHRESH}: configure heuristic threshold of state space progress for judging ETA stability (described in detail in {\tt id/option.c})
 \end{itemize}
@@ -116,13 +117,13 @@ When supplied no arguments, it reads configuration options from {\tt pebsim/conf
 (a bash script expected to define certain variables as described in \sect{\ref{sec:landslide-glue}}).
 The user may optionally specify a file containing additional config directives
 % , such as custom preemption points,
-as an argument\footnote{
+as an argument.\footnote{
 Quicksand actually supplies two such files as arguments: one ``static'' config file and one ''dynamic'' config file.
 The former contains options which require recompiling Landslide (e.g., whether or not to use ICB is controlled by an {\tt \#ifdef} in Landslide's code),
 while the latter contains options which Landslide interprets at runtime (e.g., which preemption points to use).
 The static options do not change between Landslide instances in a single Quicksand run,
 avoiding long Landslide start-up times.
-	}.
+}
 Such supported options are as follows.
 
 \subsubsection{Dynamic configuration options}
@@ -158,20 +159,100 @@ They are implemented as bash functions defined in {\tt pebsim/build.sh}.
 \subsubsection{Static configuration options}
 
 Next, configuration options which affect an {\tt \#ifdef} in Landslide and will trigger a recompile upon changing.
+%These span a wide variety of features, sorted below in subsections by roughly how interesting I think they are.
 Unless otherwise specified these are boolean flags (1 or 0) and the example value shown indicates the default used if unspecified.
 
+{\bf Search algorithm options}
 \begin{itemize}
-	\item {\tt TEST\_CASE} - configure the name of the test program to run (mandatory; no default)
-	\item {\tt VERBOSE=0} - enable more verbose output
-	\item {\tt FILTER\_DRS\_BY\_TID=1} - configures whether to use the {\tt TID} parameter of {\tt data\_race} described above.
 	\item {\tt ICB=0} - enable Iterative Context Bounding (\sect{\ref{sec:landslide-icb}});
 		corresponds to {\tt -I} in \sect{\ref{sec:landslide-quicksand-options}}.
 	\item {\tt PREEMPT\_EVERYWHERE=0} - enable Preempt-Everywhere mode (\sect{\ref{sec:quicksand-eval}});
 		corresponds to {\tt -0} in \sect{\ref{sec:landslide-quicksand-options}}.
+	\item {\tt EXPLORE\_BACKWARDS=0} - configure whether, at each newly encountered preemption point,
+		to allow the current thread to run first then later upon backtracking to preempt (0),
+		or to issue preemptions first and then try continuing the current thread later (1).
+		0 tends to produce shorter preemption traces while 1 tends to find bugs faster (\cite{landslide} \S{}8.7.1).
+		Not compatible with ICB.
+\end{itemize}
+
+{\bf Memory analysis options}
+\begin{itemize}
 	\item {\tt PURE\_HAPPENS\_BEFORE=1} - select Pure Happens-Before (1) or Limited Happens-Before (2) (\sect{\ref{sec:background-hb}});
 		corresponds to {\tt -V}/{\tt -H} in \sect{\ref{sec:landslide-quicksand-options}}.
-	\item % TODO moar
+	\item {\tt FILTER\_DRS\_BY\_TID=1} - configures whether to use the {\tt TID} parameter of {\tt data\_race} described above.
+	\item {\tt FILTER\_DRS\_BY\_LAST\_CALL=0} - configures whether to use the {\tt LAST\_CALL} parameter of {\tt data\_race} described above.
+	\item {\tt ALLOW\_LOCK\_HANDOFF=0} - configures lockset tracking to permit or disallow a lock taken by one thread to be released by another thread.%
+		\footnote{If enabled, accesses performed by the second thread before unlocking will not be considered protected by that lock,
+			as Landslide cannot infer what prior event abstractly represented the lock's ownership changing,
+			leading to spurious data race reports.
+			This could be solved in future work with a new annotation.}
+	\item {\tt ALLOW\_REENTRANT\_MALLOC\_FREE=0} - allow two threads to be in {\tt malloc}, {\tt free}, or so on simultaneously without declaring it a bug.%
+		\footnote{Used in Pintos, where those functions lock/unlock the heap mutex themselves rather than relying on a wrapper function to do so before invoking them.}
 \end{itemize}
+
+{\bf Interface options}
+\begin{itemize}
+	\item {\tt TEST\_CASE} - configure the name of the test program to run (mandatory; no default)
+	\item {\tt VERBOSE=0} - enable more verbose output
+	\item {\tt BREAK\_ON\_BUG=0} - configure whether to exit the simulator or drop into a debug prompt when a bug is found. Simics only and not compatible with Quicksand.
+	\item {\tt DONT\_EXPLORE=0} - if enabled, Landslide will not perform stateless model checking but rather will execute the default thread interleaving then exit (useful for manual inspection of preemption points).
+	\item {\tt PRINT\_DATA\_RACES=0} - as it says on the tin (for stand-alone use; will message them to Quicksand regardless).
+	\item {\tt TABULAR\_TRACE=1} - configure whether to emit bug reports to the console (0) or to an HTML trace file (1)
+\end{itemize}
+
+\subsection{Kernel annotations}
+
+The educational experiments in this thesis focus on projects which students implement on top of provided kernel basecode which Landslide already ``understands''.
+Such understanding is conferred via the annotations described in this section.
+For P2 and Pintos students I supply these annotations behind the scenes,
+but a CMU 15-410 student who wishes to use Landslide on their kernel project shall need to brave forth hereupon.
+
+\subsubsection{config.landslide annotations}
+
+The following annotations are specified in {\tt pebsim/config.landslide} akin to the static configuration options described above.
+These specify the names of kernel functions, global variables, default values, and so on
+which are required to accurately track the kernel's scheduler state:
+{\tt CONTEXT\_SWITCH},
+{\tt EXEC},
+{\tt FIRST\_TID},
+{\tt IDLE\_TID},
+{\tt INIT\_TID},
+{\tt MEMSET},
+{\tt PAGE\_FAULT\_WRAPPER},
+{\tt PREEMPT\_ENABLE\_FLAG},
+{\tt PREEMPT\_ENABLE\_VALUE},
+{\tt READLINE},
+{\tt SFREE},
+{\tt SHELL\_TID},
+{\tt SPURIOUS\_INTERRUPT\_WRAPPER},
+{\tt THREAD\_KILLED\_ARG\_VAL},
+{\tt THREAD\_KILLED\_FUNC},
+{\tt TIMER\_WRAPPER},
+{\tt VM\_USER\_COPY},
+{\tt VM\_USER\_COPY\_TAIL},
+{\tt YIELD}.
+
+The following less self-explanatory secret options also exist:
+\begin{itemize}
+	\item {\tt PINTOS\_KERNEL=0} - configure Landslide for Pebbles (0) or Pintos (1) kernel architecture. Normally set automatically by the setup scripts.
+	\item {\tt TESTING\_USERSPACE=1} - configure Landslide whether to test (i.e., focus preemption points, memory analysis, etc. on) the userspace or kernelspace code.
+	\item {\tt CURRENT\_THREAD\_LIVES\_ON\_RQ=0} - Landslide infers the list of runnable threads from the {\tt on\_rq()} and {\tt off\_rq()} annotations (described below).
+		Some kernels\footnote{most, actually} remove the current thread from their runqueue,
+		such that the abstract set of all runnable threads is actually the runqueue plus the current thread rather than just the runqueue.
+		Other kernels\footnote{the author's own student kernel from long ago}
+		leave the current thread on the runqueue,
+		removing it only when it's descheduling and should actually be considered blocked.
+		Set this option to 0 to support the former kernel type or 1 to support the latter.
+	\item {\tt PATHOS\_SYSCALL\_IRET\_DISTANCE} - indicate how much stack space is used by the reference kernel's system call wrappers (used for cross-kernel-to-userspace stack traces)
+	\item {\tt PDE\_PTE\_POISON} - indicate a poison value used in the page tables to indicate absent VM mappings
+	\item {\tt BUG\_ON\_THREADS\_WEDGED=1} - set to 0 to disable deadlock detection but instead let the kernel keep receiving system interrupts when all threads appear blocked.%
+		\footnote{once used in the bad old days; now recommended for debugging use only}
+	\item {\tt TIMER\_WRAPPER\_DISPATCH} - used to manually indicate a label before the end of the timer interrupt assembly wrapper, in case the {\tt iret} instruction couldn't be found automatically (see {\tt pebsim/definegen.sh}).
+\end{itemize}
+
+\subsubsection{In-kernel code annotations}
+
+% TODO tell_landslide
 
 \subsection{Bug reports}
 
