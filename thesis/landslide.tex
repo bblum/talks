@@ -188,11 +188,17 @@ Unless otherwise specified these are boolean flags (1 or 0) and the example valu
 			This could be solved in future work with a new annotation.}
 	\item {\tt ALLOW\_REENTRANT\_MALLOC\_FREE=0} - allow two threads to be in {\tt malloc}, {\tt free}, or so on simultaneously without declaring it a bug.%
 		\footnote{Used in Pintos, where those functions lock/unlock the heap mutex themselves rather than relying on a wrapper function to do so before invoking them.}
+	\item {\tt TESTING\_MUTEXES=0} - configure ``mutex testing'' mode (1),
+		in which the data race analysis will not consider a mutex's implementation to be protected by the mutex itself.
+		In other words, the mutex's internal memory accesses will be flagged as data races,
+		thereby enabling Landslide to verify the mutual exclusion property.
+		Normally (0), Landslide assumes mutual exclusion is provided in order to efficiently find data races in the rest of the code.
+		Quicksand will automatically set this option for P2s when {\tt -t mutex\_test} is specified.
 \end{itemize}
 
 {\bf Interface options}
 \begin{itemize}
-	\item {\tt TEST\_CASE} - configure the name of the test program to run (mandatory; no default)
+	\item {\tt TEST\_CASE=NAME} - configure the name of the test program to run (mandatory; no default)
 	\item {\tt VERBOSE=0} - enable more verbose output
 	\item {\tt BREAK\_ON\_BUG=0} - configure whether to exit the simulator or drop into a debug prompt when a bug is found. Simics only and not compatible with Quicksand.
 	\item {\tt DONT\_EXPLORE=0} - if enabled, Landslide will not perform stateless model checking but rather will execute the default thread interleaving then exit (useful for manual inspection of preemption points).
@@ -200,6 +206,7 @@ Unless otherwise specified these are boolean flags (1 or 0) and the example valu
 	\item {\tt TABULAR\_TRACE=1} - configure whether to emit bug reports to the console (0) or to an HTML trace file (1)
 \end{itemize}
 
+% TODO: mb this should be a section, not a subsection, bc there are too many subsubsubsections herein?
 \subsection{Kernel annotations}
 
 The educational experiments in this thesis focus on projects which students implement on top of provided kernel basecode which Landslide already ``understands''.
@@ -219,40 +226,126 @@ which are required to accurately track the kernel's scheduler state:
 {\tt INIT\_TID},
 {\tt MEMSET},
 {\tt PAGE\_FAULT\_WRAPPER},
-{\tt PREEMPT\_ENABLE\_FLAG},
-{\tt PREEMPT\_ENABLE\_VALUE},
 {\tt READLINE},
 {\tt SFREE},
 {\tt SHELL\_TID},
 {\tt SPURIOUS\_INTERRUPT\_WRAPPER},
+\\
 {\tt THREAD\_KILLED\_ARG\_VAL},
 {\tt THREAD\_KILLED\_FUNC},
 {\tt TIMER\_WRAPPER},
 {\tt VM\_USER\_COPY},
+\\
 {\tt VM\_USER\_COPY\_TAIL},
 {\tt YIELD}.
 
-The following less self-explanatory secret options also exist:
+Following are the non-self-explanatory options.
 \begin{itemize}
 	\item {\tt PINTOS\_KERNEL=0} - configure Landslide for Pebbles (0) or Pintos (1) kernel architecture. Normally set automatically by the setup scripts.
 	\item {\tt TESTING\_USERSPACE=1} - configure Landslide whether to test (i.e., focus preemption points, memory analysis, etc. on) the userspace or kernelspace code.
-	\item {\tt CURRENT\_THREAD\_LIVES\_ON\_RQ=0} - Landslide infers the list of runnable threads from the {\tt on\_rq()} and {\tt off\_rq()} annotations (described below).
+	\item {\tt CURRENT\_THREAD\_LIVES\_ON\_RQ=0} - Landslide infers the list of runnable threads from the {\tt tell\_landslide\_on\_rq()} and {\tt off\_rq()} annotations (described below).
 		Some kernels\footnote{most, actually} remove the current thread from their runqueue,
 		such that the abstract set of all runnable threads is actually the runqueue plus the current thread rather than just the runqueue.
 		Other kernels\footnote{the author's own student kernel from long ago}
 		leave the current thread on the runqueue,
 		removing it only when it's descheduling and should actually be considered blocked.
-		Set this option to 0 to support the former kernel type or 1 to support the latter.
-	\item {\tt PATHOS\_SYSCALL\_IRET\_DISTANCE} - indicate how much stack space is used by the reference kernel's system call wrappers (used for cross-kernel-to-userspace stack traces)
-	\item {\tt PDE\_PTE\_POISON} - indicate a poison value used in the page tables to indicate absent VM mappings
+		Set this option to 0 to support the former kernel type or 1 to support the latter.%
+		\footnote{This option replaces the deprecated {\tt kern\_current\_extra\_runnable()} annotation from {\tt student.c} described in \cite{landslide} \S{}6.2.3.}
+	\item {\tt PREEMPT\_ENABLE\_FLAG=NAME} - name of a global variable which the kernel uses to toggle scheduler preemptability, for kernels which may disable preemption without disabling interrupts.
+		For kernels wherein preemptability is corresponds directly by interrupts, leave this option unspecified.
+	\item {\tt PREEMPT\_ENABLE\_VALUE=VAL} - value of the above variable when preemption is enabled
+		(usually 0; note that many kernels use a nesting depth counter where any positive value corresponds to disabled).%
+		\footnote{These two options replace the deprecated {\tt kern\_ready\_for\_timer\_interrupt()} annotation from {\tt student.c} described in \cite{landslide} \${}6.2.3.}
+	\item {\tt PATHOS\_SYSCALL\_IRET\_DISTANCE=VALUE} - indicate how much stack space is used by the reference kernel's system call wrappers.
+		Used for cross-kernel-to-userspace stack traces;
+		if unset, stack traces from kernel space will end at the system call boundary.
+	\item {\tt PDE\_PTE\_POISON=VALUE} - indicate a poison value used in the page tables to indicate absent VM mappings to check for as well as checking the present bit (if unspecified, will check present bit only)
 	\item {\tt BUG\_ON\_THREADS\_WEDGED=1} - set to 0 to disable deadlock detection but instead let the kernel keep receiving system interrupts when all threads appear blocked.%
 		\footnote{once used in the bad old days; now recommended for debugging use only}
-	\item {\tt TIMER\_WRAPPER\_DISPATCH} - used to manually indicate a label before the end of the timer interrupt assembly wrapper, in case the {\tt iret} instruction couldn't be found automatically (see {\tt pebsim/definegen.sh}).
+	\item {\tt TIMER\_WRAPPER\_DISPATCH=NAME} - used to manually indicate a label before the end of the timer interrupt assembly wrapper, in case the {\tt iret} instruction couldn't be found automatically (see {\tt pebsim/definegen.sh}).
+	\item {\tt starting\_threads TID STARTS\_ON\_RQ} - specifies a system thread which already exists at the time {\tt tell\_landslide\_sched\_init\_done()} (see below) is called; {\tt TID} is the thread's ID and {\tt STARTS\_ON\_RQ} is 0 or 1 to indicate whether or not it starts on the system runqueue.
+		Typical threads to use this for are init and idle.
+	\item {\tt ignore\_sym NAME SIZE} - specifies a global variable {\tt NAME} of a given {\tt SIZE} in bytes whose memory accesses should be ignored for the purposes of DPOR and data race analysis.
+		Typical symbols to use this for are the console or heap mutex.
+	\item {\tt sched\_func NAME} - specifies a function whose memory accesses should all be ignored for the purposes of DPOR and data race analysis.
+		Typical functions to use this for are the timer handler and context switcher.
+	\item {\tt disk\_io\_func NAME} - specifies a function which may block a thread waiting for disk I/O (or other external interrupt) rather than blocking on another thread.
+		If any threads are blocked in a disk I/O function during an apparent deadlock,
+		Landslide will allow the kernel to idle until the simulator delivers the appropriate interrupt,
+		rather than declaring a bug.
+	\item {\tt ignore\_dr\_function NAME USERSPACE} - specifies a function whose memory access should not be counted as data races (but still be considered memory conflicts for DPOR).
+		{\tt USERSPACE} should be 0 or 1 to denote a kernel-space or user-space function respectively.
 \end{itemize}
 
 \subsubsection{In-kernel code annotations}
 
-% TODO tell_landslide
+The following annotations are provided as C functions
+which a kernel author shall include in their source code and call at appropriate times.
+The functions' actual implementations are empty;
+rather they serve as labels whose positions the annotation scripts extract
+along with the other various annotations from the previous section.
+Some of these are mandatory for Landslide to function properly,
+while others serve to improve or otherwise manipulate the state space.
+
+{\bf Mandatory annotations}
+
+\begin{itemize}
+\item {\tt tell\_landslide\_thread\_switch(int new\_tid)} - to be called during context switch, indicating the newly-running thread
+	(must be called with interrupts and/or scheduler preemption disabled)
+\item {\tt tell\_landslide\_sched\_init\_done()} - to be called after scheduler initialization,
+	indicating the point after which Landslide should begin analysis.
+	Any threads already initialized before this point (init, idle, etc) should be specified with {\tt starting\_threads} (previous subsection).
+\item {\tt tell\_landslide\_forking()} - to be called whenever a new thread is created,
+	``immediately'' before the next {\tt thread\_switch()} or {\tt on\_rq()} call for that new thread (i.e., this call sets a flag which the next instance of either of the latter will check to see if the indicated thread is new).
+	Most Pebbles kernels will call this twice; once in {\tt fork} and once in {\tt thread\_fork}.
+\item {\tt tell\_landslide\_vanishing()} - to be called whenever a thread ceases to exist,
+	``immediately'' before the next {\tt thread\_switch()} or {\tt off\_rq()} call for the exiting thread
+	(works similarly to above).
+\item {\tt tell\_landslide\_sleeping()} - to be called whenever a thread is about to {\tt sleep()} waiting for timer interrupts,
+	``immediately'' before the next {\tt thread\_switch()} or {\tt off\_rq()} call for the sleeping thread
+	(similar to the above).
+	Landslide considers sleeping threads to be runnable as normal (they will just take more timer interrupts to arrive at),
+	so this call is necessary to distinguish from the case when a thread is descheduled on a non-timer event.
+\item {\tt tell\_landslide\_thread\_on\_rq(int tid)} - to be called when a thread is added to the runqueue
+	(must be called with interrupts and/or scheduler preemption disabled).
+\item {\tt tell\_landslide\_thread\_off\_rq(int tid)} - dual of the above.
+	If {\tt CURRENT\_THREAD\_\allowbreak{}LIVES\_ON\_RQ=0} (described above), this should be invoked (among other times) during context switch with the TID of the thread about to start running.
+	Alternatively (thanks sully), even for a kernel which takes the current thread off its literal runqueue,
+	the annotator may use these two calls to indicate the ``abstract runqueue'' which includes the current thread as well,
+	and set {\tt CURRENT\_THREAD\_LIVES\_ON\_RQ=1}.
+\end{itemize}
+
+{\bf Optional annotations}
+
+\begin{itemize}
+\item {\tt tell\_landslide\_preempt()} - specifies a preemption point.
+	Subject to the constraints of {\tt within\_function}/{\tt without\_function};
+	hence may be ignored if used with Quicksand.
+\item {\tt tell\_landslide\_dump\_stack()} - instructs Landslide to print a stack trace whenever this point is reached (for debugging purposes).
+\end{itemize}
+
+{\bf Optional but strongly recommended annotations}
+
+The following annotations enable Landslide to track locksets for data race analysis.
+If not provided, it will be as if Landslide assumes no guarantees about mutual exclusion or happens-before,
+and hence will identify all memory conflicts as data races.
+
+\begin{itemize}
+\item {\tt tell\_landslide\_mutex\_locking(void *mutex\_addr)} - indicates the beginning of the lock routine for
+	whatever synchronization API Landslide should treat as the primitive for data race detection.
+	In Pintos this is the {\tt sema\_*()} function family; in Pebbles they may be called anything.
+\item {\tt tell\_landslide\_mutex\_blocking(int owner\_tid)} - called ``immediately'' before a thread becomes blocked on the mutex.
+	Definition of ``immediately'' similar to the {\tt forking()} and friends annotations above.
+	{\tt owner\_tid} allows Landslide to efficiently unblock/re-block threads when the mutex holder changes
+	(rather than relying on heuristic yield-loop detection);
+	see {\tt kern\_mutex\_block\_others()} and {\tt deadlocked()} in {\tt schedule.c} for implementation details.
+\item {\tt tell\_landslide\_mutex\_locking\_done(void *mutex\_addr)} - indicates the end of the lock routine.
+\item {\tt tell\_landslide\_mutex\_trylocking(void *mutex\_addr)} - indicates the beginning of the trylock routine (if present).
+\item {\tt tell\_landslide\_mutex\_trylocking\_done(void *mutex\_addr, int succeeded)} -
+	indicates when a thread is finished trylocking, even if it failed to get the lock (indicated by {\tt succeeded}).
+\item {\tt tell\_landslide\_mutex\_unlocking(void *mutex\_addr)} - indicates the beginning of the unlock routine.
+\item {\tt tell\_landslide\_mutex\_unlocking\_done()} - indicates the end of the unlock routine.
+\end{itemize}
 
 \subsection{Bug reports}
 
