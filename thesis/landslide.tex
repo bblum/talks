@@ -19,7 +19,9 @@ The Bochs port of Landslide is likewise open-source and available at \url{https:
 The HEAD commit at the time of writing is 8984021.
 The Simics port is available upon request.
 
-This chapter will discuss Landslide's outer and inner workings for both aspiring users and aspiring developers in all gory detail. Strap in.
+This chapter will discuss Landslide's outer and inner workings in all their gory detail.
+It is intended for the aspiring developer or the ambitious user
+and hence is written in the style of documentation rather than as a report of research results.
 
 \section{User interface}
 
@@ -106,6 +108,7 @@ The following ``secret'' arguments also exist, primarily for my own use in runni
 Quicksand will automatically generate configuration files and invoke Landslide according to the process described in the next section.
 
 \subsection{Running Landslide directly}
+\label{sec:landslide-directly}
 
 Rather than letting Quicksand juggle multiple instances of Landslide,
 the user may run a single instance directly, optionally configuring the preemption points by hand.
@@ -162,7 +165,8 @@ Next, configuration options which affect an {\tt \#ifdef} in Landslide and will 
 %These span a wide variety of features, sorted below in subsections by roughly how interesting I think they are.
 Unless otherwise specified these are boolean flags (1 or 0) and the example value shown indicates the default used if unspecified.
 
-{\bf Search algorithm options}
+\begin{itemize}
+\item {\bf Search algorithm options}
 \begin{itemize}
 	\item {\tt ICB=0} - enable Iterative Context Bounding (\sect{\ref{sec:landslide-icb}});
 		corresponds to {\tt -I} in \sect{\ref{sec:landslide-quicksand-options}}.
@@ -175,7 +179,7 @@ Unless otherwise specified these are boolean flags (1 or 0) and the example valu
 		Not compatible with ICB.
 \end{itemize}
 
-{\bf Memory analysis options}
+\item {\bf Memory analysis options}
 \begin{itemize}
 	\item {\tt PURE\_HAPPENS\_BEFORE=1} - select Pure Happens-Before (1) or Limited Happens-Before (2) (\sect{\ref{sec:background-hb}});
 		corresponds to {\tt -V}/{\tt -H} in \sect{\ref{sec:landslide-quicksand-options}}.
@@ -196,7 +200,7 @@ Unless otherwise specified these are boolean flags (1 or 0) and the example valu
 		Quicksand will automatically set this option for P2s when {\tt -t mutex\_test} is specified.
 \end{itemize}
 
-{\bf Interface options}
+\item {\bf Interface options}
 \begin{itemize}
 	\item {\tt TEST\_CASE=NAME} - configure the name of the test program to run (mandatory; no default)
 	\item {\tt VERBOSE=0} - enable more verbose output
@@ -205,18 +209,21 @@ Unless otherwise specified these are boolean flags (1 or 0) and the example valu
 	\item {\tt PRINT\_DATA\_RACES=0} - as it says on the tin (for stand-alone use; will message them to Quicksand regardless).
 	\item {\tt TABULAR\_TRACE=1} - configure whether to emit bug reports to the console (0) or to an HTML trace file (1)
 \end{itemize}
+\end{itemize}
 
-% TODO: mb this should be a section, not a subsection, bc there are too many subsubsubsections herein?
-\subsection{Kernel annotations}
+\subsection{Bug reports}
+
+\section{Kernel annotations}
 
 The educational experiments in this thesis focus on projects which students implement on top of provided kernel basecode which Landslide already ``understands''.
 Such understanding is conferred via the annotations described in this section.
 For P2 and Pintos students I supply these annotations behind the scenes,
 but a CMU 15-410 student who wishes to use Landslide on their kernel project shall need to brave forth hereupon.
 
-\subsubsection{config.landslide annotations}
+\subsection{config.landslide annotations}
 
-The following annotations are specified in {\tt pebsim/config.landslide} akin to the static configuration options described above.
+The following annotations are specified in {\tt pebsim/config.landslide} akin to the static configuration options
+described in \sect{\ref{sec:landslide-directly}}..
 These specify the names of kernel functions, global variables, default values, and so on
 which are required to accurately track the kernel's scheduler state:
 {\tt CONTEXT\_SWITCH},
@@ -239,7 +246,7 @@ which are required to accurately track the kernel's scheduler state:
 {\tt VM\_USER\_COPY\_TAIL},
 {\tt YIELD}.
 
-Following are the non-self-explanatory options.
+Following are the less self-explanatory options.
 \begin{itemize}
 	\item {\tt PINTOS\_KERNEL=0} - configure Landslide for Pebbles (0) or Pintos (1) kernel architecture. Normally set automatically by the setup scripts.
 	\item {\tt TESTING\_USERSPACE=1} - configure Landslide whether to test (i.e., focus preemption points, memory analysis, etc. on) the userspace or kernelspace code.
@@ -277,7 +284,7 @@ Following are the non-self-explanatory options.
 		{\tt USERSPACE} should be 0 or 1 to denote a kernel-space or user-space function respectively.
 \end{itemize}
 
-\subsubsection{In-kernel code annotations}
+\subsection{In-kernel code annotations}
 
 The following annotations are provided as C functions
 which a kernel author shall include in their source code and call at appropriate times.
@@ -287,7 +294,7 @@ along with the other various annotations from the previous section.
 Some of these are mandatory for Landslide to function properly,
 while others serve to improve or otherwise manipulate the state space.
 
-{\bf Mandatory annotations}
+\subsubsection{Mandatory annotations}
 
 \begin{itemize}
 \item {\tt tell\_landslide\_thread\_switch(int new\_tid)} - to be called during context switch, indicating the newly-running thread
@@ -315,7 +322,7 @@ while others serve to improve or otherwise manipulate the state space.
 	and set {\tt CURRENT\_THREAD\_LIVES\_ON\_RQ=1}.
 \end{itemize}
 
-{\bf Optional annotations}
+\subsubsection{Optional annotations}
 
 \begin{itemize}
 \item {\tt tell\_landslide\_preempt()} - specifies a preemption point.
@@ -324,11 +331,13 @@ while others serve to improve or otherwise manipulate the state space.
 \item {\tt tell\_landslide\_dump\_stack()} - instructs Landslide to print a stack trace whenever this point is reached (for debugging purposes).
 \end{itemize}
 
-{\bf Optional but strongly recommended annotations}
+\subsubsection{Optional but strongly recommended annotations}
 
 The following annotations enable Landslide to track locksets for data race analysis.
 If not provided, it will be as if Landslide assumes no guarantees about mutual exclusion or happens-before,
 and hence will identify all memory conflicts as data races.
+(Note that the corresponding instrumentation for P2s is achieved automatically,
+as the names of the mutex interface are mandated by the project specification.)
 
 \begin{itemize}
 \item {\tt tell\_landslide\_mutex\_locking(void *mutex\_addr)} - indicates the beginning of the lock routine for
@@ -346,8 +355,6 @@ and hence will identify all memory conflicts as data races.
 \item {\tt tell\_landslide\_mutex\_unlocking(void *mutex\_addr)} - indicates the beginning of the unlock routine.
 \item {\tt tell\_landslide\_mutex\_unlocking\_done()} - indicates the end of the unlock routine.
 \end{itemize}
-
-\subsection{Bug reports}
 
 \section{Architecture}
 
