@@ -21,7 +21,7 @@ The Simics port is available upon request.
 
 This chapter will discuss Landslide's outer and inner workings in all their gory detail.
 It is intended for the aspiring developer or the ambitious user
-and hence is written in the style of documentation rather than as a report of research results.
+and hence unlike other chapters is written in the style of documentation rather than as a report of research results.
 
 \section{User interface}
 
@@ -212,6 +212,37 @@ Unless otherwise specified these are boolean flags (1 or 0) and the example valu
 \end{itemize}
 
 \subsection{Bug reports}
+
+When Landslide finds a bug, it produces an execution trace of the particular interleaving of threads that led to the bug,
+in html format, recommended to be viewed in a web browser.
+This takes the form of a two-dimensional table,
+with a column for each thread,
+and each row representing the continuous execution of one thread between two (not necessarily consecutive) preemption points.
+In each row, the cell in the column corresponding to the executed thread will contain a stack trace,
+indicating the code location of the preemption point {\em at the end} of that thread transition
+(i.e., each stack trace indicates ``this thread ran until it reached the indicated line of code'').
+An example bug report is shown in Figure~\ref{fig:bugreport}.
+
+In addition to the preemption trace, the bug report reports some additional helpful information:
+a stack trace of the current thread at the ultimate point when the bug was executed,
+a message indicating the nature of the bug encountered,
+statistics about the size of the state space,
+and optionally additional information about the bug.%
+\footnote{For certain types of bugs, not pictured here;
+for example, use-after-frees will report separate stack traces
+indicating when the corresponding heap block was last allocated and freed.
+The intrepid source-diver may find all such cases of extra bug details by searching for the macro {\tt FOUND\_A\_BUG\_HTML\_INFO} in Landslide's code.}
+
+
+% TODO: check figure placement
+\begin{figure}[t]
+	\begin{center}
+		% nb. generated from landslide-trace-1506524837.14.html
+		\includegraphics[width=\textwidth]{bugreport.pdf}
+	\end{center}
+	\caption{Example preemption trace bug report.}
+	\label{fig:bugreport}
+\end{figure}
 
 \section{Kernel annotations}
 
