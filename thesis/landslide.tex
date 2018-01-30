@@ -130,6 +130,8 @@ avoiding long Landslide start-up times.
 Such supported options are as follows.
 
 \subsubsection{Dynamic configuration options}
+\label{sec:landslide-dynamicconfig}
+
 First, the following options may be changed without triggering a recompile of Landslide.
 They are implemented as bash functions defined in {\tt pebsim/build.sh}.
 
@@ -160,6 +162,7 @@ They are implemented as bash functions defined in {\tt pebsim/build.sh}.
 \end{itemize}
 
 \subsubsection{Static configuration options}
+\label{sec:landslide-staticconfig}
 
 Next, configuration options which affect an {\tt \#ifdef} in Landslide and will trigger a recompile upon changing.
 %These span a wide variety of features, sorted below in subsections by roughly how interesting I think they are.
@@ -183,7 +186,7 @@ Unless otherwise specified these are boolean flags (1 or 0) and the example valu
 \begin{itemize}
 	\item {\tt PURE\_HAPPENS\_BEFORE=1} - select Pure Happens-Before (1) or Limited Happens-Before (2) (\sect{\ref{sec:background-hb}});
 		corresponds to {\tt -V}/{\tt -H} in \sect{\ref{sec:landslide-quicksand-options}}.
-	\item {\tt FILTER\_DRS\_BY\_TID=1} - configures whether to use the {\tt TID} parameter of {\tt data\_race} described above.
+	\item {\tt FILTER\_DRS\_BY\_TID=1} - configures whether to use the {\tt TID} parameter of {\tt data\_\allowbreak{}race} described above.
 	\item {\tt FILTER\_DRS\_BY\_LAST\_CALL=0} - configures whether to use the {\tt LAST\_CALL} parameter of {\tt data\_race} described above.
 	\item {\tt ALLOW\_LOCK\_HANDOFF=0} - configures lockset tracking to permit or disallow a lock taken by one thread to be released by another thread.%
 		\footnote{If enabled, accesses performed by the second thread before unlocking will not be considered protected by that lock,
@@ -213,17 +216,17 @@ Unless otherwise specified these are boolean flags (1 or 0) and the example valu
 
 \subsection{Bug reports}
 
-When Landslide finds a bug, it produces an execution trace of the particular interleaving of threads that led to the bug,
-in html format, recommended to be viewed in a web browser.
+When Landslide finds a bug, it produces an execution trace of the particular interleaving of threads that led to the bug.
 This takes the form of a two-dimensional table,
 with a column for each thread,
 and each row representing the continuous execution of one thread between two (not necessarily consecutive) preemption points.
 In each row, the cell in the column corresponding to the executed thread will contain a stack trace,
 indicating the code location of the preemption point {\em at the end} of that thread transition
 (i.e., each stack trace indicates ``this thread ran until it reached the indicated line of code'').
-An example bug report is shown in Figure~\ref{fig:bugreport}.
+The bug reports are formatted in html, recommended to be viewed in a web browser.
+An example is shown in Figure~\ref{fig:bugreport}.
 
-In addition to the preemption trace, the bug report reports some additional helpful information:
+In addition to the preemption trace, the bug report provides some additional helpful information:
 a stack trace of the current thread at the ultimate point when the bug was executed,
 a message indicating the nature of the bug encountered,
 statistics about the size of the state space,
@@ -231,7 +234,8 @@ and optionally additional information about the bug.%
 \footnote{For certain types of bugs, not pictured here;
 for example, use-after-frees will report separate stack traces
 indicating when the corresponding heap block was last allocated and freed.
-The intrepid source-diver may find all such cases of extra bug details by searching for the macro {\tt FOUND\_A\_BUG\_HTML\_INFO} in Landslide's code.}
+The intrepid source-diver may find all such cases of extra bug details
+by searching for the macro {\tt FOUND\_A\_BUG\_HTML\_INFO} in Landslide's code.}
 
 
 % TODO: check figure placement
@@ -389,6 +393,12 @@ as the names of the mutex interface are mandated by the project specification.)
 
 \section{Architecture}
 
+This section documents the organization of code within Landslide.
+Unless otherwise specified, Landslide's code lives in
+%C files live in
+{\tt work/modules/landslide/} (Simics implemenation) or {\tt src/bochs-2.6.8/instrument/landslide/} (Bochs implementation)
+relative to the repository root.
+
 \subsection{Scheduler}
 \subsection{Memory analysis}
 \subsection{Machine state manipulation}
@@ -402,6 +412,40 @@ as the names of the mutex interface are mandated by the project specification.)
 \subsection{Pintos-specific features}
 \subsection{Handy scripts}
 \label{sec:landslide-glue}
+
+The options specified in \sect{\ref{sec:landslide-directly}}
+are handled by a family of gross shell scripts that live in {\tt pebsim/}.
+
+\begin{itemize}
+	\item {\tt landslide} is the outermost script invoked by Quicksand (or by a \sect{\ref{sec:landslide-directly}} aficionado).
+		It exports several key environment variables used by the other scripts,
+		ensures the instrumentation is up-to-date,
+		and launches the simulator.
+	\item {\tt getfunc.sh} defines several functions commonly used by {\tt build.sh} and {\tt definegen.sh} to extract function or global variable addresses from the program binary.
+	\item {\tt symbols.sh} defines the names of kernel functions that can be instrumented automatically without a corresponding manual annotation (e.g., {\tt malloc} and friends, the names of the {\tt tell\_landslide} family, various library helpers such as {\tt panic}).
+	\item {\tt build.sh} ensures the build of Landslide is up-to-date,
+		and processes any dynamic configuration options which don't require updating the build (\sect{\ref{sec:landslide-dynamicconfig}})
+		It verifies all required {\tt tell\_landslide} annotations are present,
+		verifies all required {\tt config.\allowbreak{}landslide} options,
+		processes the dynamic config options,
+		checks whether or not {\tt definegen.sh} needs to be run again (via hashes stored in {\tt student\_specifics.h} of the program binary and static config options),
+		and does so if necessary.
+	\item {\tt definegen.sh} produces the
+		%automatically-generated
+		content of {\tt student\_specifics.h}.
+		It repeatedly invokes the helpers defined in {\tt getfunc.sh}
+		to find the addresses of both functions specified in the config options
+		and functions whose names are known in advance.%
+		\footnote{You might think it should invoke objdump but once and keep the output in a shell variable,
+		but I tried that and it was mysteriously slower, so I gave up without ever figuring out why.}
+\end{itemize}
+
+The final output of these scripts is an auto-generated header, {\tt student\_specifics.h},
+containing a bunch of {\tt \#define}s of the addresses of important functions in the compiled binary,
+specific features enabled or disabled by the static config options (\sect{\ref{sec:landslide-staticconfig}}),
+and so on.
+The files {\tt kernel\_specifics.c}, {\tt user\_specifics.c}, and {\tt student.c} provide several interface functions
+for interpreting the current program state with respect to these values.
 
 \section{Algorithms of note}
 
