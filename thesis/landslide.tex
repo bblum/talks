@@ -217,6 +217,7 @@ Unless otherwise specified these are boolean flags (1 or 0) and the example valu
 \end{itemize}
 
 \subsection{Bug reports}
+\label{sec:landslide-bugreport}
 
 When Landslide finds a bug, it produces an execution trace of the particular interleaving of threads that led to the bug.
 This takes the form of a two-dimensional table,
@@ -414,8 +415,77 @@ relative to the repository root.
 % symtable stuff goes here
 % stack tracing goes here
 % foundabug goes here
+\sect{\ref{sec:landslide-bugreport}}
+
 \subsection{Pebbles-specific features}
+
+This section lists special cases of instrumentation specific to the Pebbles kernel.
+
+\begin{itemize}
+	\item {\tt mem\_check\_shared\_access()} ({\tt memory.c})
+		will assert that kernel memory is direct-mapped.
+	\item {\tt use\_after\_free()} ({\tt memory.c})
+		will ignore use-after-free reads originating from kernel code during the {\tt swexn} system call
+		(an extremely common and neither harmful nor technically interesting bug among student implementations).
+	\item {\tt cause\_test()} ({\tt test.c})
+		will issue keyboard input to type the test case name and press enter
+		when the initialization sequence completes and the shell is blocked on {\tt readline}.
+	\item {\tt kern\_mutex\_block\_others()} ({\tt schedule.c})
+		will handle the special ``blocked on via mutex'' state changes
+		whenever a mutex is acquired or released,
+		for kernels which use the {\tt tell\_landslide\_kern\_mutex\_blocking()} annotation.
+	\item {\tt sched\_update\_kern\_state\_machine()} ({\tt schedule.c})
+		will handle the reference kernel's invocation of {\tt sched\_unblock()} within {\tt cond\_signal()}
+		as a signal event for happens-before analysis.
+	\item {\tt cause\_timer\_interrupt\_immediately()} ({\tt x86.c})
+		will read the {\tt esp0} value out of the TSS to support user-to-kernel mode switches
+		in timer interrupts injected during userspace execution.
+\end{itemize}
+
 \subsection{Pintos-specific features}
+
+This section lists special cases of instrumentation specific to the Pintos kernel.
+
+\begin{itemize}
+	\item {\tt arbiter\_interested()} ({\tt arbiter.c})
+		will automatically insert preemption points on {\tt intr\_disable()} and {\tt intr\_enable()} calls
+		(immediately before and after the interrupt state is changed, respectively)
+		(as long as they aren't part of the mutex implementation, which has preemption points of its own).
+	\item {\tt lockset\_remove()} ({\tt lockset.c})
+		will warn instead of panic if a lock is unlocked twice,
+		to allow for double {\tt sema\_up()} in cases where the lock is actually a multi-use semaphore rather than a mutex.
+	\item {\tt build.sh} will edit the {\tt bootfd.img} binary to implant the name of the test case to be run in the kernel's boot command.
+	\item {\tt sched\_check\_pintos\_init\_sequence()} ({\tt schedule.c})
+		will force the kernel to skip the {\tt timer\_calibrate()} and {\tt timer\_msleep()} routines
+		used in I/O initialization.
+	\item {\tt keep\_schedule\_inflight()} ({\tt schedule.c})
+		will detect when an attempted thread switch is impossible
+		because the timer handler's try-lock will fail,
+		and will abort the interleaving early as if it never existed (which it shouldn't).
+	\item {\tt sched\_update\_kern\_state\_machine()} ({\tt schedule.c})
+		will:
+		\begin{itemize}
+			\item track invocations of {\tt timer\_sleep()} and {\tt list\_insert\_ordered()}
+				to infer when a thread is sleeping rather than blocked automatically,
+				rather than relying on the {\tt tell\_landslide\_sleeping()} annotation.
+			\item allow {\tt sema\_up()} to reenter itself,
+				which may happen when an IDE interrupt is taken when interrupts are re-enabled at the end of said function.
+			\item handle interrupt disabling/enabling as an abstract global lock for the purposes of happens-before analysis.
+		\end{itemize}
+	\item {\tt sched\_update()} ({\tt schedule.c})
+		will handle ``lock handoff'' of the abstract disable-interrupts lock
+		during a context switch for happens-before analysis.
+	\item {\tt memory.c} (various functions)
+		will handle page allocations from the {\tt palloc} family of functions in a separate memory heap,
+		allowing the usual allocator {\tt malloc} to allocate and free from {\tt palloc}'ed memory,
+		and checking both allocation heaps when checking for use-after-frees.
+	\item {\tt kern\_address\_in\_heap()} ({\tt kernel\_specifics.c})
+		will ignore DMA accesses to the VGA console,
+		which appear to be in Pintos's heap region.
+	\item {\tt test\_update\_state()} ({\tt test.c})
+		will use the boundaries of {\tt run\_test()} to denote the test lifecycle.
+\end{itemize}
+
 \subsection{Handy scripts}
 \label{sec:landslide-glue}
 
@@ -460,6 +530,8 @@ for interpreting the current program state with respect to these values.
 \subsection{Kernel annotations}
 \subsection{Bug identification}
 \subsection{Data race analysis}
+\subsubsection{Limited Happens-Before}
+\subsubsection{Pure Happens-Before}
 \subsection{Preemption point identification}
 \label{sec:landslide-pps}
 % TODO: talk about how w/in func and w/out func are processed
