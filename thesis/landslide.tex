@@ -23,6 +23,8 @@ This chapter will discuss Landslide's outer and inner workings in all their gory
 It is intended for the aspiring developer or the ambitious user
 and hence unlike other chapters is written in the style of documentation rather than as a report of research results.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \section{User interface}
 
 This section describes the features of Landslide the average student user should expect to interact with.
@@ -248,6 +250,8 @@ by searching for the macro {\tt FOUND\_A\_BUG\_HTML\_INFO} in Landslide's code.}
 	\label{fig:bugreport}
 \end{figure}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \section{Kernel annotations}
 
 The educational experiments in this thesis focus on projects which students implement on top of provided kernel basecode which Landslide already ``understands''.
@@ -332,38 +336,38 @@ while others serve to improve or otherwise manipulate the state space.
 \subsubsection{Mandatory annotations}
 
 \begin{itemize}
-\item {\tt tell\_landslide\_thread\_switch(int new\_tid)} - to be called during context switch, indicating the newly-running thread
-	(must be called with interrupts and/or scheduler preemption disabled)
-\item {\tt tell\_landslide\_sched\_init\_done()} - to be called after scheduler initialization,
-	indicating the point after which Landslide should begin analysis.
-	Any threads already initialized before this point (init, idle, etc) should be specified with {\tt starting\_threads} (previous subsection).
-\item {\tt tell\_landslide\_forking()} - to be called whenever a new thread is created,
-	``immediately'' before the next {\tt thread\_switch()} or {\tt on\_rq()} call for that new thread (i.e., this call sets a flag which the next instance of either of the latter will check to see if the indicated thread is new).
-	Most Pebbles kernels will call this twice; once in {\tt fork} and once in {\tt thread\_fork}.
-\item {\tt tell\_landslide\_vanishing()} - to be called whenever a thread ceases to exist,
-	``immediately'' before the next {\tt thread\_switch()} or {\tt off\_rq()} call for the exiting thread
-	(works similarly to above).
-\item {\tt tell\_landslide\_sleeping()} - to be called whenever a thread is about to {\tt sleep()} waiting for timer interrupts,
-	``immediately'' before the next {\tt thread\_switch()} or {\tt off\_rq()} call for the sleeping thread
-	(similar to the above).
-	Landslide considers sleeping threads to be runnable as normal (they will just take more timer interrupts to arrive at),
-	so this call is necessary to distinguish from the case when a thread is descheduled on a non-timer event.
-\item {\tt tell\_landslide\_thread\_on\_rq(int tid)} - to be called when a thread is added to the runqueue
-	(must be called with interrupts and/or scheduler preemption disabled).
-\item {\tt tell\_landslide\_thread\_off\_rq(int tid)} - dual of the above.
-	If {\tt CURRENT\_THREAD\_\allowbreak{}LIVES\_ON\_RQ=0} (described above), this should be invoked (among other times) during context switch with the TID of the thread about to start running.
-	Alternatively (thanks sully), even for a kernel which takes the current thread off its literal runqueue,
-	the annotator may use these two calls to indicate the ``abstract runqueue'' which includes the current thread as well,
-	and set {\tt CURRENT\_THREAD\_LIVES\_ON\_RQ=1}.
+	\item {\tt tell\_landslide\_thread\_switch(int new\_tid)} - to be called during context switch, indicating the newly-running thread
+		(must be called with interrupts and/or scheduler preemption disabled)
+	\item {\tt tell\_landslide\_sched\_init\_done()} - to be called after scheduler initialization,
+		indicating the point after which Landslide should begin analysis.
+		Any threads already initialized before this point (init, idle, etc) should be specified with {\tt starting\_threads} (previous subsection).
+	\item {\tt tell\_landslide\_forking()} - to be called whenever a new thread is created,
+		``immediately'' before the next {\tt thread\_switch()} or {\tt on\_rq()} call for that new thread (i.e., this call sets a flag which the next instance of either of the latter will check to see if the indicated thread is new).
+		Most Pebbles kernels will call this twice; once in {\tt fork} and once in {\tt thread\_fork}.
+	\item {\tt tell\_landslide\_vanishing()} - to be called whenever a thread ceases to exist,
+		``immediately'' before the next {\tt thread\_switch()} or {\tt off\_rq()} call for the exiting thread
+		(works similarly to above).
+	\item {\tt tell\_landslide\_sleeping()} - to be called whenever a thread is about to {\tt sleep()} waiting for timer interrupts,
+		``immediately'' before the next {\tt thread\_switch()} or {\tt off\_rq()} call for the sleeping thread
+		(similar to the above).
+		Landslide considers sleeping threads to be runnable as normal (they will just take more timer interrupts to arrive at),
+		so this call is necessary to distinguish from the case when a thread is descheduled on a non-timer event.
+	\item {\tt tell\_landslide\_thread\_on\_rq(int tid)} - to be called when a thread is added to the runqueue
+		(must be called with interrupts and/or scheduler preemption disabled).
+	\item {\tt tell\_landslide\_thread\_off\_rq(int tid)} - dual of the above.
+		If {\tt CURRENT\_THREAD\_\allowbreak{}LIVES\_ON\_RQ=0} (described above), this should be invoked (among other times) during context switch with the TID of the thread about to start running.
+		Alternatively (thanks sully), even for a kernel which takes the current thread off its literal runqueue,
+		the annotator may use these two calls to indicate the ``abstract runqueue'' which includes the current thread as well,
+		and set {\tt CURRENT\_THREAD\_LIVES\_ON\_RQ=1}.
 \end{itemize}
 
 \subsubsection{Optional annotations}
 
 \begin{itemize}
-\item {\tt tell\_landslide\_preempt()} - specifies a preemption point.
-	Subject to the constraints of {\tt within\_function}/{\tt without\_function};
-	hence may be ignored if used with Quicksand.
-\item {\tt tell\_landslide\_dump\_stack()} - instructs Landslide to print a stack trace whenever this point is reached (for debugging purposes).
+	\item {\tt tell\_landslide\_preempt()} - specifies a preemption point.
+		Subject to the constraints of {\tt within\_function}/{\tt without\_function};
+		hence may be ignored if used with Quicksand.
+	\item {\tt tell\_landslide\_dump\_stack()} - instructs Landslide to print a stack trace whenever this point is reached (for debugging purposes).
 \end{itemize}
 
 \subsubsection{Optional but strongly recommended annotations}
@@ -375,21 +379,23 @@ and hence will identify all memory conflicts as data races.
 as the names of the mutex interface are mandated by the project specification.)
 
 \begin{itemize}
-\item {\tt tell\_landslide\_mutex\_locking(void *mutex\_addr)} - indicates the beginning of the lock routine for
-	whatever synchronization API Landslide should treat as the primitive for data race detection.
-	In Pintos this is the {\tt sema\_*()} function family; in Pebbles they may be called anything.
-\item {\tt tell\_landslide\_mutex\_blocking(int owner\_tid)} - called ``immediately'' before a thread becomes blocked on the mutex.
-	Definition of ``immediately'' similar to the {\tt forking()} and friends annotations above.
-	{\tt owner\_tid} allows Landslide to efficiently unblock/re-block threads when the mutex holder changes
-	(rather than relying on heuristic yield-loop detection);
-	see {\tt kern\_mutex\_block\_others()} and {\tt deadlocked()} in {\tt schedule.c} for implementation details.
-\item {\tt tell\_landslide\_mutex\_locking\_done(void *mutex\_addr)} - indicates the end of the lock routine.
-\item {\tt tell\_landslide\_mutex\_trylocking(void *mutex\_addr)} - indicates the beginning of the trylock routine (if present).
-\item {\tt tell\_landslide\_mutex\_trylocking\_done(void *mutex\_addr, int succeeded)} -
-	indicates when a thread is finished trylocking, even if it failed to get the lock (indicated by {\tt succeeded}).
-\item {\tt tell\_landslide\_mutex\_unlocking(void *mutex\_addr)} - indicates the beginning of the unlock routine.
-\item {\tt tell\_landslide\_mutex\_unlocking\_done()} - indicates the end of the unlock routine.
+	\item {\tt tell\_landslide\_mutex\_locking(void *mutex\_addr)} - indicates the beginning of the lock routine for
+		whatever synchronization API Landslide should treat as the primitive for data race detection.
+		In Pintos this is the {\tt sema\_*()} function family; in Pebbles they may be called anything.
+	\item {\tt tell\_landslide\_mutex\_blocking(int owner\_tid)} - called ``immediately'' before a thread becomes blocked on the mutex.
+		Definition of ``immediately'' similar to the {\tt forking()} and friends annotations above.
+		{\tt owner\_tid} allows Landslide to efficiently unblock/re-block threads when the mutex holder changes
+		(rather than relying on heuristic yield-loop detection);
+		see {\tt kern\_mutex\_block\_others()} and {\tt deadlocked()} in {\tt schedule.c} for implementation details.
+	\item {\tt tell\_landslide\_mutex\_locking\_done(void *mutex\_addr)} - indicates the end of the lock routine.
+	\item {\tt tell\_landslide\_mutex\_trylocking(void *mutex\_addr)} - indicates the beginning of the trylock routine (if present).
+	\item {\tt tell\_landslide\_mutex\_trylocking\_done(void *mutex\_addr, int succeeded)} -
+		indicates when a thread is finished trylocking, even if it failed to get the lock (indicated by {\tt succeeded}).
+	\item {\tt tell\_landslide\_mutex\_unlocking(void *mutex\_addr)} - indicates the beginning of the unlock routine.
+	\item {\tt tell\_landslide\_mutex\_unlocking\_done()} - indicates the end of the unlock routine.
 \end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Architecture}
 
@@ -446,6 +452,8 @@ specific features enabled or disabled by the static config options (\sect{\ref{s
 and so on.
 The files {\tt kernel\_specifics.c}, {\tt user\_specifics.c}, and {\tt student.c} provide several interface functions
 for interpreting the current program state with respect to these values.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Algorithms of note}
 
