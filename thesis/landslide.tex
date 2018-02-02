@@ -414,6 +414,10 @@ relative to the repository root.
 % time travel, explore, arbiter
 \subsection{Bug-finding output}
 
+The infrastructure for producing the diagnostic output to help users understand their bugs
+can be classified in three parts:
+the symbol table glue, the excessively clever stack tracer, and the preemption table generator.
+
 \subsubsection{Symbol table}
 
 The symbol table logic lives in {\tt symtable.c} and is pretty much a lot of glue code.
@@ -440,7 +444,12 @@ and printing symbol table information for the pushed return addresses at the top
 However, it also offers several special-case features
 which even some students have sometimes noticed as being more clever than Simics's stack tracer.
 I document those features here.
-If you prefer to read about these in code than in prose, see {\tt stack\_trace()} in {\tt stack.c}.
+As a common point of implementation among them,
+Landslide traces the stack pointer {\tt esp} in addition to the base pointer {\tt ebp};
+not only updating it whenever dereferencing the base pointer,
+but also when decoding simple assembly routines, finding ``hidden'' stack frames without base pointers,
+identifying system call wrappers, and so on.
+The corresponding code lives in {\tt stack\_trace()} in {\tt stack.c}.
 
 \begin{itemize}
 	\item If a function is preempted at its beginning or end
