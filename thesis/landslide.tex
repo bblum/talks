@@ -261,6 +261,7 @@ For P2 and Pintos students I supply these annotations behind the scenes,
 but a CMU 15-410 student who wishes to use Landslide on their kernel project shall need to brave forth hereupon.
 
 \subsection{config.landslide annotations}
+\label{sec:landslide-config-landslide}
 
 The following annotations are specified in {\tt pebsim/config.landslide} akin to the static configuration options
 described in \sect{\ref{sec:landslide-directly}}..
@@ -430,6 +431,55 @@ which the aforementioned hex offset then serves as an index into.
 
 \subsubsection{Stack traces}
 
+The stack tracer is implemented in {\tt stack.c}.
+It does the standard approach of following the base pointer chain
+(not supporting code compiled with {\tt -fomit-frame-pointer} by doing anything clever
+like understanding how much stack frame is allocated for each function),
+and printing symbol table information for the pushed return addresses at the top of each frame.
+
+However, it also offers several special-case features
+which even some students have sometimes noticed as being more clever than Simics's stack tracer.
+I document those features here.
+If you prefer to read about these in code than in prose, see {\tt stack\_trace()} in {\tt stack.c}.
+
+\begin{itemize}
+	\item If a function is preempted at its beginning or end
+		such that its corresponding base pointer is missing from the base pointer chain,
+		Landslide will find its ``hidden'' frame and include it in the stack trace in the following cases.%
+		\footnote{Note that in such cases,
+		most other debuggers' stack tracers will be missing not the name of the interrupted function,
+		but the name of the function which called that function,
+		because it's the former's stack frame which should enable the debugger
+		to find the pushed return address for the latter.}
+		\begin{itemize}
+			\item If the last pushed return address is at offset 0 into the body of its containing function,
+				Landslide will find the next pushed return address at {\tt esp+0}.
+			\item If as above but the function is the page fault handler, at {\tt esp+4}.
+			\item If the return address is at offset 1 and the previous instruction was {\tt push ebp},
+				Landslide will find the next pushed return address at {\tt esp+4}.
+			\item If the return address is a multiple of 4 offset
+				and all previous instructions are of the form {\tt mov m32,r32},
+				Landslide will find the next pushed return address at {\tt esp+0}.
+				(This is common in student hand-written assembly functions.)
+		\end{itemize}
+	\item If the instruction at a pushed return address is a {\tt pop} or {\tt popa},
+		Landslide will search for the next non-{\tt pop}({\tt a}) instruction,
+		and if it's {\tt ret} or {\tt iret},
+		treat the function as a system call wrapper
+		(which tend not to preserve the base pointer chain)
+		and find the next return address above where all those registers were pushed.
+	\item If a return address was pushed during a fault or interrupt
+		(determined by checking for the {\tt iret} opcode or the page fault wrapper special case mentioned above),
+		Landslide will read the iret block to determine whether a stack switched happened
+		and if so what {\tt esp} used to be.
+	\item Landslide runs the tortoise/rabbit algorithm to detect cyclic {\tt ebp} chains and terminate after the first time around.
+	\item Two other Pebbles-specifc special cases described in \sect{\ref{sec:landslide-pebblesspecifics}}.
+\end{itemize}
+
+Also implemented in {\tt stack.c} is the backend of the {\tt within\_function}/{\tt without\_function} configuration command,
+which searches a given stack trace for the presence of a function return address within a specified range.
+
+
 % features:
 % noreturn functions, when last instr is a call, will avoid printing the next function in the binary
 % various function eip offsets
@@ -446,6 +496,7 @@ It should be invoked by the {\tt FOUND\_A\_BUG} macro defined in {\tt found\_a\_
 or by {\tt FOUND\_A\_BUG\_HTML\_INFO}, which also allows the caller to specify a callback to print extra details (such as use-after-free stack traces) in the bug report.
 
 \subsection{Pebbles-specific features}
+\label{sec:landslide-pebblesspecifics}
 
 This section lists special cases of instrumentation specific to the Pebbles kernel.
 
@@ -463,18 +514,21 @@ This section lists special cases of instrumentation specific to the Pebbles kern
 		whenever a mutex is acquired or released,
 		for kernels which use the {\tt tell\_landslide\_kern\_mutex\_blocking()} annotation.
 	\item {\tt sched\_update\_kern\_state\_machine()} ({\tt schedule.c})
-		will:
-		\begin{itemize}
-			\item handle the reference kernel's invocation of {\tt sched\_unblock()} within {\tt cond\_signal()}
-				as a signal event for happens-before analysis.
-			\item when a {\tt vanish}ing thread is about to delete its Simics symbol table object,
-				save a ``pre-vanish'' stack trace,
-				which {\tt splice\_pre\_vanish\_trace} ({\tt stack.c}) will then splice into any subsequent stack traces by that thread,
-				so the user can see the userspace execution sequence preceding the {\tt vanish} invocation.
-		\end{itemize}
+		will handle the reference kernel's invocation of {\tt sched\_unblock()} within {\tt cond\_\allowbreak{}signal()}
+		as a signal event for happens-before analysis.
 	\item {\tt cause\_timer\_interrupt\_immediately()} ({\tt x86.c})
 		will read the {\tt esp0} value out of the TSS to support user-to-kernel mode switches
 		in timer interrupts injected during userspace execution.
+	\item {\tt splice\_pre\_vanish\_trace} ({\tt stack.c})
+		will, when a {\tt vanish}ing thread has already deleted its Simics symbol table object,
+		splice in a saved ``pre-vanish'' stack trace
+		(saved previously in {\tt sched\_update\_kern\_state\_machine()})
+		so the user can see the userspace execution sequence preceding the {\tt vanish} invocation.
+	\item {\tt stack\_trace} ({\tt stack.c})
+		will, when {\tt ebp} crosses from kernel- to userspace across a system call boundary
+		(a reference kernel feature to allow Simics stack traces to cross same),
+		use {\tt PATHOS\_SYSCALL\_IRET\_DISTANCE} (\sect{\ref{sec:landslide-config-landslide}})
+		to track {\tt esp}'s value across the stack switch.
 \end{itemize}
 
 \subsection{Pintos-specific features}
