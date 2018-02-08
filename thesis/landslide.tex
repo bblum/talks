@@ -411,6 +411,78 @@ relative to the repository root.
 \subsection{Memory analysis}
 \subsection{Machine state manipulation}
 \subsection{State space traversal}
+
+Traversal of the state space is implemented in three parts:
+first, identifying preemption points when first encountered and selecting which thread to run for its first execution, in {\tt arbiter.c},
+second, selecting which preemption point to backtrack to after completing an execution
+and which thread to ``have switched to'' %
+% TODO: post-revisions; uncomment; change " %" above to "%"
+%\footnote{willan on-having switched to \cite{hhgg-reu}}
+instead, in {\tt explore.c},
+and third, rewinding the machine state to implement said backtracking,
+in {\tt timetravel.c} (Bochs version) and {\tt timetravel-simics.c} (Simics version).
+
+\subsubsection{Arbiter}
+
+The arbiter (named after the corresponding component of dBug \cite{dbug-ssv})
+is responsible for checking which code locations during execution should be identified as preemption points
+({\tt arbiter\_interested()}),
+and thereupon for choosing whether to keep running the current thread or to preempt and switch to a new one
+({\tt arbiter\_choose()}).
+Its behaviour in the former case is configured by the options listed in \sect{\ref{sec:landslide-dynamicconfig}},
+and in the latter case by the options listed in \sect{\ref{sec:landslide-staticconfig}}.
+For example, {\tt EXPLORE\_BACKWARDS} is interpreted here;
+if set, it will cause Landslide to always preempt and switch threads the first time it encounters each new preemption point.%
+\footnote{Another secret option, {\tt CHOOSE\_RANDOMLY},
+also exists here to randomize whether to ``explore backwards''
+(choosing independently at each preemption point, resulting in an overall unpredictable exploration order).
+% TODO: decide whether you're gonna put those estimate graphs in here
+%% I
+It's not exposed to {\tt config.landslide} but rather the user must edit it in {\tt arbiter.c} directly,
+whereupon the probability may also be adjusted via {\tt numerator} and {\tt denominator}.}
+
+\subsubsection{Explorer}
+
+Landslide invokes the explorer at the end of each execution of the test case,
+which analyzes the current branch of the interleaving state space tree
+to figure out which alternate branch to try executing next.
+Its contents are largely algorithmic rather than architectural
+and hence further described in \sect{\ref{sec:landslide-dpor}} and \sect{\ref{sec:landslide-icb}}.
+
+\subsubsection{Time Travel}
+
+After the explorer picks a past point of program preemption, % sorry this started out like that and i just had to roll with it
+Landslide collaborates with the simulator to revert the machine state to that point before switching to the desired thread.
+The Simics version is merely a bunch of wrapper glue code around the {\tt set-bookmark} and {\tt skip-to} backtracking commands.
+Bochs however does not support backtracking, so I instead use {\tt fork()} to get Linux to copy the machine state for me.
+
+The big issue to note here is that, while the simulation state should be completely reverted,
+parts of Landslide's state (e.g., scheduler runqueues, thread action flags)
+should likewise be reverted to mirror the change in program state,
+while others (tagged ancestor branches from DPOR, state space estimates) should be preserved from branch to branch.
+In Simics, I simply copy every data structure of the former case ({\tt copy\_sched()} and friends in {\tt save.c}),
+leaving those of the latter undisturbed across backtracks.%
+\footnote{Simics actually wants to save/restore all its modules' internal state on its own,
+offering an attribute set/get API for modules to expose such state (used for other purposes in {\tt simics\_glue.c}),
+but doing deep copies of data structures this way would be more trouble than it's worth.}
+
+In Bochs, {\tt fork()} automatically copies everything, so the reverse holds:
+all data of the latter case must whenever updated be propagaged to all {\tt fork()}ed children processes explicitly.
+I worried while implementing this that I might miss a case, or that future updates to the code could easily forget this step,
+resulting undoubtedly in state corruption bugs which to diagnose would be a thesis in their own right,
+so I enlisted help from my compiler via the oft-ridiculed {\tt const}.
+Every preemption point node in the execution tree ({\tt tree.h}),
+each of whose state is kept generally read-only,
+and all modifications must go through {\tt modify\_hax()} ({\tt timetravel.h}) using a modification callback,
+which internally casts away the {\tt const}, performs the requested modification,
+and also messages all relevant child processes to perform the same ({\tt timetravel\_set()} in {\tt timetravel.c}).
+The {\tt const} is absolutely, inviolably, not to be casted away, at the sacred cost of what little type safety C offers.%
+\footnote{Of course this would be followed by a footnote describing the one place where I cast it away anyway,
+{\tt mem\_check\_shared\_access()} in {\tt memory.c};
+why it's ok is documented in an {\tt XXX} comment.}
+Thence the typechecker enforces that all exploration-related state is properly propagated while scheduler state is automatically reverted.
+
+
 % time travel, explore, arbiter
 \subsection{Bug-finding output}
 
@@ -481,6 +553,11 @@ The corresponding code lives in {\tt stack\_trace()} in {\tt stack.c}.
 		(determined by checking for the {\tt iret} opcode or the page fault wrapper special case mentioned above),
 		Landslide will read the iret block to determine whether a stack switched happened
 		and if so what {\tt esp} used to be.
+	\item If a return address's offset into its containing function is 0,
+		and the last instruction in the preceding function (binary-wise) is a {\tt call},
+		Landslide will recognize it as a {\tt noreturn} tail-call, and print the correct function name.%
+		\footnote{Normally Landslide reports function/line number information for the return address as-is,
+		which indicates the next line of code after the relevant call rather than the call itself.}
 	\item Landslide runs the tortoise/rabbit algorithm to detect cyclic {\tt ebp} chains and terminate after the first time around.
 	\item Two other Pebbles-specifc special cases described in \sect{\ref{sec:landslide-pebblesspecifics}}.
 \end{itemize}
@@ -488,15 +565,9 @@ The corresponding code lives in {\tt stack\_trace()} in {\tt stack.c}.
 Also implemented in {\tt stack.c} is the backend of the {\tt within\_function}/{\tt without\_function} configuration command,
 which searches a given stack trace for the presence of a function return address within a specified range.
 
-
-% features:
-% noreturn functions, when last instr is a call, will avoid printing the next function in the binary
-% various function eip offsets
-% kernel to user mode swinches
-
 \subsubsection{Preemption traces}
 
-The preemption traces, described and exemplified in \sect{\ref{sec:landslide-bugreport}}, are generated by {\tt found\_a\_bug.c},
+The preemption traces, described and exemplified in \sect{\ref{sec:landslide-bugreport}}, are generated by {\tt found\_a\_\allowbreak{}bug.c},
 in cooperation with {\tt save.c}.
 Whenever {\tt save.c} creates a preemption point, it captures a stack trace of the current thread at the point it was interrupted, and saves it in the preemption point tree.
 {\tt found\_a\_bug.c} then traverses the current branch of the tree,
