@@ -17,7 +17,7 @@ As of this thesis's writing, Landslide supports the use of two possible simulato
 The Bochs port of Landslide is likewise open-source and available at \url{https://github.com/bblum/bochs}.
 % TODO: refresh
 The HEAD commit at the time of writing is 8984021.
-The Simics port is available upon request.
+The Simics port uses Simics's proprietary API and is hence unlicensed and available upon request.
 
 This chapter will discuss Landslide's outer and inner workings in all their gory detail.
 It is intended for the aspiring developer or the ambitious user
@@ -410,6 +410,47 @@ relative to the repository root.
 \subsection{Scheduler}
 \subsection{Memory analysis}
 \subsection{Machine state manipulation}
+
+The interface to inspect and manipulate the simulated machine state lives in {\tt x86.c}.
+
+\subsubsection{Memory}
+
+{\tt read\_memory()} and {\tt write\_memory()} are both provided (with various wrapper macros in {\tt x86.h}).
+The former is used basically everywhere throughout Landslide to query the machine state;
+the latter is used only by the interrupt manipulation below
+and by the scheduler to force Pintos to skip certain parts of its init sequence (\sect{\ref{sec:landslide-pintosspecifics}}).
+Both rely on the helper function {\tt mem\_translate()} for virtual address resolution,
+which at present supports only the normal x86 32-bit addressing mode (no PAE, long mode, etc.).
+
+\subsubsection{Interrupts}
+
+Several routines are provided for manipulating system interrupts.
+Note that the Landslide is called once per fetch-decode-execute loop of the CPU,
+after the CPU processes all already-pending interrupts and decides which instruction to execute,
+but before actually executing the instruction
+(true of both Bochs and Simics).
+I refer to this as the {\em upcoming instruction}.
+Whether or not Landslide wants that instruction to execute before triggering a thread switch is a matter of some concern in the following API.
+
+\begin{itemize}
+	\item {\tt cause\_timer\_interrupt()}
+		triggers a pending timer interrupt, whose handler will be entered as soon as the upcoming instruction is executed.
+	\item {\tt cause\_timer\_interrupt\_immediately()}
+		does as above, but forces the system to enter the interrupt handler before the upcoming instruction is executed.
+		That instruction will be executed upon return from the interrupt.
+	\item {\tt avoid\_timer\_interrupt\_immediately()}
+		suppresses a timer interrupt triggered by the simulator from outside of Landslide's control.
+		It acknowledges the APIC and forces the system to jump to the end of the interrupt handler.
+	\item {\tt delay\_instruction()}
+		forces the system to execute a no-op before the upcoming instruction,
+		effectively converting an invocation of {\tt cause\_timer\_interrupt()} to {\tt cause\_timer\_interrupt\_immediately()}.
+	\item {\tt cause\_keypress()} triggers a keyboard event corresponding to the specified character.
+		The interrupt will be taken after the upcoming instruction is executed
+		(provided no timer interrupt is simultaneously pending).
+		Only {\tt a-z}, {\tt 0-9}, {\tt \_}, space, and newline are supported (enough to name any Pebbles test case).
+	\item {\tt interrupts\_enabled()} queries the CPU's interrupt flag ({\tt eflags:IF}).
+\end{itemize}
+
 \subsection{State space traversal}
 
 Traversal of the state space is implemented in three parts:
@@ -451,7 +492,7 @@ and hence further described in \sect{\ref{sec:landslide-dpor}} and \sect{\ref{se
 
 \subsubsection{Time Travel}
 
-After the explorer picks a past point of program preemption, % sorry this started out like that and i just had to roll with it
+After the explorer picks a past point of the program to preempt, % sorry this started out like that and i just had to roll with it
 Landslide collaborates with the simulator to revert the machine state to that point before switching to the desired thread.
 The Simics version is merely a bunch of wrapper glue code around the {\tt set-bookmark} and {\tt skip-to} backtracking commands.
 Bochs however does not support backtracking, so I instead use {\tt fork()} to get Linux to copy the machine state for me.
@@ -479,7 +520,7 @@ and also messages all relevant child processes to perform the same ({\tt timetra
 The {\tt const} is absolutely, inviolably, not to be casted away, at the sacred cost of what little type safety C offers.%
 \footnote{Of course this would be followed by a footnote describing the one place where I cast it away anyway,
 {\tt mem\_check\_shared\_access()} in {\tt memory.c};
-why it's ok is documented in an {\tt XXX} comment.}
+why it's ok is documented in an {\tt XXX} comment in the code.}
 Thence the typechecker enforces that all exploration-related state is properly propagated while scheduler state is automatically reverted.
 
 
@@ -612,6 +653,7 @@ This section lists special cases of instrumentation specific to the Pebbles kern
 \end{itemize}
 
 \subsection{Pintos-specific features}
+\label{sec:landlside-pintosspecifics}
 
 This section lists special cases of instrumentation specific to the Pintos kernel.
 
