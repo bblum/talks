@@ -407,7 +407,70 @@ Unless otherwise specified, Landslide's code lives in
 {\tt work/modules/landslide/} (Simics implemenation) or {\tt src/bochs-2.6.8/instrument/landslide/} (Bochs implementation)
 relative to the repository root.
 
+Both simulators invoke Landslide once per instruction and once per memory read or write.
+% just before..
+The entry point is the aptly-named {\tt landslide\_entrypoint()} in {\tt landslide.c},
+which then dispatches to various other modules their respective analyses, described as follows.
+
+\subsection{Execution Tree}
+\label{sec:landslide-save}
+
 \subsection{Scheduler}
+
+The Landslide scheduler, which lives in {\tt schedule.c}, has two main duties:
+to maintain an accurate representation of all the existing threads on the simulated system
+and track what concurrency-relevant actions each is performing at any given time,
+and to orchestrate the sequence of timer interrupts necessary
+to cause the simulated system to context switch to any given thread at any given time.
+System-wide state is stored in a single {\tt struct sched\_state},
+including the thread queues (runqueue, deschedule queue, and sleep queue),
+while per-thread state is stored in {\tt struct agent}s (named after the terminology of \cite{dbug-ssv}) which live on said queues.
+
+It has one main entrypoint, {\tt sched\_update()}, in which both the state machine is updated and scheduling decisions are made.
+The interface also offers helper functions for finding and manipulating {\tt agent}s,
+and {\tt sched\_recover()}, which prepares the scheduler to force a new thread to run
+after a time travel (\sect{\ref{sec:landslide-timetravel}}).
+
+\subsubsection{State machine}
+
+The first part of {\tt sched\_update()} is to update the state machine of thread actions and runnability.
+Much of this functionality is found in
+{\tt sched\_update\_kern\_state\_machine()}
+and
+{\tt sched\_update\_user\_state\_machine()}.
+The current intruction pointer is compared against the known locations of
+the mutex API, system calls, runnable/descheduling {\tt tell\_\allowbreak{}landslide} annotations, and so on,
+and locksets, action flags, and runqueue membership are updated accordingly.
+
+\subsubsection{Interrupt injection}
+
+The second part of {\tt sched\_update()},
+conditional on the arbiter identifying preemption points (\sect{\ref{sec:landslide-arbiter}}),
+manages timer interrupts to switch to a desired thread.
+Whenever a preemption point is reached,
+the scheduler first creates a checkpoint in the execution tree (\sect{\ref{sec:landslide-save}}),
+asks the arbiter which thread to run next,
+and if that thread is different from the current one,
+forces the kernel into its timer interrupt handler (\sect{\ref{sec:landslide-interrupce}}).
+
+Because the kernel is part of the system being tested, Landslide can't necessarily always switch directly to a specific thread,
+but rather must keep triggering context switches until the desired thread is reached;
+any mechanism to tell the kernel which thread we want would necessarily involve modifying the code being testsed
+and hence possibly obscuring bugs or introducing new ones.%
+\footnote{For userspace testing, where I supply a pre-annotated reference kernel,
+such an approach would be more straightforward,
+but the kernel-testing repeated-context-switch approach infrastructure was already in place
+and it was easier to reuse that than to add more code.}
+
+The scheduler marks up to one thread as the ``schedule target'',
+which when set makes Landslide wait until that thread is reached before looking for more preemption points,
+so the kernel may finish its context switches undisturbed.
+Whenever the schedule target is set and the end of the context switcher is reached,
+if the schedule target is not the current thread,
+the scheduler repeats this process until it is.%
+\footnote{Note that this ``loop'' is not structured as an explicit loop in Landslide's code,
+but rather as part of the state machine which updates each time a new instruction is traced.}
+
 \subsection{Memory analysis}
 
 {\tt memory.c} is responsible for all manner of memory access analysis.
@@ -431,11 +494,11 @@ reporting a bug if not.
 
 {\tt mem\_check\_shared\_access()} also records each such access in a per-thread-transition rbtree,
 which is saved and then cleared at each preemption point.
-This allows {\tt mem\_shm\_intersect()}, called at each preemption point once for each of its ancestors
+This allows {\tt mem\_shm\_\allowbreak{}intersect()}, called at each preemption point once for each of its ancestors
 ($n^2$ total calls per interleaving),
 to perform a set intersection to find any memory conflicts.
-Any such conflicts whicih also fail a lockset (\sect{\ref{sec:landslide-lhb}})
-and/or happens-before (\sect{\ref{sec:landslide-phb}}) check
+Any such conflicts which also fail a lockset
+and/or happens-before check (\sect{\ref{sec:landslide-datarace}})
 are then reported as data races.
 Regardless, all such conflicts are later used by DPOR (\sect{\ref{sec:landslide-dpor}}) to find dependent transition pairs.
 
@@ -453,6 +516,7 @@ Both rely on the helper function {\tt mem\_translate()} for virtual address reso
 which at present supports only the normal x86 32-bit addressing mode (no PAE, long mode, etc.).
 
 \subsubsection{Interrupts}
+\label{sec:landslide-interrupce}
 
 Several routines are provided for manipulating system interrupts.
 Note that the Landslide is called once per fetch-decode-execute loop of the CPU,
@@ -500,6 +564,7 @@ and third, rewinding the machine state to implement said backtracking,
 in {\tt timetravel.c} (Bochs version) and {\tt timetravel-simics.c} (Simics version).
 
 \subsubsection{Arbiter}
+\label{sec:landslide-arbiter}
 
 The arbiter (named after the corresponding component of dBug \cite{dbug-ssv})
 is responsible for checking which code locations during execution should be identified as preemption points
@@ -527,6 +592,7 @@ Its contents are largely algorithmic rather than architectural
 and hence further described in \sect{\ref{sec:landslide-dpor}} and \sect{\ref{sec:landslide-icb}}.
 
 \subsubsection{Time Travel}
+\label{sec:landslide-timetravel}
 
 After the explorer picks a past point of the program to preempt, % sorry this started out like that and i just had to roll with it
 Landslide collaborates with the simulator to revert the machine state to that point before switching to the desired thread.
