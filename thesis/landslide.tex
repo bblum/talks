@@ -415,7 +415,35 @@ which then dispatches to various other modules their respective analyses, descri
 \subsection{Execution Tree}
 \label{sec:landslide-save}
 
+The execution tree
+%(or state space, or preemption point log, however calling it suits you)
+is stored as a chain of preemption point nodes named {\tt struct hax} defined in {\tt tree.h}.
+Although the state space of possible interleavings is exponentially-sized,
+Landslide does not actually need to store any nodes for execution sequences outside the current variation
+(see \sect{\ref{sec:landslide-estimate}} and \sect{\ref{sec:landslide-dpor}} for why),
+so the total memory consumption is only $O(n)$ in the number of preemption points in a single program run
+(for the test cases used in this thesis, typically 20-1000).
+Each {\tt hax} stores the following information:
+
+\begin{itemize}
+	\item Basic statistics such as the current instruction pointer, thread ID,
+		stack trace of current thread at the moment of preemption,
+		depth in the tree, parent node pointer, etc.;
+	\item Snapshots of the current state of the scheduler (\sect{\ref{sec:landslide-scheduler}})
+		and memory accesses and heaps (\sect{\ref{sec:landslide-memory}});
+	\item Simulator-dependent data needed to time travel and resume execution
+		from this checkpoint (\sect{\ref{sec:landslide-timetravel}});
+	\item List of parent/ancestor nodes with memory conflicts and/or happens-before edges to this one
+		for DPOR (\sect{\ref{sec:landslide-dpor}});
+	\item Current estimated state space proportion and execution time for the subtree rooted at this node
+		(not necessarily fully explored yet) for estimation \sect{\ref{sec:landslide-estimate}};
+	\item Whether this point is an {\tt xbegin} invocation
+		and if so what {\tt xabort} codes are possible and/or already explored for this transaction
+		(\sect{\ref{chap:txn}}).
+\end{itemize}
+
 \subsection{Scheduler}
+\label{sec:landslide-scheduler}
 
 The Landslide scheduler, which lives in {\tt schedule.c}, has two main duties:
 to maintain an accurate representation of all the existing threads on the simulated system
@@ -472,6 +500,7 @@ the scheduler repeats this process until it is.%
 but rather as part of the state machine which updates each time a new instruction is traced.}
 
 \subsection{Memory analysis}
+\label{sec:landslide-memory}
 
 {\tt memory.c} is responsible for all manner of memory access analysis.
 It tracks heap allocations, checks reads and writes in the heap region against same;
@@ -485,7 +514,7 @@ and data race analysis (\sect{\ref{sect:landslide-datarace}}).
 {\tt mem\_update()} serves as the main entrypoint for tracking heap allocations.
 It's called every instruction to check for the boundaries of the {\tt malloc} library,
 and behaves in a similar way to the scheduler state machine described above.
-Then, {mem\_check\_shared\_access()} checks
+Then, {\tt mem\_check\_shared\_access()} checks
 (after some elaborate manoeuvres to figure out whether to use the kernel- or userspace heap)
 whether, if in the heap region, the memory is contained in a currently-allocated heap block,
 reporting a bug if not.
@@ -852,6 +881,7 @@ for interpreting the current program state with respect to these values.
 \label{sec:landslide-pps}
 % TODO: talk about how w/in func and w/out func are processed
 \subsection{State space estimation}
+\label{sec:landslide-estimate}
 \subsection{Dynamic Partial Order Reduction}
 \label{sec:landslide-dpor}
 \subsection{Iterative Context Bounding}
