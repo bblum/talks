@@ -869,14 +869,10 @@ for interpreting the current program state with respect to these values.
 
 \section{Algorithms of note}
 
-\subsection{Kernel annotations}
-\subsection{Bug identification}
-\subsection{Data race analysis}
-\label{sec:landslide-datarace}
-\subsubsection{Limited Happens-Before}
-\label{sec:landslide-lhb}
-\subsubsection{Pure Happens-Before}
-\label{sec:landslide-phb}
+% not worth discussing?
+%\subsection{Kernel annotations}
+%\subsection{Bug identification}
+
 \subsection{Preemption point identification}
 \label{sec:landslide-pps}
 % TODO: talk about how w/in func and w/out func are processed
@@ -884,6 +880,78 @@ for interpreting the current program state with respect to these values.
 \label{sec:landslide-estimate}
 \subsection{Dynamic Partial Order Reduction}
 \label{sec:landslide-dpor}
+
+\subsection{Data race analysis}
+\label{sec:landslide-datarace}
+
+Whenever a memory conflict is identified for DPOR as described above,
+the access pair's corresponding locksets and/or happens-before edges are checked to determine if it's also a data race.
+Note the distinction: DPOR memory conflicts indicate that two thread transitions,
+if reordered, could produce different behaviour, even if all accesses therein are adequately synchronized;
+while a data race indicates furthermore that the two threads can be interleaved precisely at the moment of one or both accesses.
+% nb. i think "only one of the accesses can be preempted at and have the other interleaved inside, but not the other way around,
+% is a property of cli/sti involvement in kernel space only.
+
+The core of the comparison is in {\tt check\_locksets()} in {\tt memory.c}.
+It checks each DPOR memory conflict's locksets, for limited happens-before,
+and happens-before edges, for pure happens-before
+(\sect{\ref{sec:background-hb}}).
+
+\subsubsection{Limited Happens-Before}
+\label{sec:landslide-lhb}
+
+Conditions 1, 2, and 4 defined in \sect{\ref{sec:background-hb}}, provided the Limited Happens-Before definition for \#4,
+coincide exactly with the conditions to be considered a memory conflict under DPOR.
+Hence all that remains to be checked is \#3, the set of locks held by each thread at the time of access.
+
+Routines for recording lockset changes and computing set intersection are found in {\tt lockset.c}.
+Apart from standard data structure manipulation,
+one algorithmic point of note is that locks are distinguished by types in addition to address.
+This allows (e.g.) mutexes stored as part of the implementation of semaphores to protect a different set of accesses than are protected by the semaphore they implement.
+
+% TODO: talk abt free re malloc false positives
+
+\subsubsection{Pure Happens-Before}
+\label{sec:landslide-phb}
+
+In Pure Happens-Before,
+condition 4 is replaced with the traditional distributed systems notion of Happens-Before \cite{lamport-clocks}.
+Landslide implements this via the vector clocks approach described by {\sc FastTrack} \cite{fasttrack}.
+I refer the reader interested in the vector clock algorithm itself to the {\sc FastTrack} paper,
+limiting discussion here to Landslide's corresponding implementation of each inference rule.
+
+Despite being algorithmically worse in the size of the vector clocks,
+I use the {\sc Djit+} rules for reads and writes rather than the {\tt FastTrack} ones;
+because Landslide tests should be limited to few threads to manage the state space size,
+$O(n)$ is usually in the single digits, so I optimize for code simplicity.
+
+\begin{itemize}
+	\item Reads and Writes (writes vs reads comparison already handled by DPOR) ({\tt memory.c})
+	\begin{itemize}
+		\item \textsc{Djit+ read/write same epoch} - {\tt vc\_eq()} case of {\tt add\_lockset\_to\_shm()}
+		\item \textsc{Djit+ read/write} - {\tt vc\_happens\_before()} case of {\tt check\_locksets()}
+	\end{itemize}
+	\item Synchronization ({\tt schedule.c})
+	\begin{itemize}
+		\item \textsc{FT acquire}
+			\begin{itemize}
+				\item {\tt kern\_mutex\_\{,try\}locking\_done()} cases of {kern\_update\_state\_machine()}
+				\item {\tt user\_mutex\_\{,try\}lock\_exiting()} cases of {user\_update\_state\_machine()}
+				\item {\tt cli} case of {\tt kern\_update\_state\_machine()} (Pintos only)
+				\item {\tt cli}/{\tt sti} lock handoff case in {\tt sched\_update()} (Pebbles only)
+			\end{itemize}
+		\item \textsc{FT release}
+			\begin{itemize}
+				\item {\tt kern\_mutex\_unlocking()} case of {kern\_update\_state\_machine()}
+				\item {\tt user\_mutex\_unlock\_entering()} case of {user\_update\_state\_machine()}
+				\item {\tt sti} case of {\tt kern\_update\_state\_machine()} (Pintos only)
+				\item {\tt cli}/{\tt sti} lock handoff case in {\tt sched\_update()} (Pebbles only)
+			\end{itemize}
+		\item \textsc{FT fork} - {\tt agent\_fork()}
+		\item \textsc{FT join} - {\tt sched\_unblock()} case of {\tt kern\_update\_state\_machine()} (Pebbles only)
+	\end{itemize}
+\end{itemize}
+
 \subsection{Iterative Context Bounding}
 \label{sec:landslide-icb}
 \subsection{Heuristic loop, deadlock, and synchronization detection}
