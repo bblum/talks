@@ -920,13 +920,13 @@ Landslide implements this via the vector clocks approach described by {\sc FastT
 I refer the reader interested in the vector clock algorithm itself to the {\sc FastTrack} paper,
 limiting discussion here to Landslide's corresponding implementation of each inference rule.
 
-Despite being algorithmically worse in the size of the vector clocks,
-I use the {\sc Djit+} rules for reads and writes rather than the {\tt FastTrack} ones;
+I use the {\sc Djit+} rules for reads and writes rather than the {\tt FastTrack} ones,
+even though they incur $O(n)$ runtime in the size of the vector clocks more often:
 because Landslide tests should be limited to few threads to manage the state space size,
 $O(n)$ is usually in the single digits, so I optimize for code simplicity.
 
 \begin{itemize}
-	\item Reads and Writes (writes vs reads comparison already handled by DPOR) ({\tt memory.c})
+	\item Reads and Writes ({\tt memory.c})
 	\begin{itemize}
 		\item \textsc{Djit+ read/write same epoch} - {\tt vc\_eq()} case of {\tt add\_lockset\_to\_shm()}
 		\item \textsc{Djit+ read/write} - {\tt vc\_happens\_before()} case of {\tt check\_locksets()}
@@ -935,15 +935,15 @@ $O(n)$ is usually in the single digits, so I optimize for code simplicity.
 	\begin{itemize}
 		\item \textsc{FT acquire}
 			\begin{itemize}
-				\item {\tt kern\_mutex\_\{,try\}locking\_done()} cases of {kern\_update\_state\_machine()}
-				\item {\tt user\_mutex\_\{,try\}lock\_exiting()} cases of {user\_update\_state\_machine()}
+				\item {\tt kern\_mutex\_\{,try\}locking\_done()} cases of {\tt kern\_update\_state\_\allowbreak{}machine()}
+				\item {\tt user\_mutex\_\{,try\}lock\_exiting()} cases of {\tt user\_update\_state\_\allowbreak{}machine()}
 				\item {\tt cli} case of {\tt kern\_update\_state\_machine()} (Pintos only)
 				\item {\tt cli}/{\tt sti} lock handoff case in {\tt sched\_update()} (Pebbles only)
 			\end{itemize}
 		\item \textsc{FT release}
 			\begin{itemize}
-				\item {\tt kern\_mutex\_unlocking()} case of {kern\_update\_state\_machine()}
-				\item {\tt user\_mutex\_unlock\_entering()} case of {user\_update\_state\_machine()}
+				\item {\tt kern\_mutex\_unlocking()} case of {\tt kern\_update\_state\_machine()}
+				\item {\tt user\_mutex\_unlock\_entering()} case of {\tt user\_update\_state\_machine()}
 				\item {\tt sti} case of {\tt kern\_update\_state\_machine()} (Pintos only)
 				\item {\tt cli}/{\tt sti} lock handoff case in {\tt sched\_update()} (Pebbles only)
 			\end{itemize}
