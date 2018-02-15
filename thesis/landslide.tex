@@ -920,13 +920,13 @@ Landslide implements this via the vector clocks approach described by {\sc FastT
 I refer the reader interested in the vector clock algorithm itself to the {\sc FastTrack} paper,
 limiting discussion here to Landslide's corresponding implementation of each inference rule.
 
-I use the {\sc Djit+} rules for reads and writes rather than the {\tt FastTrack} ones,
-even though they incur $O(n)$ runtime in the size of the vector clocks more often:
-because Landslide tests should be limited to few threads to manage the state space size,
-$O(n)$ is usually in the single digits, so I optimize for code simplicity.
+I use the {\sc Djit+} rules for reads and writes rather than the {\sc FastTrack} ones,
+even though they more often incur $O(n)$ runtime in the size of the vector clocks:
+because Landslide tests should be limited to few threads in order to manage the state space size,
+$n$ is always in the single digits, so I optimize for code simplicity.
 
 \begin{itemize}
-	\item Reads and Writes ({\tt memory.c})
+	\item Reads and writes ({\tt memory.c})
 	\begin{itemize}
 		\item \textsc{Djit+ read/write same epoch} - {\tt vc\_eq()} case of {\tt add\_lockset\_to\_shm()}
 		\item \textsc{Djit+ read/write} - {\tt vc\_happens\_before()} case of {\tt check\_locksets()}
@@ -948,10 +948,59 @@ $O(n)$ is usually in the single digits, so I optimize for code simplicity.
 				\item {\tt cli}/{\tt sti} lock handoff case in {\tt sched\_update()} (Pebbles only)
 			\end{itemize}
 		\item \textsc{FT fork} - {\tt agent\_fork()}
-		\item \textsc{FT join} - {\tt sched\_unblock()} case of {\tt kern\_update\_state\_machine()} (Pebbles only)
+		\item \textsc{FT join} - {\tt sched\_unblock()} case of {\tt kern\_update\_state\_machine()}
+			(Pebbles only; Pintos case is handled by above {\tt cli}/{\tt sti} cases in context switch)
 	\end{itemize}
 \end{itemize}
 
 \subsection{Iterative Context Bounding}
 \label{sec:landslide-icb}
+
+Iterative Context Bounding \cite{chess-icb} is a state space exploration strategy
+that prioritizes interleavings with fewer total preemptions first.
+Let $P(I)$ denote the number of preemptions in an interleaving $I$.
+Then, to summarize in pseudocode a na\"ive exploration of some state space $S$ as:
+
+\begin{algorithm}[h]
+	\ForEach{$I \in S$}{
+		Execute($I$)
+	}
+\end{algorithm}
+
+ICB's approach could likewise be summarized as follows:
+
+\begin{algorithm}[h]
+	\For{$n \in [0..\mathsf{max}_P(S)]$}{
+		\ForEach{$I \in S, P(I) \le n$}{
+			Execute($I$)
+		}
+	}
+\end{algorithm}
+
+%% stupid imperative way to write it
+%\begin{algorithm}[h]
+%	\For{$n \in [0..\infty]$}{
+%		$\mathsf{skipped\_any} := \mathsf{false}$ \\
+%		\ForEach{$I \in S$}{
+%			\uIf{$P(I) \le n$}{
+%				Execute($I$)
+%			} \Else {
+%				$\mathsf{skipped\_any} := \mathsf{true}$
+%			}
+%		}
+%		\If{$\neg \mathsf{skipped\_any}$}{
+%			{\bf Break}
+%		}
+%	}
+%\end{algorithm}
+
+However, when combined with DPOR to prune equivalent interleavings,
+DPOR's reduction might not be sound with respect to the subset of $S$ under $P \le n$.
+Prior work introduced Bounded Partial Order Reduction (BPOR) \cite{bpor},
+a compatibility extension to DPOR for ICB to address this problem.
+I refer the reader interested in the algorithm's details to the citation;
+this section will discuss Landslide's implementation.
+
+% TODO: say how u do it
+
 \subsection{Heuristic loop, deadlock, and synchronization detection}
