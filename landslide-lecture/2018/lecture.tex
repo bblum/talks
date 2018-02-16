@@ -22,7 +22,7 @@
 \author[Ben Blum]{Ben Blum \texttt{(bblum@andrew.cmu.edu)}}
 
 \institute[CMU 15-410]{Carnegie Mellon University - 15-410}
-\date[]{2017, September 27}
+\date[]{2018, February 16}
 
 \setbeamertemplate{footline}{\hspace*{.5cm}\scriptsize{\insertauthor\hspace*{50pt} \hfill\insertframenumber\hspace*{.5cm}}} 
 
@@ -131,6 +131,7 @@
 			\end{tabular}
 			}
 		\end{tabular}
+		\pause
 		\linegap
 
 		\begin{itemize}
@@ -234,7 +235,7 @@
 		\begin{itemize}
 			\item heavy burden on the programmers
 		\end{itemize}
-		\item Releasing to paying customers and worrying about correctness later
+		\item \sout{Releasing to paying customers and worrying about correctness later}
 			% Say... "and I'm hoping to prevent you from finding yourself in a future where this happens!"
 	\end{itemize}
 	\linegap
@@ -484,7 +485,7 @@
 \breakslide{\Huge Landslide}
 
 \begin{frame}{About The Project}
-	\textbf{About me}: Final(?) year graduate student, advised by Garth Gibson
+	\textbf{About me}: Final year graduate student, advised by Garth Gibson
 	\begin{itemize}
 		\item TAed 15-410 for 3 semesters during undergrad
 		%\item 1st graduate year was 5th year M.S., rest in Ph.D. program
@@ -786,22 +787,31 @@
 
 \begin{frame}{Previous Semesters}
 	%% S'15, F'15, S'16: 48 groups signed up to use Landslide; 38 found bugs
-	S'15, F'15, S'16, F'16, S'17: 79 groups signed up to use Landslide; 59 found bugs
+	%% S'15, F'15, S'16, F'16, S'17: 79 groups signed up to use Landslide; 59 found bugs
+	S'15, F'15, S'16, F'16, S'17, F'17: 94 groups signed up to use Landslide; 71 found bugs
 	\linegap
 
 	%%44 {\em deterministic} bugs (e.g. swexn, initialization)
-	91 {\em deterministic} bugs (e.g. swexn, initialization)
+	%% F17 lecture - stats up to S17
+	%% 91 {\em deterministic} bugs (e.g. swexn, initialization)
+	% S18 lecture - stats up to F17
+	109 {\em deterministic} bugs (e.g. swexn, initialization)
 	\linegap
 
 	%%85 distinct {\em non-deterministic} bugs (among 32 groups)
-	113 distinct {\em non-deterministic} bugs (among 44 groups)
+	%% F17 lecture - stats up to S17
+	%% 113 distinct {\em non-deterministic} bugs (among 44 groups)
+	% S18 lecture - stats up to F17
+	122 distinct {\em non-deterministic} bugs (among 49 groups)
 	\begin{itemize}
-		\item 33 groups (75\%) fixed $\ge 1$ such bug
+		\item 36 groups (73\%) fixed $\ge 1$ such bug
+		%\item 33 groups (75\%) fixed $\ge 1$ such bug
 		%%\item 24 groups (75\%) fixed $\ge 1$ such bug
 			\begin{itemize}
 				\item (as verified by running Landslide again -- not a guarantee!)
 			\end{itemize}
-		\item 24 groups (55\%) fixed {\em all} such bugs
+		\item 26 groups (53\%) fixed {\em all} such bugs
+		%\item 24 groups (55\%) fixed {\em all} such bugs
 		%%\item 15 groups (47\%) fixed {\em all} such bugs
 		\item Most ambitious group: 11 distinct races found + fixed!
 	\end{itemize}
