@@ -17,12 +17,14 @@ As of this thesis's writing, Landslide supports the use of two possible simulato
 The Bochs port of Landslide is likewise open-source and available at \url{https://github.com/bblum/bochs}.
 % TODO: refresh
 The HEAD commit at the time of writing is 8984021.
-The Simics port uses Simics's proprietary API and is hence unlicensed and available upon request.
+The Simics port uses Simics's proprietary API and is hence unlicensed and available upon request for educational use only.
 
 This chapter will discuss Landslide's outer and inner workings in all their gory detail.
 It is intended for the aspiring developer or the ambitious user
 and hence unlike other chapters is written in the style of documentation rather than as a report of research results.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{User interface}
@@ -30,6 +32,8 @@ and hence unlike other chapters is written in the style of documentation rather 
 This section describes the features of Landslide the average student user should expect to interact with.
 % TODO: make more specific section reference
 Separate user guides also exist, described in Chapter~\ref{chap:410}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Setup}
 
@@ -52,6 +56,8 @@ These scripts accomplish the following setup tasks (among other trivialities):
 		(see \sect{\ref{sec:landslide-glue}}).
 \end{itemize}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsection{Running Landslide through Quicksand}
 \label{sec:landslide-quicksand-options}
 
@@ -66,6 +72,8 @@ This is done via the {\tt ./landslide} script in the top-level directory, which:
 		creates a snapshot tarball of them and the current version of the user's code,
 		and sends it to me for nefarious research purposes.
 \end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Command-line argments}
 
@@ -108,6 +116,8 @@ The following ``secret'' arguments also exist, primarily for my own use in runni
 \end{itemize}
 
 Quicksand will automatically generate configuration files and invoke Landslide according to the process described in the next section.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Running Landslide directly}
 \label{sec:landslide-directly}
@@ -216,6 +226,8 @@ Unless otherwise specified these are boolean flags (1 or 0) and the example valu
 \end{itemize}
 \end{itemize}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsection{Bug reports}
 \label{sec:landslide-bugreport}
 
@@ -252,6 +264,8 @@ by searching for the macro {\tt FOUND\_A\_BUG\_HTML\_INFO} in Landslide's code.}
 \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Kernel annotations}
 
@@ -259,6 +273,8 @@ The educational experiments in this thesis focus on projects which students impl
 Such understanding is conferred via the annotations described in this section.
 For P2 and Pintos students I supply these annotations behind the scenes,
 but a CMU 15-410 student who wishes to use Landslide on their kernel project shall need to brave forth hereupon.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{config.landslide annotations}
 \label{sec:landslide-config-landslide}
@@ -324,6 +340,8 @@ Following are the less self-explanatory options.
 	\item {\tt ignore\_dr\_function NAME USERSPACE} - specifies a function whose memory access should not be counted as data races (but still be considered memory conflicts for DPOR).
 		{\tt USERSPACE} should be 0 or 1 to denote a kernel-space or user-space function respectively.
 \end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{In-kernel code annotations}
 
@@ -398,6 +416,8 @@ as the names of the mutex interface are mandated by the project specification.)
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Architecture}
 
@@ -411,6 +431,8 @@ Both simulators invoke Landslide once per instruction and once per memory read o
 % just before..
 The entry point is the aptly-named {\tt landslide\_entrypoint()} in {\tt landslide.c},
 which then dispatches to various other modules their respective analyses, described as follows.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Execution Tree}
 \label{sec:landslide-save}
@@ -441,6 +463,8 @@ Each {\tt hax} stores the following information:
 		and if so what {\tt xabort} codes are possible and/or already explored for this transaction
 		(\sect{\ref{chap:txn}}).
 \end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Scheduler}
 \label{sec:landslide-scheduler}
@@ -499,6 +523,8 @@ the scheduler repeats this process until it is.%
 \footnote{Note that this ``loop'' is not structured as an explicit loop in Landslide's code,
 but rather as part of the state machine which updates each time a new instruction is traced.}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsection{Memory analysis}
 \label{sec:landslide-memory}
 
@@ -530,6 +556,8 @@ Any such conflicts which also fail a lockset
 and/or happens-before check (\sect{\ref{sec:landslide-datarace}})
 are then reported as data races.
 Regardless, all such conflicts are later used by DPOR (\sect{\ref{sec:landslide-dpor}}) to find dependent transition pairs.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Machine state manipulation}
 
@@ -579,6 +607,8 @@ from {\tt interrupts\_enabled()} if needed;
 while {\tt interrupts\_enabled()} must be true before invoking {\tt cause\_timer\_interrupt()},
 if the kernel is not ready the interrupt may not be received for a long time.
 Also, use of {\tt cause\_timer\_interrupt\_immediately()} must not be used while the kernel is not ready.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{State space traversal}
 
@@ -654,6 +684,7 @@ The {\tt const} is absolutely, inviolably, not to be casted away, at the sacred 
 why it's ok is documented in an {\tt XXX} comment in the code.}
 Thence the typechecker enforces that all exploration-related state is properly propagated while scheduler state is automatically reverted.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % time travel, explore, arbiter
 \subsection{Bug-finding output}
@@ -747,6 +778,8 @@ potentially producing both console output and HTML output (controlled by the {\t
 It should be invoked by the {\tt FOUND\_A\_BUG} macro defined in {\tt found\_a\_bug.h},
 or by {\tt FOUND\_A\_BUG\_HTML\_INFO}, which also allows the caller to specify a callback to print extra details (such as use-after-free stack traces) in the bug report.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsection{Pebbles-specific features}
 \label{sec:landslide-pebblesspecifics}
 
@@ -782,6 +815,8 @@ This section lists special cases of instrumentation specific to the Pebbles kern
 		use {\tt PATHOS\_SYSCALL\_IRET\_DISTANCE} (\sect{\ref{sec:landslide-config-landslide}})
 		to track {\tt esp}'s value across the stack switch.
 \end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Pintos-specific features}
 \label{sec:landlside-pintosspecifics}
@@ -828,6 +863,8 @@ This section lists special cases of instrumentation specific to the Pintos kerne
 		will use the boundaries of {\tt run\_test()} to denote the test lifecycle.
 \end{itemize}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsection{Handy scripts}
 \label{sec:landslide-glue}
 
@@ -866,6 +903,8 @@ The files {\tt kernel\_specifics.c}, {\tt user\_specifics.c}, and {\tt student.c
 for interpreting the current program state with respect to these values.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Algorithms of note}
 
@@ -873,13 +912,94 @@ for interpreting the current program state with respect to these values.
 %\subsection{Kernel annotations}
 %\subsection{Bug identification}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsection{Preemption point identification}
 \label{sec:landslide-pps}
 % TODO: talk about how w/in func and w/out func are processed
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsection{State space estimation}
 \label{sec:landslide-estimate}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsection{Dynamic Partial Order Reduction}
 \label{sec:landslide-dpor}
+
+Landslide implements Dynamic Partial Order Reduction (DPOR) \cite{dpor}
+to identify concurrent yet independent thread transitions
+whose permutations can safely be pruned from the state space
+while still testing all possible program behaviours.
+
+The DPOR implementation consists of 3 parts:
+computing memory conflicts, computing happens-before,
+and tagging alternate branches to explore to drive the state space exploration.
+The former two are computed as each preemption point is reached,
+for the associated thread transition pairwise with all other preceding thread transitions.
+The latter is computed at the end of each full interleaving executed, using the results of the two former,
+and constitutes the bulk of the algorithm.
+
+\subsubsection{Happens-before}
+
+The happens-before relation expresses when two thread transitions can potentially be reordered,
+or in other words, are concurrent (despite the serialized nature of the simulated execution).
+This relation is expressed in the following definitions paraphrased from \cite{dpor}.
+
+\begin{itemize}
+	\item {\bf Enabled}: A transition $t$ is enabled in a state $s$ when a state $s'$ exists such that $s \xrightarrow{t} s'$ exists.
+		In systems terms, the scheduler at state $s$ considers the thread corresponding to $t$ to be runnable.
+	\item {\bf Dependent}: Two transitions $t_i$ and $t_j$ are dependent if
+		\begin{itemize}
+			\item $t_1$ is enabled in $s$ and $s \xrightarrow{t_1} s'$, and
+			\item $t_2$ is enabled in $s$ but not enabled in $s'$, or vice versa.
+		\end{itemize}
+		In systems terms, either $t_1$ and $t_2$ belong to the same thread,
+		or the execution of $t_1$ at $s$ causes $t_2$'s thread
+		to change state from blocked to runnable or vice versa.
+		Landslide computes this relation in {\tt enabled\_by()} in {\tt save.c}.
+		\footnote{The original definition includes a second criterion that, from $s$,
+		the executions $t_1 t_2$ and $t_2 t_1$ result in identical states;
+		this captures the memory independence relation which I defer to the next subsection.}
+	\item {\bf Happens-Before}: The happens-before relation for a transition sequence $S = t_1 \dots t_n$
+		is the smallest relation $\rightarrow_S$ on ${1 \dots n}$ such that
+		\begin{enumerate}
+			\item if $i < j$ and $S_i$ and $S_j$ are dependent then $i \rightarrow_S j$, and
+			\item $\rightarrow_S$ is transitively closed.
+		\end{enumerate}
+		Landslide computes this relation in the aptly-named {\tt compute\_happens\_before()} in {\tt save.c}.
+\end{itemize}
+The happens-before relation is a partial order expressing the scheduling constraints of a given interleaving.
+All pairs of interleavings not included are subject to reordering,
+and hence candidates for new thread interleavings to test.
+
+Note that DPOR's notion of happens-before differs from the traditional distributed systems definition \cite{lamport-clocks}
+or Pure Happens-Before;
+rather, it coincides with condition 3 of Limited Happens-Before as defined in \sect{\ref{sec:background-datarace}}
+(in fact, Landslide's Limited HB implementation simply reuses the same result computed for DPOR's purpose).
+
+\subsubsection{Memory conflicts}
+
+The memory conflict relation expresses when two thread transitions are dependent,
+or in other words, when their behaviour could potentially vary depending which executes first.
+
+When each preemption point is reached,
+Landslide saves the current set of all memory accesses since the previous preemption point,
+compares it to the accesses from all previous transitions by different threads
+which weren't marked as happens-before in the previous section,
+and then empties that set for the next thread transition ({\tt shimsham\_shm()} in {\tt save.c}).
+
+The set intersection is implemented in {\tt mem\_shm\_interseect()} in {\tt memory.c}.
+It checks for read/write and write/write pairs to the same address with an $O(\mathsf{max}(m,n))$ scan of both access sets (pre-sorted).
+Whenever a conflict is identified, it also invokes the data race analysis (\sect{\ref{sec:landslide-datarace}}).
+It checks for {\tt free()}/access conflicts as well as access pairs,
+effectively treating deallocation of a heap block as a ``poisoning'' write to its entire contents,
+which should conflict with accesses to any address therein.
+
+\subsubsection{State space exploration}
+
+\subsubsection{Example}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Data race analysis}
 \label{sec:landslide-datarace}
@@ -953,6 +1073,8 @@ $n$ is always in the single digits, so I optimize for code simplicity.
 	\end{itemize}
 \end{itemize}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsection{Iterative Context Bounding}
 \label{sec:landslide-icb}
 
@@ -965,8 +1087,11 @@ Then, to summarize in pseudocode a na\"ive exploration of some state space $S$ a
 	\ForEach{$I \in S$}{
 		Execute($I$)
 	}
+	\caption{Straightforward exploration ordering}
+	\label{alg:not-icb}
 \end{algorithm}
 
+% TODO: make sure latex doesn't fuck up the algorithm placement
 ICB's approach could likewise be summarized as follows:
 
 \begin{algorithm}[h]
@@ -975,6 +1100,8 @@ ICB's approach could likewise be summarized as follows:
 			Execute($I$)
 		}
 	}
+	\caption{ICB exploration ordering}
+	\label{alg:icb}
 \end{algorithm}
 
 %% stupid imperative way to write it
@@ -994,13 +1121,28 @@ ICB's approach could likewise be summarized as follows:
 %	}
 %\end{algorithm}
 
-However, when combined with DPOR to prune equivalent interleavings,
-DPOR's reduction might not be sound with respect to the subset of $S$ under $P \le n$.
-Prior work introduced Bounded Partial Order Reduction (BPOR) \cite{bpor},
-a compatibility extension to DPOR for ICB to address this problem.
-I refer the reader interested in the algorithm's details to the citation;
-this section will discuss Landslide's implementation.
+First of all, note that Algorithm~\ref{alg:icb} is structured in a way that repeats interleavings
+with fewer than $n$ preemptions that have already been checked in previous iterations of the outer loop.
+This is because the number of preemptions in each branch is not known in advance;
+rather, the state space must always be explored in an overall depth-first approach,
+at best skipping too-preemptful interleavings as they are encountered.
+As simple as it would be to state ``{\bf foreach} $I \in {\mathsf{sort}_P(S)}$'' in pseudocode,
+implementing such an ordering would be much less straightforward. %
+% TODO: post committee review
+%\footnote{Translating conference papers' pseudocode into usable implementations is often quite difficult \cite{itg2}.}
+The core ICB loop appears in {\tt time\_travel()} in {\tt landslide.c}.
+%(although not explicitly structured as a C-style loop in the code)
 
+Secondly, prior work \cite{bpor} has shown that
+when combined with DPOR to prune equivalent interleavings,
+DPOR's reduction might not be sound with respect to the subset of $S$ under $P \le n$.
+That work introduced Bounded Partial Order Reduction (BPOR),
+a compatibility extension to DPOR for ICB to address this problem.
+To summarize, % TODO: summarize this once you write the DPOR section so you know what terminology to write in terms of
+%I refer the reader interested in the algorithm's details to the citation;
+%this section will discuss Landslide's implementation.
 % TODO: say how u do it
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Heuristic loop, deadlock, and synchronization detection}

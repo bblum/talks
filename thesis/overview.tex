@@ -384,6 +384,7 @@ Iterative Deepening, presented in Chapter~\ref{chap:quicksand}, is another such 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Data Race Analsyis}
+\label{sec:background-datarace}
 
 \begin{figure}[t]
         \small
@@ -569,7 +570,7 @@ The required concurrency primitives are as follows:
 		The primary challenge of this exercise is ensuring the aforementioned atomicity between {\tt cond\_wait}'s unlock and deschedule, with respect to the rest of the interface.
 	\item Semaphores, with the interface {\tt sem\_wait(sp)} and {\tt sem\_signal(sp)} (sometimes called {\em proberen} and {\em verhogen} in other literature). The semaphore can be initialized to any integer value; if initialized to 1, it behaves like a mutex.
 		Students typically implement semaphores using mutexes and condition variables, not using atomic instructions or system calls directly.
-	\item Reader-writer locks (rwlocks), with the interface {\tt rwlock\_lock(rwp, mode)} and {\tt rwlock\_unlock(rwp)}. {\tt mode} may be either {\tt RWLOCK\_READ} or {\tt RWLOCK\_}- {\tt WRITE}.
+	\item Reader-writer locks (rwlocks), with the interface {\tt rwlock\_lock(rwp, mode)} and {\tt rwlock\_unlock(rwp)}. {\tt mode} may be either {\tt RWLOCK\_READ} or {\tt RWLOCK\_\allowbreak{}WRITE}.
 		Behaves as mutexes, but multiple readers may access the critical section simultaneously.
 		Students typically implement rwlocks using mutexes and condition variables, not using atomic instructions or system calls directly.
 \end{itemize}
@@ -624,12 +625,12 @@ upon which students add more features in several projects.
 Most relevant to this thesis, the basecode provides the following functions/libraries, among others:
 \begin{itemize}
 	\item Semaphores (the basic concurrency primitive, implemented using direct scheduler calls): {\tt sema\_up}, {\tt sema\_down}, {\tt sema\_try\_down};
-	\item Locks (which simply wrap a semaphore initialized to 1), {\tt lock\_acquire}, {\tt lock\_}- {\tt release}, {\tt lock\_try\_acquire};
-	\item Condition variables (also implemented using scheduler calls): {\tt cond\_wait}, {\tt cond\_}- {\tt signal}, {\tt cond\_broadcast}, with the same semantics as Pebbles P2 condvars;
+	\item Locks (which wrap a semaphore initialized to 1), {\tt lock\_acquire}, {\tt lock\_\allowbreak{}release}, {\tt lock\_try\_acquire};
+	\item Condition variables (also implemented using scheduler calls): {\tt cond\_wait}, {\tt cond\_\allowbreak{}signal}, {\tt cond\_broadcast}, with the same semantics as Pebbles P2 condvars;
 	\item Basic round-robin scheduling facilities: {\tt thread\_block} (a kernel-level analogue to Pebbles's {\tt deschedule}), {\tt thread\_yield}
 	\item Kernel thread lifecycle management, {\tt thread\_create} and {\tt thread\_exit}, including stack space memory management;
 	\item Interrupt and fault handlers;
-	\item A page allocator, {\tt palloc\_get\_page}, {\tt palloc\_get\_multiple}, {\tt palloc\_}- {\tt free\_page}, {\tt palloc\_free\_multiple}
+	\item A page allocator, {\tt palloc\_get\_page}, {\tt palloc\_get\_multiple}, {\tt palloc\_free\_page}, and {\tt palloc\_free\_multiple}
 \end{itemize}
 Both Pebbles and Pintos basecodes offer a standard C library including {\tt malloc}, string-formatting, printing, etc.
 
