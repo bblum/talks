@@ -1038,27 +1038,44 @@ Landslide's implementation represents $S$ as a list of {\tt struct hax}es, defin
 each one representing a preemption point, or intermediate state between two transitions.
 
 {\bf Identifying new interleavings.}
-To summarize, for each pair of transitions $t_i$ and $t_j$ ($i<j$),
-DPOR identifies interleavings which will reorder them,
-executing $t_j' t_i'$ to reach a new program state not exposed in the current interleaving.
+To find which alternate interleavings need to be tested,
+% TODO: change i<4 to i<j.
+% i accidentally typed i<4 here and decided it'd be funny to leave it this way
+DPOR compares pairwise each pair of transitions $t_i$ and $t_j$, $i<4$, in the current interleaving $S$.
 If $t_i \rightarrow_S t_j$ then they cannot be reordered,
 and if $t_i \not\leftrightsquigarrow_S t_j$ then reordering them
 will produce a state already encountered in this interleaving;
-hence, DPOR considers only transition pairs
-which are not related by happens-before and are related by memory conflict ({\tt is\_evil\_ancestor()}).
+hence, DPOR marks new interleavings only
+when $t_i \not\rightarrow_S t_j$ and $t_i \leftrightsquigarrow_S t_j$
+%for transition pairs not related by happens-before and are related by memory conflict
+({\tt is\_evil\_ancestor()}).
+\footnote{To aid intuition, consider the two extremes:
+if all transitions are related by happens-before,
+the program is not concurrent and no alternate interleavings are possible;
+if all transitions are memory-independent,
+the program exhibits full data isolation between threads and all schedules are observably equivalent.}
 
-% TODO: change i<4 to i<j.
-% i accidentally typed i<4 here and decided it'd be funny to leave it this way
-For each such pair $t_i$, $t_j$, $i<4$, let $s$ denote the state (preemption point) immediately before $t_i$.
+For each such pair, let $s$ denote the state (preemption point) before $t_i$.
 Then:
 \begin{itemize}
 	\item If $T(t_j)$ is runnable at $s$, return $I_{ij} = (t_1 \dots t_{i-1}, T_j)$ ({\tt tag\_good\_sibling()}).
-	\item Otherwise, there must be some third thread runnable at $s$
-		(from $t_i \not\rightarrow_S t_j$, by contrapositive of the second condition of dependence);
+	\item Otherwise, there must be some third thread runnable at $s$;
+		\footnote{AFSOC $T(t_i)$ is the only runnable thread at $s$,
+		then either $T(t_i)$'s execution at $s$ enabled $T(t_j)$,
+		or it enabled an intermediate transition
+		(whether by $T(t_i)$ or a third thread)
+		which in turn enabled $T(t_j)$.
+		In either case $t_i$ is transitively dependent with $t_j$, contradicting $t_i \not\rightarrow_S t_j$.}
+		%(from $t_i \not\rightarrow_S t_j$, by contrapositive of the second condition of dependence);
 		then, return all $I_{ik} = (t_1 \dots t_{i-1}, T_k)$ such that
 		$T_k \ne T(t_i)$ and $T_k$ is runnable at $s$
 		({\tt tag\_all\_siblings()}).
 \end{itemize}
+
+To summarize, %for each pair of transitions $t_i$ and $t_j$ ($i<j$) in $S$,
+DPOR identifies $I_{ij}$s which will (eventually) reorder each conflicting, concurrent transition pair in $S$
+%executing some $t_j' t_i'$
+to reach a (possibly) new program state not exposed in the current interleaving.
 
 {\bf Tracking already-visited interleavings.}
 Let $U(I_{ij})$ denote the sub-state-space (or sub-tree) beginning at the next preemption point reached
@@ -1095,7 +1112,7 @@ the exploration is complete.
 
 Acknowledging that quickly gaining an intuitive understanding for an algorithm
 is basically impossible from just paragraphs of text,
-I provide in this section an example of a single iteration of DPOR
+I conclude this section with an example of a single iteration of DPOR
 on the example state space from Figures~\ref{fig:concurrency-bug} and \ref{fig:tree}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1107,7 +1124,8 @@ Whenever a memory conflict is identified for DPOR as described above,
 the access pair's corresponding locksets and/or happens-before edges are checked to determine if it's also a data race.
 Note the distinction: DPOR memory conflicts indicate that two thread transitions,
 if reordered, could produce different behaviour, even if all accesses therein are adequately synchronized;
-while a data race indicates furthermore that the two threads can be interleaved precisely at the moment of one or both accesses.
+while a data race indicates furthermore that the two threads can be interleaved precisely at the moment of one or both accesses,
+supposing that a new preemption point were introduced to split one or both transitions in half.
 % nb. i think "only one of the accesses can be preempted at and have the other interleaved inside, but not the other way around,
 % is a property of cli/sti involvement in kernel space only.
 
@@ -1119,8 +1137,10 @@ and happens-before edges, for pure happens-before
 \subsubsection{Limited Happens-Before}
 \label{sec:landslide-lhb}
 
-Conditions 1, 2, and 4 defined in \sect{\ref{sec:background-hb}}, provided the Limited Happens-Before definition for \#4,
-coincide exactly with the conditions to be considered a memory conflict under DPOR.
+Conditions \#1, \#2, and \#4 defined in \sect{\ref{sec:background-hb}},
+provided the Limited Happens-Before definition for \#4,
+coincide with DPOR's version of happens-before described in the previous section.
+%coincide exactly with the conditions to be considered a memory conflict under DPOR.
 Hence all that remains to be checked is \#3, the set of locks held by each thread at the time of access.
 
 Routines for recording lockset changes and computing set intersection are found in {\tt lockset.c}.
