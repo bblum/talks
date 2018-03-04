@@ -932,12 +932,17 @@ whose permutations can safely be pruned from the state space
 while still testing all possible program behaviours.
 
 The DPOR implementation consists of 3 parts:
-computing memory conflicts, computing happens-before,
+computing happens-before,
+computing memory conflicts,
 and tagging alternate branches to explore to drive the state space exploration.
 The former two are computed as each preemption point is reached,
 for the associated thread transition pairwise with all other preceding thread transitions.
 The latter is computed at the end of each full interleaving executed, using the results of the two former,
 and constitutes the bulk of the algorithm.
+
+In this section $t_i$ will denote a transition between two program states during execution,
+with each state being a preemption point as identified in \sect{\ref{sec:landslide-pps}},
+and $T(t_i)$ will denote the thread which was scheduled to produce that transition.
 
 \subsubsection{Happens-before}
 
@@ -946,58 +951,149 @@ or in other words, are concurrent (despite the serialized nature of the simulate
 This relation is expressed in the following definitions paraphrased from \cite{dpor}.
 
 \begin{itemize}
-	\item {\bf Enabled}: A transition $t$ is enabled in a state $s$ when a state $s'$ exists such that $s \xrightarrow{t} s'$ exists.
-		In systems terms, the scheduler at state $s$ considers the thread corresponding to $t$ to be runnable.
+	\item {\bf Enabled}: A transition $t_i$ is enabled in a state $s$ when a state $s'$ exists such that $s \xrightarrow{t_i} s'$ exists.
+		In systems terms, the scheduler at state $s$ considers $T(t_i)$ to be runnable.
 	\item {\bf Dependent}: Two transitions $t_i$ and $t_j$ are dependent if
-		\begin{itemize}
+		\begin{enumerate}
 			\item $t_1$ is enabled in $s$ and $s \xrightarrow{t_1} s'$, and
 			\item $t_2$ is enabled in $s$ but not enabled in $s'$, or vice versa.
-		\end{itemize}
-		In systems terms, either $t_1$ and $t_2$ belong to the same thread,
-		or the execution of $t_1$ at $s$ causes $t_2$'s thread
+		\end{enumerate}
+		In systems terms, either $T(t_1) = T(t_2)$,
+		or the execution of $t_1$ at $s$ causes $T(t_2)$
 		to change state from blocked to runnable or vice versa.
+		\footnote{The original paper's definition includes a second criterion that, from $s$,
+		%the executions $t_1 t_2$ and $t_2 t_1$ result in identical states;
+		a state $s'$ exists such that both $s \xrightarrow{t_1 t_2} s'$ and $s \xrightarrow{t_2 t_1} s'$.
+		This captures the memory independence relation,
+		but computationally requires direct comparison of program states.
+		{\em Stateless} model checkers compute memory conflicts separately from happens-before,
+		to find and prune such identical states implicitly,
+		as described in the next two subsections.}
 		Landslide computes this relation in {\tt enabled\_by()} in {\tt save.c}.
-		\footnote{The original definition includes a second criterion that, from $s$,
-		the executions $t_1 t_2$ and $t_2 t_1$ result in identical states;
-		this captures the memory independence relation which I defer to the next subsection.}
 	\item {\bf Happens-Before}: The happens-before relation for a transition sequence $S = t_1 \dots t_n$
 		is the smallest relation $\rightarrow_S$ on ${1 \dots n}$ such that
 		\begin{enumerate}
 			\item if $i < j$ and $S_i$ and $S_j$ are dependent then $i \rightarrow_S j$, and
 			\item $\rightarrow_S$ is transitively closed.
 		\end{enumerate}
-		Landslide computes this relation in the aptly-named {\tt compute\_happens\_before()} in {\tt save.c}.
+		Landslide computes this relation in
+		%the aptly-named
+		{\tt compute\_happens\_before()} in {\tt save.c}.
 \end{itemize}
 The happens-before relation is a partial order expressing the scheduling constraints of a given interleaving.
 All pairs of interleavings not included are subject to reordering,
-and hence candidates for new thread interleavings to test.
+and hence candidates for new interleavings to test.
 
 Note that DPOR's notion of happens-before differs from the traditional distributed systems definition \cite{lamport-clocks}
-or Pure Happens-Before;
-rather, it coincides with condition 3 of Limited Happens-Before as defined in \sect{\ref{sec:background-datarace}}
+as used in Pure Happens-Before \sect{\ref{sec:background-hb}};
+rather, it coincides with condition 3 of Limited Happens-Before %as defined in \sect{\ref{sec:background-datarace}}
 (in fact, Landslide's Limited HB implementation simply reuses the same result computed for DPOR's purpose).
 
 \subsubsection{Memory conflicts}
 
-The memory conflict relation expresses when two thread transitions are dependent,
+The memory conflict relation expresses when two transitions are dependent,
 or in other words, when their behaviour could potentially vary depending which executes first.
 
-When each preemption point is reached,
-Landslide saves the current set of all memory accesses since the previous preemption point,
-compares it to the accesses from all previous transitions by different threads
-which weren't marked as happens-before in the previous section,
-and then empties that set for the next thread transition ({\tt shimsham\_shm()} in {\tt save.c}).
+Upon execution of each $t_j \in S$,
+Landslide saves the current set of all memory accesses since the previous preemption point (call this $M(t_j)$),
+compares it to all $M(t_i)$ with $i < j$ and $i \not\rightarrow_S j$,
+and then begins recording subsequent memory accesses in a new empty set for $t_{j+1}$.
+%When each preemption point is reached,
+%Landslide saves the current set of all memory accesses since the previous preemption point,
+%compares it to the accesses from all previous transitions by different threads
+%which weren't marked as happens-before in the previous section,
+%and then empties that set for the next thread transition
+({\tt shimsham\_shm()} in {\tt save.c}).
+These $M(t)$ sets are mappings from memory addresses to
+instruction pointer value, read-or-write boolean, lockset or vector clock, and various other metadata
+({\tt struct mem\_lockset} in {\tt memory.h}).
 
 The set intersection is implemented in {\tt mem\_shm\_interseect()} in {\tt memory.c}.
 It checks for read/write and write/write pairs to the same address with an $O(\mathsf{max}(m,n))$ scan of both access sets (pre-sorted).
+If any address $a$ exists with $a \in M(t_i)$ and $a \in M(t_j)$ and $M(t_i)(a) = \mathsf{write} \vee M(t_j)(a) = \mathsf{write}$
+then $t_i$ and $t_j$ are said to conflict,
+which I will denote $t_i \leftrightsquigarrow_S t_j$.
+
 Whenever a conflict is identified, it also invokes the data race analysis (\sect{\ref{sec:landslide-datarace}}).
 It checks for {\tt free()}/access conflicts as well as access pairs,
 effectively treating deallocation of a heap block as a ``poisoning'' write to its entire contents,
-which should conflict with accesses to any address therein.
+which is considered to conflict with accesses to any address therein
+on the grounds that reordering may expose a use-after-free.
 
 \subsubsection{State space exploration}
 
+The core of the DPOR algorithm is implemented in {\tt explore()} in {\tt explore.c}.
+
+{\bf Definition.}
+Given a transition sequence (execution, interleaving, preemption trace) $S = t_1 \dots t_n$,
+the DPOR algorithm identifies any number of alternate interleavings that must be tested.
+Each such interleaving I will denote in this section as $I_{ij} = (t_1 \dots t_{i-1}, T_j)$,
+where $t_1 \dots t_{i-1}$ is the common execution prefix shared between $S$ and the new interleaving,
+and $T_j$ is the thread ID to be scheduled after $t_{i-1}$, $T_j \ne T(t_i)$.
+%to run {\em instead} of $T(t_i)$.
+\footnote{I describe $T_j$ as a thread ID here, rather than as a thread transition,
+because the nature of the transition (its memory accesses, the subsequent state, etc)
+is unknown until we actually execute it.}
+Landslide's implementation represents $S$ as a list of {\tt struct hax}es, defined in {\tt tree.h},
+each one representing a preemption point, or intermediate state between two transitions.
+
+{\bf Identifying new interleavings.}
+To summarize, for each pair of transitions $t_i$ and $t_j$ ($i<j$),
+DPOR identifies interleavings which will reorder them,
+executing $t_j' t_i'$ to reach a new program state not exposed in the current interleaving.
+If $t_i \rightarrow_S t_j$ then they cannot be reordered,
+and if $t_i \not\leftrightsquigarrow_S t_j$ then reordering them
+will produce a state already encountered in this interleaving;
+hence, DPOR considers only transition pairs
+which are not related by happens-before and are related by memory conflict ({\tt is\_evil\_ancestor()}).
+
+% TODO: change i<4 to i<j.
+% i accidentally typed i<4 here and decided it'd be funny to leave it this way
+For each such pair $t_i$, $t_j$, $i<4$, let $s$ denote the state (preemption point) immediately before $t_i$.
+Then:
+\begin{itemize}
+	\item If $T(t_j)$ is runnable at $s$, return $I_{ij} = (t_1 \dots t_{i-1}, T_j)$ ({\tt tag\_good\_sibling()}).
+	\item Otherwise, there must be some third thread runnable at $s$
+		(from $t_i \not\rightarrow_S t_j$, by contrapositive of the second condition of dependence);
+		then, return all $I_{ik} = (t_1 \dots t_{i-1}, T_k)$ such that $T_k$ is runnable at $s$ and $T_k \ne T(t_i)$
+		({\tt tag\_all\_siblings()}).
+\end{itemize}
+
+{\bf Tracking already-visited interleavings.}
+Let $U(I_{ij})$ denote the sub-state-space (or sub-tree) beginning at the state
+which results from executing $T_j$ after $t_1 \dots t_{i-1}$;
+in other words, all sequences $S' = t_1 \dots t_{i-1}, t'_i, \dots t'_{n'}$ with $T(t'_{i+1}) = T_j$.
+I use a depth-first search ordering,
+so for any such $U$ outside the current interleaving,
+either all or none of its $S'$s will have been tested already.
+Therefore, to avoid repeating interleavings,
+Landslide need only store at each {\tt struct hax} a list of threads
+such that their corresponding subtree $U$ is fully explored,
+and can omit any non-constant-size information about the contents of that $U$
+({\tt struct hax\_child} in the code).
+Hence Landslide's DPOR implementation's memory cost is $O(n*k)$,
+$k$ being the average number of runnable threads at each preemption point.
+
+{\bf Choosing which new interleaving to test next.}
+Among all interleavings chosen by DPOR not already marked as explored,
+Landslide chooses the one with the longest execution prefix matching the current $S$,
+to maintain the depth-first search invariant.
+(In the case of a tie, differing only by which thread to run, it chooses arbitrarily.)
+All other new interleavings are marked to explore later in their corresponding {\tt struct hax},
+and automatically included in the result of any future iterations of DPOR until they are tested.
+Because the one with the longest execution prefix was chosen to test next,
+all others must share their execution prefixes with it,
+so storing markers for the others during the next execution is still $O(1)$ memory.
+
+When DPOR returns no new $I_{ij}$s not already marked in the set of visited subtrees,
+the exploration is complete.
+
 \subsubsection{Example}
+
+Acknowledging that quickly gaining an intuitive understanding for an algorithm
+is basically impossible from just paragraphs of text,
+I provide in this section an example of a single iteration of DPOR
+on the example state space from Figures~\ref{fig:concurrency-bug} and \ref{fig:tree}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
