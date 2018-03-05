@@ -1115,6 +1115,8 @@ is basically impossible from just paragraphs of text,
 I conclude this section with an example of a single iteration of DPOR
 on the example state space from Figures~\ref{fig:concurrency-bug} and \ref{fig:tree}.
 
+% TODO
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Data race analysis}
@@ -1199,12 +1201,12 @@ $n$ is always in the single digits, so I optimize for code simplicity.
 
 Iterative Context Bounding \cite{chess-icb} is a state space exploration strategy
 that prioritizes interleavings with fewer total preemptions first.
-Let $P(I)$ denote the number of preemptions in an interleaving $I$.
-Then, to summarize in pseudocode a na\"ive exploration of some state space $S$ as:
+Let $P(S)$ denote the number of preemptions in an execution sequence $S$.
+Then, to summarize in pseudocode a na\"ive exploration of some state space $U$ as:
 
 \begin{algorithm}[h]
-	\ForEach{$I \in S$}{
-		Execute($I$)
+	\ForEach{$S \in U$}{
+		Execute($S$)
 	}
 	\caption{Straightforward exploration ordering}
 	\label{alg:not-icb}
@@ -1214,9 +1216,9 @@ Then, to summarize in pseudocode a na\"ive exploration of some state space $S$ a
 ICB's approach could likewise be summarized as follows:
 
 \begin{algorithm}[h]
-	\For{$n \in [0..\mathsf{max}_P(S)]$}{
-		\ForEach{$I \in S, P(I) \le n$}{
-			Execute($I$)
+	\For{$n \in [0..\mathsf{max}_P(U)]$}{
+		\ForEach{$S \in U, P(S) \le n$}{
+			Execute($S$)
 		}
 	}
 	\caption{ICB exploration ordering}
@@ -1227,9 +1229,9 @@ ICB's approach could likewise be summarized as follows:
 %\begin{algorithm}[h]
 %	\For{$n \in [0..\infty]$}{
 %		$\mathsf{skipped\_any} := \mathsf{false}$ \\
-%		\ForEach{$I \in S$}{
-%			\uIf{$P(I) \le n$}{
-%				Execute($I$)
+%		\ForEach{$S \in U$}{
+%			\uIf{$P(S) \le n$}{
+%				Execute($S$)
 %			} \Else {
 %				$\mathsf{skipped\_any} := \mathsf{true}$
 %			}
@@ -1245,19 +1247,34 @@ with fewer than $n$ preemptions that have already been checked in previous itera
 This is because the number of preemptions in each branch is not known in advance;
 rather, the state space must always be explored in an overall depth-first approach,
 at best skipping too-preemptful interleavings as they are encountered.
-As simple as it would be to state ``{\bf foreach} $I \in {\mathsf{sort}_P(S)}$'' in pseudocode,
+As simple as it would be to state ``{\bf foreach} $S \in {\mathsf{sort}_P(U)}$'' in pseudocode,
 implementing such an ordering would be much less straightforward. %
 % TODO: post committee review
 %\footnote{Translating conference papers' pseudocode into usable implementations is often quite difficult \cite{itg2}.}
 The core ICB loop appears in {\tt time\_travel()} in {\tt landslide.c}.
 %(although not explicitly structured as a C-style loop in the code)
 
+\subsubsection{Bounded Partial-Order Reduction}
+
 Secondly, prior work \cite{bpor} has shown that
 when combined with DPOR to prune equivalent interleavings,
-DPOR's reduction might not be sound with respect to the subset of $S$ under $P \le n$.
+DPOR's reduction might not be sound with respect to the subset of $U$ under $P \le n$.
 That work introduced Bounded Partial Order Reduction (BPOR),
 a compatibility extension to DPOR for ICB to address this problem.
-To summarize, % TODO: summarize this once you write the DPOR section so you know what terminology to write in terms of
+
+To summarize, when DPOR identifies some interleaving $I_{ij}$ to test,
+it may not be possible to execute $T(t_j)$ after $t_i$ without exceeding the current preemption bound.
+However, there may exist another interleaving $J_{i'j}$ within the bound which runs $T(t_j)$ before $t_i$.
+If a DPOR implementation na\"ively configured with ICB simply skipped $I$ on account of the preemption bound,
+there's no guarantee $J$ would get marked for exploration
+from any other iteration and/or any other pair of conflicting transitions.
+Even though restricting the state space to a certain maximum preemption bound is already unsound
+in terms of losing full concurrency coverage,
+failing to test even $J$ would be a failure of DPOR itself
+to soundly prune the already-reduced state space defined by the bound.
+Hence the need for BPOR, to ensure that if such an alternative $J$ to $I$ exists within the bound,
+$J$ gets marked for exploration immediately.
+
 %I refer the reader interested in the algorithm's details to the citation;
 %this section will discuss Landslide's implementation.
 % TODO: say how u do it
