@@ -1,4 +1,6 @@
 \chapter{Landslide}
+\label{chap:landslide}
+
 \inspirationalquote{Somewhere is the promise of an uncharted trail, with 700 branching limbs and 700 ways to fail.}
 {ThouShaltNot, "Cardinal Directions"}
 
@@ -31,7 +33,7 @@ and hence unlike other chapters is written in the style of documentation rather 
 
 This section describes the features of Landslide the average student user should expect to interact with.
 % TODO: make more specific section reference
-Separate user guides also exist, described in Chapter~\ref{chap:410}.
+Separate user guides also exist, described in Chapter~\ref{chap:education}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -461,7 +463,7 @@ Each {\tt hax} stores the following information:
 		(not necessarily fully explored yet) for estimation \sect{\ref{sec:landslide-estimate}};
 	\item Whether this point is an {\tt xbegin} invocation
 		and if so what {\tt xabort} codes are possible and/or already explored for this transaction
-		(\sect{\ref{chap:txn}}).
+		(\sect{\ref{chap:tm}}).
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -533,7 +535,7 @@ It tracks heap allocations, checks reads and writes in the heap region against s
 tracks reads and writes (in any region) from each thread
 and checks them against each other
 for DPOR (\sect{\ref{sec:landslide-dpor}})
-and data race analysis (\sect{\ref{sect:landslide-datarace}}).
+and data race analysis (\sect{\ref{sec:landslide-datarace}}).
 
 \subsubsection{Heap checking}
 
@@ -819,7 +821,7 @@ This section lists special cases of instrumentation specific to the Pebbles kern
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Pintos-specific features}
-\label{sec:landlside-pintosspecifics}
+\label{sec:landslide-pintosspecifics}
 
 This section lists special cases of instrumentation specific to the Pintos kernel.
 

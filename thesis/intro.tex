@@ -81,7 +81,7 @@ This thesis will comprise three major contributions:
 		Iterative Deepening incorporates state space estimation \cite{estimation} to decide on-the-fly whether each state space is worth pursuing, and uses data race analysis \cite{tsan} to find new preemption point candidates based on a program's dynamic behaviour.
 		This section will include a large evaluation of the technique, comparing its performance to three prior work approaches across 600+ unique tests.
 		I will show that Iterative Deepening of preemption points outperforms prior work in terms both of finding bugs quickly and of completely verifying correctness when no bug exists.
-	\item {\bf Educational use (Chapters \ref{chap:410} and \ref{chap:pintos}).}
+	\item {\bf Educational use (Chapter \ref{chap:education}).}
 		For the past five semesters, I have offered a fully-automated version of Landslide to students in 15-410, CMU's undergraduate Operating System Design and Implementation class \cite{kspec,thrlib}, for use as a debugging aid during the thread library project.
 		Recently I have also extended Landslide to handle Pintos kernel projects from other universities \cite{pintos}.
 		In the two most recent semesters, I collaborated with Operating Systems course staff at two such schools, the University of Chicago and University of California at Berkeley,
