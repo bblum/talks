@@ -1242,6 +1242,8 @@ ICB's approach could likewise be summarized as follows:
 %	}
 %\end{algorithm}
 
+\subsubsection{Implementation}
+
 First of all, note that Algorithm~\ref{alg:icb} is structured in a way that repeats interleavings
 with fewer than $n$ preemptions that have already been checked in previous iterations of the outer loop.
 This is because the number of preemptions in each branch is not known in advance;
@@ -1251,12 +1253,33 @@ As simple as it would be to state ``{\bf foreach} $S \in {\mathsf{sort}_P(U)}$''
 implementing such an ordering would be much less straightforward. %
 % TODO: post committee review
 %\footnote{Translating conference papers' pseudocode into usable implementations is often quite difficult \cite{itg2}.}
-The core ICB loop appears in {\tt time\_travel()} in {\tt landslide.c}.
-%(although not explicitly structured as a C-style loop in the code)
+
+Therefore, Landslide's ICB implementation combines with DPOR
+when tagging new branches to explore at the end of each branch:
+just as DPOR skips alternate interleavings that are memory-independent,
+ICB further filters interleavings requiring more preemptions than the current bound
+out of the to-explore set.
+The macro {\tt ICB\_BLOCKED},
+defined in {\tt schedule.h},
+decides if a given thread would require a preemption beyond the current bound to switch to.
+The DPOR implementation then checks, for some $I_{ij}$ it wants to mark for exploration,
+whether {\tt ICB\_BLOCKED(}$T_j${\tt )} at the state after $t_i$,
+and skips it if so ({\tt tag\_good\_sibling()}/{\tt tag\_all\_siblings()}).
+\footnote{Since ``voluntary'' context switches (e.g. arising from {\tt yield()})
+are often necessary for correct execution,
+{\tt ICB\_BLOCKED} does not count such switches towards the preemption count.
+Therefore, within a certain preemption bound $b$,
+interleavings with more than $b$ context switches may still be tested.}
+
+Then, the entire state space is repeated with increasing bound until no such are filtered.
+This core ICB loop appears in {\tt time\_travel()} in {\tt landslide.c}.
+Although not explicitly structured as a C-style loop in the code,
+it resets Landslide's progress through the state space,
+allowing exploration to continue until it finally observes all interleavings to have fewer preemptions than the bound.
 
 \subsubsection{Bounded Partial-Order Reduction}
 
-Secondly, prior work \cite{bpor} has shown that
+Prior work \cite{bpor} has shown that
 when combined with DPOR to prune equivalent interleavings,
 DPOR's reduction might not be sound with respect to the subset of $U$ under $P \le n$.
 That work introduced Bounded Partial Order Reduction (BPOR),
@@ -1266,18 +1289,24 @@ To summarize, when DPOR identifies some interleaving $I_{ij}$ to test,
 it may not be possible to execute $T(t_j)$ after $t_i$ without exceeding the current preemption bound.
 However, there may exist another interleaving $J_{i'j}$ within the bound which runs $T(t_j)$ before $t_i$.
 If a DPOR implementation na\"ively configured with ICB simply skipped $I$ on account of the preemption bound,
-there's no guarantee $J$ would get marked for exploration
-from any other iteration and/or any other pair of conflicting transitions.
+$J$ may not get marked for exploration
+from any other iteration and/or pair of conflicting transitions.
 Even though restricting the state space to a certain maximum preemption bound is already unsound
-in terms of losing full concurrency coverage,
+in terms of losing full interleaving coverage,
 failing to test even $J$ would be a failure of DPOR itself
-to soundly prune the already-reduced state space defined by the bound.
+to soundly prune the already-reduced state space defined by that bound.
 Hence the need for BPOR, to ensure that if such an alternative $J$ to $I$ exists within the bound,
-$J$ gets marked for exploration immediately.
+it gets marked for exploration immediately.
 
-%I refer the reader interested in the algorithm's details to the citation;
-%this section will discuss Landslide's implementation.
-% TODO: say how u do it
+To implement BPOR,
+whenever {\tt ICB\_BLOCKED} causes DPOR to skip an interleaving,
+Landslide searches all transitions $t_k \in S$
+such that $t_k \prec_S t_i$ and $T(t_k) = T(t_i)$ and
+$\neg$\{$\exists t_l \in S$ such that $t_k \preceq_S t_l \prec_S t_i$ and $T(t_l) = T_j$\}
+({\tt stop\_bpor\_backtracking()}).
+All $I_{kj}$s which can be tested within the preemption bound are marked instead of $I_{ij}$
+({\tt tag\_reachable\_aunts()}).
+The reader interested in further algorithm details and the corresponding soundness proof is referred to \cite{bpor}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
