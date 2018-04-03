@@ -15,14 +15,16 @@
 \usepackage{proof}
 \usepackage{array}
 \usepackage{colortbl}
+\usepackage{xspace}
 \setbeamertemplate{navigation symbols}{}
 
-\title[Landslide]{{\bf Landslide: A New Race-Finding Tool for 15-410}}
+\newcommand\classname{CMPSC 473\xspace}
+\title[Landslide]{{\bf Landslide: Concurrency Bug-Finding for Pebbles}}
 \subtitle[]{ {\em more clever than } ``\texttt{agility\_drill}'' {\em since 2011.}}
 \author[Ben Blum]{Ben Blum \texttt{(bblum@andrew.cmu.edu)}}
 
-\institute[CMU 15-410]{Carnegie Mellon University - 15-410}
-\date[]{2018, February 16}
+\institute[PSU \classname]{Penn State University - \classname}
+\date[]{2018, April 3}
 
 \setbeamertemplate{footline}{\hspace*{.5cm}\scriptsize{\insertauthor\hspace*{50pt} \hfill\insertframenumber\hspace*{.5cm}}} 
 
@@ -52,7 +54,7 @@
 \definecolor{olivegreen}{RGB}{0,127,0}
 
 \begin{document}
-\renewcommand{\inserttotalframenumber}{39}
+\renewcommand{\inserttotalframenumber}{42}
 \normalem
 \begin{frame}
 	\titlepage
@@ -71,7 +73,7 @@
 \begin{frame}{Outline}
 	\textbf{Theory: Seeing concurrency bugs in a new way}
 	\begin{itemize}
-		\item Case study (example)
+		\item Examples
 		\item Tabular execution traces
 		\item The execution tree
 	\end{itemize}
@@ -83,8 +85,8 @@
 	\end{itemize}
 	{\bf Tool: Landslide}
 	\begin{itemize}
-		\item How it works
 		\item Automatically choosing preemption points
+		\item Demo (the fun part)
 		\item User study (that's you!)
 			% !!! SAY !!! : If you are struggling, this is not for you, etc.
 	\end{itemize}
@@ -96,7 +98,98 @@
 \definecolor{thread2}{RGB}{255,201,102}
 \definecolor{thread3}{RGB}{255,128,160}
 
-\begin{frame}{Case Study}
+% buggy atomics
+
+\begin{frame}{Case Study 1}
+	\begin{center}
+			\fbox{
+			\begin{tabular}{l}
+				libatomic/atomic.S \\
+				\hline
+				\\
+				\texttt{/* int atomic\_fetch\_add(volatile int* obj, int arg); */} \\
+				\texttt{.global atomic\_fetch\_add} \\
+				\texttt{atomic\_fetch\_add:} \\
+				\texttt{~~mov 4(\%esp), \%ecx~~~~~~// obj} \\
+				\texttt{~~mov 8(\%esp), \%edx~~~~~~// arg} \\
+				\texttt{~~mov~~(\%ecx), \%eax~~~~~~// return old value of obj} \\
+				\texttt{~~lock xadd \%edx, (\%ecx) // atomically increment obj} \\
+				\texttt{~~ret} \\
+			\end{tabular}
+			}
+		\pause
+		\linegap
+
+		\begin{itemize}
+			\item Loading {\tt \%ecx} separately breaks atomicity!
+			\item Two threads can see the same return value.
+		\end{itemize}
+	\end{center}
+\end{frame}
+\begin{frame}{Thread Interleavings (``good'' case)}
+	\begin{center}
+		\begin{tabular}{|l|l|}
+			\hline
+			\cellcolor{thread1} {\bf Thread 1} & \cellcolor{thread2} {\bf Thread 2} \\
+			\hline
+			\texttt{mov 4(\%esp), \%ecx} & \\
+			\texttt{mov 8(\%esp), \%edx} & \\
+			\texttt{mov~~(\%ecx), \%eax} & \\
+			\texttt{lock xadd \%edx, (\%ecx)} & \\
+			\texttt{ret} & \\
+			& \texttt{mov 4(\%esp), \%ecx} \\
+			& \texttt{mov 8(\%esp), \%edx} \\
+			& \texttt{mov~~(\%ecx), \%eax} \\
+			& \texttt{lock xadd \%edx, (\%ecx)} \\
+			& \texttt{ret} \\
+			\hline
+		\end{tabular}
+	\end{center}
+\end{frame}
+\begin{frame}{Thread Interleavings (different ``good'' case)}
+	\begin{center}
+		\begin{tabular}{|l|l|}
+			\hline
+			\cellcolor{thread1} {\bf Thread 1} & \cellcolor{thread2} {\bf Thread 2} \\
+			\hline
+			\texttt{mov 4(\%esp), \%ecx} & \\
+			\texttt{mov 8(\%esp), \%edx} & \\
+			& \texttt{mov 4(\%esp), \%ecx} \\
+			& \texttt{mov 8(\%esp), \%edx} \\
+			& \texttt{mov~~(\%ecx), \%eax} \\
+			& \texttt{lock xadd \%edx, (\%ecx)} \\
+			& \texttt{ret} \\
+			\texttt{mov~~(\%ecx), \%eax} & \\
+			\texttt{lock xadd \%edx, (\%ecx)} & \\
+			\texttt{ret} & \\
+			\hline
+		\end{tabular}
+	\end{center}
+\end{frame}
+\begin{frame}{Thread Interleavings (race condition)}
+	\begin{center}
+		\begin{tabular}{|l|l|}
+			\hline
+			\cellcolor{thread1} {\bf Thread 1} & \cellcolor{thread2} {\bf Thread 2} \\
+			\hline
+			\texttt{mov 4(\%esp), \%ecx} & \\
+			\texttt{mov 8(\%esp), \%edx} & \\
+			\texttt{mov~~(\%ecx), \%eax} & \\
+			& \texttt{mov 4(\%esp), \%ecx} \\
+			& \texttt{mov 8(\%esp), \%edx} \\
+			& \texttt{mov~~(\%ecx), \%eax} \\
+			& \texttt{lock xadd \%edx, (\%ecx)} \\
+			& \texttt{ret} \\
+			\texttt{lock xadd \%edx, (\%ecx)} & \\
+			\texttt{ret} & \\
+			\hline
+		\end{tabular}
+	\end{center}
+\end{frame}
+
+% paradise lost
+
+\begin{frame}{Case Study 2}
 	\begin{center}
 		\begin{tabular}{llll}
 			\fbox{
@@ -135,7 +228,7 @@
 		\linegap
 
 		\begin{itemize}
-			\item See {\bf Paradise Lost} lecture!
+			\item See {\bf Synchronization} lecture!
 			\item {\tt if} vs {\tt while}: Two consumers can race to make one fail.
 		\end{itemize}
 	\end{center}
@@ -229,7 +322,7 @@
 		\end{itemize}
 		\item Stress tests
 		\begin{itemize}
-			\item state of the art in 15-410
+			\item state of the art in \classname
 		\end{itemize}
 		\item Theorem proving
 		\begin{itemize}
@@ -344,22 +437,21 @@
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{Preemption Point Example (remember this?)}
+\begin{frame}{Preemption Point Example ({\tt atomic\_fetch\_add()})}
 	\fbox{
-	\begin{tabular}{l}
-	\texttt{boolean~want[2]~=~\{~false,~false~\};}\\
-	\\
 	\begin{tabular}{rll}
-		1 & \texttt{want[i]~=~true;} & \\
+		\multicolumn{3}{l}{\texttt{/* int atomic\_fetch\_add(volatile int* obj, int arg); */}} \\
+		1 & \texttt{.global atomic\_fetch\_add} \\
+		2 & \texttt{atomic\_fetch\_add:} \\
+		3 & \texttt{~~mov 4(\%esp), \%ecx} \\
 		  & & \footnotesize (preemption point A) \\
-		2 & \texttt{while~(want[j])} & \\
+		4 & \texttt{~~mov 8(\%esp), \%edx} \\
 		  & & \footnotesize (preemption point B) \\
-		3 & \texttt{~~~~~~~~continue;} & \\
+		5 & \texttt{~~mov~~(\%ecx), \%eax} \\
 		  & & \footnotesize (preemption point C) \\
-		4 & \texttt{//~...critical~section...} & \\
+		6 & \texttt{~~lock xadd \%edx, (\%ecx)} \\
 		  & & \footnotesize (preemption point D) \\
-		5 & \texttt{want[i]~=~false;} & \\
-	\end{tabular}
+		7 & \texttt{~~ret} \\
 	\end{tabular}
 	}
 	\linegap
@@ -369,27 +461,26 @@
 
 \end{frame}
 
-\begin{frame}{Preemption Point Example (remember this?)}
+\begin{frame}{Preemption Point Example ({\tt atomic\_fetch\_add()})}
 	\fbox{
-	\begin{tabular}{l}
-	\texttt{boolean~want[2]~=~\{~false,~false~\};}\\
-	\\
 	\begin{tabular}{rll}
-		1 & \texttt{want[i]~=~true;} & \\
+		\multicolumn{3}{l}{\texttt{/* int atomic\_fetch\_add(volatile int* obj, int arg); */}} \\
+		1 & \texttt{.global atomic\_fetch\_add} \\
+		2 & \texttt{atomic\_fetch\_add:} \\
+		3 & \texttt{~~mov 4(\%esp), \%ecx} \\
 		  & & \footnotesize (preemption point A) \\
-		2 & \texttt{while~(want[j])} & \\
-		  & & \footnotesize ~ \\
-		3 & \texttt{~~~~~~~~continue;} & \\
-		  & & \footnotesize ~ \\
-		4 & \texttt{//~...critical~section...} & \\
-		  & & \footnotesize ~ \\
-		5 & \texttt{want[i]~=~false;} & \\
-	\end{tabular}
+		4 & \texttt{~~mov 8(\%esp), \%edx} \\
+		  & & \footnotesize (preemption point B) \\
+		5 & \texttt{~~mov~~(\%ecx), \%eax} \\
+		  & & \footnotesize (preemption point C) \\
+		6 & \texttt{~~lock xadd \%edx, (\%ecx)} \\
+		  & & \footnotesize (preemption point D) \\
+		7 & \texttt{~~ret} \\
 	\end{tabular}
 	}
 	\linegap
 
-	Here, only preemption point A will trigger a deadlock. {\bf ~}\\
+	Here, only preemption point B will break atomicity. {\bf ~}\\
 	All other interleavings are benign.{\bf ~}
 
 \end{frame}
@@ -485,13 +576,13 @@
 \breakslide{\Huge Landslide}
 
 \begin{frame}{About The Project}
-	\textbf{About me}: Final year graduate student, advised by Garth Gibson
+	\textbf{About me}: Final year graduate student at Carnegie Mellon
 	\begin{itemize}
-		\item TAed 15-410 for 3 semesters during undergrad
+		\item TAed CMU OS (same thread project) for 3 semesters %during undergrad
 		%\item 1st graduate year was 5th year M.S., rest in Ph.D. program
 		\item Landslide's publication history
 		\begin{itemize}
-			\item Master's thesis
+			\item Master's thesis (CMU)
 			\begin{itemize}
 				\item \url{http://www.contrib.andrew.cmu.edu/~bblum/thesis.pdf}
 			\end{itemize}
@@ -506,7 +597,7 @@
 
 	{\bf About Landslide}
 	\begin{itemize}
-		\item Simics module, which traces:
+		\item Runs your code in a simulator (Bochs) which traces:
 			\begin{itemize}
 				\item Every instruction executed
 				\item Every memory access read/written
@@ -525,11 +616,8 @@
 	\textbf{Backtracking}
 	\begin{itemize}
 		\item Each time test completes, identify a PP to replay differently
-		\item Reset machine state and start over
-		\item Implemented using Simics bookmarks
-			\begin{itemize}
-				\item {\tt set-bookmark} and {\tt skip-to}
-			\end{itemize}
+		\item Reset thread library state and start over
+		% \item Implemented with fork() in Bochs
 		\item Replay test from the beginning, with a different interleaving
 	\end{itemize}
 	\pause
@@ -538,17 +626,18 @@
 	{\bf Controlling scheduling decisions}
 	\begin{itemize}
 		\item Tool must control all sources of nondeterminism
-		\item In 15-410, just timer and keyboard interrupts
+		\item For thread libraries, just timer interrupts
+		%\item In 15-410, just timer and keyboard interrupts
 			% optional - say: "in real kernels, disk/network io interrupts"
 		\item Landslide repeatedly fires timer ticks until desired thread is run.
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{Landslide \& You}
-	\begin{center}
-	\includegraphics[width=0.85\textwidth]{landslide-new-blank.pdf}
-	\end{center}
-\end{frame}
+%\begin{frame}{Landslide \& You}
+%	\begin{center}
+%	\includegraphics[width=0.85\textwidth]{landslide-new-blank.pdf}
+%	\end{center}
+%\end{frame}
 
 \begin{frame}{Landslide \& You}
 	\begin{center}
@@ -567,7 +656,7 @@
 	\linegap
 	Landslide can {\em reasonably suspect:}
 	\begin{itemize}
-		\item Infinite loop (halting problem)
+		\item Infinite loop (see: halting problem)
 		\item Data race bugs
 	\end{itemize}
 \end{frame}
@@ -584,7 +673,8 @@
 
 	Data races are {\em not necessarily} bugs, just highly suspicious!
 	\begin{itemize}
-		\item Bakery alg: Is {\tt number[i]=max(number[0],number[1])+1} bad?
+		%\item Bakery alg: Is {\tt number[i]=max(number[0],number[1])+1} bad?
+		\item Atomic load/store: Is {\tt mov \%ecx, \%edx} bad?
 		%\item Is unprotected {\tt foobar\_statistics\_counter++} bad?
 		\item What about unprotected {\tt next\_thread\_id++}?
 		\item ``If threads interleaved the wrong way here, it {\em might} crash later.''
@@ -605,7 +695,7 @@
 
 	State of the art tools choose a fixed set of preemption points.
 	\begin{itemize}
-		\item E.g., ``all thread API calls'' or ``all kernel mutex locks/unlocks''
+		\item E.g., ``all thread API calls'' or ``all mutex locks/unlocks''
 		\item Depending on length of test, completion time is unpredictable.
 		\item More often, a subset is better in terms of time/coverage. 
 	\end{itemize}
@@ -705,21 +795,27 @@
 \breakslide{\Huge Demo}
 
 \begin{frame}{Test Suite}
-	Landslide ships with 6 approved test cases:
-	\linegap
+	Landslide can check the following thread library tests:
+	%Landslide ships with 6 approved test cases:
+	%\linegap
 
-	Standard P2 tests
+	Atomic tests
 	\begin{itemize}
-		\item {\tt thr\_exit\_join}
-		\item {\tt paraguay}
-		\item {\tt rwlock\_downgrade\_read\_test}
+		\item {\tt atomic\_fetch\_add}
+		\item (etc...)
 	\end{itemize}
 
-	New tests
+	Locking tests
 	\begin{itemize}
-		\item {\tt broadcast\_test}
-		\item {\tt paradise\_lost} %(new this semester)
-		\item {\tt mutex\_test} %(new this semester)
+		\item mutex: {\tt mutex\_test}
+		\item cvars: {\tt broadcast\_test}, {\tt paraguay}
+		\item semaphores: {\tt paradise\_lost}
+		\item rwlocks: {\tt rwlock\_downgrade\_read\_test}
+	\end{itemize}
+
+	Threading tests
+	\begin{itemize}
+		\item {\tt thr\_exit\_join}
 	\end{itemize}
 \end{frame}
 
@@ -730,8 +826,9 @@
 	Sample code from {\tt cyclone}: % abbreviated
 	\begin{center}
 	\begin{tabular}{l}
-		\texttt{for (i = 0; i < MAX\_MISBEHAVE /* 64 */; i++) \{} \\
-		\texttt{~~~~misbehave(i);} \\
+		\texttt{for (i = 0; i < 64; i++) \{} \\
+		%\texttt{for (i = 0; i < MAX\_MISBEHAVE /* 64 */; i++) \{} \\
+		%\texttt{~~~~misbehave(i);} \\
 		\texttt{~~~~tid = thr\_create(child\_fn, i);} \\
 		\texttt{~~~~thr\_join(tid, \&status);} \\
 		\texttt{\}}
@@ -785,7 +882,7 @@
 %	\end{itemize}
 %\end{frame}
 
-\begin{frame}{Previous Semesters}
+\begin{frame}{Previous Semesters in CMU's OS class}
 	%% S'15, F'15, S'16: 48 groups signed up to use Landslide; 38 found bugs
 	%% S'15, F'15, S'16, F'16, S'17: 79 groups signed up to use Landslide; 59 found bugs
 	S'15, F'15, S'16, F'16, S'17, F'17: 94 groups signed up to use Landslide; 71 found bugs
@@ -795,8 +892,9 @@
 	%% F17 lecture - stats up to S17
 	%% 91 {\em deterministic} bugs (e.g. swexn, initialization)
 	% S18 lecture - stats up to F17
-	109 {\em deterministic} bugs (e.g. swexn, initialization)
-	\linegap
+
+	%109 {\em deterministic} bugs (e.g. swexn, initialization)
+	%\linegap
 
 	%%85 distinct {\em non-deterministic} bugs (among 32 groups)
 	%% F17 lecture - stats up to S17
@@ -854,12 +952,12 @@
 \subsection{Landslide for the People}
 
 \begin{frame}{User Study}
-	\textbf{Try Landslide on your P2!}
+	\textbf{Try Landslide on your project!}
 	\begin{itemize}
 		\item Bare minimum effort: No more than 1 hour
 		\begin{itemize}
 			\item Clone a github URL, run setup script, run tests, answer survey
-			\item Landslide will automatically report test results (as described below)
+			%\item Landslide will automatically report test results (as described below)
 		\end{itemize}
 		\item Full study plan: 4-8 hours of active attention
 		\begin{itemize}
@@ -872,10 +970,18 @@
 
 	Prerequisites
 	\begin{itemize}
-		\item You {\em must} pass the P2 hurdle before using Landslide.
+		\item Atomic tests: Landslide requires working {\tt thr\_create()}.
 		\begin{itemize}
-			\item {\tt startle}, {\tt agility\_drill}, {\tt cyclone}, {\tt join\_specific\_test}, {\tt thr\_exit\_join}
+			\item You must first pass {\tt startle}
 		\end{itemize}
+		\item Locking and threading tests: also need {\tt thr\_exit()} and {\tt thr\_join()}
+		\begin{itemize}
+			\item Must pass {\tt agility\_drill}, {\tt cyclone}, {\tt join\_specific\_test}, {\tt thr\_exit\_join}
+		\end{itemize}
+		%\item You {\em must} pass the P2 hurdle before using Landslide.
+		%\begin{itemize}
+		%	\item {\tt startle}, {\tt agility\_drill}, {\tt cyclone}, {\tt join\_specific\_test}, {\tt thr\_exit\_join}
+		%\end{itemize}
 		\item Recommended to attempt several stress tests, e.g.:
 		\begin{itemize}
 			\item {\tt juggle 4 3 2 0}, {\tt multitest}, {\tt racer}, {\tt paraguay}
@@ -888,12 +994,17 @@
 	Human Subjects Research
 	\begin{itemize}
 		\item CMU IRB has approved this study
-		\item Landslide will collect results while you use it
+		\item I will survey you when the project is done
 		\begin{itemize}
-			\item Record commands issued, take snapshots of your P2 code
-			\item All data will be anonymized before publication
+			\item How many bugs did you find, was it easy to use...
+			\item All survey responses will be anonymized before publication
 		\end{itemize}
-		\item No coercion: {\bf \em There is no penalty for not participating.}
+		%\item Landslide will collect results while you use it
+		%\begin{itemize}
+		%	\item Record commands issued, take snapshots of your P2 code
+		%	\item All data will be anonymized before publication
+		%\end{itemize}
+		\item No coercion: {\em There is no penalty for not participating.}
 		\begin{itemize}
 			\item I am not on course staff, cannot influence your grade
 			\item Course staff will not have access to study data during semester
@@ -906,7 +1017,8 @@
 	\begin{itemize}
 		\item Benefit: Landslide may help you find/fix bugs, improving your grade!
 		\item Risk: Landslide may find no bugs and be a waste of your time.
-		\item Benefit: You might learn something...
+		% sorry dave
+		%\item Benefit: You might learn something...
 	\end{itemize}
 	% Say: Accordingly, although I hope you will use landslide enough to get good results for me, you should also responsibly allocate time between testing with landslide versus actually implementing your P2.
 \end{frame}
@@ -918,16 +1030,23 @@
 	To participate\dots
 	\begin{itemize}
 		%\item Review this lecture and study information sheet
-		\item Meet prerequisites of passing P2 tests
+		\item Meet prerequisites of passing thread library tests
 		\item Complete sign-up form online to get further instructions
 			\begin{itemize}
-				\item (watch your email for the link)
+				\item (link will be emailed to you soon)
 				%\item \url{http://tinyurl.com/landslide-p2-s17}
 			\end{itemize}
-		\item Optional ``Landslide clinic'' for in-person tech (or moral) support
+		\item Email me with any Landslide-related questions: {\sf bblum@cs.cmu.edu}
 			\begin{itemize}
-				\item Next week, room and time TBD
+				\item OK: ``How do I interpret the html output as a thread interleaving?''
+				\item OK: ``Landslide said it crashed and to email you for tech support!''
+				\item NOT: ``Landslide found a bug, what's wrong with my code?''
+				\item NOT: ``Landslide found a bug, how do I fix it?''
 			\end{itemize}
+		%\item Optional ``Landslide clinic'' for in-person tech (or moral) support
+		%	\begin{itemize}
+		%		\item Next week, room and time TBD
+		%	\end{itemize}
 		%\item Use Landslide in addition to stress tests until P2 is due!
 	\end{itemize}
 	%% im out of time :<<
@@ -956,6 +1075,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Bonus Slides}
+
+\breakslide{\Huge Bonus Slides}
 
 %\subsection{Experimental Results}
 %
