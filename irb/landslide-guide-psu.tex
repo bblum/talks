@@ -49,7 +49,7 @@
 
 You should have received a document titled {\em User Study Information Sheet} that describes your rights as a study
 participant and our confidentiality procedures. If you are missing this, please contact me immediately. My email
-address is {\tt bblum@cs.cmu.edu} and my phone number is 412-304-4294; email is preferred.
+address is {\tt bblum@cs.cmu.edu}.
 \\
 
 \noindent Likewise, please make sure you have read and understand the lecture slides on systematic testing, which are
@@ -60,7 +60,7 @@ happy to answer them.
 
 We encourage you to use Landslide on the Vagrant VM or the W204 cluster machines.
 Landslide has not been tested with other configurations and may fail
-mysteriously on your personal laptop, and we cannot promise to be of any help.
+mysteriously on other development environments, and we cannot promise to be of any help.
 
 \begin{enumerate}
 	\item Clone the repository - {\tt git clone https://github.com/bblum/landslide.git} - this will be your workspace.
@@ -76,7 +76,7 @@ mysteriously on your personal laptop, and we cannot promise to be of any help.
 		\end{itemize}
 	\item Run {\tt ./landslide OPTIONS} to run tests with Landslide, replacing {\tt OPTIONS} with any of the following:
 		\begin{enumerate}
-			\item Use ./landslide -h to view command line options. The most important ones are {\tt -t}, max testing
+			\item Use {\tt ./landslide -h} to view command line options. The most important ones are {\tt -t}, max testing
 				time, and {\tt -p}, which test program to run.
 			\item Suggested test configurations to run are as follows.
 				You can, of course, change the time limits or test programs as you see fit.
@@ -98,42 +98,48 @@ mysteriously on your personal laptop, and we cannot promise to be of any help.
 						\item \texttt{./landslide -t 30m -p broadcast\_test}
 						\item \texttt{./landslide -t 30m -p paraguay}
 						\item \texttt{./landslide -t 30m -p rwlock\_downgrade\_read\_test}
+						%	\\
+						%\item \texttt{./landslide -t 3h -p thr\_exit\_join}
+						%\item \texttt{./landslide -t 3h -p mutex\_test}
+						%\item \texttt{./landslide -t 3h -p paradise\_lost}
+						%\item \texttt{./landslide -t 3h -p broadcast\_test}
+						%\item \texttt{./landslide -t 3h -p paraguay}
+						%\item \texttt{./landslide -t 3h -p rwlock\_downgrade\_read\_test}
 							\\
-						\item \texttt{./landslide -t 3h -p thr\_exit\_join}
-						\item \texttt{./landslide -t 3h -p mutex\_test}
-						\item \texttt{./landslide -t 3h -p paradise\_lost}
-						\item \texttt{./landslide -t 3h -p broadcast\_test}
-						\item \texttt{./landslide -t 3h -p paraguay}
-						\item \texttt{./landslide -t 3h -p rwlock\_downgrade\_read\_test}
-							\\
-						\item \texttt{./landslide -t 12h -p thr\_exit\_join}
-						\item \texttt{./landslide -t 12h -p mutex\_test}
-						\item \texttt{./landslide -t 12h -p paradise\_lost}
-						\item \texttt{./landslide -t 12h -p broadcast\_test}
-						\item \texttt{./landslide -t 12h -p paraguay}
-						\item \texttt{./landslide -t 12h -p rwlock\_downgrade\_read\_test}
+						\item \texttt{./landslide -t 8h -p thr\_exit\_join}
+						\item \texttt{./landslide -t 8h -p mutex\_test}
+						\item \texttt{./landslide -t 8h -p paradise\_lost}
+						\item \texttt{./landslide -t 8h -p broadcast\_test}
+						\item \texttt{./landslide -t 8h -p paraguay}
+						\item \texttt{./landslide -t 8h -p rwlock\_downgrade\_read\_test}
 					\end{itemize}
-				\item To build your own custom test case, %for use with Landslide,
-					put it in the {\tt pebsim/p2-basecode/user/progs} subdirectory %of the repository
-					and edit the {\tt STUDENTTESTS} line in {\tt pebsim/p2-basecode/config-incomplete.mk}
-					(note: NOT {\tt config.mk}; the setup script auto-generates that file).
-					Then run {\tt ./psu-setup.sh} again.
-					Refer to slide 37 of the Landslide lecture to make sure your test is ``Landslide-friendly''.
+				%\item To build your own custom test case, %for use with Landslide,
+				%	put it in the {\tt pebsim/p2-basecode/user/progs} subdirectory %of the repository
+				%	and edit the {\tt STUDENTTESTS} line in {\tt pebsim/p2-basecode/config-incomplete.mk}
+				%	(note: NOT {\tt config.mk}; the setup script auto-generates that file).
+				%	Then run {\tt ./psu-setup.sh} again.
+				%	Refer to slide 37 of the Landslide lecture to make sure your test is ``Landslide-friendly''.
 				\end{enumerate}
 			\item Landslide's bug reports will show up in the current directory as HTML files which you can view in a web browser.
 				\begin{itemize}
 					\item On the Vagrant VM, move these files to {\tt /vagrant}, the shared directory, and open them with a web browser on the host.
 					\item On the W204 cluster, you should be able to open the files directly from the landslide repository.
 				\end{itemize}
-				Landslide may also print some {\em data races}, even if it doesn't emit an HTML bug report. These are not necessarily bugs; please refer to slide 29 of the Landslide lecture for details about what this means.
+				Landslide may also print some {\em data races},
+				even if it doesn't emit an HTML bug report,
+				for example as follows:
+				\[
+					\texttt{Found a racy access at 0x0100291e in atomic\_compare\_swap (atomic.S:42)}
+				\]
+				These are not necessarily bugs; please refer to slide 29 of the Landslide lecture for details about what this means.
 		\end{enumerate}
 	\item After fixing any found bugs, re-run Landslide with the same test options to confirm that your fix works.
-		(Remember to re-run {\tt psu-setup.sh} to make sure Landslide sees your updates.)
+		(Remember to re-run {\tt psu-setup.sh} as in step 2 to make sure Landslide sees your updates.)
 \end{enumerate}
 
 \noindent {\bf Note on simultaneous Landslides:} Landslide does not support running multiple tests at once;
 it needs to create some temporary files to annotate your code, and multiple instances of Landslide can step on each other's toes by clobbering those files.
-If you want to try multiple tests at once, simply {\tt git clone} the repository again in a different directory, and run one instance of Landslide in each.
+%If you want to try multiple tests at once, simply {\tt git clone} the repository again in a different directory, and run one instance of Landslide in each.
 \\
 
 % TODO
