@@ -480,7 +480,7 @@
 	}
 	\linegap
 
-	Here, only preemption point B will break atomicity. {\bf ~}\\
+	Here, only preemption point C will break atomicity. {\bf ~}\\
 	All other interleavings are benign.{\bf ~}
 
 \end{frame}
@@ -494,7 +494,7 @@
 
 	Systematic tests are {\em parameterized} by the set of PPs.
 	\begin{itemize}
-		\item $n$ PPs and $k$ threads $\Rightarrow$ state space size is $O(n^k)$.
+		\item $n$ PPs and $k$ threads $\Rightarrow$ state space size is $O(k^n)$.
 		\item Need to choose PPs very carefully for test to be effective.
 		\begin{itemize}
 			\item ``Effective'' = both comprehensive and feasible.
@@ -674,7 +674,7 @@
 	Data races are {\em not necessarily} bugs, just highly suspicious!
 	\begin{itemize}
 		%\item Bakery alg: Is {\tt number[i]=max(number[0],number[1])+1} bad?
-		\item Atomic load/store: Is {\tt mov \%ecx, \%edx} bad?
+		\item Atomic load/store: Is {\tt mov \%ecx, (\%edx)} bad?
 		%\item Is unprotected {\tt foobar\_statistics\_counter++} bad?
 		\item What about unprotected {\tt next\_thread\_id++}?
 		\item ``If threads interleaved the wrong way here, it {\em might} crash later.''
