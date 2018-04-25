@@ -500,6 +500,8 @@ This section describes the projects which students implement and which Landslide
 \subsection{Pebbles}
 \label{sec:pebbles}
 
+The Pebbles kernel architecture
+is used at CMU in 15-410, Operating System Design and Education \cite{kspec,thrlib}.
 In the course of a semester, students work on five programming assignments;
 the first two are individual, and the remaining three are the products of two-person teams.
 I will focus on the third and fourth of these, the thread library and kernel,
@@ -615,6 +617,20 @@ meanwhile, threads in tasks that receive new children may need to be awakened fr
 Careless solutions to this problem are prone to data races or deadlocks.
 
 % TODO: Talk about the hurdle (both for p2 and p3).
+
+\subsubsection{Use at other universities}
+
+\newcommand\psuos{CMPSC 473\xspace}
+
+In the Spring 2018 semester,
+the Operating Systems class at Penn State University (henceforth \psuos and PSU, respectively)
+offered the P2 thread library project as part of its curriculum.
+Students in this class implemented P2 working alone rather than in pairs,
+skip the {\tt swexn} automatic stack growth portion,
+and rather than running their code with a reference Pebbles kernel binary in a simulator,
+use the Pebwine emulation layer \cite{pebwine}
+to run Pebbles-compatible program binaries in the Linux userspace.
+Otherwise, the project is identical to CMU 15-410's P2.
 
 \subsection{Pintos}
 \label{sec:overview-pintos}
