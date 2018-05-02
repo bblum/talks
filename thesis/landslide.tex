@@ -14,11 +14,10 @@ As of this thesis's writing, Landslide supports the use of two possible simulato
 	\item {\bf Bochs} \cite{bochs}, an open-source (LGPL) simulator used at the University of Chicago, Berkeley, and other schools to run Pintos kernels.
 \end{itemize}
 
-% TODO: update this linkerino (repository name)
 % TODO: add some backup linkeroos
-The Bochs port of Landslide is likewise open-source and available at \url{https://github.com/bblum/bochs}.
+The Bochs port of Landslide is likewise open-source and available at \url{https://github.com/bblum/landslide}.
 % TODO: refresh
-The HEAD commit at the time of writing is 8984021.
+The HEAD commit at the time of writing is 5d45e2c.
 The Simics port uses Simics's proprietary API and is hence unlicensed and available upon request for educational use only.
 
 This chapter will discuss Landslide's outer and inner workings in all their gory detail.
@@ -39,12 +38,14 @@ Separate user guides also exist, described in Chapter~\ref{chap:education}.
 
 \subsection{Setup}
 
-Two setup scripts are provided, one for each supported kernel architecture: {\tt p2-setup.sh} and {\tt pintos-setup.sh}.
+Three setup scripts are provided, one for each supported kernel architecture: {\tt p2-setup.sh}, {\tt psu-setup.sh}, and {\tt pintos-setup.sh}.
 The user should supply the directory containing their project implementation.
-The latter script also supports arguments specifying which of the Pintos projects to target.
+The second of the three is largely the same as the first, with CMU-specific project details replaced by PSU-specific ones.
+The latter of the three also supports arguments specifying which of the Pintos projects to target.
 For example:
 \begin{itemize}
 	\item {\tt ./p2-setup.sh /path/to/my/p2}
+	\item {\tt ./psu-setup.sh /path/to/my/thrlib}
 	\item {\tt ./pintos-setup.sh /path/to/my/threads} (2nd argument defaults to ``{\tt threads}'')
 	\item {\tt ./pintos-setup.sh /path/to/my/userprog userprog}
 \end{itemize}
@@ -101,17 +102,22 @@ The following ``secret'' arguments also exist, primarily for my own use in runni
 		this generally causes bugs to be found faster should they exist, but degrades completion time
 		(\sect{\ref{sec:landslide-icb}})
 	\item {\tt -0}: enable Preempt-Everywhere mode (\sect{\ref{sec:quicksand-eval}}, requires {\tt -C})
+	\item {\tt -M}: enable Maximal State Space mode,
+		which prioritizes the maximal state space to optimize for fast verification,
+		abandoning all subset jobs even if they might find bugs faster
+		% TODO: more speicfic sectio nreference
+		(\sect{\ref{chap:tm}}, incompatible with {\tt -C})
 	\item {\tt -H}: use Limited Happens-Before for data-race analysis (\sect{\ref{sec:background-hb}})
 		(default for Pebbles kernelspace mode)
 	\item {\tt -V}: use vector-clock-based Pure Happens-Before for data-race analysis (\sect{\ref{sec:background-hb}})
-		(default for P2 userspace and Pintos modes)
+		(default for P2/PSU userspace and Pintos modes)
 	\item {\tt -X}: support transactional memory (Chapter~\ref{chap:tm})
 		% TODO: make a more specific section reference
 	\item {\tt -A}: support multiple abort codes during transaction failure (Chapter~\ref{chap:tm});
 		required for testing programs which behave differently under different abort circumstances,
 		but impacts the state space size
 	\item {\tt -P}: support Pintos architecture (enabled automatically when {\tt pintos-setup.sh} is run)
-	\item {\tt -4}: support Pebbles architecture (enabled automatically when {\tt p2-setup.sh} is run)
+	\item {\tt -4}: support Pebbles architecture (enabled automatically when either {\tt p2-setup.sh} or {\tt psu-setup.sh} is run)
 		% TODO: put a section reference
 	\item {\tt -e ETAFACTOR}: configure heuristic state space ETA deferring factor (described in detail in {\tt id/option.c})
 	\item {\tt -E ETATHRESH}: configure heuristic threshold of state space progress for judging ETA stability (described in detail in {\tt id/option.c})
@@ -254,12 +260,14 @@ indicating when the corresponding heap block was last allocated and freed.
 The intrepid source-diver may find all such cases of extra bug details
 by searching for the macro {\tt FOUND\_A\_BUG\_HTML\_INFO} in Landslide's code.}
 
-
 % TODO: check figure placement
-\begin{figure}[t]
+\begin{figure}[h!]
 	\begin{center}
+		% XXX: at 0.986\textwidth or bigger, latex puts this infinity pages into the future
+		% at 0.985 or lower, it goes on the right page
+		% wtffff latex.
 		% nb. generated from landslide-trace-1506524837.14.html
-		\includegraphics[width=\textwidth]{bugreport.pdf}
+		\includegraphics[width=0.985\textwidth]{bugreport.pdf}
 	\end{center}
 	\caption{Example preemption trace bug report.}
 	\label{fig:bugreport}
@@ -536,6 +544,10 @@ tracks reads and writes (in any region) from each thread
 and checks them against each other
 for DPOR (\sect{\ref{sec:landslide-dpor}})
 and data race analysis (\sect{\ref{sec:landslide-datarace}}).
+For userspace tests, it also tracks which virtual address space ({\tt cr3}) belongs to the test program
+via a state machine of the test lifecycle,
+which lets it avoid false positive heap errors from other programs which have differently-addressed heaps
+({\tt check\_user\_address\_space()} and {\tt ignore\_user\_access()}.
 
 \subsubsection{Heap checking}
 
@@ -711,6 +723,7 @@ using {\tt objdump} and {\tt addr2line},
 which the aforementioned hex offset then serves as an index into.
 
 \subsubsection{Stack traces}
+\label{sec:landslide-stacktrace}
 
 The stack tracer is implemented in {\tt stack.c}.
 It does the standard approach of following the base pointer chain
@@ -918,7 +931,133 @@ for interpreting the current program state with respect to these values.
 
 \subsection{Preemption point identification}
 \label{sec:landslide-pps}
-% TODO: talk about how w/in func and w/out func are processed
+
+When should Landslide sunder the universe into alternate realities,
+in which each a different thread executes immediately following the current instruction?
+This singular question determines to what extent the state space of possible interleavings explodes exponentially.
+While other parts of the research decide which lock API calls to consider,
+or which memory accesses constitute a data race,
+interpreting those combinations of preemption point {\em predicates}
+to decide if the current program state constitutes a single preemption {\em point}
+warrants discussion.
+
+Preemption point identification is implemented largely in {\tt pp.c}.
+At startup, {\tt pps\_init()} and {\tt load\_dynamic\_pps()} process the
+statically-configured preemption points (\sect{\ref{sec:landslide-staticconfig}})
+and dynamically-configured preemption points (\sect{\ref{sec:landslide-dynamicconfig}}),
+respectively.
+Each of these configurations may contain any number of
+{\tt within\_function}, {\tt without\_function}, and {\tt data\_race} commands.
+
+\subsubsection{Stack trace inclusion/exclusion}
+
+{\tt check\_withins()} implements the whitelist/blacklist behaviour for the former two of those commands
+(in a similar manner to the Preemption Sealing technique described in prior work \cite{sealing}).
+It invokes the stack tracer (\sect{\ref{sec:landslide-stacktrace}})
+for a list of which functions are on the call stack
+(hence the importance of the stack tracer's complex logic to not miss any frames
+even when interrupts or system calls are involved).
+Then, to determine if the current program state should be considered a valid preemption point,
+or whether it should be rejected,
+it compares each {\tt within} or {\tt without\_function} directive in the following sequence-dependent manner:
+
+\begin{itemize}
+	\item If no {\tt within\_function} commands are given, operate in ``blacklist mode'':
+		the preemption point is by default valid as long as no {\tt without\_function} calls reject it.
+		Otherwise, operate in ``whitelist mode'':
+		the preemption point is by default rejected unless at least one {\tt within\_function} directive matches.
+	\item Subject to the above, find the sequentially-last {\tt *\_function} directive
+		(static preemption point commands considered before dynamic ones)
+		which matches any function in the stack trace.
+		If {\tt within}, accept the preemption point; if {\tt without}, reject it.
+\end{itemize}
+
+The same comparison is done for {\tt within\_user\_function} and {\tt without\_user\_function}.
+
+\subsubsection{Data race predicates}
+
+The {\tt data\_race} command specifies an instruction pointer value to identify as a data race preemption point.
+The point can optionally be qualified by a thread ID, most recent system call number, etc.,
+as described in \sect{\ref{sec:landslide-dynamicconfig}},
+and is queried through {\tt suspected\_data\_race()}.
+
+In Preempt-Everywhere mode, instead Landslide marks all shared memory accesses
+as long as they are not either part of the mutex implementation or part of the running thread's stack frame.
+The {\tt data\_race} command is ignored and {\tt suspected\_data\_race()}
+instead checks whether the instruction pointer is associated with any such shared memory access.
+
+\subsubsection{Preemption point predicates}
+
+{\tt arbiter\_interested()} in {\tt arbiter.c} then
+checks various annotations and hard-coded preemption point predicates
+to decide whether the current program state constitutes a preemption point.
+The following predicates are constrained by {\tt check\_withins()}:
+
+\begin{itemize}
+	\item {\tt suspected\_data\_race()}
+	\item User or kernel {\tt mutex\_lock()} or {\tt mutex\_unlock()} call
+	\item Custom kernel preemption point using {\tt tell\_landslide\_preempt()}
+		(relic of \cite{landslide}, largely obsoleted by data-race preemption pooints)
+\end{itemize}
+
+The following predicates ignore any {\tt within\_function} settings
+(mandatory preemption points needed, for example, to maintain the one-thread-per-transition invariant):
+
+\begin{itemize}
+	\item Voluntary reschedule, e.g. explicit {\tt yield()}
+	\item {\tt hlt} instruction (kernel waiting for interrupt)
+	\item User thread becomes yield- or xchg-blocked (\sect{\ref{sec:landslide-blocking}})
+	\item {\tt \_xbegin()} or {\tt \_xend()}, if testing transactional memory (Chapter~\ref{chap:tm})
+\end{itemize}
+
+Whenever {\tt arbiter\_interested()} returns true,
+Landslide creates a new {\tt struct hax} in the execution tree (\sect{\ref{sec:landslide-save}}),
+creates a checkpoint (\sect{\ref{sec:landslide-timetravel}}),
+and queries {\tt arbiter\_choose()} to decide which thread to run next (\sect{\ref{sec:landslide-arbiter}}).
+
+\subsubsection{Example}
+
+Consider the following examples to illustrate the behaviour of the stack trace directives.
+\begin{enumerate}
+	\item
+		{\tt mutex\_lock()}, in
+		{\tt malloc()}, in
+		{\tt thr\_create()}, in
+		{\tt main()}
+	\item
+		{\tt mutex\_lock()}, in
+		{\tt cond\_wait()}, in
+		{\tt thr\_join()}, in
+		{\tt main()}
+\end{enumerate}
+and the following {\tt within}/{\tt without\_user\_function} combinations:
+\begin{itemize}
+	\item
+		{\tt within\_user\_function mutex\_lock},
+		{\tt without\_user\_function malloc}
+
+		Rejects stack trace 1 (last matching directive is to exclude {\tt malloc}),
+		accepts stack trace 2 (last matching directive is to include {\tt mutex\_lock})
+	\item
+		{\tt within\_user\_function thr\_join}
+
+		No {\tt without}s present, so behaves as a whitelist,
+		rejecting stack trace 1 (not in {\tt thr\_join()}),
+		accepting stack trace 2 (in {\tt thr\_join()}).
+	\item
+		{\tt without\_user\_function cond\_wait}
+
+		No {\tt within}s present, so behaves as a blacklist,
+		accepting stack trace 1 (not in {\tt cond\_\allowbreak{}wait()}),
+		rejecting stack trace 2 (in {\tt cond\_wait()}).
+	\item
+		{\tt without\_user\_function main},
+		{\tt within\_user\_function mutex\_lock}
+
+		Accepts both (last matching directive is to accept {\tt mutex\_lock()},
+		regardless of {\tt main()})
+\end{itemize}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{State space estimation}
@@ -1313,3 +1452,4 @@ The reader interested in further algorithm details and the corresponding soundne
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Heuristic loop, deadlock, and synchronization detection}
+\label{sec:landslide-blocking}
