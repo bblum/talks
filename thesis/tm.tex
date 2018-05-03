@@ -18,3 +18,76 @@ Yet we still build sand castles.
 % counter: tests k threads on n iterations, benchmark xchg-aways vs txn. removed benchmarking, added assertion that no counts are lost.
 
 % TODO
+
+Transactional memory (TM) is a concurrency primitive
+by which programmers may attempt an arbitrary sequence of shared memory accesses,
+which will either be committed (made visible to other processors/threads) atomically,
+such that no intermediate state modification is ever visible,
+or in the case of a conflict which would prevent such,
+discarded with an error code returned to allow the programmer to write a synchronized backup path.
+%
+Transactional memory specifications typically have three API functions, abstractly speaking:
+\begin{itemize}
+	\item  {\sf begin} begins a transaction,
+		staging any subsequent shared memory accesses in some temporary thread-local storage,
+		and checking for conflicts with the accesses of any other threads or CPUs.
+		If the transaction is unsuccessful, as described below,
+		{\sf begin} instead returns an error code
+		indicating the programmer should fall back to some other, possibly slower, synchronization method.
+	\item {\sf end} ends a transaction,
+		attempting to commit all staged accesses to the shared memory atomically with respect to
+		reads or writes from other concurrently-executing code.
+		If any of those accesses conflict (i.e., read/write or write/write)
+		with any other access to the same memory since the transaction started,
+		they are instead discarded and execution state reverts to the {\sf begin} with an error code as described above.
+	\item {\sf abort} explicitly aborts a transaction,
+		regardless of any memory conflicts,
+		discarding changes and reverting execution as described above.
+		Some implementations allow an arbitrary abort code to be specified
+		which will appear in {\sf begin}'s error code.
+\end{itemize}
+
+% do they track changes in pthread-style TLS? or?
+{\bf Implementations.}
+Software TM implementations (STM) typically function as a library,
+tracking staged memory accesses in local memory,
+and aborting whenever a conflict is detected between two transactions' tracked accesses \cite{stm-pldi06}.
+Hardware TM implementations (HTM) use processor-level hardware support,
+which stages changes in per-CPU cache lines,
+and may abort for STM's reason above \cite{htm-experience},
+or additionally whenever a conflict is detected between one transaction's traced access and {\em any} other memory access,
+or whenever a conflict occurs on the same cache line, not necessarily the same address,
+or in case of any system interrupt or cache overflow.
+
+{\bf Terminology.}
+The world of hardware transactional memory is home to several more confusing acronyms in addition to ``HTM''.
+Transactional Synchronization Extensions (TSX)
+refers to Intel's implementation of HTM on the Haswell microarchitecture
+\cite{htm-haswell}.
+Restricted Transactional Memory (RTM)
+refers to the {\tt xbegin}, {\tt xend}, and {\tt xabort} subset of TSX instructions,
+which of course correspond to {\sf begin}, {\tt end}, and {\tt abort} listed above,
+and which GCC exposes as C/C++ intrinsices named {\tt \_xbegin()}, {\tt \_xend()}, and {\tt \_xabort()}
+\cite{htm-gcc}.
+Hardware Lock Elision (HLE)
+refers to the {\tt xacquire} and {\tt xrelease} subset of TSX instructions,
+which extend the traditional interface to offer a slightly higher-level way to access the CPU feature,
+optimized for simplicity for locking-like synchronization patterns
+% other possible things to cite here:
+% https://lwn.net/Articles/534758/
+% https://software.intel.com/en-us/node/683688
+\cite{hardware-lock-elision}.
+In this thesis I focus on RTM, the more general (i.e., expressive (i.e., bug-prone)) interface,
+and among all these acronyms restrict myself to ``HTM''
+(when referring to transactional memory as a concurrency primitive in the abstract)
+and ``TSX''
+(when referring to Intel's implementation and/or GCC's intrinsics interface).
+The non-pedantic reader may treat these as interchangeable.
+
+An example TSX program is shown in \sect{\ref{sec:overview-tm}}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Concurrency Model}
+
+% TODO
