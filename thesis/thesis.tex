@@ -175,6 +175,22 @@ I thank my dog, Louie.
 \definecolor{olivegreen}{RGB}{0,127,0}
 \definecolor{brickred}{RGB}{192,0,0}
 \definecolor{commentblue}{RGB}{0,0,192}
+% colors from sigbovik for tsx/etc
+% threads
+\definecolor{lavender}{RGB}{102,65,208} % (?? i don't know what happened here anymore but it looks good)
+\definecolor{seafoam}{RGB}{56,158,68} % * 2/3
+\definecolor{salmon}{RGB}{208,89,74} % * 7/8
+% eval data
+\definecolor{darkcyan}{RGB}{0,128,128}
+\definecolor{lime}{RGB}{48,128,0}
+\definecolor{darklavender}{RGB}{68,44,138}
+\definecolor{brownish}{RGB}{128,96,0}
+\definecolor{pinkish}{RGB}{128,34,102} % ff4488
+% syntax hilighting
+\newcommand\flow[1]{\hilight{brown}{#1}\xspace}
+\newcommand\const[1]{\hilight{brickred}{#1}\xspace}
+\newcommand\call[1]{\hilight{pinkish}{#1}}
+\newcommand\ctype[1]{\hilight{olivegreen}{#1}\xspace}
 
 \newtheorem{lemma}{Lemma}
 \newtheorem{theorem}{Theorem}

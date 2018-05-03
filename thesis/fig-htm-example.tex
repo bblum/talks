@@ -1,0 +1,16 @@
+\begin{center}
+	\begin{tabular}{l}
+	\texttt{\ctype{void} \call{count}() \{} \\
+	\texttt{~~~~\flow{for} (\ctype{int} i = \const{0}; i < \const{1000}; i++) \{} \\
+	\texttt{~~~~~~~~\flow{if} ((status = \call{\_xbegin}()) == \const{\_XBEGIN\_STARTED}) \{} \\
+	\texttt{~~~~~~~~~~~~x++;} \\
+	\texttt{~~~~~~~~~~~~\call{\_xend}();} \\
+	\texttt{~~~~~~~~\} \flow{else} \{} \\
+	\texttt{~~~~~~~~~~~~\call{mutex\_lock}(\&m);} \\
+	\texttt{~~~~~~~~~~~~x++;} \\
+	\texttt{~~~~~~~~~~~~\call{mutex\_unlock}(\&m);} \\
+	\texttt{~~~~~~~~\}} \\
+	\texttt{~~~~\}} \\
+	\texttt{\}} \\
+	\end{tabular}
+\end{center}

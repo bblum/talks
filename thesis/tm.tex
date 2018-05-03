@@ -1,23 +1,6 @@
 \chapter{Transactions}
 \label{chap:tm}
 
-% copied from sigbovik - mb move into thesis.tex later?
-% threads
-\definecolor{lavender}{RGB}{102,65,208} % (?? i don't know what happened here anymore but it looks good)
-\definecolor{seafoam}{RGB}{56,158,68} % * 2/3
-\definecolor{salmon}{RGB}{208,89,74} % * 7/8
-% eval data
-\definecolor{darkcyan}{RGB}{0,128,128}
-\definecolor{lime}{RGB}{48,128,0}
-\definecolor{darklavender}{RGB}{68,44,138}
-\definecolor{brownish}{RGB}{128,96,0}
-\definecolor{pinkish}{RGB}{128,34,102} % ff4488
-% syntax hilighting
-\newcommand\flow[1]{\hilight{brown}{#1}\xspace}
-\newcommand\const[1]{\hilight{brickred}{#1}\xspace}
-\newcommand\call[1]{\hilight{pinkish}{#1}}
-
-
 %\inspirationalquote{This paper presents earth-shaking work that deserves to be read by the entire computer science community.
 %To that end, have you considered putting it in a thesis?}
 %{Anonymous SIGBOVIK reviewer}
@@ -101,7 +84,14 @@ and ``TSX''
 (when referring to Intel's implementation and/or GCC's intrinsics interface).
 The non-pedantic reader may treat these as interchangeable.
 
-An example TSX program is shown in Figure~\ref{fig:htm-example} (\sect{\ref{sec:overview-tm}}).
+The example TSX program from Figure~\ref{fig:htm-example} (\sect{\ref{sec:overview-tm}})
+is reproduced here for the reader's convenience.
+
+\begin{figure}[h]
+	\input{fig-htm-example}
+	\caption{Example TSX program.}
+	\label{fig:htm-example-reproduced}
+\end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -130,7 +120,7 @@ For discussion of relaxed memory models refer to Section~\ref{sec:warpzone}.
 
 \subsection{Example}
 
-Consider again the program in Figure~\ref{fig:htm-example}.
+Consider again the program in Figure~\ref{fig:htm-example-reproduced}.
 Note that the C-style {\tt x++} operations, when compiled into assembly, %\cite{printy},
 results in multiple memory accesses which can be interleaved with other threads.
 \[
@@ -187,10 +177,10 @@ which shows that correctly synchronizing even the simplest transactions may be s
 		\begin{tabular}{ll}
 		%\texttt{void count() \{} \\
 		%\texttt{~~~~for (int i = 0; i < 1000; i++) \{} \\
-		  & \texttt{prevent\_transactions = \const{false};} \\
+		& \texttt{\ctype{bool} prevent\_transactions = \const{false};} \\
 		\\
 		0 & \texttt{\flow{while} (prevent\_transactions) \flow{continue};} \\
-		1 & \texttt{\flow{if} ((status = \call{\_xbegin}()) == \const{SUCCESS}) \{} \\
+		1 & \texttt{\flow{if} ((status = \call{\_xbegin}()) == \const{\_XBEGIN\_STARTED}) \{} \\
 		2 & \texttt{~~~~\flow{if} (prevent\_transactions)} \\
 		3 & \texttt{~~~~~~~~\call{\_xabort}();} \\
 		4 & \texttt{~~~~x++;} \\
@@ -206,7 +196,7 @@ which shows that correctly synchronizing even the simplest transactions may be s
 		%\texttt{\}} \\
 		\end{tabular}
 	\end{center}
-	\caption{Variant of the program in Figure~\ref{fig:htm-example},
+	\caption{Variant of the program in Figure~\ref{fig:htm-example-reproduced},
 		with additional synchronization to protect the failure path from the transactional path.
 		The optional line 0 serves to prevent a cascade of failure paths
 		for the sake of performance
@@ -273,8 +263,7 @@ Then, without loss of generality (for any number of other threads \tjj/\tkk, and
 	\begin{enumerate}
 		\item $\tiiat{\alpha},\tjjat{\gamma_1}\dots\tjjat{\gamma_j},\tkkat{\kappa_1}\dots\tkkat{\kappa_k},\tiiat{\phi_1}\dots$
 			(conflicting case), or
-		\item $\tiiat{\alpha},\tiiat{\beta_1}\dots\tiiat{\beta_b}\dots\tiiat{\beta_n},\tjjat{\gamma_1}\dots\tjjat{\gamma_j},$ \\
-			$\tkkat{\kappa_1}\dots\tkkat{\kappa_k}$
+		\item $\tiiat{\alpha},\tiiat{\beta_1}\dots\tiiat{\beta_b}\dots\tiiat{\beta_n},\tjjat{\gamma_1}\dots\tjjat{\gamma_j},\tkkat{\kappa_1}\dots\tkkat{\kappa_k}$
 			(independent case)
 	\end{enumerate}
 	exists and is observationally equivalent.
@@ -295,6 +284,7 @@ Then, without loss of generality (for any number of other threads \tjj/\tkk, and
 \end{proof}
 
 The claim's second part follows naturally.
+\vspace{1em}
 
 \begin{theorem}[Atomicity of Transactions]
 	\label{thm:atom}
@@ -327,6 +317,7 @@ or no replacement otherwise.
 Finally, let $I' = \exists m. \mathsf{lockify}_m(I)$,
 the execution with the boundaries of all successful transactions replaced by an abstract global lock.
 Lemma~\ref{lem:equiv} guarantees mutual exclusion of $m$.
+\vspace{1em}
 
 \begin{theorem}[Transactions are a Global Lock]
 	$\tiiat{\mu},\tjjat{\nu}$ is a data race in $I$ iff it is a data race in $I'$.

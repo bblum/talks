@@ -215,22 +215,7 @@ The example program in Figure~\ref{fig:htm-example} demonstrates how these primi
 using GCC's compiler intrinsics \cite{htm-gcc}.
 
 \begin{figure}[h]
-	\begin{center}
-		\begin{tabular}{l}
-		\texttt{void count() \{} \\
-		\texttt{~~~~for (int i = 0; i < 1000; i++) \{} \\
-		\texttt{~~~~~~~~if ((status = \_xbegin()) == \_XBEGIN\_STARTED) \{} \\
-		\texttt{~~~~~~~~~~~~x++;} \\
-		\texttt{~~~~~~~~~~~~\_xend();} \\
-		\texttt{~~~~~~~~\} else \{} \\
-		\texttt{~~~~~~~~~~~~mutex\_lock(\&m);} \\
-		\texttt{~~~~~~~~~~~~x++;} \\
-		\texttt{~~~~~~~~~~~~mutex\_unlock(\&m);} \\
-		\texttt{~~~~~~~~\}} \\
-		\texttt{~~~~\}} \\
-		\texttt{\}} \\
-		\end{tabular}
-	\end{center}
+	\input{fig-htm-example}
 	\caption{The example {\tt count} routine from Figure~\ref{fig:mutex}, rewritten to use HTM.
 		If the transaction in the top branch aborts,
 		whether from a memory conflict or random system interrupt,
@@ -391,7 +376,7 @@ Iterative Deepening, presented in Chapter~\ref{chap:quicksand}, is another such 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Data Race Analsyis}
+\section{Data Race Analysis}
 \label{sec:background-datarace}
 
 \begin{figure}[t]
@@ -673,3 +658,7 @@ The main concurrency challenges in Pintos projects arise from the threads and us
 implementing a correct {\tt alarm} routine,
 ensuring the priority scheduler remains safe in the presence of concurrent threads of the same priority,
 and designing correct interactions between the {\tt wait} and {\tt exit} system calls.
+
+\section{Glossary}
+
+% TODO
