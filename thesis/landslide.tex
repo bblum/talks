@@ -11,7 +11,7 @@ As of this thesis's writing, Landslide supports the use of two possible simulato
 
 \begin{itemize}
 	\item {\bf Simics} \cite{simics}, a proprietary simulator licensed commercially by Wind River, used at CMU in 15-410 to run Pebbles thread libraries and kernels, and
-	\item {\bf Bochs} \cite{bochs}, an open-source (LGPL) simulator used at the University of Chicago, Berkeley, and other schools to run Pintos kernels.
+	\item {\bf Bochs} \cite{bochs}, an open-source (LGPL) simulator used at the University of Chicago, Berkeley, Stanford, and other schools to run Pintos kernels.
 \end{itemize}
 
 % TODO: add some backup linkeroos
@@ -19,6 +19,9 @@ The Bochs port of Landslide is likewise open-source and available at \url{https:
 % TODO: refresh
 The HEAD commit at the time of writing is 5d45e2c.
 The Simics port uses Simics's proprietary API and is hence unlicensed and available upon request for educational use only.
+Development on the Simics port is largely frozen,
+as the Bochs port implements all the same features and more,
+and is also roughly 3x faster.
 
 This chapter will discuss Landslide's outer and inner workings in all their gory detail.
 It is intended for the aspiring developer or the ambitious user
@@ -1062,6 +1065,9 @@ and the following {\tt within}/{\tt without\_user\_function} combinations:
 
 \subsection{State space estimation}
 \label{sec:landslide-estimate}
+
+% TODO
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Dynamic Partial Order Reduction}
@@ -1453,3 +1459,5 @@ The reader interested in further algorithm details and the corresponding soundne
 
 \subsection{Heuristic loop, deadlock, and synchronization detection}
 \label{sec:landslide-blocking}
+
+% TODO
