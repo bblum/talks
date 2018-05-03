@@ -28,6 +28,7 @@
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{amsthm}
 \usepackage[numbers,sort]{natbib}
 \usepackage[backref,pageanchor=true,plainpages=false, pdfpagelabels, bookmarks,bookmarksnumbered,
 %pdfborder=0 0 0,  %removes outlines around hyper links in online display
@@ -175,10 +176,12 @@ I thank my dog, Louie.
 \definecolor{brickred}{RGB}{192,0,0}
 \definecolor{commentblue}{RGB}{0,0,192}
 
+\newtheorem{lemma}{Lemma}
 \newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
 
 \newcommand\llama[1]{\includegraphics[width=#1]{llama.pdf}}
-\newcommand\llitem{\item[\llama{1.2em}]}
+\newcommand\llitem{\item[\raisebox{-0.15em}{\llama{1.2em}}]}
 
 \newcommand{\inspirationallinebreak}{\vspace{0.25em}}
 \newcommand{\inspirationalhyphen}{-\hspace{-0.15em}-\xspace}
