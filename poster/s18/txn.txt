@@ -1,0 +1,107 @@
+Systematic Testing for Transactional Concurrency
+Ben Blum and Garth Gibson
+
+==== Background ====
+
+Attempting a transaction
+- Code between _xbegin() and _xend() provisionally executed
+- All writes kept in cache until _xend()
+- _xend() commits changes atomically
+
+Transaction failure
+- Memory conflict, false sharing, random interrupt, ...
+- All changes discarded, _xbegin() returns error [1]
+  - _XABORT_EXPLICIT: user called _xabort
+  - _XABORT_CONFLICT: memory conflict
+  - _XABORT_CAPACITY: too much memory (cache eviction)
+  - (etc.)
+
+Example [1]
+
+[ figure 1 (please bold the _xbegin() and _xend() calls only) ]
+
+    if ((status = _xbegin()) == SUCCESS) {
+        foo++;
+        _xend();
+    } else {
+        mutex_lock(&foo_lock);
+        foo++;
+        mutex_unlock(&foo_lock);
+    }
+
+Motivation
+- Hardware TM recently commercially available [2]
+- Related work focuses on performance (abort rates) [3]
+- Want to verify correctness of TM client programs
+
+==== Concurrency Model ====
+
+Represent with equivalent, easier-to-verify patterns
+- Transaction atomicity == global lock
+- Transaction aborts == failure injection
+- Equivalence proofs: see [5]
+
+[ figure 2: failure-injection.pdf ]
+
+Transaction-path/failure-path interleavings:
+
+[ figure 3: please make the below into a table ]
+
+Thread 1            | Thread 2
+--------------------+-----------------
+(txn path)          | (failure path)
+                    | _xbegin() = ABORT...
+                    | mutex_lock(&foo_lock);
+                    | tmp = foo;
+                    | tmp = tmp + 1;
+_xbegin() = SUCCESS | 
+foo++;              |
+_xend()             |
+                    | foo = tmp;
+                    | mutex_unlock(&foo_lock);
+
+Mutex alone doesn't guarantee atomicity!
+
+How to prevent this bug? [4]
+
+[ figure 4 (please highlight the lines marked with *, make them bold or something) ]
+
+    if ((status = _xbegin()) == SUCCESS) {
+        if (prevent_transactions) { *
+            _xabort(); *
+        } *
+        foo++;
+        _xend();
+    } else {
+        mutex_lock(&foo_lock);
+        prevent_transactions = true; *
+        foo++;
+        prevent_transactions = true; *
+        mutex_unlock(&foo_lock);
+    }
+
+==== Evaluation ====
+
+Test suite:
+- Hand-written microbenchmarks
+- HTM data structure benchmarks (AVL tree, hashmap) [4]
+
+Bugs found:
+- Example bug (figure 1) (6 sec)
+- Microbenchmark deadlock (introduced by hand) (13 sec)
+- AVL tree segfault (40 sec)
+
+Verified correct (2 threads, 2 iterations):
+- Fixed example bug (figure 4) (134 sec, 4902 interleavings)
+- Fixed deadlock bug (1 hr, 101,150 interleavings)
+- (Not verified: fixed AVL bug, estimated size: 8,714,863)
+
+** Need more benchmarks - know any OSS TM algorithms/benchmarks? Let me know! **
+
+==== References ====
+
+[1] X86 transaction memory intrinsics. GCC manual 4.8.2
+[2] Haswell: The 4th-gen Intel core processor. IEEE Micro '14
+[3] SI-TM: Reducing TM abort rates. ASPLOS '14
+[4] HTM with Intel's TSX. CMU 15-618, '16
+[5] TM concurrency verification with Landslide. SIGBOVIK '18
