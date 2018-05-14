@@ -123,6 +123,8 @@ For discussion of relaxed memory models refer to Section~\ref{sec:warpzone}.
 Consider again the program in Figure~\ref{fig:htm-example-reproduced}.
 Note that the C-style {\tt x++} operations, when compiled into assembly, %\cite{printy},
 results in multiple memory accesses which can be interleaved with other threads.
+% TODO: fix line numbers
+% TODO: put "void count" back in the mario-fixed example program, and fix ALL line numbers thruout proofs
 \[
 \begin{tabular}{ll}
 	$2a$ & \texttt{temp <- x;} \\
@@ -394,7 +396,122 @@ Hence, data-race analysis is sound when transaction boundaries are replaced by a
 
 \section{Implementation}
 
-% TODO
+Support for TSX programs in Landslide is implemented in three parts, broadly speaking,
+the user interface plus one internal part corresponding to each proof above.
+
+\subsection{User Interface}
+
+Landslide provides its own ``implementation'' of the TSX interface,
+which matches GCC's interface exactly,
+located in {\tt 410user/inc/htm.h}
+under {\tt pebsim/p2-basecode/}.
+The interface is implemented in {\tt 410user/libhtm/htm.c},
+perhaps surprisingly, as totally empty functions:
+Landslide hooks these functions' addresses during instrumentation
+and inserts preemption points, failure injections, etcetera as necessary whenever the execution encounters them.
+
+Transactional test programs should be ported to the Pebbles userspace if not already,
+then replace any use of compiler HTM intrinsics with Landslide's interface%
+\footnote{Attempts to execute a real TSX instruction under Landslide, instead of using the custom interface,
+will be reported as ``invalid opcode'' bugs.
+}.
+They should then be put in either {\tt 410user/progs/} or {\tt user/progs/}
+and the {\tt 410TESTS} or {\tt STUDENTTESTS} line (respectively) of {\tt config-incomplete.mk} be edited to add the test name,
+% TODO: better section reference
+before running {\tt p2-setup.sh} (\sect{\ref{chap:education}})
+% TODO(implementation): Provide an obfuscated refp2?
+on a (hopefully) correct P2 as usual.
+Several example HTM tests are provided as {\tt 410user/progs/htm*.c}.
+
+Finally, Quicksand supports the following command-line options to enable various sets of HTM features within Landslide.
+Each option requires each of the previously-listed options to also be present.
+\begin{itemize}
+	\item {\tt -X} (for ``tsX'' or ``Xbegin'') enables the basic features:
+		preemption points on each {\tt \_xbegin()} and {\tt \_xend()} call,
+		failure injection on each of the former
+		(always returning {\tt \_XABORT\_RETRY} as the failure code)
+		(\sect{\ref{sec:txn-failure}}),
+		and treatment of transactional regions during data-race analysis (\sect{\ref{sec:txn-datarace}}).
+	\item {\tt -A} (for ``xAbort codes'')
+		enables multiple xabort failure codes (\sect{\ref{sec:txn-failure}}).
+	% TODO(implementation): implement an option for this as -S for STM.
+	\item {\tt -S} (for ``Stm'')
+		disables the {\tt \_XABORT\_RETRY} failure reason,
+		which causes Landslide to match STM's execution semantics rather than HTM.
+		(This feature was used in \cite{sigbovik-htm}~\sect{5}.)
+\end{itemize}
+
+\subsection{Failure Injection}
+\label{sec:txn-failure}
+
+Each preemption point ({\tt struct hax} as defined in {\tt tree.h})
+includes three new fields.
+The boolean {\tt h->xbegin} is set if the preemption point occurred at an {\tt \_xbegin()} call.
+Then if set (as the tag of an option type),
+the twin lists of integers
+{\tt h->xabort\_codes\_ever}
+and
+{\tt h->xabort\_codes\_todo}
+store possible error codes this {\tt \_xbegin()} call should be tested to possibly return.
+The former list stores all such error codes, whether already tested or yet to be tested,
+while the latter serves as a workqueue that indicates only those not already tested yet
+(serving an analogous purpose as the {\tt all\_explored} flag for thread scheduling).
+
+\subsubsection{Adding possible abort codes}
+
+Up to three abort codes are considered depending on the testing options listed in the previous section.
+All abort codes are simultaneously added to both lists,
+unless already present on {\tt xabort\_codes\_ever},
+in which case not added to {\tt xabort\_codes\_todo} to avoid duplicate work.
+\begin{itemize}
+	\item {\tt \_XABORT\_RETRY}:
+		When a {\tt xbegin} preemption point is created ({\tt save\_setjmp()}),
+		if {\tt -S} is not set,
+		both {\tt xabort\_codes} lists are initialized to contain this code.
+		This represents the possibility for a hardware transaction to fail
+		for reasons outside of the programmer's control such as system interrupts or cache eviction.
+		If {\tt -S} is set they are initialized to empty,
+		representing either STM's policy of failing only when a true memory conflict arises,
+		or a TSX user wrapping all their {\tt \_xbegin()}s in a retry loop such as in \cite{sigbovik-htm}.
+	\item {\tt \_XABORT\_CONFLICT}:
+		Whenever DPOR detects a memory conflict between two preemption points ({\tt shimsham\_shm()}),
+		if {\tt -A} is set,
+		for each of the two which are within a transaction,
+		it finds the nearest ancestor {\tt xbegin} preemption point by the same thread
+		and adds this code to both lists.
+		% FIXME(implementation): make sure that abort_transaction can't cross a xend() boundary?
+		% don't want to cause spurious conflict aborts on post-xend code
+	\item {\tt \_XABORT\_EXPLICIT}:
+		Whenever the program invokes {\tt \_xabort()} ({\tt sched\_update\_user\_\allowbreak{}state\_machine()}),
+		if {\tt -A} is set,
+		this code is added to both lists, bitwise-ored with the user-supplied argument code
+		as specified in \cite{htm-gcc}.
+\end{itemize}
+
+% FIXME(implementation): false sharing should be covered under conflict, not retry!
+
+\subsubsection{Injecting abort codes}
+When traversing the state space (\sect{\ref{sec:landslide-statespace}}),
+in addition to performing DPOR to select non-independent thread interleavings (\sect{\ref{sec:landslide-dpor}}),
+% TODO: reduction challenge?
+the abort codes under each {\tt xbegin} preemption point are also considered ``marked'' paths which must be tested.
+Hence {\tt explore()}, by way of {\tt any\_tagged\_child()},
+will pop off the {\tt xabort\_codes\_todo} queue
+when it's time to explore that preemption point in the usual depth-first manner%
+\footnote{The search order prioritizes abort codes before scheduling other threads
+at such preemption points,
+which is just an implementation detail, not theoretically necessary}.
+The optional abort code is then passed through {\tt arbiter\_append\_choice()}/{\tt arbiter\_pop\_choice()}
+to {\tt cause\_transaction\_failure()},
+which edits the simulation state ({\tt \%eip} and {\tt \%eax})
+to force {\tt \_xbegin()} to return the provided code.
+
+\subsection{Data Race Analysis}
+\label{sec:txn-datarace}
+
+% XXX(implementation): i bet you need to fix your pure hb impl
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
