@@ -206,14 +206,26 @@ which shows that correctly synchronizing even the simplest transactions may be s
 
 \subsection{Modeling Transaction Failure}
 
-Left unstated in interleavings such as $\tiat{1-2c}, \tjat{1-3}, \tiat{4-7}$%
+In the previous section's examples,
+the way I stated interleavings such as $\tiat{1-2c}, \tjat{1-3}, \tiat{4-7}$%
 \footnote{For a clearer example here I have reordered \ti's write to {\tt x} before \tj's part, compared to before.}
-are HTM's execution semantics, namely:
+glossed over the HTM execution semantics underlying how such a sequence of operations would be carried out.
+For example, thread 1's write during $2c$ is not actually visible to thread 2,
+such as it would be under a thread-scheduling-only concurrency model.
+
+Intel's official TSX documentation summarizes its interface and behaviour in prose \cite{intel-tsx-overview};
+to the best of my knowledge,
+no formal definition exists which could be verified in a mechanized logical framework \cite{x86-semantics}.
+Hence the proofs in this section will likewise be in prose.
+To summarize HTM's execution semantics:
+
+% TODO FIXME: this is not genral semantics, this is jut as epplies to the examineple. rephrase
 \begin{enumerate}
 	\item any modifications to shared state (such as $2c$) by \ti are not visible to \tj during its execution,
 		despite \tj being executed afterwards, and
 	\item all local and global state changes by \ti between lines $1$ and $2c$ are discarded when jumping to line $4$.
 \end{enumerate}
+
 % there shouldbe a better word than 'requires' here.. benefits from.. "the point of it is"..
 While use of HTM in production requires the performance advantage
 of temporarily staging such accesses in local CPU cache,
@@ -240,13 +252,14 @@ Stated formally, let:
 	\item $\tiiat{\alpha}$ be an HTM begin operation,
 	\item $\tiiat{\beta_1}\dots\tiiat{\beta_n}$ be the transaction body (with $\beta_n$ the HTM end call),
 	\item $\tiiat{\phi_1}\dots\tiiat{\phi_m}$ be the failure path, and
-	\item $\tiiat{\omega_1}\dots\tiiat{\omega_l}$ be the subsequent code executed unconditionally.%
-		\footnote{Arbitrary code may not be structured to distinguish these as nicely as in our examples;
-		e.g., more code may exist in the success branch after {\tt \_xend()};
-		such would be considered part of $\omega$ here.}
+	\item $\tiiat{\omega_1}\dots\tiiat{\omega_l}$ be the subsequent code executed unconditionally.
 \end{itemize}
+Note that arbitrary code may not be structured to distinguish these as nicely as in our examples;
+e.g., more code may exist in the success branch after {\tt \_xend()};
+such would be considered part of $\omega$ here.
 
 Then, without loss of generality (for any number of other threads \tjj/\tkk, and for any number of thread switches away from \tii during the transaction):
+\vspace{1em}
 
 \begin{lemma}[Equivalence of Aborts]
 	\label{lem:equiv}
@@ -270,7 +283,7 @@ Then, without loss of generality (for any number of other threads \tjj/\tkk, and
 \end{lemma}
 
 \begin{proof}
-	Case on whether the operations by \tjj and/or \tkk have any memory conflicts (read/write or write/write)
+	Case on whether the operations by \tjj and/or \tkk have any memory conflicts (read/\allowbreak{}write or write/write)
 	with $\tiiat{\beta_1}\dots\tiiat{\beta_n}$.
 	If so, then the hardware will abort \tii's transaction, discarding the effects of $\tiiat{\beta_1}\dots\tiiat{\beta_n}$
 	and jumping to $\tiiat{\phi_1}$,
