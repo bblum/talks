@@ -87,8 +87,7 @@ and infinite loops (which must be identified heuristically \cite{entscheidungspr
 			\begin{tabular}{l}
 				\texttt{int x;} \\
 				\texttt{void count() \{} \\
-				\texttt{~~~~for (int i = 0; i < 1000;} \\
-				\texttt{~~~~~~~~~i++)} \\
+				\texttt{~~~~for (int i = 0; i < 1000; i++)} \\
 				\texttt{~~~~~~~~x++;} \\
 				\texttt{\}} \\
 				\texttt{void main() \{} \\
@@ -159,11 +158,11 @@ These include {\em locks}, {\em descheduling}, {\em condition variables}, {\em s
 			\texttt{int x;} \\
 			\texttt{mutex\_t m;} \\
 			\texttt{void count() \{} \\
-			\texttt{~~~~for (int i = 0; i < 1000;} \\
-			\texttt{~~~~~~~~~i++)} \\
+			\texttt{~~~~for (int i = 0; i < 1000; i++) \{} \\
 			\texttt{~~~~~~~~mutex\_lock(\&m);} \\
 			\texttt{~~~~~~~~x++;} \\
 			\texttt{~~~~~~~~mutex\_unlock(\&m);} \\
+			\texttt{~~~~\}} \\
 			\texttt{\}} \\
 		\end{tabular}
 		}
