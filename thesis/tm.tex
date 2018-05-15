@@ -434,7 +434,6 @@ Each option requires each of the previously-listed options to also be present.
 		and treatment of transactional regions during data-race analysis (\sect{\ref{sec:txn-datarace}}).
 	\item {\tt -A} (for ``xAbort codes'')
 		enables multiple xabort failure codes (\sect{\ref{sec:txn-failure}}).
-	% TODO(implementation): implement an option for this as -S for STM.
 	\item {\tt -S} (for ``Stm'')
 		disables the {\tt \_XABORT\_RETRY} failure reason,
 		which causes Landslide to match STM's execution semantics rather than HTM.
@@ -479,8 +478,6 @@ in which case not added to {\tt xabort\_codes\_todo} to avoid duplicate work.
 		for each of the two which are within a transaction,
 		it finds the nearest ancestor {\tt xbegin} preemption point by the same thread
 		and adds this code to both lists.
-		% FIXME(implementation): make sure that abort_transaction can't cross a xend() boundary?
-		% don't want to cause spurious conflict aborts on post-xend code
 	\item {\tt \_XABORT\_EXPLICIT}:
 		Whenever the program invokes {\tt \_xabort()} ({\tt sched\_update\_user\_\allowbreak{}state\_machine()}),
 		if {\tt -A} is set,
@@ -523,9 +520,20 @@ to force {\tt \_xbegin()} to return the provided code.
 \subsection{Data Race Analysis}
 \label{sec:txn-datarace}
 
-% XXX(implementation): i bet you need to fix your pure hb impl
-
-
+When a thread returns {\tt \_XBEGIN\_STARTED} from {\tt \_xbegin()}
+(analogous to {\tt mutex\_trylock()}),
+Landslide's scheduler sets the ``in transaction'' action flag for that thread (\sect{\ref{sec:landslide-scheduler}}),
+and if using Pure Happens-Before,
+applies \textsc{FT acquire} (\sect{\ref{sec:landslide-phb}}) using a dummy lock address to represent the abstract global lock.
+When a thread reaches {\tt \_xend()},
+the above flag is cleared,
+and under Pure Happens-Before,
+\textsc{FT release} is applied.
+Then when {\tt check\_locksets()} compares an access pair,
+under Limited Happens-Before,
+it is considered not a data race if not both threads' ``in transaction'' flags were set in addition to the usual conditions;
+under Pure Happens-Before,
+the vector clocks are simply checked as usual.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
