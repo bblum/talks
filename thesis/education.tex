@@ -6,4 +6,56 @@
 fix their concurrency bugs...
 it fills you with determination.}{Undertale (paraphrased)}
 
-% TODO
+Concurrency is taught in as many different ways as there are
+systems programming classes at universities which teach the subject.
+Yet one thing they all have in common is presenting the concurrency bug
+as some elusive menace,
+humanity's best weapon against which is mere random stress testing.
+This chapter will prove stateless model checking's mettle as a better alternative in the educational theatre.
+
+While the previous chapter demonstrated Landslide's bug-finding power
+compared to prior MC techniques in a controlled environment,.
+whether it offers pedagogical merit in the hands of students and/or TAs is a separate question.
+And while my MS thesis \cite{landslide} showed that students
+could annotate P3 Pebbles kernels and thence use Landslide to debug them,
+the annotations alone required 2 hours of effort on average per user,
+meaning the only students who could benefit were the ones already succeeding enough to have such free time.
+% TODO: sect ref
+Since then, I have extended Landslide with a fully-automatic instrumentation process
+for Pebbles thread libraries (P2s) and Pintos kernels
+to improve its accessibility.
+
+I have run several user studies in the Operating Systems classes
+at Carnegie Mellon University (CMU), University of Chicago (U. Chicago), and Penn State University (PSU),
+wherein students get to use Landslide to find and diagnose their own bugs during the semester.
+% TODO: put section refs
+At CMU, I recorded logs and code snapshots as students used Landslide during P2.
+At CMU and PSU, I surveyed students on their experience after submitting their Landslide-debugged P2s.
+At U. Chicago, I collaborated with a TA to check submitted Pintos kernels,
+then return any resulting bug reports to students and likewise survey them on the quality of the diagnostic output.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Pebbles}
+
+% Possible experiment questions
+% compare e.g. use after free bug reporce from OOPSLA data set, to P2 grade files, see who has thread exit uafs
+% is landslide better at finding thread uafs than TAs
+% same Q for other stuff.. (expect paraguay answer to be "no", explain why)
+
+\subsection{Automatic instrumentation}
+
+\subsection{Evaluation}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Pintos}
+
+\subsection{Automatic instrumentation}
+
+\subsection{Evaluation}
+
+% survey questions i WISH i had asked
+% - did you have any technical difficulties w landslide that i had to intervene on
+
+% \section{Survey results} % ???
