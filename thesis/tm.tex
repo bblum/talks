@@ -522,7 +522,7 @@ to force {\tt \_xbegin()} to return the provided code.
 
 When a thread returns {\tt \_XBEGIN\_STARTED} from {\tt \_xbegin()}
 (analogous to {\tt mutex\_trylock()}),
-Landslide's scheduler sets the ``in transaction'' action flag for that thread (\sect{\ref{sec:landslide-scheduler}}),
+Landslide's scheduler sets the {\tt user\_txn} action flag for that thread (\sect{\ref{sec:landslide-scheduler}}),
 and if using Pure Happens-Before,
 applies \textsc{FT acquire} (\sect{\ref{sec:landslide-phb}}) using a dummy lock address to represent the abstract global lock.
 When a thread reaches {\tt \_xend()},
@@ -531,7 +531,7 @@ and under Pure Happens-Before,
 \textsc{FT release} is applied.
 Then when {\tt check\_locksets()} compares an access pair,
 under Limited Happens-Before,
-it is considered not a data race if not both threads' ``in transaction'' flags were set in addition to the usual conditions;
+it is considered not a data race if not both threads' {\tt user\_txn} flags were set in addition to the usual conditions;
 under Pure Happens-Before,
 the vector clocks are simply checked as usual.
 
@@ -541,3 +541,7 @@ the vector clocks are simply checked as usual.
 
 % TODO
 
+% TODO: evaluate a reduction in the AVL/etc where you take the xbegin/retry/mutex/retry pattern and encapsulate it in smth like
+% T txn(mutex_t *mp, T body(U env), U env)
+% verify this primitive on some simple mutual exclusion tests up to N,K or w/e
+% then in AVL/etc have landslide, whenever it is reached, force the user into an alternate path which just always takes the mx
