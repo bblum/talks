@@ -10,13 +10,13 @@ Concurrency is taught in as many different ways as there are
 systems programming classes at universities which teach the subject.
 Yet one thing they all have in common is presenting the concurrency bug
 as some elusive menace,
-humanity's best weapon against which is mere random stress testing.
+against which humanity's best weapon is mere random stress testing.
 This chapter will prove stateless model checking's mettle as a better alternative in the educational theatre.
 
 While the previous chapter demonstrated Landslide's bug-finding power
-compared to prior MC techniques in a controlled environment,.
+compared to prior MC techniques in a controlled environment,
 whether it offers pedagogical merit in the hands of students and/or TAs is a separate question.
-And while my MS thesis \cite{landslide} showed that students
+And while my MS thesis~\cite{landslide} showed that students
 could annotate P3 Pebbles kernels and thence use Landslide to debug them,
 the annotations alone required 2 hours of effort on average per user,
 meaning the only students who could benefit were the ones already succeeding enough to have such free time.
@@ -32,18 +32,122 @@ wherein students get to use Landslide to find and diagnose their own bugs during
 At CMU, I recorded logs and code snapshots as students used Landslide during P2.
 At CMU and PSU, I surveyed students on their experience after submitting their Landslide-debugged P2s.
 At U. Chicago, I collaborated with a TA to check submitted Pintos kernels,
-then return any resulting bug reports to students and likewise survey them on the quality of the diagnostic output.
+then returned any resulting bug reports to students and likewise surveyed them on the quality of the diagnostic output.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Pebbles}
+\section{P2}
+
+This section presents the user studies done in
+%CMU's 15-410 and PSU's \psuos classes,
+%in semesters Fall 2015 to Spring 2018 and in Spring 2018 alone, respectively,
+%taught by David Eckhardt and Timothy Zhu, respectively.
+CMU's 15-410 in semesters Fall 2015 to Spring 2018,
+taught by David Eckhardt,
+and in PSU's \psuos in Spring 2018,
+taught by Timothy Zhu.
+In both cases the instructors assisted to introduce me during the guest lecture
+%(see below)
+and to distribute the recruiting emails;
+TAs were not involved.
+The in-house user study has CMU IRB approval under study number STUDY2016\_00000425,
+and the external user study under STUDY2017\_00000429.
 
 % Possible experiment questions
 % compare e.g. use after free bug reporce from OOPSLA data set, to P2 grade files, see who has thread exit uafs
 % is landslide better at finding thread uafs than TAs
 % same Q for other stuff.. (expect paraguay answer to be "no", explain why)
 
+\subsection{Recruiting}
+
+Since the Spring 2015 semester I have given a guest lecture in 15-410
+to recruit students to participate in the user study.
+The 50-minute lecture is given 1 week into the 2.5-week-long P2 project,
+approximately when the students should be getting child threads running in {\tt thr\_create()}
+and experiencing concurrency bugs for the first time.
+It introduces the research subject abstractly
+using an example ``Paradise Lost'' bug from a previous lecture \cite{paradise-lost},
+explains how Landslide works concretely,
+shows a short demo of effortlessly using Landslide to find the example bug,
+and provides the necessary IRB legalese about the risks and benefits of participation.
+The most recent lecture slides are available on the course website at
+\url{http://www.cs.cmu.edu/~410-s18/lectures/L14_Landslide.pdf},
+and all semesters' editions at
+\url{https://github.com/bblum/talks/tree/master/landslide-lecture}.
+
+The PSU version of the lecture
+%was given in Spring 2018, and
+is available at
+\url{http://www.contrib.andrew.cmu.edu/~bblum/psu-lecture.pdf}
+as well as under the github link above.
+Being a 70-minute lecture slot rather than 50, I extended the demo to
+both find and (attempt to) verify a fix for two bugs:
+one a simple data race and the other the more complicated Paradise Lost bug as above.
+After finding each bug, I demonstrated using Landslide on a fixed version of the code
+to show how it proves the test case correct by completing all state spaces,
+or (in the case of Paradise Lost) suffers an exponentially-exploding state space.
+Not that I scientifically measured it or anything,
+but this extended demo seemed to help students more clearly understand Landslide's intended workflow,
+at the cost of about 10-15 extra minutes of lecture time.
+
+At both schools students then signed up using a Google form I emailed them,
+which upon completion linked them to the Landslide user guide,
+which is available at
+\url{http://www.contrib.andrew.cmu.edu/~bblum/landslide-guide-p2.pdf}
+(CMU version)
+and
+\url{http://www.contrib.andrew.cmu.edu/~bblum/landslide-guide-psu.pdf}
+(PSU version)
+and
+\url{https://github.com/bblum/talks/tree/master/irb}
+(both versions).
+
 \subsection{Automatic instrumentation}
+
+As described in \sect{\ref{sec:landslide-setup}},
+all setup from the user's point of view is handled through the {\tt p2-setup.sh} script%
+\footnote{PSU's version is called {\tt psu-setup.sh};
+in this section, unless otherwise noted, {\tt p2-setup.sh} will refer to both.
+}.
+It, its helper scripts (\sect{\ref{sec:landslide-glue}}),
+and the {\tt landslide} script itself contain several checks to prevent
+studence
+from accidentally misusing Landslide in ways that could produce mysterious crashes, false bug reports, and so on
+(the need for each one, as the reader might imagine, discovered through bitter experience).
+These include:
+\begin{itemize}
+	\item {\tt check-need-p2-setup-again.sh} checks if any source files in the original P2 source directory
+		(the argument supplied to {\tt p2-setup.sh}),
+		in case the student hoped to fix some bug and verify their fix but forgot to re-run the setup script.
+	% TODO
+	% pointing p2 setup at the user/libthread directory or whatever other wrong thing
+	% wrong program name like racer or OPTIONS
+	\item
+	\item {\tt landslide} checks if any other instance of itself is simultaneously running in the same directory,
+		and if so, refuses to do so and advises the student
+		to {\tt git clone} the repository afresh for simultaneous use%
+		\footnote{This is ironically implemented with a non-atomic lock file
+		and should really be using {\tt flock} instead.
+		}.
+\end{itemize}
+Landslide also includes several P2-specific instrumentations and features to cope with various student irregularities:
+\begin{itemize}
+		% yield loosps
+		% mutex loosp "suspicious"
+		% HURDLE_VIOLATION
+		% snapshooting
+		% psu magic post-test-case check these flags (rationale why, dont have to thr_exit -- also save state space)
+		% quicksand emit custom without_function directives depending on name of test
+		% TODO
+
+	\item
+\end{itemize}
+
+\subsection{Test cases}
+
+% mx, bcast, paradise, paraguay, rwl dgr, exit join
+
+% for psu additionally - bcast test 2, and all the atomics
 
 \subsection{Evaluation}
 
@@ -51,11 +155,40 @@ then return any resulting bug reports to students and likewise survey them on th
 
 \section{Pintos}
 
+This section presents the user study done in U. Chicago's \uchos class in the Fall 2017 semester,
+taught by Haryadi Gunawi.
+Kevin Zhao, the TA, assisted to run Landslide on student submissions
+and to distribute recruiting materials and testing results.
+The study has CMU IRB approval under study number STUDY2017\_00000429.
+
+\subsection{Recruiting}
+
+For this study students were recruited remotely via email.
+After each of the Threads and Userprog project deadlines (\sect{\ref{sec:overview-pintos}}),
+% TODO talk about th econtence of the email
+
 \subsection{Automatic instrumentation}
+
+
+
+\subsection{Test cases}
+
+% prisema
+% alarm simul
+% donate multiple
+% wait simple
 
 \subsection{Evaluation}
 
 % survey questions i WISH i had asked
 % - did you have any technical difficulties w landslide that i had to intervene on
+% mb anything else from timmys 2nd latest email
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % \section{Survey results} % ???
+
+% TODO: addressing bias
+% well, we did the best we could(?)
+% survey email: "please answer honestly rather than flatteringly"
+% anything else?
