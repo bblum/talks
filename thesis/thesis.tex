@@ -62,6 +62,24 @@
 % Provides a draft mark at the top of the document.
 \draftstamp{\today}{DRAFT}
 
+% % nwf made this but i don't know how to get it to work?
+% \usepackage{etoolbox}
+% \makeatletter
+% \apptocmd{\ref}{%
+%   \immediate\write\@auxout%
+%     {\expandafter\string\csname nwf@backref\endcsname{#1}{\arabic{page}}}%
+% }{}{}
+%
+% \newcommand{\nwf@backref}[2]{%
+%   \ifcsdef{nwf@backrefs@#1}%
+%    {\csgappto{nwf@backrefs@#1}{, #2}}%
+%    {\csgdef{nwf@backrefs@#1}{#2}}%
+% }
+% \AtEndDocument{\let\nwf@backref\relax}
+%
+% \newcommand{\linksto}[1]{\csname nwf@backrefs@#1\endcsname}
+% \makeatother
+
 \begin{document}
 \frontmatter
 
