@@ -59,6 +59,7 @@ and the external user study under STUDY2017\_00000429.
 % same Q for other stuff.. (expect paraguay answer to be "no", explain why)
 
 \subsection{Recruiting}
+\label{sec:education-pebbles-recruiting}
 
 Since the Spring 2015 semester I have given a guest lecture in 15-410
 to recruit students to participate in the user study.
@@ -103,6 +104,7 @@ and
 (both versions).
 
 \subsection{Automatic instrumentation}
+\label{sec:education-pebbles-instrumentation}
 
 As described in \sect{\ref{sec:landslide-setup}},
 all setup from the user's point of view is handled through the {\tt p2-setup.sh} script%
@@ -145,9 +147,56 @@ Landslide also includes several P2-specific instrumentations and features to cop
 
 \subsection{Test cases}
 
-% mx, bcast, paradise, paraguay, rwl dgr, exit join
+Landslide ships with several ``approved'' test cases,
+i.e., programs copied from, derived from, or at least vaguely resembling
+the tests distributed with P2,
+which I curated to produce concurrent behaviour suitable for stateless model checking.
+Some tests are crafted to target specific bugs which,
+from personal experience as a TA, are common in many student submissions;
+others are crafted to exercise generally concurrency-heavy code paths and uncover any number of unforeseen problems.
 
-% for psu additionally - bcast test 2, and all the atomics
+The following tests were released to CMU students:
+\begin{itemize}
+	\item {\tt broadcast\_test}:
+		Tests the {\tt cond\_broadcast()} signalling path with a single waiter.
+	\item {\tt mutex\_test}:
+		Tests student mutexes under 2 threads with 2 iterations
+		(the 2nd iteration serves to expose problems with {\tt mutex\_unlock()} as well as {\tt mutex\_lock()}).
+		This test uses the special {\tt TESTING\_MUTEXES} data-race analysis mode
+		described in \sect{\ref{sec:landslide-staticconfig}}.
+	\item {\tt paradise\_lost}:
+		Written for the sake of the Landslide lecture demo
+		(\sect{\ref{sec:education-pebbles-recruiting}}).
+		Tests for the Paradise Lost bug by attempting to break mutual exclusion.
+	\item {\tt paraguay}:
+		Copied directly from the P2 test suite;
+		tests for proper handling of seemingly ``spurious'' wakeups in {\tt cond\_wait()}.
+		Written by Michael Sullivan.
+	\item {\tt rwlock\_downgrade\_read\_test}:
+		Copied directly from the P2 test suite;
+		tests for mutually-exclusive and deadlock-free {\tt rwlock\_downgrade()}.
+		Written by me (as a TA).
+	\item {\tt thr\_exit\_join}:
+		Copied directly from the P2 test suite;
+		tests for a variety of problems between {\tt thr\_exit()} and {\tt thr\_join()},
+		but especially for memory issues pertaining to stack deallocation.
+\end{itemize}
+The following tests were released to PSU students, in addition to the ones above:
+\begin{itemize}
+	\item {\tt atomic\_compare\_swap}:
+		Tests the {\tt cmpxchg} assembly function for being properly atomic.
+		Uses the {\tt magic\_*} global variables, and invokes {\tt vanish()} directly,
+		to avoid requiring the student to implement {\tt thr\_join()}/{\tt thr\_exit()}
+		before being able to run this test.
+	\item {\tt atomic\_exchange}:
+		As above for {\tt xchg}.
+	\item {\tt atomic\_fetch\_add}:
+		As above for {\tt xadd}.
+	\item {\tt atomic\_fetch\_sub}:
+		As above for {\tt xadd}.
+	\item {\tt broadcast\_two\_waiters}:
+		As {\tt broadcast\_test}, but uses two waiting threads to ensure both get signalled.
+\end{itemize}
 
 \subsection{Evaluation}
 
