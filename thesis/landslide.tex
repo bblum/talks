@@ -358,6 +358,7 @@ Following are the less self-explanatory options.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{In-kernel code annotations}
+\label{sec:tell-landslide}
 
 The following annotations are provided as C functions
 which a kernel author shall include in their source code and call at appropriate times.
@@ -913,6 +914,11 @@ are handled by a family of gross shell scripts that live in {\tt pebsim/}.
 		and functions whose names are known in advance.%
 		\footnote{You might think it should invoke objdump but once and keep the output in a shell variable,
 		but I tried that and it was mysteriously slower, so I gave up without ever figuring out why.}
+	\item {\tt p2-basecode/import-p2.sh} and {\tt pintos/import-pintos.sh}
+		are invoked by their respective setup scripts
+		to copy the student implementation into their respective directories.
+		\sect{\ref{sec:education-pebbles-instrumentation}} and \sect{\ref{sec:education-pintos-instrumentation}}
+		describe their office in more detail.
 \end{itemize}
 
 The final output of these scripts is an auto-generated header, {\tt student\_specifics.h},

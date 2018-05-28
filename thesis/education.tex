@@ -162,8 +162,9 @@ The following tests were released to CMU students:
 	\item {\tt mutex\_test}:
 		Tests student mutexes under 2 threads with 2 iterations
 		(the 2nd iteration serves to expose problems with {\tt mutex\_unlock()} as well as {\tt mutex\_lock()}).
-		This test uses the special {\tt TESTING\_MUTEXES} data-race analysis mode
-		described in \sect{\ref{sec:landslide-staticconfig}}.
+		This test uses the {\tt TESTING\_MUTEXES}
+		described in \sect{\ref{sec:landslide-staticconfig}}
+		to enable data-race preemption points within the mutex implementation.
 	\item {\tt paradise\_lost}:
 		Written for the sake of the Landslide lecture demo
 		(\sect{\ref{sec:education-pebbles-recruiting}}).
@@ -185,7 +186,7 @@ The following tests were released to PSU students, in addition to the ones above
 \begin{itemize}
 	\item {\tt atomic\_compare\_swap}:
 		Tests the {\tt cmpxchg} assembly function for being properly atomic.
-		Uses the {\tt magic\_*} global variables, and invokes {\tt vanish()} directly,
+		Uses the {\tt magic\_*} global variables (\sect{\ref{sec:education-pebbles-instrumentation}}), and invokes {\tt vanish()} directly,
 		to avoid requiring the student to implement {\tt thr\_join()}/{\tt thr\_exit()}
 		before being able to run this test.
 	\item {\tt atomic\_exchange}:
@@ -217,8 +218,55 @@ After each of the Threads and Userprog project deadlines (\sect{\ref{sec:overvie
 % TODO talk about th econtence of the email
 
 \subsection{Automatic instrumentation}
+\label{sec:education-pintos-instrumentation}
 
+As described in \sect{\ref{sec:landslide-setup}},
+all setup from the user's point of view is handled through the {\tt pintos-setup.sh} script.
+It
+and its helper {\tt pebsim/pintos/import-pintos.sh}
+perform most of the same sanity checks as listed in \sect{\ref{sec:education-pebbles-instrumentation}},
+then applies the patch {\tt annotate-\allowbreak{}pintos.patch}
+(plus several more hacks in the script itself)
+to insert the {\tt tell\_landslide\_*()} annotations (\sect{\ref{sec:tell-landslide}})
+into the student's kernel code.
+The following tricks serve to make sure the annotations apply consistently
+to (almost) all variations of code that students commonly submit:
 
+\begin{itemize}
+	\item Finds the declaration of {\tt ready\_list}, the scheduler runqueue declared by the basecode,
+		and detects if the student has modified to be an array of lists rather than a single one.
+		If so, defines the length of that array in a macro to be used by {\tt is\_runqueue()}
+		(part of the patch described below).
+		Either way defines a function {\tt get\_rq\_addr()} to return the address of the (first) list.
+	\item Changes the basecode's definition of {\tt TIME\_SLICE} from 4 to 1 (units of timer ticks)
+		so Landslide's timer injection will properly drive the context switcher.
+	\item Inserts {\tt tell\_landslide\_forking()} into {\tt thread.c}
+		(using {\tt sed} rather than the patch, described below,
+		because it must go in a function which students have to implement,
+		which is likely to disturb the context and make a patch fail).
+	\item Adds the new {\tt priority-donate-multiple} test.
+	\item Applies the {\tt annotate-pintos.patch} patch to the imported student implementation, which:
+	\begin{itemize}
+		\item Adds {\tt tell\_landslide\_thread\_on\_rq()}
+			and {\tt tell\_landslide\_thread\_off\_rq()}
+			annotations
+			to {\tt list\_insert()} and {\tt list\_remove()} respectively
+			(in {\tt lib/kernel/\allowbreak{}list.c}, which the students don't modify),
+			which
+			check whether the argument list
+			is the scheduler runqueue
+			using a helper function {\tt is\_runqueue},
+			which in turn uses {\tt get\_rq\_addr()} and {\tt READY\_LIST\_LENGTH} described above.
+		\item Modifies the existing {\tt priority-sema} and {\tt alarm-simultaneous} tests to be more Landslide-friendly.
+		\item Inserts the {\tt tell\_landslide\_sched\_init\_done()},
+			{\tt tell\_landslide\_vanishing()},
+			and {\tt tell\_landslide\_thread\_switch()}
+			annotations in the appropriate places
+			(which the students generally do not modify).
+	\end{itemize}
+	\item Detects if the student has renamed the {\tt elem} field of the TCB struct,
+		and if so renames its use in {\tt is\_runqueue()} (described above) correspondingly.
+\end{itemize}
 
 \subsection{Test cases}
 
