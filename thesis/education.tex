@@ -199,6 +199,8 @@ The following tests were released to PSU students, in addition to the ones above
 		As {\tt broadcast\_test}, but uses two waiting threads to ensure both get signalled.
 \end{itemize}
 
+The tests can all be viewed at \url{https://github.com/bblum/landslide/tree/master/pebsim/p2-basecode/410user/progs}.
+
 \subsection{Evaluation}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -214,7 +216,7 @@ The study has CMU IRB approval under study number STUDY2017\_00000429.
 \subsection{Recruiting}
 
 For this study students were recruited remotely via email.
-After each of the Threads and Userprog project deadlines (\sect{\ref{sec:overview-pintos}}),
+After each of the {\em threads} and {\em userprog} project deadlines (\sect{\ref{sec:overview-pintos}}),
 % TODO talk about th econtence of the email
 
 \subsection{Automatic instrumentation}
@@ -270,10 +272,37 @@ to (almost) all variations of code that students commonly submit:
 
 \subsection{Test cases}
 
-% prisema
-% alarm simul
-% donate multiple
-% wait simple
+Like the P2 tests, the Pintos test cases are either hand-picked from the provided unit tests,
+with an eye for which will produce interesting concurrent behaviour,
+or created using a TA's intuition for the most likely student bugs.
+The following tests are approved to be Landslide-friendly:
+
+\begin{itemize}
+	\item {\tt priority-sema}:
+		Modified to be Landslide-friendly from the basecode, for {\em threads}.
+		Creates two child threads to wait on a semaphore and signals them.
+		Replaces threads with different priorities
+		(originally chosen to produce deterministic output which the test checked for)
+		with threads of the same priority.
+	\item {\tt alarm-simultaneous}:
+		Modified to be Landslide-friendly from the basecode, for {\em threads}.
+		Creates two child threads which each invoke {\tt timer\_sleep()} for a different amount of time.
+		Number of (threads,iterations) reduced from (3,5) to (2,1).
+	\item {\tt wait-simple}:
+		Unmodified from the basecode's version, for {\em userprog}.
+		Userspace process {\tt exec()}s a child process, which immediately exits, and {\tt wait()}s on it.
+	\item {\tt priority-donate-multiple}:
+		Written by Kevin Zhao, TA at U. Chicago, for {\em threads}.
+		Tests for a priority donation race during {\tt lock\_release()}
+		in which a thread holding a lock can accidentally keep a contending thread's donated priority
+		after finishing releasing it.
+\end{itemize}
+
+The (unpatched versions of) the first three tests are available at
+\url{https://github.com/Berkeley-CS162/group0/tree/master/pintos/src/tests}.
+The fourth test is available at
+% FIXME: allowbreak makes nasty latex shit show up in the output??
+\url{https://github.com/bblum/landslide/blob/master/pebsim/pintos/priority-donate-multiple.c}.
 
 \subsection{Evaluation}
 
