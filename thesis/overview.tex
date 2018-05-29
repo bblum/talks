@@ -655,12 +655,13 @@ Although there is some variety in supplemental assignments, all Pintos courses i
 
 Some schools further offer a virtual memory project, extending the provided VM with a frame table and supplemental page table and fault handler \cite{standford-cs140,uchicago-cs230}, or supplemental HTTP server and {\tt malloc} assignments \cite{berkeley-cs162}.
 Being largely architectural/algorithmic projects rather than concurrency-oriented ones, I am not concerned with these assignments in this thesis.
-The main concurrency challenges in Pintos projects arise from the threads and userprog assignments:
+The main concurrency challenges in Pintos projects arise from the {\em threads} and {\em userprog} assignments:
 implementing a correct {\tt alarm} routine,
 ensuring the priority scheduler remains safe in the presence of concurrent threads of the same priority,
 and designing correct interactions between the {\tt wait} and {\tt exit} system calls.
 
 \section{Glossary}
+\label{sec:glossary}
 
 This section provides a convenient reference of terminology used throughout the thesis.
 
@@ -684,3 +685,4 @@ This section provides a convenient reference of terminology used throughout the 
 % MC, stateless MC
 % TA: teaching assistant
 % P2 (note abotu psu - dosent call it p2, but we call it that for both schools here
+% happens before, all 3 versions - DPOR, LHB, and PHB
