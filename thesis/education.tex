@@ -203,6 +203,10 @@ The tests can all be viewed at \url{https://github.com/bblum/landslide/tree/mast
 
 \subsection{Evaluation}
 
+\subsection{Retrospect}
+
+Landslide is great and should be used in 410. Dave wants to use it. That's enough evidence right there.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Pintos}
@@ -217,7 +221,8 @@ The study has CMU IRB approval under study number STUDY2017\_00000429.
 
 For this study students were recruited remotely via email.
 After each of the {\em threads} and {\em userprog} project deadlines (\sect{\ref{sec:overview-pintos}}),
-% TODO talk about th econtence of the email
+\uchos staff sent students an email inviting them to volunteer to receive Landslide's bug reports,
+disclaiming that it did not represent part of the official grading process but could help improve their future submissions.
 
 \subsection{Automatic instrumentation}
 \label{sec:education-pintos-instrumentation}
@@ -309,6 +314,38 @@ The fourth test is available at
 % survey questions i WISH i had asked
 % - did you have any technical difficulties w landslide that i had to intervene on
 % mb anything else from timmys 2nd latest email
+
+\subsection{Retrospect}
+
+I attribute the low participation rate of Pintos students to P2 students to two major factors:
+one, not incentivizing the students to directly improve their grades
+(instead offering only the vague promise of a ``learning experience'' debugging their code only after handin),
+and two, not traveling to the university to introduce the research topic in an in-person lecture
+(leaving the students potentially confused about what advantage, if any, was offered over stress testing).
+
+While part of the point of this experimental design was to evaluate Landslide as a grading tool in the hands of TAs,
+I would be remiss to mention that I also feared the automatic annotation process would not be as robust as the P2 version.
+Indeed, while helping Kevin get oriented with using Landslide,
+I implemented
+several % TODO: how many and what specifically
+fixes/improvements to the setup scripts
+as we found student kernels that failed to automatically annotate
+(for example, those with {\tt ready\_list} changed to an array,
+as described in \sect{\ref{sec:education-pintos-instrumentation}}).
+Had we given Landslide directly to students that semester,
+the students themselves would have had to email me for tech support.
+
+Hypothetically, I could have achieved greater user study participation
+either by offering extra credit to students
+or by offering an autograder-like interface for students to receive bug reports before their deadlines instead of after
+(either way requiring a more rigorous IRB review process).
+Practically, as for non-research use in Pintos classes,
+Landslide can now handle a considerably wider variety of student implementation quirks
+on account of this time's fixes.
+In its current shape I would recommend it for TA use grading,
+but not necessarily directly to students without someone familiar with the codebase on immediate hand for tech support.
+
+% Point two is much more easily addressed, although perhaps not necessary if only being used for grading anyway.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
