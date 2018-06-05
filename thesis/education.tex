@@ -118,13 +118,14 @@ from accidentally misusing Landslide in ways that could produce mysterious crash
 (the need for each one, as the reader might imagine, discovered through bitter experience).
 These include:
 \begin{itemize}
+	\item {\tt p2-setup.sh} checks if the directory argument correctly points at the top-level P2 basecode directory
+		rather than any subdirectories such as {\tt user/libthread/}.
 	\item {\tt check-need-p2-setup-again.sh} checks if any source files in the original P2 source directory
 		(the argument supplied to {\tt p2-setup.sh}),
 		in case the student hoped to fix some bug and verify their fix but forgot to re-run the setup script.
-	% TODO
-	% pointing p2 setup at the user/libthread directory or whatever other wrong thing
-	% wrong program name like racer or OPTIONS
-	\item
+	\item {\tt landslide} checks the supplied test name matches one of the endorsed Landslide-friendly tests
+		(students love trying to run Landslide with {\tt racer}, {\tt largetest},
+		or even the string {\tt OPTIONS}).
 	\item {\tt landslide} checks if any other instance of itself is simultaneously running in the same directory,
 		and if so, refuses to do so and advises the student
 		to {\tt git clone} the repository afresh for simultaneous use%
@@ -134,15 +135,26 @@ These include:
 \end{itemize}
 Landslide also includes several P2-specific instrumentations and features to cope with various student irregularities:
 \begin{itemize}
-		% yield loosps
-		% mutex loosp "suspicious"
-		% HURDLE_VIOLATION
-		% snapshooting
-		% psu magic post-test-case check these flags (rationale why, dont have to thr_exit -- also save state space)
-		% quicksand emit custom without_function directives depending on name of test
-		% TODO
-
-	\item
+	\item Quicksand emits different combinations of {\tt within\_function}/{\tt without\_function} directives
+		for Landslide depending on the name of the test.
+		For example, for {\tt paradise\_lost} Landslide will not preempt in a function named {\tt critical\_section()},
+		which the test case uses to protect an internal counter used to detect the bug;
+		and it will not preempt in any of the {\tt thr\_*()} thread library API functions
+		for tests intended to target just the concurrency primitives.
+		In future work this could be improved as annotations to be placed inside the test case code itself.
+	\item Landslide finds ad-hoc synchronization patterns which students often open-code,
+		rather than using the prescribed synchronization API,
+		such as {\tt while (!flag) yield();} or {\tt while (xchg(...)) continue;},
+		and treats them as synchronization points as described in \sect{\ref{sec:landslide-blocking}}.
+	\item Landslide finds ``too suspicious'' spinwait-loops in the students' mutex implementations
+		which are neither yield- nor {\tt xchg}-loops (as described above),
+		which would ordinarily be classified as infinite loop bugs,
+		and reports them with a suggestive message ({\tt undesirable\_loop\_html()} in {\tt landslide.c})
+		referring them to the appropriate lecture material
+		\cite{synchronization-2}.
+	\item The {\tt landslide} wrapper script logs the time and command-line options of invocation
+		and captures a snapshot of the student code and results of the test and saves them to AFS after each run.
+		% HURDLE_VIOLATION -- no, this is for p3 (context switcher) features only
 \end{itemize}
 
 \subsection{Test cases}
@@ -154,6 +166,8 @@ which I curated to produce concurrent behaviour suitable for stateless model che
 Some tests are crafted to target specific bugs which,
 from personal experience as a TA, are common in many student submissions;
 others are crafted to exercise generally concurrency-heavy code paths and uncover any number of unforeseen problems.
+
+\subsubsection{Test case list}
 
 The following tests were released to CMU students:
 \begin{itemize}
@@ -186,7 +200,7 @@ The following tests were released to PSU students, in addition to the ones above
 \begin{itemize}
 	\item {\tt atomic\_compare\_swap}:
 		Tests the {\tt cmpxchg} assembly function for being properly atomic.
-		Uses the {\tt magic\_*} global variables (\sect{\ref{sec:education-pebbles-instrumentation}}), and invokes {\tt vanish()} directly,
+		Uses the {\tt magic\_*} global variables described below, and invokes {\tt vanish()} directly,
 		to avoid requiring the student to implement {\tt thr\_join()}/{\tt thr\_exit()}
 		before being able to run this test.
 	\item {\tt atomic\_exchange}:
@@ -199,12 +213,33 @@ The following tests were released to PSU students, in addition to the ones above
 		As {\tt broadcast\_test}, but uses two waiting threads to ensure both get signalled.
 \end{itemize}
 
+\subsubsection{Magic post-test assertions}
+
+Test cases may define global variables of the following names
+to instruct Landslide to assert the following corresponding predicates at the end of each test execution,
+after all threads exit %
+\footnote{Each predicate will be checked iff its first listed variable name is defined;
+if that variable is defined, all others associated must also be;
+any combination of the three first-listed variables
+}.
+(These cannot be implemented as asserts in the test code itself
+without requiring the student to implement {\tt thr\_join()} and {\tt thr\_exit()}.)
+\begin{itemize}
+	\item {\tt magic\_global\_expected\_result == magic\_global\_value}
+	\item {\tt magic\_expected\_sum == magic\_thread\_local\_value\_parent +} \\ {\tt magic\_thread\_local\_value\_child}
+	\item {\tt magic\_expected\_sum\_minus\_result == magic\_thread\_local\_value\_parent +} \\ {\tt magic\_thread\_local\_value\_child - magic\_global\_value}
+\end{itemize}
+
+
 The tests can all be viewed at \url{https://github.com/bblum/landslide/tree/master/pebsim/p2-basecode/410user/progs}.
 
 \subsection{Evaluation}
 
+% TODO
+
 \subsection{Retrospect}
 
+% TODO FIXME
 Landslide is great and should be used in 410. Dave wants to use it. That's enough evidence right there.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -234,7 +269,7 @@ and its helper {\tt pebsim/pintos/import-pintos.sh}
 perform most of the same sanity checks as listed in \sect{\ref{sec:education-pebbles-instrumentation}},
 then applies the patch {\tt annotate-\allowbreak{}pintos.patch}
 (plus several more hacks in the script itself)
-to insert the {\tt tell\_landslide\_*()} annotations (\sect{\ref{sec:tell-landslide}})
+to insert the {\tt tell\_landslide()} annotations (\sect{\ref{sec:tell-landslide}})
 into the student's kernel code.
 The following tricks serve to make sure the annotations apply consistently
 to (almost) all variations of code that students commonly submit:
@@ -306,7 +341,6 @@ The following tests are approved to be Landslide-friendly:
 The (unpatched versions of) the first three tests are available at
 \url{https://github.com/Berkeley-CS162/group0/tree/master/pintos/src/tests}.
 The fourth test is available at
-% FIXME: allowbreak makes nasty latex shit show up in the output??
 \url{https://github.com/bblum/landslide/blob/master/pebsim/pintos/priority-donate-multiple.c}.
 
 \subsection{Evaluation}
@@ -314,6 +348,8 @@ The fourth test is available at
 % survey questions i WISH i had asked
 % - did you have any technical difficulties w landslide that i had to intervene on
 % mb anything else from timmys 2nd latest email
+
+% TODO
 
 \subsection{Retrospect}
 
