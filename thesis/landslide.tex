@@ -240,6 +240,73 @@ Unless otherwise specified these are boolean flags (1 or 0) and the example valu
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\subsection{Test cases}
+\label{sec:landslide-testcases}
+
+Landslide depends on human intuition to construct a test case
+that will produce both meaningful in quality and manageable in quantity thread interleavings.
+
+The user may supply custom test cases
+for Pebbles (under {\tt pebsim/p2-basecode})
+by creating a file in {\tt 410user/progs} and adding it to config.mk as usual,
+or for Pintos (under {\tt pebsim/pintos/src/tests/threads})
+by creating a file and adding it to both {\tt tests.c} and {\tt Make.tests}.
+Tests for the most common interactions during the P2 and Pintos projects are of course already supplied,
+as described in \sect{\ref{sec:education-pebbles-tests}} and \sect{\ref{sec:education-pintos-tests}}.
+
+Use of {\tt tell\_landslide()} annotations is not necessary,
+although {\tt tell\_landslide\_\allowbreak{}preempt()} and {\tt tell\_landslide\_dump\_stack()}
+may optionally be used at the user's convenience.
+Additionally, the following ``secret'' annotations
+are occasionally used in the pre-supplied test cases
+to accomplish several mysterious goals described hereupon.
+
+\subsubsection{Magic post-test assertions}
+
+Test cases may define global variables of the following names
+to instruct Landslide to assert the following corresponding predicates at the end of each test execution,
+after all threads exit.
+Each predicate will be checked iff its first listed variable name is defined;
+if that variable is defined, all others associated must also be;
+any combination of the three first-listed variables may be specified at the user's option.
+\begin{itemize}
+	\item {\tt magic\_global\_expected\_result == magic\_global\_value}
+	\item {\tt magic\_expected\_sum == magic\_thread\_local\_value\_parent +} \\ {\tt magic\_thread\_local\_value\_child}
+	\item {\tt magic\_expected\_sum\_minus\_result == magic\_thread\_local\_value\_parent +} \\ {\tt magic\_thread\_local\_value\_child - magic\_global\_value}
+\end{itemize}
+These could not be implemented as asserts in the test code itself
+without requiring the student to implement {\tt thr\_join()} and {\tt thr\_exit()},
+avoiding which is important for tests to be student-accessible earlier in the project implementation timeline.
+
+\subsubsection{Misbehave}
+
+Many of the P2 test cases can be seen to invoke the {\tt misbehave()} system call
+with a mysterious argument (usually {\tt BGND\_BRWN >> FGND\_CYAN})
+before the creation of any child threads.
+The use of terminal color code constants is of course a red herring of obfuscation,
+as the true nature of the Pathos reference kernel's {\tt misbehave} modes
+is a closely-guarded secret among 15-410 course staff.
+The mode in question causes the reference kernel to prioritize scheduling the child thread over the parent
+whenever {\tt thread\_fork} is called,
+and the target thread over the invoking thread
+whenever {\tt make\_runnable} is called,
+which are necessary to allow Landslide to recognize a {\tt yield()} preemption point
+and be able to run the newly-runnable thread as soon as possible.
+
+To illustrate, consider the following program.
+
+% TODO
+% TODO - make a progr that data races immediately after thr create, no mutex es or whatever.
+% TODO - check if it rly happens under pure happens before? or if this is only a concern under limited HB.
+
+Other {\tt misbehave} modes may be used, but are likely to have no effect,
+since Landslide's thread-scheduling algorithm will override
+any Pathos-internal scheduling priorities that may arise therefrom.
+Hypothetically speaking, a reader with access to the top-secret Pebbles source code
+could find further {\tt misbehave} documentation in its {\tt inc/misbehavior.h}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsection{Bug reports}
 \label{sec:landslide-bugreport}
 

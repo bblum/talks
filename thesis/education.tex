@@ -36,7 +36,7 @@ then returned any resulting bug reports to students and likewise surveyed them o
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{P2}
+\section{Pebbles}
 
 This section presents the user studies done in
 %CMU's 15-410 and PSU's \psuos classes,
@@ -158,6 +158,7 @@ Landslide also includes several P2-specific instrumentations and features to cop
 \end{itemize}
 
 \subsection{Test cases}
+\label{sec:education-pebbles-tests}
 
 Landslide ships with several ``approved'' test cases,
 i.e., programs copied from, derived from, or at least vaguely resembling
@@ -166,6 +167,7 @@ which I curated to produce concurrent behaviour suitable for stateless model che
 Some tests are crafted to target specific bugs which,
 from personal experience as a TA, are common in many student submissions;
 others are crafted to exercise generally concurrency-heavy code paths and uncover any number of unforeseen problems.
+Many use some of the features/annotations described in \sect{\ref{sec:landslide-testcases}}.
 
 \subsubsection{Test case list}
 
@@ -212,24 +214,6 @@ The following tests were released to PSU students, in addition to the ones above
 	\item {\tt broadcast\_two\_waiters}:
 		As {\tt broadcast\_test}, but uses two waiting threads to ensure both get signalled.
 \end{itemize}
-
-\subsubsection{Magic post-test assertions}
-
-Test cases may define global variables of the following names
-to instruct Landslide to assert the following corresponding predicates at the end of each test execution,
-after all threads exit %
-\footnote{Each predicate will be checked iff its first listed variable name is defined;
-if that variable is defined, all others associated must also be;
-any combination of the three first-listed variables
-}.
-(These cannot be implemented as asserts in the test code itself
-without requiring the student to implement {\tt thr\_join()} and {\tt thr\_exit()}.)
-\begin{itemize}
-	\item {\tt magic\_global\_expected\_result == magic\_global\_value}
-	\item {\tt magic\_expected\_sum == magic\_thread\_local\_value\_parent +} \\ {\tt magic\_thread\_local\_value\_child}
-	\item {\tt magic\_expected\_sum\_minus\_result == magic\_thread\_local\_value\_parent +} \\ {\tt magic\_thread\_local\_value\_child - magic\_global\_value}
-\end{itemize}
-
 
 The tests can all be viewed at \url{https://github.com/bblum/landslide/tree/master/pebsim/p2-basecode/410user/progs}.
 
@@ -311,6 +295,7 @@ to (almost) all variations of code that students commonly submit:
 \end{itemize}
 
 \subsection{Test cases}
+\label{sec:education-pintos-tests}
 
 Like the P2 tests, the Pintos test cases are either hand-picked from the provided unit tests,
 with an eye for which will produce interesting concurrent behaviour,
