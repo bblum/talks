@@ -280,7 +280,7 @@ avoiding which is important for tests to be student-accessible earlier in the pr
 
 \subsubsection{Misbehave}
 
-Many of the P2 test cases can be seen to invoke the {\tt misbehave()} system call
+Many of the supplied P2 test cases invoke the {\tt misbehave()} system call
 with a mysterious argument (usually {\tt BGND\_BRWN >> FGND\_CYAN})
 before the creation of any child threads.
 The use of terminal color code constants is of course a red herring of obfuscation,
@@ -302,7 +302,7 @@ To illustrate, consider the following program.
 Other {\tt misbehave} modes may be used, but are likely to have no effect,
 since Landslide's thread-scheduling algorithm will override
 any Pathos-internal scheduling priorities that may arise therefrom.
-Hypothetically speaking, a reader with access to the top-secret Pebbles source code
+Hypothetically speaking, a reader with access to the top-secret Pathos source code
 could find further {\tt misbehave} documentation in its {\tt inc/misbehavior.h}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1025,7 +1025,7 @@ statically-configured preemption points (\sect{\ref{sec:landslide-staticconfig}}
 and dynamically-configured preemption points (\sect{\ref{sec:landslide-dynamicconfig}}),
 respectively.
 Each of these configurations may contain any number of
-{\tt within\_function}, {\tt without\_function}, and {\tt data\_race} commands.
+{\tt within\_function}, {\tt without\_function}, and {\tt data\_\allowbreak{}race} commands.
 
 \subsubsection{Stack trace inclusion/exclusion}
 
