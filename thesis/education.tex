@@ -271,15 +271,6 @@ I asked participants to answer several survey questions, reproduced below.
 	\item Your PSU username
 \end{enumerate}
 
-\subsection{Evaluation}
-
-% TODO
-
-\subsection{Retrospect}
-
-% TODO FIXME
-Landslide is great and should be used in 410. Dave wants to use it. That's enough evidence right there.
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Pintos}
@@ -415,15 +406,68 @@ the questions here focus more on the debugging experience than on using Landslid
 	\item Your project partner's name (if applicable)
 \end{enumerate}
 
-\subsection{Evaluation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\section{Evaluation}
+
+I pose the following evaluation questions.
+
+\begin{itemize}
+	\item How many bugs, and of what severities, does Landslide help students find and fix before submitting their code?
+	\item Does Landslide use result in higher quality submissions, whether directly for P2, or for subsequent projects as well?
+	\item Do students feel the experience is worthwhile, as compared to stress testing?
+	\item How well does Landslide apply to operating systems projects outside of CMU?
+\end{itemize}
+\vspace{1em}
+
+The data set is comprised of Landslide's automatically-generated usage snapshots
+from CMU students from semesters Spring 2015 to Spring 2018 inclusive,
+% and PSU \psuos from Spring 2018, % no snapshots from psu
+CMU's official project grades from same,
+CMU students' survey responses and submitted project code from Fall 2017 and Spring 2018
+PSU students' survey responses and submitted project code from Spring 2018,
+and U. Chicago students' survey responses from Fall 2017.
+
+\subsection{Bug-finding}
+
+\subsection{Student submission quality}
+
+\subsection{Student opinions}
+
+\subsection{Other universities}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Discussion}
+
+\subsection{Bias}
+
+% TODO: addressing bias
+% well, we did the best we could(?)
+% survey email: "please answer honestly rather than flatteringly"
+% anything else?
+
+%%%% pintos %%%%
 % survey questions i WISH i had asked
 % - did you have any technical difficulties w landslide that i had to intervene on
 % mb anything else from timmys 2nd latest email
 
+\subsection{Retrospect}
+
+Human subjects research is inherently messy.
+More than just drawing firm conclusions from
+the opinions of students who are just learning concurrency to begin with,
+student feedback in turn guided the constant development
+of Landslide, and the experimental design itself,
+as the semesters went by.
+In this section I will fantasize about how I might have run more perfect experiments
+granted the impossible wish of knowing then what I know now.
+
+\subsubsection{Pebbles}
+
 % TODO
 
-\subsection{Retrospect}
+\subsubsection{Pintos}
 
 I attribute the low participation rate of Pintos students to P2 students to two major factors:
 one, not incentivizing the students to directly improve their grades
@@ -455,11 +499,3 @@ but not necessarily directly to students without someone familiar with the codeb
 
 % Point two is much more easily addressed, although perhaps not necessary if only being used for grading anyway.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% \section{Survey results} % ???
-
-% TODO: addressing bias
-% well, we did the best we could(?)
-% survey email: "please answer honestly rather than flatteringly"
-% anything else?
