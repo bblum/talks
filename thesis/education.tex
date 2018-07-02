@@ -133,7 +133,9 @@ These include:
 		and should really be using {\tt flock} instead.
 		}.
 \end{itemize}
-Landslide also includes several P2-specific instrumentations and features to cope with various student irregularities:
+\vspace{1em}
+
+\noindent Landslide also includes several P2-specific instrumentations and features to cope with various student irregularities:
 \begin{itemize}
 	\item Quicksand emits different combinations of {\tt within\_function}/{\tt without\_function} directives
 		for Landslide depending on the name of the test.
@@ -198,7 +200,9 @@ The following tests were released to CMU students:
 		tests for a variety of problems between {\tt thr\_exit()} and {\tt thr\_join()},
 		but especially for memory issues pertaining to stack deallocation.
 \end{itemize}
-The following tests were released to PSU students, in addition to the ones above:
+\vspace{1em}
+
+\noindent The following tests were released to PSU students, in addition to the ones above:
 \begin{itemize}
 	\item {\tt atomic\_compare\_swap}:
 		Tests the {\tt cmpxchg} assembly function for being properly atomic.
@@ -214,8 +218,58 @@ The following tests were released to PSU students, in addition to the ones above
 	\item {\tt broadcast\_two\_waiters}:
 		As {\tt broadcast\_test}, but uses two waiting threads to ensure both get signalled.
 \end{itemize}
+\vspace{1em}
 
-The tests can all be viewed at \url{https://github.com/bblum/landslide/tree/master/pebsim/p2-basecode/410user/progs}.
+\noindent The tests can all be viewed at \url{https://github.com/bblum/landslide/tree/master/pebsim/p2-basecode/410user/progs}.
+
+\subsection{Survey}
+\label{sec:education-survey-pebbles}
+
+Starting in Fall 2017, I sought to gauge the students' personal opinions on their experience with Landslide,
+in addition to simply counting
+from the automatic snapshots
+how many bugs were found.
+Shortly after the P2 submission deadline,
+I asked participants to answer several survey questions, reproduced below.
+%distributed via email as a Google Doc.
+
+\begin{enumerate}
+	\item How many bugs did Landslide help you find in your code? (Please indicate a number.)
+	\item How many of the bugs you found with Landslide do you believe you fixed before submitting your project? (You may answer "all", "none", or a number.)
+	\item How many of the bugs you found with Landslide did you verify you had fixed by running Landslide again to make sure the bug was gone? (You may answer "all", "none", or a number.)
+	\item In addition to the bugs Landslide found, did it report anything that you believe was NOT a bug? For example, Landslide printed an execution trace that was actually impossible, or Landlside reported a bug about some behaviour that was actually allowed by the P2 specification. (If so, please describe.)
+	\item I found Landslide's debugging output easy to understand.
+		(Multiple choice from strongly disagree to strongly agree.)
+	\item It's easier to diagnose the root cause of a bug with Landslide than with a stress test (e.g. juggle).
+		(Multiple choice from strongly disagree to strongly agree; plus "Not sure" and "Easier for some bugs but harder for others")
+	\item I felt the time I saved by having Landslide to help debug was worth the time it took me to learn how to use Landslide.
+		(Multiple choice from strongly disagree to strongly agree.)
+	\item I feel that by using Landslide I learned to understand concurrency better.
+		(Multiple choice from strongly disagree to strongly agree.)
+	\item Suppose after you submitted your project, % "P2" for cmu, "project" for pintos
+		we gave you 100 CPU-hours on the cloud provider of your choice to test it. Then we extended the project deadline by a day for you to use the results to fix bugs and get partial credit. How would you divide that CPU time between the staff-provided stress tests and Landslide?
+		(Multiple choice: 0/10/.../100 CPU-hours on Landslide, 100/90/.../0 CPU-hours on stress tests.)
+	\item If I found out next semester that a friend of mine (or a student in my degree program) were taking OS, I would recommend that they should probably invest some time during the project % "P2" for cmu, as above
+		to learn Landslide and try to find bugs with it.
+		(Multiple choice from strongly disagree to strongly agree.)
+	\item Regarding the previous question, why or why not?
+\suspend{enumerate}
+\vspace{1em}
+
+\noindent The following questions were served only on the CMU version of the survey.
+\resume{enumerate}
+	\item Did you answer this survey together with your partner, or on your own while they were busy? (If you both have time for it, please try to submit one survey together.)
+		(Multiple choice: together or alone)
+	\item Your andrew ID
+	\item Your partner's andrew ID (if any)
+\suspend{enumerate}
+\vspace{1em}
+
+\noindent The following questions were served only on the PSU version of the survey.
+\resume{enumerate}
+	\item Any feedback on how Landslide's user interface could be improved / made easier to use or understand? (setup process, messages printed while running, or the execution trace / stack traces emitted after a bug is found?)
+	\item Your PSU username
+\end{enumerate}
 
 \subsection{Evaluation}
 
@@ -322,11 +376,44 @@ The following tests are approved to be Landslide-friendly:
 		in which a thread holding a lock can accidentally keep a contending thread's donated priority
 		after finishing releasing it.
 \end{itemize}
+\vspace{1em}
 
 The (unpatched versions of) the first three tests are available at
 \url{https://github.com/Berkeley-CS162/group0/tree/master/pintos/src/tests}.
 The fourth test is available at
 \url{https://github.com/bblum/landslide/blob/master/pebsim/pintos/priority-donate-multiple.c}.
+
+\subsection{Survey}
+
+Similar to the survey for Pebbles projects
+\sect{\ref{sec:education-survey-pebbles}},
+I surveyed the Pintos user study participants for their opinions.
+Because of the different nature of the user study, of course,
+the questions here focus more on the debugging experience than on using Landslide directly.
+
+\begin{enumerate}
+	\item How many Landslide bug reports did you receive from course staff? (Please indicate a number.)
+	\item Among those bug reports, how many were you able to diagnose and recognize the root cause in your code? (You may answer "all", "none", or a number.)
+	\item Among those bug reports, how many described a behaviour that you believe was NOT a bug? For example, Landslide printed an execution trace that was actually impossible, or Landslide reported a bug about some behaviour that was actually allowed by the Pintos specification. (You may answer "all", "none", or a number.)
+	\item About how much time did you spend interpreting Landslide's debugging output? (Please indicate a number of minutes, or a range if uncertain, e.g. "30-60 minutes".)
+	\item I found Landslide's debugging output easy to understand.
+		(Multiple choice from strongly disagree to strongly agree.)
+	\item It's easier to diagnose the root cause of a bug with Landslide than with a stress test (for example "exec-multiple").
+		(Multiple choice from strongly disagree to strongly agree; plus "Not sure" and "Easier for some bugs but harder for others")
+	\item I feel that by interpreting Landslide's debugging output I learned to understand concurrency better.
+		(Multiple choice from strongly disagree to strongly agree.)
+	\item These kinds of concurrency bugs are important to fix, even though they don't count against my grade.
+		(Multiple choice from strongly disagree to strongly agree.)
+	\item Suppose after you submitted your pintos, we gave you 100 CPU-hours on the cloud provider of your choice to test it. Then we extended the project deadline by a day for you to use the results to fix bugs and get partial credit. How would you divide that CPU time between the staff-provided stress tests and Landslide?
+		(Multiple choice: 0/10/.../100 CPU-hours on Landslide, 100/90/.../0 CPU-hours on stress tests.)
+	\item If course staff were to allow students to resubmit updated code after reviewing Landslide bug reports to receive partial credit for each bug that had been fixed, it would be worth my time to try that (even if I could be spending that time working on the next project instead).
+		(Multiple choice from strongly disagree to strongly agree.)
+	\item If a friend of mine took OS next semester, I would recommend that they should sign up to receive Landslide bug reports during projects in the future.
+		(Multiple choice from strongly disagree to strongly agree.)
+	\item Regarding the previous question, why or why not?
+	\item Your name
+	\item Your project partner's name (if applicable)
+\end{enumerate}
 
 \subsection{Evaluation}
 
