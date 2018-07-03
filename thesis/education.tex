@@ -429,16 +429,111 @@ PSU students' survey responses and submitted project code from Spring 2018,
 and U. Chicago students' survey responses from Fall 2017.
 
 \subsection{Bug-finding}
+\label{sec:education-eval-bugfinding}
 
 \subsection{Student submission quality}
 
+I evaluated Landslide's impact on student submission quality in two ways.
+First, I analyzed the overall P2 grades of CMU 15-410 students between Landslide users and non-users,
+to see if Landslide helped them submit overall better implementations,
+as well as their later overall P3 (kernel project) grades,
+to see if Landslide helped them internalize any concurrency debugging skills
+that would help write better kernels even without Landslide's aid.
+% This experiment produced inconclusive or negative results. % say this?
+
+Second, I studied
+several % how many? 3
+individual concurrency bugs that I thought Landslide was likely to detect,
+all already well-known by 15-410 course staff,
+to see if using Landslide correlated with submitting projects absent those bugs.
+% results..?
+
+\subsubsection{Impact on grades}
+
+% TODO
+
+\subsubsection{Common bugs}
+
+Based on the results from \sect{\ref{sec:education-eval-bugfinding}},
+I selected 3 bugs to study in depth to ascertain
+whether Landslide played an instrumental difference
+in helping the students ultimately submit respecitvely correct implementations.
+To avoid bias of picking too obscure and/or trivial bugs
+that Landslide alone might find but even course staff would not expect students to solve,
+I chose only bugs which had substantial penalties in the grading rubric
+(guided, as well, by my own intuition as a former TA).
+% TODO: the results are shown in table...
+
+{\bf Thread exit use-after-free.}
+During {\tt thr\_exit()}, a thread must arrange for its own stack memory allocation to be freed.
+A common student pitfall is to allow a {\tt thr\_join()}ing thread to free said stack space
+while {\tt thr\_exit()} is still executing userspace C code (which inevitably accesses the stack),
+or even for {\tt thr\_exit()} to do it itself.
+In the former case, threads must interleave specifically to exhibit a use-after-free;
+in the latter case, the use-after-free will be deterministic (i.e., present in all interleavings).
+Besides Landslide, however,
+the students have no Valgrind-like heap debugging tool which would report a bug immediately upon any illegal heap access;
+without such, a third thread would have to race to recycle the memory for a new thread stack
+and conflict with the old exiting thread
+before any problem could be detected.
+% TODO: mark which of the tej bugs were deterministic vs race
+%
+The Landslide-friendly test {\tt thr\_exit\_join} is most likely to expose this bug, and
+the official rubric penalties for it are
+{\tt :exit\_stack\_minor -2} and
+{\tt :exit\_stack\_race -4} (for the former case),
+and
+{\tt :uses\_freed\_stack -4} (for the latter).
+
+{\bf Paraguay.}
+Named after a certain Paraguayan 15-410 TA from years gone by,
+this refers to a condition variable bug in which a thread which sleeps on two different condition variables
+can spuriously wake up early from the later {\tt cond\_wait()}.
+The precise reasoning why many common na\"ive student implementations are susceptible to this bug,
+as well as the 3 major ways of fixing it,
+are one of 15-410 staff's closely-guarded secrets.
+Suffice to say that the test invokes a specially-made Pathos {\tt misbehave} mode
+which biases thread scheduling towards the specific interleaving required to exhibit the bug
+(Landslide, of course, replaces this {\tt misbehav}iour with model checking).
+% TODO: i feel tihs sentence should go somewhere else, like after analysis, not in description
+Hence, despite being a subtle concurrency bug,
+the official course test suite is likely to expose it,
+so comparing how many Landslide users and non-users submitted this bug in particular
+speaks more to the impact of Landslide's preemption traces
+in helping students diagnose a bug that a ``stress'' test could already find.
+%
+The Landslide-friendly test {\tt paraguay} is most likely to expose this bug, and
+the official rubric penalty for it is
+{\tt :paraguay -2}.
+
+{\bf R/W-lock downgrade.}
+In addition to the standard R/W-lock interface,
+P2 requires students to implement {\tt rwlock\_downgrade()}:
+called with the lock held in write mode,
+the caller adopts the reader role instead,
+allowing other waiting reader threads to proceed simultaneously,
+all while allowing no waiting writers to access in between.
+The Landslide-friendly test {\tt rwlock\_downgrade\_read\_test}
+checks that readers are allowed simultaneous access after a downgrade, and
+the official rubric penalties related to this bug are
+{\tt :downgrade\_no\_signal -1},
+{\tt :unsafe\_rwlock\_downgrade -2},
+{\tt :downgrade\_lies -3}, and
+{\tt :downgrade\_deadlock -4}.
+
 \subsection{Student opinions}
 
+% TODO
+
 \subsection{Other universities}
+
+% TODO
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Discussion}
+
+% TODO intro text
 
 \subsection{Bias}
 
@@ -455,7 +550,7 @@ and U. Chicago students' survey responses from Fall 2017.
 \subsection{Retrospect}
 
 Human subjects research is inherently messy.
-More than just drawing firm conclusions from
+More than just trying to draw firm conclusions from
 the opinions of students who are just learning concurrency to begin with,
 student feedback in turn guided the constant development
 of Landslide, and the experimental design itself,
