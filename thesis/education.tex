@@ -440,7 +440,7 @@ as well as their later overall P3 (kernel project) grades,
 to see if Landslide helped them internalize any concurrency debugging skills
 that would help write better kernels even without Landslide's aid.
 % This experiment produced inconclusive or negative results. % say this?
-
+%
 Second, I studied
 several % how many? 3
 individual concurrency bugs that I thought Landslide was likely to detect,
@@ -462,7 +462,35 @@ To avoid bias of picking too obscure and/or trivial bugs
 that Landslide alone might find but even course staff would not expect students to solve,
 I chose only bugs which had substantial penalties in the grading rubric
 (guided, as well, by my own intuition as a former TA).
-% TODO: the results are shown in table...
+Table~\ref{tab:eval-common-bugs} presents the results.
+
+\begin{table}[h]
+	\begin{center}
+	\begin{tabular}{r||cc|cc|c}
+		& \multicolumn{2}{c|}{Landslide users} & \multicolumn{2}{c|}{Non-users} & \\
+		Bug name & \#correct & total & \#correct & total & $\Delta P(\mathsf{correct})$ \\
+		\hline
+		%Exit UAF  & 9	& 21	& 2	& 16	& $+30.4\%$ \\ % not filtering out did not run tej; also using "old" thing..?
+		Exit UAF  & 11	& 21	& 0	& 16	& $+52.4\%$ \\
+		% nb. this is not filter out the did not run paras -- smae for all of the above/below
+		% Paraguay  & 22	& 24	& 12	& 13	& $-0.64\%$ \\ % not filtering out did not run para
+		Paraguay  & 20	& 21	& 14	& 16	& $+07.7\%$ \\
+		% nb this is any downgrade related ding not just dgr tested ones
+		% nb 1 is msising bc didn't impl rwlock at all
+		%Downgrade & 17	& 24	& 8	& 12	& $+4.17\%$ \\ % not filtering out either did not run, or unrel ding
+		Downgrade & 10	& 13	& 19	& 23	& $-05.7\%$ \\
+	\end{tabular}
+	\end{center}
+	\caption{
+		Students who used Landslide in general but whose usage snapshots showed they did not run the test case in question are counted as non-Landslide-users here.
+		$\Delta P$ stands for the increased probability that a student submits a correct P2
+		(with respect to each bug)
+		given that they use Landslide, versus not using Landslide; i.e.,
+		$P(\mathsf{correct}|\mathsf{landslide})-
+		P(\mathsf{correct}|\mathsf{non\text{-}user})$.
+		}
+	\label{tab:eval-common-bugs}
+\end{table}
 
 {\bf Thread exit use-after-free.}
 During {\tt thr\_exit()}, a thread must arrange for its own stack memory allocation to be freed.
@@ -477,22 +505,25 @@ without such, a third thread would have to race to recycle the memory for a new 
 and conflict with the old exiting thread
 before any problem could be detected.
 % TODO: mark which of the tej bugs were deterministic vs race
-%
+
+
 The Landslide-friendly test {\tt thr\_exit\_join} is most likely to expose this bug, and
 the official rubric penalties for it are
 {\tt :exit\_stack\_minor -2} and
 {\tt :exit\_stack\_race -4} (for the former case),
 and
 {\tt :uses\_freed\_stack -4} (for the latter).
+Whether each student's submitted P2 solved or suffered from this bug
+was determined by me personally inspecting their code.
 
 {\bf Paraguay.}
-Named after a certain Paraguayan 15-410 TA from years gone by,
+Named after a certain Paraguayan 15-410 TA from years gone by who originally discovered it,
 this refers to a condition variable bug in which a thread which sleeps on two different condition variables
 can spuriously wake up early from the later {\tt cond\_wait()}.
 The precise reasoning why many common na\"ive student implementations are susceptible to this bug,
 as well as the 3 major ways of fixing it,
 are one of 15-410 staff's closely-guarded secrets.
-Suffice to say that the test invokes a specially-made Pathos {\tt misbehave} mode
+Suffice to say that the test {\tt paraguay} invokes a specially-made Pathos {\tt misbehave} mode
 which biases thread scheduling towards the specific interleaving required to exhibit the bug
 (Landslide, of course, replaces this {\tt misbehav}iour with model checking).
 % TODO: i feel tihs sentence should go somewhere else, like after analysis, not in description
@@ -501,10 +532,12 @@ the official course test suite is likely to expose it,
 so comparing how many Landslide users and non-users submitted this bug in particular
 speaks more to the impact of Landslide's preemption traces
 in helping students diagnose a bug that a ``stress'' test could already find.
-%
-The Landslide-friendly test {\tt paraguay} is most likely to expose this bug, and
+
+{\tt paraguay} is itself the Landslide-friendly test for its eponymous bug, and
 the official rubric penalty for it is
 {\tt :paraguay -2}.
+Whether each student's submitted P2 solved or suffered from this bug
+was determined by me personally inspecting their code.
 
 {\bf R/W-lock downgrade.}
 In addition to the standard R/W-lock interface,
@@ -513,13 +546,18 @@ called with the lock held in write mode,
 the caller adopts the reader role instead,
 allowing other waiting reader threads to proceed simultaneously,
 all while allowing no waiting writers to access in between.
+
 The Landslide-friendly test {\tt rwlock\_downgrade\_read\_test}
 checks that readers are allowed simultaneous access after a downgrade, and
 the official rubric penalties related to this bug are
 {\tt :downgrade\_no\_signal -1},
-{\tt :unsafe\_rwlock\_downgrade -2},
+%{\tt :unsafe\_rwlock\_downgrade -2}, % don't think this is right; not relevant anyway (overlaps)
+{\tt :downgrade\_partial\_signal -1}, % not sure if this means smth that dgr would expose
 {\tt :downgrade\_lies -3}, and
 {\tt :downgrade\_deadlock -4}.
+Whether each student's submitted P2 solved or suffered from this bug
+was determined by checking their grade files for any of the above-listed penalties
+(which were assessed by the TAs as a result of their manual inspection, rather than mine).
 
 \subsection{Student opinions}
 
