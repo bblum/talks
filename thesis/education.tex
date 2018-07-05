@@ -467,6 +467,10 @@ Table~\ref{tab:eval-common-bugs} presents the results.
 
 \begin{table}[h]
 	\begin{center}
+		% TODO: calc p values for this
+		% note, smth like fisher's method which "combines independent studies into a meta p value"
+		% cannot be applied for 2 reasons - 1, these are not independent since the same studence were
+		% running landslide on diff test cases; 2, the hypotheses tested are different for each test
 	\begin{tabular}{r||cc|cc|c}
 		& \multicolumn{2}{c|}{Landslide users} & \multicolumn{2}{c|}{Non-users} & \\
 		Bug name & \#correct & total & \#correct & total & $\Delta P(\mathsf{correct})$ \\
@@ -480,9 +484,11 @@ Table~\ref{tab:eval-common-bugs} presents the results.
 		% nb 1 is msising bc didn't impl rwlock at all
 		%Downgrade & 17	& 24	& 8	& 12	& $+4.17\%$ \\ % not filtering out either did not run, or unrel ding
 		Downgrade & 10	& 13	& 19	& 23	& $-05.7\%$ \\
+		Total & \\ % TODO
 	\end{tabular}
 	\end{center}
 	\caption{
+		Correlation of student Landslide use with solving certain bugs in their final submission during Fall 2017 and Spring 2018 semesters.
 		Students who used Landslide in general but whose usage snapshots showed they did not run the test case in question are counted as non-Landslide-users here.
 		$\Delta P$ stands for the increased probability that a student submits a correct P2
 		(with respect to each bug)
@@ -554,7 +560,7 @@ the official rubric penalties related to this bug are
 {\tt :downgrade\_no\_signal -1},
 %{\tt :unsafe\_rwlock\_downgrade -2}, % don't think this is right; not relevant anyway (overlaps)
 {\tt :downgrade\_partial\_signal -1}, % not sure if this means smth that dgr would expose
-{\tt :downgrade\_lies -3}, and
+{\tt :downgrade\_\allowbreak{}lies -3}, and
 {\tt :downgrade\_deadlock -4}.
 Whether each student's submitted P2 solved or suffered from this bug
 was determined by checking their grade files for any of the above-listed penalties
@@ -778,12 +784,30 @@ Lastly, I asked the PSU students for any feedback they might have on making Land
 	\item Don't print warnings about line length exceeding 80 characters (inconsistency between 15-410 and \psuos compilation options).
 	\item ``It takes too long. But I guess that's impossible to fix.'' (Well, it's an open research problem to fix!)
 	\item Preemption traces should explicitly indicate where in the interleaving the bug occurred.
-		(Root cause identification is its own research area,
-		but Landslide could show, for example, the sets of memory conflicts between threads in the trace as well.)
+		(Root cause identification is its own research area, but more detail is certainly possible.)
 	\item Improve explanation of data races (in the user guide, perhaps).
 	\item Happy with it as-is (3 students)
 	\item No response (7 students)
 \end{enumerate}
+
+Though I did not ask this question on the CMU survey,
+my experience handling student questions suggests CMU students
+also mostly wish for
+better explanations of data races and
+more detail and clarity in the preemption traces.
+Though I present the formal definition of data races in the lecture
+(\sect{\ref{sec:education-pebbles-recruiting}})
+and refer back to it in Landslide's documentation and output,
+showing a concrete example
+in future iterations of the user guide
+would go a long way to illustrate the abstract concepts.
+The preemption traces could be improved by making it clearer that the stack trace in each cell of the table
+represents executing the thread in question from wherever it previously left off (or its inception)
+all the way until it reaches that stack trace, then preempting it to run another thread.
+They could also easily report more diagnostic information;
+for example, showing the sets of memory conflicts between each thread,
+annotating the type of each preemption point (yield, mutex, or data race),
+and/or indicating the adversarial memory access for each data race preemption point.
 
 \subsection{Other universities}
 
@@ -799,10 +823,12 @@ Lastly, I asked the PSU students for any feedback they might have on making Land
 
 % TODO: addressing bias
 % well, we did the best we could(?)
-% survey email: "please answer honestly rather than flatteringly"
+% survey email: "please answer honestly rather than flatteringly" vs. studence trying to be polite
+% selection bias, students who liked landslide more more likely to answer the survey at all
+% TODO - u can verify the bug just by taking survey graph #1 and comparing to landslide snapshots (sep. by groups who answered survey)
 % anything else?
 
-%%%% pintos %%%%
+%%%% pintos %%%% (?? this is psu not pintos)
 % survey questions i WISH i had asked
 % - did you have any technical difficulties w landslide that i had to intervene on
 % mb anything else from timmys 2nd latest email
@@ -824,17 +850,11 @@ granted the impossible wish of knowing then what I know now.
 
 \subsubsection{Pintos}
 
-I attribute the low participation rate of Pintos students to P2 students to two major factors:
-one, not incentivizing the students to directly improve their grades
-(instead offering only the vague promise of a ``learning experience'' debugging their code only after handin),
-and two, not traveling to the university to introduce the research topic in an in-person lecture
-(leaving the students potentially confused about what advantage, if any, was offered over stress testing).
-
 While part of the point of this experimental design was to evaluate Landslide as a grading tool in the hands of TAs,
 I would be remiss to mention that I also feared the automatic annotation process would not be as robust as the P2 version.
 Indeed, while helping Kevin get oriented with using Landslide,
 I implemented
-several % TODO: how many and what specifically
+several
 fixes/improvements to the setup scripts
 as we found student kernels that failed to automatically annotate
 (for example, those with {\tt ready\_list} changed to an array,
@@ -842,15 +862,30 @@ as described in \sect{\ref{sec:education-pintos-instrumentation}}).
 Had we given Landslide directly to students that semester,
 the students themselves would have had to email me for tech support.
 
+I attribute the low participation rate of Pintos students to P2 students to two major factors:
+one, not incentivizing the students to directly improve their grades
+(instead offering only the vague promise of a ``learning experience'' debugging their code only after handin),
+and two, not traveling to the university to introduce the research topic in an in-person lecture
+(leaving the students potentially confused about what advantage, if any, was offered over stress testing).
 Hypothetically, I could have achieved greater user study participation
 either by offering extra credit to students
 or by offering an autograder-like interface for students to receive bug reports before their deadlines instead of after
 (either way requiring a more rigorous IRB review process).
-Practically, as for non-research use in Pintos classes,
+
+\subsection{Future educational use}
+
+% TODO: para for pebbles; discuss with dave
+
+Regarding non-research use in Pintos classes,
 Landslide can now handle a considerably wider variety of student implementation quirks
-on account of this time's fixes.
+on account of the fixes from this time (\sect{\ref{sec:education-pintos-instrumentation}}).
 In its current shape I would recommend it for TA use grading,
 but not necessarily directly to students without someone familiar with the codebase on immediate hand for tech support.
-
-% Point two is much more easily addressed, although perhaps not necessary if only being used for grading anyway.
+However, I also believe Landslide's success in these user studies,
+provided me present to handle technical issues,
+serves as testament for stateless model checking in general in the educational theatre.
+While Pintos's kernel-level environment presents a unique challenge for concurrency testing,
+other, more readily automatic model checkers for user-space programs,
+such as dBug \cite{dbug-ssv},
+could easily be used on other thread-library-like programming projects at any university.
 
