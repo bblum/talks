@@ -375,6 +375,7 @@ The fourth test is available at
 \url{https://github.com/bblum/landslide/blob/master/pebsim/pintos/priority-donate-multiple.c}.
 
 \subsection{Survey}
+\label{sec:education-survey-pintos}
 
 Similar to the survey for Pebbles projects
 \sect{\ref{sec:education-survey-pebbles}},
@@ -559,9 +560,147 @@ Whether each student's submitted P2 solved or suffered from this bug
 was determined by checking their grade files for any of the above-listed penalties
 (which were assessed by the TAs as a result of their manual inspection, rather than mine).
 
-\subsection{Student opinions}
+\subsection{Survey responses}
 
-% TODO
+Analyzing only the raw technical data of how users interacted with Landslide can paint only part of the picture.
+For one, offering students better testing and debugging tools
+may not necessarily find strictly more bugs or help students submit more correct implementations
+than with stress testing;
+it may instead find the same bugs faster,
+affording the students more free time apart from the project,
+a quality-of-life improvement normally invisible to graders.
+For two, Landslide's automatic snapshots, being captured at the time of issuing each preemption trace,
+necessarily miss the student's subsequent experience interpreting them.
+The surveys listed in sections \sect{\ref{sec:education-survey-pebbles}} and \sect{\ref{sec:education-survey-pintos}}
+serve to probe these more qualitative aspects of the Landslide experience.
+
+\begin{figure}[p]
+	\begin{center}
+		\begin{tabular}{cc}
+			\includegraphics[width=0.42\textwidth]{survey1.pdf} &
+			\includegraphics[width=0.42\textwidth]{survey2.pdf} \\
+			\includegraphics[width=0.42\textwidth]{survey3.pdf} &
+			\includegraphics[width=0.42\textwidth]{survey4.pdf} \\
+			\includegraphics[width=0.42\textwidth]{survey5.pdf} &
+			\includegraphics[width=0.42\textwidth]{survey6.pdf} \\
+			\includegraphics[width=0.42\textwidth]{survey7.pdf} &
+			\includegraphics[width=0.42\textwidth]{survey8.pdf} \\
+			\includegraphics[width=0.42\textwidth]{survey9.pdf} &
+			\includegraphics[width=0.42\textwidth]{survey10.pdf} \\
+		\end{tabular}
+	\end{center}
+	\caption{Student survey responses.
+	SD/D/N/A/SA stands for
+	strongly disagree/\allowbreak{}disagree/\allowbreak{}neutral/\allowbreak{}agree/\allowbreak{}strongly agree.}
+	\label{fig:survey}
+\end{figure}
+
+{\bf Response data.}
+The response distributions for each of the surveys' multiple choice questions
+are shown in Figure~\ref{fig:survey}.
+In total, 28 students (or pairs thereof, in the case of CMU and U. Chicago) answered the survey:
+12 pairs from CMU, 15 individuals from PSU, and 1 pair from U. Chicago.
+The first four questions/graphs focus on concrete debugging results,
+and the latter six on the students' subjective opinions.
+%
+Note that two of the questions
+(3 and 7 from \sect{\ref{sec:education-survey-pebbles}})
+were not asked on U. Chicago's version of the survey,
+so their corresponding graphs show only CMU and PSU response data.
+Likewise, U. Chicago's questions 4, 8, and 10
+(see \sect{\ref{sec:education-survey-pintos}}),
+which were not asked on CMU's and PSU's surveys,
+having only one respondent,
+are not pictured;
+the answers thereto were ``15-20 minutes'', ``Agree'', and ``Agree'', respectively.
+
+The survey results were overwhelmingly positive, and largely speak for themselves:
+% TODO: corroborate this with snapshot data?
+students reported being able to both diagnose and verify fixed the vast majority of Landslide's reported bugs,
+compared Landslide favorably to stress testing,
+and found the experience worthwhile and worth recommending.
+Three questions with open-form answers bear further discussion
+are that of what kind of false positives Landslide (regrettably) reported % oopsative mood
+(CMU and PSU only),
+reasons they found it worth recommending to a friend,
+and suggestions for improving the interface
+(PSU only\footnote{I thought to ask this question too late for CMU's surveys.}).
+
+{\bf False positives.}
+Even though 71\% of students reported receiving no false positive bug reports,
+the nature of Landslide's bug-detection algorithms is such
+that it should ideally never report any correct behaviour as wrong,
+so I consider those 29\% that did report such the most negative result among the survey responses.
+They described their false positives, and I either make excuses or own up, as appropriate, as follows.
+Reports from CMU students (Simics version):
+\begin{enumerate}
+	\item Landslide complained of a nonexistent {\tt MAGIC\_BREAK} (Simics debugging function),
+		despite the student's code never invoking it.
+		This arose because of confusion between the test program's and the shell's address spaces,
+		and was subsequently fixed in commit 3f24d67 (Simics repository only).
+	\item Landslide reported ``some weird errors'' and/or mysteriously crashed
+		when multiple instances were run from the same directory.
+		(Multiple students suffering this failure mode contacted me for support,
+		though only one reported it on the survey;
+		in some cases, I recall said weird errors manifesting as false positive invalid heap access reports.)
+		Simultaneous Landslides can clobber certain auto-generated header and/or temporary files,
+		leading to undefined behaviour.
+		I introduced a guard against this in commit 977e8fb (Simics repository) and e49b5df (Bochs repository).
+	\item One student reported ``Data races which I believe they are not''.
+		Looking at their usage snapshots to corroborate this,
+		these appear to be true, yet benign, data races
+		(in several cases corresponding to {\tt mutex\_test}'s verification of the mutex's internal memory accesses
+		(see \sect{\ref{sec:education-pebbles-tests}}));
+		i.e., expected behaviour rather than false positive bug reports.
+		Student confusion about these could be alleviated
+		by improving Landslide's user interface messages when printing data race information. % uuuuuuu its already so
+	\item One student complained of a bug report that, while truly a bug, showed wrong filenames and line numbers in stack traces,
+		and (quite naturally) suggested that accurate stack traces would make debugging easier.
+		Checking against their usage snapshots,
+		this seems to be an issue with Simics's symtable's handling of assembly functions.
+		The Bochs version handles these correctly.
+\suspend{enumerate}
+Reports from PSU students (Bochs version):
+\resume{enumerate}
+	\item Landslide kept crashing for one student while running {\tt paraguay}.
+		This is likely due to exceeding Linux's process limit and/or exhausting the class's official VM's memory,
+		which can arise when many data race candidates cause Quicksand to spawn many Landslide jobs,
+		and (as on {\tt paraguay}) each with very large state spaces that must defer.
+		I had been working on mitigating this problem just before beginning the PSU study;
+		properly addressing it would involve improving Quicksand's memory-exhaustion detection code
+		and/or making Quicksand at all aware of the process limit to begin with.
+		(Note that this is not strictly a false positive bug report, just a Landslide crash.)
+	\item Students who initialized child threads with a base pointer value of {\tt 0xffffffff} observed Landslide crashes,
+		as it attempted to stack trace through that address (accessing memory that wrapped around the address space).
+		(Several students contacted me about this via email, and I issued a prompt fix;
+		one student later reported it on the survey.)
+		Commits 0573e34 (Bochs repository) and 654f459 (Simics repository) fixed this bug.
+		(Like the above, not actually a false positive bug report.)
+	\item Landslide issued false invalid heap access reports to one student
+		who had been using {\tt new\_pages} to allocate thread stacks ``very close'' to the {\tt malloc} heap.
+		They reported this during the study and I fixed it promptly for them in commit 4a26da7 (Bochs repository only),
+		then reminded me of it again in the survey.
+	\item Finally, one student reported simply, ``Race condition''.
+		Without the same usage snapshots to consult as I'd have for a CMU student,
+		or more self-reported detail, I regrettably can offer no comment.
+\end{enumerate}
+
+\noindent
+Overall, most of the issues reported as answers to the ``false positive'' survey question
+were merely Landslide crashes or user interface confusion.
+Those few truly erroneous bug reports (items 1, 2, and 7),
+while certainly guilty of burdening % oopsative mood
+students with worry over whether the problem is their own code or in Landslide itself,
+are at least not too discouraging for two reasons.
+Firstly, in all cases the students were able to recognize the false positive quickly enough to ask for help,
+and I was able to deploy a fix and let them proceed before the project came due.
+Secondly, each such problem, now having been fixed, will befall no future student again --
+not to assert Landslide is completely bug-free now,
+but it at least grows more and more stable with each passing semester.
+
+{\bf Reasons worthwhile.}
+
+{\bf Interface suggestions.}
 
 \subsection{Other universities}
 
