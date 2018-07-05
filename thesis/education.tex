@@ -595,10 +595,11 @@ serve to probe these more qualitative aspects of the Landslide experience.
 	\label{fig:survey}
 \end{figure}
 
-{\bf Response data.}
+\subsubsection{Response data}
+
 The response distributions for each of the surveys' multiple choice questions
 are shown in Figure~\ref{fig:survey}.
-In total, 28 students (or pairs thereof, in the case of CMU and U. Chicago) answered the survey:
+In total, 28 students (or pairs thereof) answered the survey:
 12 pairs from CMU, 15 individuals from PSU, and 1 pair from U. Chicago.
 The first four questions/graphs focus on concrete debugging results,
 and the latter six on the students' subjective opinions.
@@ -614,19 +615,19 @@ having only one respondent,
 are not pictured;
 the answers thereto were ``15-20 minutes'', ``Agree'', and ``Agree'', respectively.
 
-The survey results were overwhelmingly positive, and largely speak for themselves:
+The survey responses were very positive:
 % TODO: corroborate this with snapshot data?
-students reported being able to both diagnose and verify fixed the vast majority of Landslide's reported bugs,
+students reported being able both to diagnose and to verify as fixed the vast majority of Landslide's reported bugs,
 compared Landslide favorably to stress testing,
 and found the experience worthwhile and worth recommending.
-Three questions with open-form answers bear further discussion
-are that of what kind of false positives Landslide (regrettably) reported % oopsative mood
-(CMU and PSU only),
+Three questions with open-form answers bear further discussion:
+what kind of false positives Landslide reported, % oopsative mood
 reasons they found it worth recommending to a friend,
 and suggestions for improving the interface
-(PSU only\footnote{I thought to ask this question too late for CMU's surveys.}).
+(PSU only\footnote{I thought to ask this question too late for CMU's surveys.}). % ososugichatte
 
-{\bf False positives.}
+\subsubsection{False positives}
+
 Even though 71\% of students reported receiving no false positive bug reports,
 the nature of Landslide's bug-detection algorithms is such
 that it should ideally never report any correct behaviour as wrong,
@@ -636,7 +637,7 @@ Reports from CMU students (Simics version):
 \begin{enumerate}
 	\item Landslide complained of a nonexistent {\tt MAGIC\_BREAK} (Simics debugging function),
 		despite the student's code never invoking it.
-		This arose because of confusion between the test program's and the shell's address spaces,
+		This arose because of technical confusion between the test program's and the shell's address spaces,
 		and was subsequently fixed in commit 3f24d67 (Simics repository only).
 	\item Landslide reported ``some weird errors'' and/or mysteriously crashed
 		when multiple instances were run from the same directory.
@@ -671,7 +672,7 @@ Reports from PSU students (Bochs version):
 		and/or making Quicksand at all aware of the process limit to begin with.
 		(Note that this is not strictly a false positive bug report, just a Landslide crash.)
 	\item Students who initialized child threads with a base pointer value of {\tt 0xffffffff} observed Landslide crashes,
-		as it attempted to stack trace through that address (accessing memory that wrapped around the address space).
+		as it attempted to stack trace through that address and access memory that wrapped around the address space.
 		(Several students contacted me about this via email, and I issued a prompt fix;
 		one student later reported it on the survey.)
 		Commits 0573e34 (Bochs repository) and 654f459 (Simics repository) fixed this bug.
@@ -698,9 +699,91 @@ Secondly, each such problem, now having been fixed, will befall no future studen
 not to assert Landslide is completely bug-free now,
 but it at least grows more and more stable with each passing semester.
 
-{\bf Reasons worthwhile.}
+\subsubsection{Reasons worthwhile}
 
-{\bf Interface suggestions.}
+After the question asking ``Would you recommend a friend taking OS next semester to use Landslide?'',
+I asked the students for open-form reasons why or why not.
+As the former question's answers were exclusively positive (only 1 student even answering ``no opinion''),
+this question's answers turned out to be mostly praise.
+3 students declined to answer this question;
+I reproduce the rest, paraphrasing for clarity and brevity,%
+\footnote{Note that most students used the term ``race condition'' rather than ``concurrency bug'',
+as taught in CMU and PSU lecture material;
+I replaced these while paraphrasing in accordance with \sect{\ref{sec:glossary}}.}
+here.
+Answers from CMU:
+
+\begin{enumerate}
+	\item Easy to use and found nontrivial bugs.
+	\item Useful to find some bugs, but other types of bugs (such as memory corruption) were impossible to find with Landslide.
+	\item Helped verify our atomic primitives were correct.
+	\item Would recommend, but takes too much time (unclear, but seems to be referring to execution time rather than setup/usage).
+	\item Tests are automated and can be left running for a long time.
+		However, faced uptime issues with CMU's linux servers (which reboot every night);
+		wished for a more reliable execution environment.
+	\item It's pretty helpful. % lol
+	\item Seems more reliable than stress tests.
+	\item Found a bug not found by stress tests.
+	\item Finds concurrency bugs with little effort that may be undiscovered otherwise.
+		(Also provided some interface feedback here, since I didn't ask CMU students a separate question for such;
+		see next section.)
+	\item Easy to learn and a simple way to test our P2.
+\suspend{enumerate}
+Answers from PSU:
+\resume{enumerate}
+	\item Although didn't find any concurrency bugs for me, gives me more confidence about my code.
+	\item Helpful, just didn't have a lot of time to use it.
+	\item Does not make concurrency debugging easy, but definitely makes it easier.
+	\item Helpful to find bugs you weren't previously aware of.
+		Makes more sense to use an expressly designed tool rather than (unit/stress) tests.
+	\item Helpful and easy to use.
+	\item Saves time overall, can run long tests overnight.
+	\item Helps to find concurrency bugs and their root causes better than stress tests.
+	\item It finds the concurrency bugs you need to fix for full credit.
+	\item Helpful for finding some uncommon bugs I hadn't found or wasn't looking for.
+	\item Found bugs I kept overlooking, which may have taken many hours to find otherwise.
+	\item Helpful for the difficult step from code being ``finished'' (scare-quotes theirs; presumably meaning ``feature-complete'')
+		to getting rid of all concurrency bugs.
+	\item Easy to use, setup taking no more than 5-10 minutes, and allowing being run overnight.
+	\item Very efficient at concurrency testing.
+		Stress test crash reports do not necessarily point to the root cause, due to memory corruption for example;
+		plus bugs may not show up every time due to nondeterminism.
+	\item Helped find a bug I wouldn't have found otherwise.
+		Did not show an interleaving directly (i.e., did not issue a bug report),
+		but reported a data race that turned out to be a concurrency bug upon inspection.
+\suspend{enumerate}
+Answer from U. Chicago:
+\resume{enumerate}
+	\item Found several subtle, legitimate bugs we wouldn't have easily caught otherwise, but made sense once revealed.
+		Fixing them took little time but allowed us to proceed confidently on the next project.
+		Often wished for Landslide to have been available to use during the next project as well.
+\end{enumerate}
+
+\noindent
+Overall, students most commonly praised Landslide's ease of use,
+its ability to find bugs that elude stress testing,
+and the confidence instilled from verifying bugs had been fixed.
+
+\subsubsection{Interface suggestions}
+
+Lastly, I asked the PSU students for any feedback they might have on making Landslide's interface easier to use or understand.
+
+\begin{enumerate}
+	\item Requested for preemption traces to be more clear about the meaning of each stack trace in each table cell,
+		and complained of inaccurate line numbers
+		(likely referring to how the current behaviour indicates the line of code {\em after} a function call,
+		corresponding to the {\tt call} instruction's pushed return address,
+		rather than the function call itself). (This answer from CMU; see above.)
+	\item Including a manual or tutorial would be helpful (presumably beyond the user guide's instructions, such as recapping the procedure shown in the lecture demo which wasn't written down anywhere).
+	\item Don't print warnings about line length exceeding 80 characters (inconsistency between 15-410 and \psuos compilation options).
+	\item ``It takes too long. But I guess that's impossible to fix.'' (Well, it's an open research problem to fix!)
+	\item Preemption traces should explicitly indicate where in the interleaving the bug occurred.
+		(Root cause identification is its own research area,
+		but Landslide could show, for example, the sets of memory conflicts between threads in the trace as well.)
+	\item Improve explanation of data races (in the user guide, perhaps).
+	\item Happy with it as-is (3 students)
+	\item No response (7 students)
+\end{enumerate}
 
 \subsection{Other universities}
 
