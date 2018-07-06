@@ -610,6 +610,24 @@ Careless solutions to this problem are prone to data races or deadlocks.
 
 % TODO: Talk about the hurdle (both for p2 and p3).
 
+\subsubsection{Secrecy}
+\label{sec:410-secrecy}
+
+The 15-410 course staff is notoriously secretive about the nature of many concurrency bugs
+students commonly encounter during P2 and P3.
+This is driven by a desire to cause students to find, diagnose, and fix these bugs on their own during the projects,
+rather than to be surprised by them afterwards during grading
+\cite{de0u-2018}.
+%
+One such example is the {\tt paraguay} unit test distributed with P2 (\sect{\ref{sec:education-pebbles-tests}}),
+which targets a subtle condition-variable bug.
+The test uses the {\tt misbehave} system call to target a particular thread interleaving likely to expose the bug
+which is otherwise very unlikely to arise in normal execution.
+The reference kernel specification \cite{kspec} does not define the {\tt misbehave} modes' behaviours,
+as doing so would deprive students of the learning experience of discovering the interleaving in question on their own.
+%
+In this thesis I will occasionally use intentionally vague phrasing to preserve the mystery of these bugs.
+
 \subsubsection{Use at other universities}
 
 \newcommand\psuos{CMPSC 473\xspace}
@@ -686,3 +704,4 @@ This section provides a convenient reference of terminology used throughout the 
 % TA: teaching assistant
 % P2 (note abotu psu - dosent call it p2, but we call it that for both schools here
 % happens before, all 3 versions - DPOR, LHB, and PHB
+% userspace, kernelspace

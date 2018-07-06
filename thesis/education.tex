@@ -499,38 +499,38 @@ Table~\ref{tab:eval-common-bugs} presents the results.
 	\label{tab:eval-common-bugs}
 \end{table}
 
-{\bf Thread exit use-after-free.}
-During {\tt thr\_exit()}, a thread must arrange for its own stack memory allocation to be freed.
+{\bf Thread-exit use-after-free.}
+%During {\tt thr\_exit()}, a thread must arrange for its own stack memory allocation to be freed.
+After a thread finishes exiting, the memory allocated for its stack must be reclaimed for other uses.
 A common student pitfall is to allow a {\tt thr\_join()}ing thread to free said stack space
-while {\tt thr\_exit()} is still executing userspace C code (which inevitably accesses the stack),
-or even for {\tt thr\_exit()} to do it itself.
+while {\tt thr\_exit()} is still executing userspace C code (which typically accesses the stack),
+or even for {\tt thr\_exit()} to free it itself.
 In the former case, threads must interleave specifically to exhibit a use-after-free;
 in the latter case, the use-after-free will be deterministic (i.e., present in all interleavings).
-Besides Landslide, however,
-the students have no Valgrind-like heap debugging tool which would report a bug immediately upon any illegal heap access;
-without such, a third thread would have to race to recycle the memory for a new thread stack
+Other than Landslide, however,
+the students have no Valgrind-like heap debugging tool which would report a bug immediately upon any illegal heap access.
+This means that a subsequent {\tt thr\_create()} invocation would need to race to recycle the memory for a new thread stack
 and conflict with the old exiting thread
 before any problem could be detected.
 % TODO: mark which of the tej bugs were deterministic vs race
-
-
-The Landslide-friendly test {\tt thr\_exit\_join} is most likely to expose this bug, and
-the official rubric penalties for it are
-{\tt :exit\_stack\_minor -2} and
-{\tt :exit\_stack\_race -4} (for the former case),
-and
-{\tt :uses\_freed\_stack -4} (for the latter).
+The Landslide-friendly test {\tt thr\_exit\_join} is most likely to expose this bug.
+%, and
+%the official rubric penalties for it are
+%{\tt :exit\_stack\_minor -2} and
+%{\tt :exit\_stack\_race -4} (for the former case),
+%and
+%{\tt :uses\_freed\_stack -4} (for the latter).
 Whether each student's submitted P2 solved or suffered from this bug
 was determined by me personally inspecting their code.
 
 {\bf Paraguay.}
-Named after a certain Paraguayan 15-410 TA from years gone by who originally discovered it,
-this refers to a condition variable bug in which a thread which sleeps on two different condition variables
-can spuriously wake up early from the later {\tt cond\_wait()}.
+Named after Ivan Jager, the Paraguayan 15-410 TA from 2004-2006 who originally discovered it,
+this refers to a condition-variable bug in which a thread which sequentially sleeps on two different condition variables
+can spuriously wake up early from the second {\tt cond\_wait()}.
 The precise reasoning why many common na\"ive student implementations are susceptible to this bug,
 as well as the 3 major ways of fixing it,
-are one of 15-410 staff's closely-guarded secrets.
-Suffice to say that the test {\tt paraguay} invokes a specially-made Pathos {\tt misbehave} mode
+are one of 15-410 staff's closely-guarded secrets (see \sect{\ref{sec:410-secrecy}}).
+Suffice it to say that the test {\tt paraguay} invokes a specially-made Pathos {\tt misbehave} mode
 which biases thread scheduling towards the specific interleaving required to exhibit the bug
 (Landslide, of course, replaces this {\tt misbehav}iour with model checking).
 % TODO: i feel tihs sentence should go somewhere else, like after analysis, not in description
@@ -539,10 +539,11 @@ the official course test suite is likely to expose it,
 so comparing how many Landslide users and non-users submitted this bug in particular
 speaks more to the impact of Landslide's preemption traces
 in helping students diagnose a bug that a ``stress'' test could already find.
-
-{\tt paraguay} is itself the Landslide-friendly test for its eponymous bug, and
-the official rubric penalty for it is
-{\tt :paraguay -2}.
+%
+{\tt paraguay} is itself the Landslide-friendly test for its eponymous bug.
+%, and
+%the official rubric penalty for it is
+%{\tt :paraguay -2}.
 Whether each student's submitted P2 solved or suffered from this bug
 was determined by me personally inspecting their code.
 
@@ -553,16 +554,18 @@ called with the lock held in write mode,
 the caller adopts the reader role instead,
 allowing other waiting reader threads to proceed simultaneously,
 all while allowing no waiting writers to access in between.
-
+%
 The Landslide-friendly test {\tt rwlock\_downgrade\_read\_test}
-checks that readers are allowed simultaneous access after a downgrade, and
-the official rubric penalties related to this bug are
-{\tt :downgrade\_no\_signal -1},
-%{\tt :unsafe\_rwlock\_downgrade -2}, % don't think this is right; not relevant anyway (overlaps)
-{\tt :downgrade\_partial\_signal -1}, % not sure if this means smth that dgr would expose
-{\tt :downgrade\_\allowbreak{}lies -3}, and
-{\tt :downgrade\_deadlock -4}.
-Whether each student's submitted P2 solved or suffered from this bug
+checks that readers are allowed simultaneous access after a downgrade with no possibility for deadlock.
+Rather than one specific bug, this refers to any of several failures that can arise during a downgrade.
+%, and
+%the official rubric penalties related to this bug are
+%{\tt :downgrade\_no\_signal -1},
+%%{\tt :unsafe\_rwlock\_downgrade -2}, % don't think this is right; not relevant anyway (overlaps)
+%{\tt :downgrade\_partial\_signal -1}, % not sure if this means smth that dgr would expose
+%{\tt :downgrade\_\allowbreak{}lies -3}, and
+%{\tt :downgrade\_deadlock -4}.
+Whether each student's submitted P2 solved or suffered from these bugs
 was determined by checking their grade files for any of the above-listed penalties
 (which were assessed by the TAs as a result of their manual inspection, rather than mine).
 

@@ -285,7 +285,7 @@ with a mysterious argument (usually {\tt BGND\_BRWN >> FGND\_CYAN})
 before the creation of any child threads.
 The use of terminal color code constants is of course a red herring of obfuscation,
 as the true nature of the Pathos reference kernel's {\tt misbehave} modes
-is a closely-guarded secret among 15-410 course staff.
+is a closely-guarded secret among 15-410 course staff (\sect{\ref{sec:410-secrecy}}).
 The mode in question causes the reference kernel to prioritize scheduling the child thread over the parent
 whenever {\tt thread\_fork} is called,
 and the target thread over the invoking thread
