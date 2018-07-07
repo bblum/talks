@@ -483,8 +483,21 @@ Table~\ref{tab:eval-common-bugs} presents the results.
 		% nb this is any downgrade related ding not just dgr tested ones
 		% nb 1 is msising bc didn't impl rwlock at all
 		%Downgrade & 17	& 24	& 8	& 12	& $+4.17\%$ \\ % not filtering out either did not run, or unrel ding
-		Downgrade & 10	& 13	& 19	& 23	& $-05.7\%$ \\
-		Total & \\ % TODO
+		Downgrade & 10	& 13	& 19	& 23	& $-05.7\%$ \\ % TODO verify these buggers by eye
+		% I spent more hours than I should have looking at this landslide-user-submitted-bug group.
+		% Can't name the group here, but if you're me and have the analysis file,
+		% it's the one from f17 with 3 mutex_test logs in their "u" snapshot.
+		% It seems like a mysterious older version of mutex.c was present between their "a" version
+		% (which gets fully verified very quickly btw) and their "u" version (for which landslide finds
+		% the bug in just a few minutes, no way they could be running the same version; plus the reported
+		% data races and so on in the id-log don't line up to the "u" mutex.c source code).
+		% That version was correct, then they updated it (introducing the bug) and ran a bunch of other tests,
+		% but didn't rerun mutex_test to check their update.
+		Mutex     & 17	& 18	& 19	& 19	& $-05.6\%$ \\
+		\hline
+		% TODO: figure out if calculating a p value (or w/e) for this the same way is valid,
+		% since they summands are arguably not independent? ..or maybe they are?
+		Total     & 58	& 73	& 52	& 74	& $+09.2\%$ \\
 	\end{tabular}
 	\end{center}
 	\caption{
@@ -495,6 +508,8 @@ Table~\ref{tab:eval-common-bugs} presents the results.
 		given that they use Landslide, versus not using Landslide; i.e.,
 		$P(\mathsf{correct}|\mathsf{landslide})-
 		P(\mathsf{correct}|\mathsf{non\text{-}user})$.
+		Note that the bottom row's totals double-count students,
+		which only makes sense if you believe the incidences of each bug within a given submission are independent.
 		}
 	\label{tab:eval-common-bugs}
 \end{table}
@@ -527,11 +542,11 @@ was determined by me personally inspecting their code.
 Named after Ivan Jager, the Paraguayan 15-410 TA from 2004-2006 who originally discovered it,
 this refers to a condition-variable bug in which a thread which sequentially sleeps on two different condition variables
 can spuriously wake up early from the second {\tt cond\_wait()}.
-The precise reasoning why many common na\"ive student implementations are susceptible to this bug,
+The precise reasoning why many na\"ive student implementations are susceptible to this bug,
 as well as the 3 major ways of fixing it,
-are one of 15-410 staff's closely-guarded secrets (see \sect{\ref{sec:410-secrecy}}).
-Suffice it to say that the test {\tt paraguay} invokes a specially-made Pathos {\tt misbehave} mode
-which biases thread scheduling towards the specific interleaving required to exhibit the bug
+are one of 15-410 staff's closely-guarded secrets (\sect{\ref{sec:410-secrecy}}).
+Suffice it to say that the {\tt paraguay} test invokes a custom Pathos {\tt misbehave} mode
+which biases thread scheduling towards the interleaving required to exhibit the bug
 (Landslide, of course, replaces this {\tt misbehav}iour with model checking).
 % TODO: i feel tihs sentence should go somewhere else, like after analysis, not in description
 Hence, despite being a subtle concurrency bug,
