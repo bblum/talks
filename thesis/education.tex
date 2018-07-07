@@ -477,13 +477,6 @@ Table~\ref{tab:eval-common-bugs} presents the results.
 		\hline
 		%Exit UAF  & 9	& 21	& 2	& 16	& $+30.4\%$ \\ % not filtering out did not run tej; also using "old" thing..?
 		Exit UAF  & 11	& 21	& 0	& 16	& $+52.4\%$ \\
-		% nb. this is not filter out the did not run paras -- smae for all of the above/below
-		% Paraguay  & 22	& 24	& 12	& 13	& $-0.64\%$ \\ % not filtering out did not run para
-		Paraguay  & 20	& 21	& 14	& 16	& $+07.7\%$ \\
-		% nb this is any downgrade related ding not just dgr tested ones
-		% nb 1 is msising bc didn't impl rwlock at all
-		%Downgrade & 17	& 24	& 8	& 12	& $+4.17\%$ \\ % not filtering out either did not run, or unrel ding
-		Downgrade & 10	& 13	& 19	& 23	& $-05.7\%$ \\ % TODO verify these buggers by eye
 		% I spent more hours than I should have looking at this landslide-user-submitted-bug group.
 		% Can't name the group here, but if you're me and have the analysis file,
 		% it's the one from f17 with 3 mutex_test logs in their "u" snapshot.
@@ -494,6 +487,13 @@ Table~\ref{tab:eval-common-bugs} presents the results.
 		% That version was correct, then they updated it (introducing the bug) and ran a bunch of other tests,
 		% but didn't rerun mutex_test to check their update.
 		Mutex     & 17	& 18	& 19	& 19	& $-05.6\%$ \\
+		% nb. this is not filter out the did not run paras -- smae for all of the above/below
+		% Paraguay  & 22	& 24	& 12	& 13	& $-0.64\%$ \\ % not filtering out did not run para
+		Paraguay  & 20	& 21	& 14	& 16	& $+07.7\%$ \\
+		% nb this is any downgrade related ding not just dgr tested ones
+		% nb 1 is msising bc didn't impl rwlock at all
+		%Downgrade & 17	& 24	& 8	& 12	& $+4.17\%$ \\ % not filtering out either did not run, or unrel ding
+		Downgrade & 10	& 13	& 19	& 23	& $-05.7\%$ \\ % TODO verify these buggers by eye
 		\hline
 		% TODO: figure out if calculating a p value (or w/e) for this the same way is valid,
 		% since they summands are arguably not independent? ..or maybe they are?
@@ -514,7 +514,7 @@ Table~\ref{tab:eval-common-bugs} presents the results.
 	\label{tab:eval-common-bugs}
 \end{table}
 
-{\bf Thread-exit use-after-free.}
+{\bf Thread exit/join.}
 %During {\tt thr\_exit()}, a thread must arrange for its own stack memory allocation to be freed.
 After a thread finishes exiting, the memory allocated for its stack must be reclaimed for other uses.
 A common student pitfall is to allow a {\tt thr\_join()}ing thread to free said stack space
@@ -537,6 +537,27 @@ The Landslide-friendly test {\tt thr\_exit\_join} is most likely to expose this 
 %{\tt :uses\_freed\_stack -4} (for the latter).
 Whether each student's submitted P2 solved or suffered from this bug
 was determined by me personally inspecting their code.
+
+{\bf Mutex.}
+The Landslide-friendly {\tt mutex\_test} checks for the possibility of two contending threads
+accessing a mutex-protected critical section simultaneously.
+It includes one thread repeating once the lock, unlock cycle
+so as to check for unlock/lock races as well as lock/lock interactions,
+and, as mentioned previously (\sect{\ref{sec:education-pebbles-tests}}),
+checks for data race access pairs inside the mutex implementation itself.
+As students have free rein to design their mutex internals,
+this refers to the general class of mutex bugs
+in which any number of things can go wrong depending on the implementation.
+Whether each student's submitted P2 solved or suffered from this bug
+was determined by checking their grade files for any mutex-related penalties (assessed by the TAs),
+then me double-checking their implementations by hand to confirm.
+
+Further investigating the one group who submitted a buggy mutex,
+I found that while they had run {\tt mutex\_test} in Landslide
+(and even found and fixed a separate deterministic bug already),
+Landslide found no bug in what was presumably a correct implementation,
+then they updated % oops
+that implementation, introducing the bug, without testing it again thereafter.
 
 {\bf Paraguay.}
 Named after Ivan Jager, the Paraguayan 15-410 TA from 2004-2006 who originally discovered it,
@@ -581,7 +602,7 @@ Rather than one specific bug, this refers to any of several failures that can ar
 %{\tt :downgrade\_\allowbreak{}lies -3}, and
 %{\tt :downgrade\_deadlock -4}.
 Whether each student's submitted P2 solved or suffered from these bugs
-was determined by checking their grade files for any of the above-listed penalties
+was determined by checking their grade files for any downgrade-related penalties
 (which were assessed by the TAs as a result of their manual inspection, rather than mine).
 
 \subsection{Survey responses}
