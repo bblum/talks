@@ -499,7 +499,7 @@ the first two are individual, and the remaining three are the products of two-pe
 I will focus on the third and fourth of these, the thread library and kernel,
 called ``P2'' and ``P3'' respectively (the project numbers start at 0).
 The other three (a stack-crawling backtrace utility, a bare-metal game with device drivers, and a small extension to the P3 kernel) are not of concern in this thesis.
-The course's prerequisite is Introduction to Computer Systems \cite{sigcse01:CSaPP}.
+The course's prerequisite is 15-213, Introduction to Computer Systems \cite{sigcse01:CSaPP}.
 Both P2 and P3 are built using the {\em Pebbles} system call specification, outlined in Table~\ref{tab:syscalls}
 
 \begin{table}
@@ -629,13 +629,16 @@ as doing so would deprive students of the learning experience of discovering the
 In this thesis I will occasionally use intentionally vague phrasing to preserve the mystery of these bugs.
 
 \subsubsection{Use at other universities}
+\label{sec:overview-psu}
 
 \newcommand\psuos{CMPSC 473\xspace}
 
 In the Spring 2018 semester,
 the Operating Systems class at Penn State University (henceforth \psuos and PSU, respectively)
 offered the P2 thread library project as part of its curriculum.
-Students in this class implemented P2 working alone rather than in pairs,
+Students in this class implemented P2
+on a 6 week project timeline (compared to 2 weeks at CMU),
+work alone rather than in pairs,
 skip the {\tt swexn} automatic stack growth portion,
 and rather than running their code with a reference Pebbles kernel binary in a simulator,
 use the Pebwine emulation layer \cite{pebwine}
