@@ -1298,6 +1298,9 @@ To summarize, %for each pair of transitions $t_i$ and $t_j$ ($i<j$) in $S$,
 DPOR identifies $I_{ij}$s which will (eventually) reorder each conflicting, concurrent transition pair in $S$
 %executing some $t_j' t_i'$
 to reach a (possibly) new program state not exposed in the current interleaving.
+Prior work \cite{dpor,optimal-dpor} refers to the set of these $I_{ij}$s,
+for a given $i$,
+as the {\em persistent set} at the preemption point after $t_{i-1}$.
 
 {\bf Tracking already-visited interleavings.}
 Let $U(I_{ij})$ denote the sub-state-space (or sub-tree) beginning at the next preemption point reached
@@ -1315,6 +1318,77 @@ Hence the memory cost of Landslide's DPOR implementation is $O(nk)$,
 $k$ being the maximum runnable threads at any preemption point
 (which in turn is always single digits for model checking tests).
 
+{\bf Further pruning.}
+In the presence of non-conflicting transitions as well as conflicting ones,
+DPOR's approach as described so far can still end up testing equivalent interleavings.
+For example, consider the execution sequence
+in Figure~\ref{fig:sleepsets}(a).
+After executing this interleaving, DPOR will detect the conflict between $t_a$ and $t_c$,
+and tag $I_{a2}$ (i.e., $T_2$ to run before $t_a$), causing us to next execute
+Figure~\ref{fig:sleepsets}(b).
+However, DPOR does not ``remember'' why it wanted to reorder $T_2$ with $T_1$
+(i.e., whether $t_b$ or $t_c$ was the important one to run before $t_a$),
+so from this branch,
+it next tags $I_{c'1}$, causing
+Figure~\ref{fig:sleepsets}(c).
+to be tested next, which is regrettably equivalent to the original interleaving
+($t_a$ and $t_b$ having been reordered all told, which are independent).
+To recover our forgotten original purpose,
+which was already fulfilled by testing the second interleaving,
+DPOR can check just before tagging a new interleaving (here, $I_{c'1}$),
+among all preceding transitions equivalent to the conflicting one (here, $t_{b'}$ equivalent to $t_{a'}$),
+for an already-explored interleaving beginning with the target thread.
+If such exists,
+%then because of the depth-first search ordering,
+the new interleaving is guaranteed to be equivalent to one already checked,
+and can be skipped.
+
+\begin{figure}[h]
+	\begin{center}
+		\begin{tabular}{p{0.3\textwidth}p{0.25\textwidth}p{0.35\textwidth}}
+	\begin{tabular}{l}
+	$T_1$@$t_a$: \texttt{write~x} \\
+	$T_2$@$t_b$: \texttt{read~y} \\
+	$T_2$@$t_c$: \texttt{read~x} \\
+	\end{tabular}
+	&
+	\begin{tabular}{l}
+	$T_2$@$t_{b'}$: \texttt{read~y} \\
+	$T_2$@$t_{c'}$: \texttt{read~x} \\
+	$T_1$@$t_{a'}$: \texttt{write~x} \\
+	\end{tabular}
+	&
+	\begin{tabular}{l}
+	$T_2$@$t_{b'}$: \texttt{read~y} \\
+	$T_1$@$t_{a''}$: \texttt{write~x} \\
+	$T_2$@$t_{c''}$: \texttt{read~x} \\
+	\end{tabular}
+	\\
+	\\
+	(a) Original interleaving.
+	&
+	(b) Goal interleaving.
+	&
+	(c) Redundant interleaving.
+	\end{tabular}
+	\end{center}
+	\caption{Motivating example for the sleep sets optimization.
+	For clarity, threads are labeled here with numbers ($T_n$) and the transitions thereby with letters ($t_i$).}
+	\label{fig:sleepsets}
+\end{figure}
+Landslide implements this check in {\tt equiv\_already\_explored()}.
+This corresponds to the {\em sleep sets} optimization described by prior work \cite{dpor,optimal-dpor},
+so named because it effectively puts $T_1$ ``to sleep'' until after the true conflicting access in $t_c$.
+Further optimizations such as {\em source sets} and {\em wakeup trees},
+which achieve optimality (i.e., executing exactly one interleaving per equivalence class) \cite{optimal-dpor}
+are not yet implemented,
+although to the best of my knowledge,
+they provide further reduction only in cases of 3 or more threads;
+I suspect (without proof) that sleep-set DPOR is optimal for 2 threads.
+
+% TODO: make sure it's clear that the quicksand chapter expts were run before this optmz was added,
+% and that the HTM expts fro msigbovik paper were re-run for its chapater herein
+
 {\bf Choosing which new interleaving to test next.}
 Among all interleavings chosen by DPOR not already marked as explored,
 Landslide chooses the one with the longest execution prefix matching the current $S$,
@@ -1327,6 +1401,7 @@ all others must share their execution prefixes with it,
 preserving the $O(nk)$ memory bound described above.
 %so storing markers for the others during the next execution is still $O(1)$ memory.
 
+{\bf Termination.}
 When DPOR returns no new $I_{ij}$s not already marked in the set of visited subtrees,
 the exploration is complete.
 
