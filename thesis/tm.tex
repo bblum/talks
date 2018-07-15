@@ -13,12 +13,6 @@ Yet we still build sand castles.
 \end{tabular}}
 {Yuri, Doki Doki Literature Club}
 
-
-% notes to self abour marios tests
-% counter: tests k threads on n iterations, benchmark xchg-aways vs txn. removed benchmarking, added assertion that no counts are lost.
-
-% TODO
-
 Transactional memory (TM) is a concurrency primitive
 by which programmers may attempt an arbitrary sequence of shared memory accesses,
 which will either be committed (made visible to other processors/threads) atomically,
@@ -67,7 +61,8 @@ refers to Intel's implementation of HTM on the Haswell microarchitecture
 Restricted Transactional Memory (RTM)
 refers to the {\tt xbegin}, {\tt xend}, and {\tt xabort} subset of TSX instructions,
 which of course correspond to {\sf begin}, {\tt end}, and {\tt abort} listed above,
-and which GCC exposes as C/C++ intrinsices named {\tt \_xbegin()}, {\tt \_xend()}, and {\tt \_xabort()}
+as well as {\tt xtest}, an instruction which returns whether or not the CPU is executing transactionally.
+GCC and Clang expose these as C/C++ intrinsics named {\tt \_xbegin()}, {\tt \_xend()}, {\tt \_xabort()}, and {\tt \_xtest()}
 \cite{htm-gcc}.
 Hardware Lock Elision (HLE)
 refers to the {\tt xacquire} and {\tt xrelease} subset of TSX instructions,
@@ -169,7 +164,7 @@ this highlights MC's dependence on its test cases to produce meaningful state sp
 \[
 	\tiat{1-2b}, \tjat{1-3}, \tiat{4-6b}, \tkat{1-3}, \tiat{6c-7}
 \]
-Prior work \cite{htm-mario} proposed the idiom shown in Figure~\ref{fig:htm-fixed}
+Prior work \cite{tm-benchmark-cmu} proposed the idiom shown in Figure~\ref{fig:htm-fixed}
 to exclude this family of interleavings,
 which shows that correctly synchronizing even the simplest transactions may be surprisingly difficult or complex.
 %further motivating our research.
@@ -408,17 +403,18 @@ under {\tt pebsim/p2-basecode/}.
 The interface is implemented in {\tt 410user/libhtm/htm.c},
 perhaps surprisingly, as totally empty functions:
 Landslide hooks these functions' addresses during instrumentation
-and inserts preemption points, failure injections, etcetera as necessary whenever the execution encounters them.
+and inserts preemption points, failure injections,
+et cetera as necessary whenever the execution encounters them.
 
 Transactional test programs should be ported to the Pebbles userspace if not already,
-then replace any use of compiler HTM intrinsics with Landslide's interface%
+then any use of compiler HTM intrinsics replaced with Landslide's interface%
 \footnote{Attempts to execute a real TSX instruction under Landslide, instead of using the custom interface,
-will be reported as ``invalid opcode'' bugs.
+will be reported as ``invalid opcode'' bugs,
+as neither of its supported simulation platforms support the feature.
 }.
 They should then be put in either {\tt 410user/progs/} or {\tt user/progs/}
 and the {\tt 410TESTS} or {\tt STUDENTTESTS} line (respectively) of {\tt config-incomplete.mk} be edited to add the test name,
-% TODO: better section reference
-before running {\tt p2-setup.sh} (\sect{\ref{chap:education}})
+before running {\tt p2-setup.sh} (\sect{\ref{sec:landslide-setup}})
 % TODO(implementation): Provide an obfuscated refp2?
 on a (hopefully) correct P2 as usual.
 Several example HTM tests are provided as {\tt 410user/progs/htm*.c}.
@@ -539,9 +535,559 @@ the vector clocks are simply checked as usual.
 
 \section{Evaluation}
 
+While prior work has focused on verifying implementations of transactional memory themselves
+\cite{specifying-verifying-tm,tm-correctness,tm-completeness,mc-tm-with-spin},
+Landslide is to the best of my knowledge the first model checker to support transactional client code.
+% mumble smth new concurrency model
+Accordingly, there is no baseline against which to compare Landslide's performance.
+Likewise, since Landslide's HTM semantics emulation relies on the equivalences proved in \sect{\ref{sec:tm-design}},
+we did not actually implement an HTM-style speculative-execution-and-rollback simulation mode.
+% so have no basis to measure how much it saves, or smth like that
+On this count, at least,
+we hope the reader finds it self-evident that
+our equivalence proofs provide exponential state space reduction
+compared to actually testing (and thereafter aborting) every combination of instructions within transactions.
+Beyond those, this chapter's evaluation will take a relatively green-field and exploratory approach.
+I pose the following evaluation questions.
+
+% on one hand,
+% comparing with \cite{mc-tm-with-spin}, succeeding for (2,3) then burning out with (2,4) is consistent with prior work
+% on the other hand, they were verifying STM implementation, which is no doubt more operations per iteration?
+% whatever, don't need to make this argument
+
+\begin{enumerate}
+	\item How quickly does Landslide find bugs in incorrect transactional programs? %of varying sizes?
+	\item Does Landslide find any previously-unknown bugs in real-world transactional code?%
+		\footnote{The savvy reader will realize that whether or not the author poses this evaluation question to begin with spoils its answer.}
+	%\item How quickly does Landslide verify correct transactional programs of varying sizes?
+	\item How does Iterative Deepening's performance compare to Maximal State Space mode?%
+		\footnote{Not necessarily related to HTM,
+		but the latter was implemented well after Chapter~\ref{chap:quicksand}'s conference paper was published,
+		so this was the most convenient test suite to evaluate it on.}
+	\item How well does Landslide's verification scale
+		with increasing thread/iteration count for correct transactional programs?
+	\item What further reduction can be achieved beyond that provided by
+		the global-lock/failure-injection equivalences?
+	%\item By the way, should MC research papers quantify variance in their CPU-time performance experiments?
+\end{enumerate}
+
+The evaluation suite comprises several hand-written unit tests,
+microbenchmarks and transactional data structures from \cite{tm-benchmark-cmu},
+a transactional spinlock from \cite{spinlock-rtm-github},
+and various combinations thereof,
+as follows.
+
+% notes to self abour marios tests
+% counter: tests k threads on n iterations, benchmark xchg-aways vs txn. removed benchmarking, added assertion that no counts are lost.
+
+\begin{itemize}
+	\item Microbenchmarks
+	\begin{itemize}
+		\item {\tt htm1}: The bug from Figure~\ref{fig:htm-example}. %(assertion failure on {\tt count}).
+		\item {\tt htm2}: The fixed version as in Figure~\ref{fig:htm-fixed}.
+		\item {\tt counter}: Microbenchmark version of {\tt htm2} which replaces the complex failure path with a simple {\tt xadd}.
+		\item {\tt swap}: Microbenchmark that swaps values in an array.
+		\item {\tt swapbug}: {\tt swap} modified to introduce circular locking in the failure path. %(deadlock).
+	\end{itemize}
+	\item Data structure tests
+	\begin{itemize}
+		\item {\tt avl\_insert}: AVL tree concurrent insertion test \cite{tm-benchmark-cmu}.
+		\item {\tt avl\_fixed}: {\tt avl\_insert} with the AVL bug fixed (spoilers!!).
+		\item {\tt map\_basic}: Separate-chaining hashmap concurrent insertion test \cite{tm-benchmark-cmu}.
+		\item {\tt map\_basicer}: {\tt map\_basic} modified with a larger initial size to skip the resizing step.
+		\item {\tt avl\_mutex}: {\tt avl\_fixed} with transactional sections simplified by abstraction into a mutex.
+		\item {\tt map\_mutex}: {\tt map\_basic} simplified likewise.
+	\end{itemize}
+	\item Lock abstraction tests.
+		These are each parameterized over implementations {\tt spinlock} (from \cite{spinlock-rtm-github}),
+		{\tt spinlock\_fixed} (spoilers!!),
+		and {\tt mutex} (replaces the spinlock with a Landslide-annotated mutex to reduce state space size).
+	\begin{itemize}
+		\item {\tt lock}(): Checks that multiple threads using a transactional lock
+			cannot access the critical section simultaneously.
+		\item {\tt lock\_fast}(): Checks that a transactional lock's fast path will not suffer conflict aborts
+			if its client threads' critical sections are independent.
+	\end{itemize}
+\end{itemize}
+
+The notation {\tt testname}$(K,N)$ will denote a test configuration of $K$ threads, each running $N$ iterations of the test logic.
+All tests were run on an 8-core 2.7GHz Core i7 with 32 GB RAM.
+To minimize variance in CPU-time measurements,
+I ensured the test machine was not loaded beyond normal web browser use,
+and ran only one instance of Landslide at a time
+\cite{sigbovik-htm}.
+
+\newcommand\ETA[1]{\hilight{brownish}{{\em #1}}\xspace}
+\newcommand\cpu[1]{\hilight{darkcyan}{{#1}}\xspace}
+\newcommand\wtm[1]{\hilight{lime}{{#1}}\xspace}
+\newcommand\ints[1]{\hilight{pinkish}{{#1}}\xspace}
+\newcommand\ETAdag[1]{\ETA{\ensuremath{\dagger}#1}}
+
+\subsection{Bugs}
+
+\begin{table*}[t]
+	\begin{center}
+		\footnotesize
+	\begin{tabular}{cc||r|r|r||r|r|r|r}
+			&	&\multicolumn{3}{c||}{\bf Quicksand mode}&\multicolumn{4}{c}{{\bf Maximal state space mode} ({\tt -M})} \\
+		\bf buggy test	& \bf params&\cpu{\bf cpu (s)}&\wtm{\bf wall (s)}&\ints{\bf int's}&\cpu{\bf cpu (s)}&\wtm{\bf wall (s)}&\ints{\bf int's}& \ETA{\bf SS size (est.)} \\
+		\hline
+		\hline
+		{\tt htm1}
+			& 2,1	&\cpu{  45.78}&\wtm{9.70}&\ints{21}& \cpu{*9.47}& \wtm{*6.40}& \ints{21	}& \ETA{213} \\
+		(assertion)
+			& 2,2	&\cpu{  84.14}&\wtm{13.59}&\ints{*33}& \cpu{*10.39}& \wtm{*7.70}& \ints{49	}& \ETA{1536} \\
+			& 2,3	&\cpu{ 131.91}&\wtm{20.44}&\ints{*73}& \cpu{*12.83}& \wtm{*9.67}& \ints{113	}& \ETA{10752} \\
+			& 2,4	&\cpu{ 255.75}&\wtm{37.56}&\ints{257}& \cpu{*18.63}& \wtm{*15.86}& \ints{257	}& \ETA{73728} \\
+		\cline{2-9}
+			& 3,1	&\cpu{ 114.06}&\wtm{17.45}&\ints{*15}& \cpu{*9.50}& \wtm{*6.79}& \ints{21	}& \ETA{13653} \\
+			& 3,2	&\cpu{ 109.60}&\wtm{26.16}&\ints{49}& \cpu{*10.72}& \wtm{*7.97}& \ints{49	}& \ETA{393216} \\
+			& 3,3	&\cpu{ 124.80}&\wtm{20.40}&\ints{*73}& \cpu{*13.84}& \wtm{*11.01}& \ints{113	}& \ETA{11010048} \\
+			& 3,4	&\cpu{ 227.49}&\wtm{35.15}&\ints{*161}& \cpu{*31.37}& \wtm{*28.53}& \ints{257	}& \ETA{301989888} \\
+		\cline{2-9}
+			& 4,1	&\cpu{ 53.08}&\wtm{9.79}&\ints{*15}& \cpu{*9.82}& \wtm{*7.00}& \ints{21	}& \ETA{873813} \\
+			& 4,2	&\cpu{117.07}&\wtm{19.09}&\ints{*33}& \cpu{*11.54}& \wtm{*8.55}& \ints{49	}& \ETA{100663296} \\
+		\hline
+		{\tt swapbug}
+			& 2,1	&\cpu{ 70.95}&\wtm{13.45}&\ints{*16}& \cpu{*38.96}& \wtm{*13.15}& \ints{109	}& \ETA{194} \\
+		(deadlock)
+			& 2,2	&\cpu{ 107.28}&\wtm{*17.45}&\ints{*146}& \cpu{*44.73}& \wtm{19.47}& \ints{281	}& \ETA{1620} \\
+			& 2,3	&\cpu{ 280.05}&\wtm{38.70}&\ints{*352}& \cpu{*60.30}& \wtm{*35.55}& \ints{718	}& \ETA{12748} \\
+			& 2,4	&\cpu{ 617.94}&\wtm{*81.50}&\ints{*834}& \cpu{*108.58}& \wtm{82.60}& \ints{1820	}& \ETA{97823} \\
+		\cline{2-9}
+			& 3,1	&\cpu{*1275.04}&\wtm{*163.42}&\ints{*771}&\ETA{--}&\ETA{>30m}&\ETA{--}& \ETA{184984} \\
+			& 3,2	&\ETA{--}&\ETA{>30m}&\ETA{--}&\ETA{--}&\ETA{>30m}&\ETA{--}& \ETA{3099225} \\
+		\hline
+		{\tt avl\_insert}
+			& 2,2	&\cpu{488.07}&\wtm{64.77}&\ints{*83}	&\cpu{*81.00}&\wtm{*40.30}&\ints{336}&\ETA{379982} \\
+		(segfault+)
+			& 2,3	&\cpu{2670.87}&\wtm{*330.45}&\ints{*3066}&\cpu{*1331.79}&\wtm{1274.36}&\ints{13926}&\ETA{96248131} \\
+			& 2,4	&\cpu{*3259.37}&\wtm{*436.50}&\ints{*1639}&\ETA{--}&\ETA{>30m}&\ETA{--}& \ETA{36019973} \\
+		\cline{2-9}
+			& 3,1	&\cpu{222.02}&\wtm{40.04}&\ints{*28}	&\cpu{*69.99}&\wtm{*24.25}&\ints{78}&\ETA{1572107} \\
+			& 3,2	&\cpu{*1569.09}&\wtm{*216.85}&\ints{*209}&\ETA{--}&\ETA{>30m}&\ETA{--}& \ETA{1402363529} \\
+	\end{tabular}
+	\end{center}
+	\caption{Landslide's bug-finding performance on various test configurations.
+		Iterative Deepening, optimized for fast bug-finding,
+		is compared against Maximal State Space mode,
+		optimized for fast verification.
+		For each, I list the CPU-time and wall-clock time elapsed,
+		plus the number of interleavings of the ultimately buggy state space tested,
+		before the bug was found.
+		* marks the winning measurements between each series.
+		Lastly, state space estimation, % \sect{\ref{sec....}}
+		though approximate at best,
+		confers a sense of the exponential explosion.
+		{\bf THESIS DRAFT NOTE:} These numbers all need to be re-run on account of some state space reductions and/or soundness fixes that have been added since these numbers were calculated in \cite{sigbovik-htm}.
+	}
+	\label{tab:buges}
+\end{table*}
+
+Table~\ref{tab:buges}
+presents the bug-finding results.
+% TODO: better sec'n reference?
+I configured Landslide to run Quicksand's Iterative Deepening algorithm (\sect{\ref{chap:quicksand}}),
+shown left,
+as well as to prioritize the maximal state space (\sect{\ref{sec:landslide-quicksand-options}}),
+shown right,
+% TODO: make 1 hour
+each with a time limit of 30 minutes.
+
+{\bf Finding bugs quickly.}
+As the test parameters increase,
+the multiplicative factor in bug-finding speed (2-4x, eyeballing) is generally smaller
+than that of the total number of interleavings (10-100x).
+In other words,
+should they exist,
+Landslide find bugs reasonably quickly in these transactional programs
+despite prohibitive exponential explosion in total state space size.
+This corroborates the results from Chapter~\ref{chap:quicksand},
+extending its good news to the world of HTM.
+
+{\bf Finding new bugs.}
+In addition to the bugs I intentionally wrote in {\tt htm1} and {\tt swapbug},
+%to my pleasant surprise % only the former of these is a surprise now
+Landslide also found two bugs in the ``real-world'' transactional algorithms I tested.
+\begin{itemize}
+	\item
+	{\bf Atomicity violation.}
+	{\tt avl\_insert} with any parameters higher than (2,1)
+	exposed a previously-unknown bug in the transactional AVL tree.
+	Figure~\ref{fig:avlbug} shows the root cause, essentially the {\tt htm1} bug in disguise.
+	% landslide-trace-1521093835.18927.html
+	This manifested
+	alternately
+	as a segfault (for test parameters (2,2) and (3,1)) % TODO double check
+	% landslide-trace-1521092404.23772.html
+	and
+	as a consistency-check assertion failure (for test parameters (2,3)).
+	The presence of {\tt while (\_retry);} makes the necessary preemption window extremely small
+	(between it and {\tt \_xbegin()}),
+	making the bug extremely unlikely to manifest under stress testing,
+	but Landslide is blind to such matters of chance.
+
+	As a matter of full disclosure,
+	while editing this test to make it Landslide-friendly,
+	I noted that the loop does not affect the test's possible behaviours,
+	only its {\em likely} ones,
+	and so removed it to keep the state space size manageable.
+	One could then argue that manual inspection is at least partly to credit for this result.
+	% TODO justify this
+	However, adding the loop back in to dispel any doubt,
+	% converting it to a {\tt yield()} loop % TODO: necessary?
+	Landslide still finds the bug,
+	albeit slightly slower,
+	in % TODO how much time
+	\item
+	% TODO
+	{\bf Spurious spinlock abort.}
+	{\tt lock\_fast}({\tt spinlock})
+\end{itemize}
+Note that in the AVL tree bug,
+the code's author was the very same person who proposed the protocol in Figure~\ref{fig:htm-fixed},
+yet still got it wrong once, having to write it out by hand throughout both data structures.
+This motivates the need for model checking such programs,
+no matter how much of a concurrency expert the author may be.
+It also suggests HTM primitives should be encapsulated behind higher-level abstractions,
+such as lock elision \cite{lock-elision}
+or a simple spinlock \cite{spinlock-rtm-github},
+which can be verified in isolation with smaller state spaces
+then trusted in turn when checking their client programs \cite{dbug-phdthesis}.
+\sect{\ref{sec:tm-verif}} explores this further.
+
+\begin{figure}[t]
+	\begin{center}
+		\begin{tabular}{l}
+		\texttt{\flow{while} (\_retry);} \\
+		\texttt{\flow{if} (\call{\_xbegin}() == \const{SUCCESS}) \{} \\
+		\texttt{~~~~\hilight{brickred}{tie}(\_root,inserted) = \call{\_insert}(\_root,n); } \\
+		\texttt{~~~~\call{\_xend}();} \\
+		\texttt{\} \flow{else} \{} \\
+		\texttt{~~~~\call{pthread\_mutex\_lock}(\&\_tree\_lock);} \\
+		\texttt{~~~~\_retry = \const{true};} \\
+		\texttt{~~~~\hilight{brickred}{tie}(\_root,inserted) = \call{\_insert}(\_root,n); } \\
+		\texttt{~~~~\_retry = \const{false};} \\
+		\texttt{~~~~\call{pthread\_mutex\_unlock}(\&\_tree\_lock);} \\
+		\texttt{\}} \\
+		\end{tabular}
+	\end{center}
+	%\caption{mario man had a very large house. or a castle.}
+	\caption{Unmodified code from {\tt htmavl.hpp} showing the previously-unknown bug found by Landslide.
+		The transaction path fails to check {\tt \_retry},
+		leading to data races and corruption just as in {\tt htm1}.
+		}
+	\label{fig:avlbug}
+\end{figure}
+
+\begin{figure}[t]
+	\begin{center}
+		% TODO synhi
+		\begin{tabular}{l}
+		\texttt{bool hle\_spinlock\_isfree(spinlock\_t* lock) \{} \\
+		\texttt{~~~~return (\_\_sync\_bool\_compare\_and\_swap(\&lock->v, 0, 0) ? true : false);} \\
+		\texttt{\}} \\
+		\texttt{void rtm\_spinlock\_acquire(spinlock\_t* lock) \{} \\
+		\texttt{~~~~if ((tm\_status = \_xbegin()) == \_XBEGIN\_STARTED) \{} \\
+		\texttt{~~~~~~~~if (hle\_spinlock\_isfree(lock)) return;} \\
+		\texttt{~~~~~~~~\_xabort(0xff);} \\
+		\texttt{~~~~\} else \{} \\
+		\texttt{~~~~~~~~// ... retrying, etc. abbreviated for brevity ...} \\
+		\texttt{~~~~~~~~hle\_spinlock\_acquire(lock);} \\
+		\texttt{~~~~\}} \\
+		\texttt{\}} \\
+		\texttt{void rtm\_spinlock\_release(spinlock\_t* lock)\{} \\
+		\texttt{~~~~if (hle\_spinlock\_isfree(lock)) \{} \\
+		\texttt{~~~~~~~~\_xend();} \\
+		\texttt{~~~~\} else \{} \\
+		\texttt{~~~~~~~~hle\_spinlock\_release(lock);} \\
+		\texttt{~~~~\}} \\
+		\texttt{\}} \\
+		\end{tabular}
+	\end{center}
+	% TODO describe
+	\caption{ff}
+	\label{fig:spinlockbug}
+\end{figure}
+
+\subsection{Performance}
+
+Quicksand's ability to find bugs in fewer distinct interleavings (i.e., overall smaller state spaces)
+does not necessarily correlate with better performance in terms of CPU-time.
+Comparing Table~\ref{tab:buges}'s trends
+to the break-even point in Quicksand's evaluation (\sect{\ref{sec:quicksand-eval}}),
+most of these tests are too small for its approach to pay off,
+% TODO: re check this after re running
+with {\tt swapbug}(3,1) and {\tt avl\_insert} as its notable wins.
+While plenty more wins were observed in \sect{\ref{sec:quicksand-eval}},
+%an upper bound also exists:
+%in {\tt swapbug}(3,2),
+%not even the {\em minimal} state space was completed in time.
+this suggests
+future MCs could prioritize state spaces using not just size estimation
+but a hybrid approach also conisdering state space maximality and preemption bounds \cite{chess-icb}
+to soften the trade-off
+both for smaller tests and for verification.
+
+\subsection{Verification}
+\label{sec:tm-verif}
+
+Landslide proved the following tests correct.
+With no bugs to find, comparing the different testing modes against each other is meaningless;
+I simply present their state space sizes and runtime
+(measured under {\tt -M})
+in Table~\ref{tab:verifs}.
+
+\begin{table}[h]
+	\begin{center}
+		\begin{tabular}{cc|r|r}
+			& & \cpu{\bf cpu (s)} & \ints{\bf SS size} \\
+			\bf test & \bf params & \em (or \ETAdag{\bf \em ETA}) & \em (or \ETAdag{\bf \em est.}) \\
+			\hline
+			\hline
+			{\tt htm2}
+			& 2,1 & \cpu{18.57}	& \ints{294}	\\
+			& 2,2 & \cpu{133.78}	& \ints{4902}	\\
+			& 2,3 &\cpu{1986.98}	& \ints{79017}	\\
+			& 3,1 &\cpu{11672.15}	& \ints{467730}	\\
+			& 3,2 &	\ETAdag{10d 14h}& \ETAdag{13763999}	\\
+			%[JOB 4] progress: 127032/13763999 brs (0.922929%), ETA 10d 13h 52m 44s (elapsed 59m 56s)
+			%[JOB 4] TIMED OUT (0.922929%; ETA 10d 13h 52m 44s)
+			\hline
+			{\tt counter}
+			& 2,1 & \cpu{5.57}	& \ints{30}	\\
+			& 2,2 & \cpu{15.53}	& \ints{384}	\\
+			& 2,3 &\cpu{155.00}	& \ints{5280}	\\
+			& 2,4 &\cpu{2211.10}	& \ints{75264}	\\
+			& 3,1 & \cpu{57.90}	& \ints{1960}	\\
+			& 3,2 & \cpu{10028.93}	& \ints{329888}	\\ % TODO running atm
+			\hline
+			{\tt swap}
+			%& 2,1 & \cpu{38.77}	& \ints{228}	\\ % pre-ignore_thr_func fix
+			& 2,1 & \cpu{32.98}	& \ints{193}	\\
+			& 2,2 & \cpu{3652.91}	& \ints{101150}	\\
+			%[JOB 8] progress: 97913/161897 brs (60.478362%), ETA 1h 29m 30s (elapsed 59m 52s)
+			% [JOB 8] TIMED OUT (60.478362%; ETA 1h 29m 30s)
+
+			& 3,1 & \ETAdag{8d 12h} & \ETAdag{411312}	\\
+			%[JOB 8] progress: 103873/411312 brs (25.254021%), ETA 8d 11h 36m 0s (elapsed 59m 42s)
+			%[JOB 8] TIMED OUT (25.254021%; ETA 8d 11h 36m 0s)
+			\hline
+			{\tt avl\_insert}
+			& 2,1 & \cpu{1083.35}	& \ints{40062}	\\
+			%& 2,2 & \multicolumn{2}{c}{\em (bug!)} \\
+			\hline
+			{\tt avl\_fixed}
+			& 2,1 & \cpu{1079.03} 	& \ints{45078} 	\\
+			& 2,2 & \ETAdag{2762y}	& \ETAdag{8714863} 	\\
+			%[JOB 19] progress: 45863/8714863 brs (0.526262%), ETA 2762y 28d 9h 57m 14s (elapsed 59m 25s)
+			%[JOB 19] TIMED OUT (0.526262%; ETA 2762y 28d 9h 57m 14s)
+			% the below is from avlfixed2,2 after running it overnight
+			% eta is ever worse but i'm using the 1hr one as promised
+			%[JOB 19] progress: 315672/29992026 brs (1.052520%), ETA 321008y 136d 18h 22m 12s (elapsed 6h 58m 15s)
+			& 3,1 & \ETAdag{12d 2h}	& \ETAdag{11498545}	\\
+
+			\hline
+			{\tt map\_basic}
+			& 2,1 & \ETAdag{10d 17h} & \ETAdag{16388977} \\
+			%[JOB 15] progress: 70330/16388977 brs (0.429130%), ETA 10d 16h 34m 15s (elapsed 43m 21s)
+			%[JOB 15] TIMED OUT (0.429130%; ETA 10d 16h 34m 15s)
+			\hline
+			{\tt map\_basicer}
+			& 2,1 & \cpu{877.44}& \ints{28635}	\\
+			& 2,2 & \ETAdag{2d 7h} & \ETAdag{5925634} \\
+			& 3,1 & \ETAdag{468d 13h} & \ETAdag{35893653} \\
+			% [JOB 5] progress: 100181/35893653 brs (0.279105%), ETA 1y 103d 12h 50m 47s (elapsed 59m 24s)
+			%[JOB 5] TIMED OUT (0.279105%; ETA 1y 103d 12h 50m 47s)
+			% i don't know what this is but it was hanging out under 3,1 here :<
+			%[JOB 6] progress: 35042/5925634 brs (0.591363%), ETA 2d 6h 40m 30s (elapsed 21m 12s)
+			%[JOB 6] TIMED OUT (0.591363%; ETA 2d 6h 40m 30s)
+		\end{tabular}
+	\end{center}
+	\caption{Transactional tests verified (or not) by Landslide.
+		{\bf THESIS DRAFT NOTE:} These numbers all need to be re-run on account of some state space reductions and/or soundness fixes that have been added since these numbers were calculated in \cite{sigbovik-htm}.
+		}
+	\label{tab:verifs}
+\end{table}
+
+% TODO rephrase the outdated para from sigbovik here,
+% probably after rerunning expts
+
+{\bf State space reduction.}
+
+% as for the sleep-set-alike optimization,
+% we see it would provide 25% reduction in the example (from thesprop)
+% however, evaluating its potential impact in general is tantamount to implementing it.
+
 % TODO
 
 % TODO: evaluate a reduction in the AVL/etc where you take the xbegin/retry/mutex/retry pattern and encapsulate it in smth like
 % T txn(mutex_t *mp, T body(U env), U env)
 % verify this primitive on some simple mutual exclusion tests up to N,K or w/e
 % then in AVL/etc have landslide, whenever it is reached, force the user into an alternate path which just always takes the mx
+
+% new spinlock test resulce - htm_spinlock
+% (2,1) without isfree fix
+%%%% total time elapsed: 9s
+%%%% [JOB 4] COMPLETE (41 interleavings tested; 3s elapsed)
+%%%% total CPU time consumed: 14s (14231661 usecs) (core saturation: 37%)
+
+% (2,2) without isfree fix
+%%%% total time elapsed: 1h 22m 20s
+%%%% [JOB 4] COMPLETE (38544 interleavings tested; 1h 22m 13s elapsed)
+%%%% total CPU time consumed: 1h 22m 24s (4944373889 usecs) (core saturation: 25%)
+
+% (3,1) without isfree fix
+
+% (2,1) with isfree fix
+%%%% total time elapsed: 10s
+%%%% [JOB 4] COMPLETE (31 interleavings tested; 2s elapsed)
+%%%% total CPU time consumed: 13s (13256415 usecs) (core saturation: 30%)
+
+% (2,2) with isfree fix
+%%%% total time elapsed: 25m 1s
+%%%% [JOB 4] COMPLETE (15076 interleavings tested; 24m 41s elapsed)
+%%%% total CPU time consumed: 25m 4s (1504809436 usecs) (core saturation: 25%)
+% (nb. it's not known whether this was run from a "hot" start (no recompiling) -- but probably wasnt!
+
+% (2,3)
+%% this will be an overnight 10hr job
+% [DBG] [JOB 4] progress: 30353/444731 brs (6.825013%),
+% [JOB 4] Running (6.825013%; ETA 5d 9h 4m 41s)
+
+
+% (3,1) with isfree fix
+% hot start confirmed
+%%%% total time elapsed: 41m 26s
+%%%% [JOB 4] COMPLETE (24790 interleavings tested; 41m 18s elapsed)
+%%%% total CPU time consumed: 41m 28s (2488953483 usecs) (core saturation: 25%)
+
+%%%% avl_mutex
+% % 2,1
+% [JOB 0] COMPLETE (3 interleavings tested; 2s elapsed)
+% total CPU time consumed: 2s (2489515 usecs) (core saturation: 24%)
+% % 2,2
+% [JOB 0] COMPLETE (3 interleavings tested; 1s elapsed)
+% total CPU time consumed: 2s (2443451 usecs) (core saturation: 24%)
+% % 2,3
+% [JOB 0] COMPLETE (3 interleavings tested; 1s elapsed)
+% total CPU time consumed: 2s (2448127 usecs) (core saturation: 24%)
+% % 2,4
+% [JOB 0] COMPLETE (3 interleavings tested; 1s elapsed)
+% total CPU time consumed: 2s (2407903 usecs) (core saturation: 24%)
+% % 3,1
+% [JOB 0] COMPLETE (12 interleavings tested; 2s elapsed)
+% total CPU time consumed: 2s (2685913 usecs) (core saturation: 24%)
+% %3,2
+% [JOB 0] COMPLETE (12 interleavings tested; 2s elapsed)
+% total CPU time consumed: 2s (2666826 usecs) (core saturation: 24%)
+% % 3,3
+% [JOB 0] COMPLETE (13 interleavings tested; 2s elapsed)
+% total CPU time consumed: 2s (2761157 usecs) (core saturation: 24%)
+% % 3,4
+% [JOB 0] COMPLETE (13 interleavings tested; 2s elapsed)
+% total CPU time consumed: 2s (2738169 usecs) (core saturation: 24%)
+% % 4,1
+% [JOB 0] COMPLETE (60 interleavings tested; 3s elapsed)
+% total CPU time consumed: 4s (4034411 usecs) (core saturation: 24%)
+% % 4,2
+% [JOB 0] COMPLETE (66 interleavings tested; 3s elapsed)
+% total CPU time consumed: 4s (4338442 usecs) (core saturation: 24%)
+% % 4,3
+% [JOB 0] COMPLETE (71 interleavings tested; 4s elapsed)
+% total CPU time consumed: 4s (4526641 usecs) (core saturation: 24%)
+% % 4,4
+% [JOB 0] COMPLETE (73 interleavings tested; 4s elapsed)
+% total CPU time consumed: 4s (4752864 usecs) (core saturation: 24%)
+
+%%%% map mutex
+% % TODO - bc of this weird nonlinear behaviour around 2,1+, yo ushoud prob try 2,2 for map_basic as well
+% % 2,1
+% total time elapsed: 19s
+% [JOB 7] COMPLETE (57 interleavings tested; 5s elapsed)
+%        PPs: { 'mutex_lock' 'mutex_unlock' 'DR @ 0x100053b' [NONDET] 'DR @ 0x1000552' [NONDET] 'DR @ 0x1000521' [NONDET]
+%        'DR @ 0x100055d' [NONDET] 'DR @ 0x100055a' [NONDET] 'DR @ 0x1000916' [NONDET] 'DR @ 0x1000919' [NONDET] }
+% total CPU time consumed: 31s (31198379 usecs) (core saturation: 39%)
+% % 2,2
+% total time elapsed: 3s
+% [JOB 0] COMPLETE (6 interleavings tested; 2s elapsed)
+%        PPs: { 'mutex_lock' 'mutex_unlock' }
+% =========================
+% progress report thr exiting
+% total CPU time consumed: 3s (3192831 usecs) (core saturation: 24%)
+% % 2,3
+% ==== PROGRESS REPORT ====
+% total time elapsed: 3s
+% [JOB 0] COMPLETE (6 interleavings tested; 2s elapsed)
+%        PPs: { 'mutex_lock' 'mutex_unlock' }
+% =========================
+% progress report thr exiting
+% total CPU time consumed: 3s (3240367 usecs) (core saturation: 24%)
+% 2,4
+% 3,1
+% 3,2
+
+%%%%%%%%%%% htm_mutex
+%%%% -- nb. these numbers were obtained with a oops-exploded state space from a misplaced assert on hm->held
+% % 2,1
+% total time elapsed: 6s
+% [JOB 2] COMPLETE (24 interleavings tested; 3s elapsed)
+% total CPU time consumed: 9s (9642348 usecs) (core saturation: 35%)
+% % 2,2
+% total time elapsed: 1m 20s
+% [JOB 2] COMPLETE (2672 interleavings tested; 1m 16s elapsed)
+% total CPU time consumed: 1m 23s (83001932 usecs) (core saturation: 25%)
+% % 2,3
+% total time elapsed: 2h 3m 45s
+% [JOB 2] COMPLETE (220338 interleavings tested; 2h 3m 40s elapsed)
+% total CPU time consumed: 2h 3m 47s (7427873599 usecs) (core saturation: 25%)
+% % 3,1
+% total time elapsed: 51s
+% [JOB 2] COMPLETE (1594 interleavings tested; 47s elapsed)
+% total CPU time consumed: 54s (54572810 usecs) (core saturation: 26%)
+
+%%%% -- nb. better version
+% % 2,1
+% total time elapsed: 6s
+% [JOB 2] COMPLETE (22 interleavings tested; 2s elapsed)
+% total CPU time consumed: 9s (9415448 usecs) (core saturation: 34%)
+% % 2,2
+% total time elapsed: 40s
+% [JOB 2] COMPLETE (1208 interleavings tested; 37s elapsed)
+% total CPU time consumed: 44s (44068381 usecs) (core saturation: 27%)
+% 2,3
+% 2,4
+% % 3,1
+% total time elapsed: 38s
+% [JOB 2] COMPLETE (1148 interleavings tested; 35s elapsed)
+% total CPU time consumed: 42s (42108005 usecs) (core saturation: 27%)
+% % 3,2
+% [JOB 2] progress: 920684/4793666 brs (19.206260%), ETA 11d 4h 17m 50s (elapsed 9h 59m 56s)
+% total time elapsed: 10h 0s
+% [JOB 2] TIMED OUT (19.206260%; ETA 11d 4h 17m 50s)
+% total CPU time consumed: 10h 3s (36003199876 usecs) (core saturation: 25%)
+
+
+% commentary -- writing this test case well requires expert knowledge of noobs (of writing landslide friendly tests)
+% - placing the asserts well, using sync_test_and_set and asserting on the result rather than having a separate read,
+%   has an impact on the state space, as seen above
+% - design of critical_section and how it uses xtest to yield only in failure path, and why that's justified
+
+% "Landslide cannot in general test for performance degradation bugs,
+% such as in a program which requires a transaction abort rate below a certain threshhold
+% owing to the nature of its workload,
+% because all interleavings are equal in Landslide's eyes, and probability is no object.
+% However, the lock_noconflict test illustrates that model checking can still test for certain performance properties
+% as long as the element of probability can be removed."
+
+
+
+
+
+% other one to test -
+% https://github.com/vamsikc/leveldb-tsx/blob/master/ext/xsync/include/scope.hpp
+
+% "Although we skipped implementing it to begin with, the sheer size of this reduction also
+% reflects on the numbers one might see betwee the original reduction in theorem so-and-so that lets us
+% treat transactional success paths as mutually-exclusive (and, once started, abort-proof) to begin with"
+% this sentence is a complete mess....
