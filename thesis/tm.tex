@@ -842,24 +842,24 @@ but with a hybrid approach between model checking and what other technique is no
 	\begin{center}
 		% TODO synhi
 		\begin{tabular}{l}
-		\texttt{bool hle\_spinlock\_isfree(spinlock\_t* lock) \{} \\
-		\texttt{~~~~// XXX: should be "return lock->v == 0;"} \\
-		\texttt{~~~~return \_\_sync\_bool\_compare\_and\_swap(\&lock->v, 0, 0);} \\
+		\texttt{\ctype{bool} \call{hle\_spinlock\_isfree}(\ctype{spinlock\_t} *lock) \{} \\
+		\texttt{~~~~\ccomment{// XXX: should be "return lock->v == 0;"}} \\
+		\texttt{~~~~\flow{return} \call{\_\_sync\_bool\_compare\_and\_swap}(\&lock->v, \const{0}, \const{0});} \\
 		\texttt{\}} \\
-		\texttt{void rtm\_spinlock\_acquire(spinlock\_t* lock) \{} \\
-		\texttt{~~~~if ((tm\_status = \_xbegin()) == \_XBEGIN\_STARTED) \{} \\
-		\texttt{~~~~~~~~if (hle\_spinlock\_isfree(lock)) return;} \\
-		\texttt{~~~~~~~~\_xabort(0xff);} \\
-		\texttt{~~~~\} else \{} \\
-			\texttt{~~~~~~~~// ... retrying \&c abbreviated for brevity ...} \\
-		\texttt{~~~~~~~~hle\_spinlock\_acquire(lock);} \\
+		\texttt{\ctype{void} \call{rtm\_spinlock\_acquire}(\ctype{spinlock\_t} *lock) \{} \\
+		\texttt{~~~~\flow{if} ((tm\_status = \call{\_xbegin}()) == \const{\_XBEGIN\_STARTED}) \{} \\
+		\texttt{~~~~~~~~\flow{if} (\call{hle\_spinlock\_isfree}(lock)) \flow{return};} \\
+		\texttt{~~~~~~~~\call{\_xabort}(\const{0xff});} \\
+		\texttt{~~~~\} \flow{else} \{} \\
+		\texttt{~~~~~~~~\ccomment{// ... retrying \&c abbreviated for brevity ...}} \\
+		\texttt{~~~~~~~~\call{hle\_spinlock\_acquire}(lock);} \\
 		\texttt{~~~~\}} \\
 		\texttt{\}} \\
-		\texttt{void rtm\_spinlock\_release(spinlock\_t* lock)\{} \\
-		\texttt{~~~~if (hle\_spinlock\_isfree(lock)) \{} \\
-		\texttt{~~~~~~~~\_xend();} \\
-		\texttt{~~~~\} else \{} \\
-		\texttt{~~~~~~~~hle\_spinlock\_release(lock);} \\
+		\texttt{\ctype{void} \call{rtm\_spinlock\_release}(\ctype{spinlock\_t} *lock)\{} \\
+		\texttt{~~~~\flow{if} (\call{hle\_spinlock\_isfree}(lock)) \{} \\
+		\texttt{~~~~~~~~\call{\_xend}();} \\
+		\texttt{~~~~\} \flow{else} \{} \\
+		\texttt{~~~~~~~~\call{hle\_spinlock\_release}(lock);} \\
 		\texttt{~~~~\}} \\
 		\texttt{\}} \\
 		\end{tabular}
@@ -1026,23 +1026,23 @@ and {\tt mutex} using Landslide-annotated P2 mutexes (as the AVL and map impleme
 	\begin{center}
 	\begin{tabular}{p{0.47\textwidth}p{0.5\textwidth}}
 		\begin{tabular}{l}
-			\texttt{static int num\_in\_section = 0;} \\
-			\texttt{for (int i = 0; i < NITERS; i++) \{} \\
-			\texttt{~~~~rtm\_spinlock\_acquire(\&lock);} \\
+			\texttt{\ctype{static int} num\_in\_section = 0;} \\
+			\texttt{\flow{for} (\ctype{int} i = \const{0}; i < \const{NITERS}; i++) \{} \\
+			\texttt{~~~~\call{rtm\_spinlock\_acquire}(\&lock);} \\
 			\texttt{~~~~num\_in\_section++;} \\
-			\texttt{~~~~if (!\_xtest())} \\
-			\texttt{~~~~~~~~thr\_yield(-1);} \\
-			\texttt{~~~~assert(num\_in\_section == 1); } \\
+			\texttt{~~~~\flow{if} (!\call{\_xtest()})} \\
+			\texttt{~~~~~~~~\call{thr\_yield}(\const{-1});} \\
+			\texttt{~~~~\flow{assert}(num\_in\_section == \const{1}); } \\
 			\texttt{~~~~num\_in\_section--;} \\
-			\texttt{~~~~rtm\_spinlock\_release(\&lock);} \\
+			\texttt{~~~~\call{rtm\_spinlock\_release}(\&lock);} \\
 			\texttt{\}} \\
 		\end{tabular}
 		&
 		\begin{tabular}{ll}
-			\texttt{for (int i = 0; i < NITERS; i++) \{} \\
-			\texttt{~~~~rtm\_spinlock\_acquire(\&lock);} \\
-			\texttt{~~~~assert(\_xtest());} \\
-			\texttt{~~~~rtm\_spinlock\_release(\&lock);} \\
+			\texttt{\flow{for} (\ctype{int} i = \const{0}; i < \const{NITERS}; i++) \{} \\
+			\texttt{~~~~\call{rtm\_spinlock\_acquire}(\&lock);} \\
+			\texttt{~~~~\flow{assert}(\_xtest());} \\
+			\texttt{~~~~\call{rtm\_spinlock\_release}(\&lock);} \\
 			\texttt{\}} \\
 		\end{tabular}
 		\\
@@ -1061,7 +1061,9 @@ Landslide reached before the same 10-hour timeout.
 Provided that one trusts the {\tt lock} tests correctly check the desired properties,
 and that open-coding hadn't introduced any new bugs (such as Figure~\ref{fig:avlbug}'s),
 the benefit is clear:
-for example,
+the data structure tests suddenly reach unprecedented thread/iteration counts with ease,
+their state space growth now defined only by their internal conflicts from tree rebalancing, map resizing, and so on.
+In total,
 summing the testing times of {\tt lock}({\tt mutex})$(K,N)$ and {\tt avl\_mutex}$(K,N)$
 produces the same verification as {\tt avl\_fixed}$(K,N)$ far more cheaply.
 Furthermore, {\tt lock}'s verification can be reused,
