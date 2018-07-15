@@ -546,11 +546,11 @@ Landslide is to the best of my knowledge the first model checker to support tran
 % mumble smth new concurrency model
 Accordingly, there is no baseline against which to compare Landslide's performance.
 Likewise, since Landslide's HTM semantics emulation relies on the equivalences proved in \sect{\ref{sec:tm-design}},
-we did not actually implement an HTM-style speculative-execution-and-rollback simulation mode.
+I did not actually implement an HTM-style speculative-execution-and-rollback simulation mode.
 % so have no basis to measure how much it saves, or smth like that
 On this count, at least,
-we hope the reader finds it self-evident that
-our equivalence proofs provide exponential state space reduction
+I hope the reader finds it self-evident that
+the equivalence proofs provide exponential state space reduction
 compared to actually testing (and thereafter aborting) every combination of instructions within transactions.
 Beyond those, this chapter's evaluation will take a relatively green-field and exploratory approach.
 I pose the following evaluation questions.
@@ -604,10 +604,7 @@ as follows.
 		\item {\tt avl\_mutex}: {\tt avl\_fixed} with transactional sections simplified by abstraction into a mutex.
 		\item {\tt map\_mutex}: {\tt map\_basic} simplified likewise.
 	\end{itemize}
-	\item Lock abstraction tests.
-		These are each parameterized over implementations {\tt spinlock} (from \cite{spinlock-rtm-github}),
-		{\tt spinlock\_fixed} (spoilers!!),
-		and {\tt mutex} (replaces the spinlock with a Landslide-annotated mutex to reduce state space size).
+	\item Lock abstraction tests
 	\begin{itemize}
 		\item {\tt lock}(): Checks that multiple threads using a transactional lock
 			cannot access the critical section simultaneously.
@@ -616,6 +613,9 @@ as follows.
 			if its client threads' critical sections are independent.
 			% htm_spinlock_fastpath and htm_mutex_fastpath
 	\end{itemize}
+		These are each parameterized over implementations {\tt spinlock} (from \cite{spinlock-rtm-github}),
+		{\tt spin\_\allowbreak{}fixed} (spoilers!!),
+		and {\tt mutex} (replaces the spinlock with a Landslide-annotated P2 mutex to reduce state space size).
 \end{itemize}
 
 The notation {\tt testname}$(K,N)$ will denote a test configuration of $K$ threads, each running $N$ iterations of the test logic.
@@ -676,11 +676,12 @@ and ran only one instance of Landslide at a time
 			& 3,1	&\cpu{222.02}&\wtm{40.04}&\ints{*28}	&\cpu{*69.99}&\wtm{*24.25}&\ints{78}&\ETA{1572107} \\
 			& 3,2	&\cpu{*1569.09}&\wtm{*216.85}&\ints{*209}&\ETA{--}&\ETA{>30m}&\ETA{--}& \ETA{1402363529} \\
 		\hline
+			\multicolumn{9}{c}{\em everything above this line needs rerun} \\ \hline
 		{\tt lock\_fast}
-			& 2,1	& \\
 		%({\tt spinlock})
+			& 2,1	&\cpu{10.48}&\wtm{3.22}&\ints{2}&\cpu{*2.98}&\wtm{*2.98}&\ints{2}& \ETA{8} \\
 		(perf)
-			& 9,9	& \\
+			& 9,9	&\cpu{37.41}&\wtm{9.96}&\ints{2}&\cpu{*4.93}&\wtm{*4.93}&\ints{2}& \ETA{inf} \\
 	\end{tabular}
 	\end{center}
 	\caption{Landslide's bug-finding performance on various test configurations.
@@ -757,11 +758,25 @@ Landslide also found two bugs in the ``real-world'' transactional algorithms I t
 	in % TODO how much time
 	\item
 	{\bf Spurious spinlock abort.}
-	% TODO
-	{\tt lock\_fast}({\tt spinlock})
+	{\tt lock\_fast} discovered a spurious transactional-path write conflict
+	in the {\tt spinlock} HTM-lock implementation.%
 	\footnote{{\tt lock\_fast}'s unusual (9,9) parameter shows that this state space size is constant: %in $(K,N)$:
 	DPOR will always either deem all thread transitions independent and end exploration immediately,
 	or the test's assertion will trip as soon as the first conflict is found.}
+	This ``performance bug'' causes the lock to suffer slow-path spin-locking
+	even in cases where the user's thread transitions are completely independent
+	(for example, locking the root of an AVL tree,
+	then traversing in different directions to make disjoint modifications),
+	which the test case detects with {\tt \_xtest()}.
+	Figure~\ref{fig:spinlockbug} shows the root cause:
+	the {\tt isfree()} routine (corresponding to the AVL's {\tt \_retry})
+	used an atomic compare-and-swap that would always write to memory even without modifying it.
+	I corrected this in the {\tt spin\_fixed} implementation by replacing it
+	with a normal read
+	(being used only in the transactional path, no barriers are required to protect it).
+	A cursory search on Github found one user of this code,
+	a transactional LevelDB implementation \cite{htm-leveldb-github},
+	whose author had also noticed and corrected this problem in the same way.
 
 	As another matter of full disclosure,
 	I noticed this bug through manual inspection,
@@ -910,7 +925,7 @@ in Table~\ref{tab:verifs}.
 			& 2,3 &\cpu{155.00}	& \ints{5280}	\\
 			& 2,4 &\cpu{2211.10}	& \ints{75264}	\\
 			& 3,1 & \cpu{57.90}	& \ints{1960}	\\
-			& 3,2 & \cpu{10028.93}	& \ints{329888}	\\ % TODO running atm
+			& 3,2 & \cpu{10028.93}	& \ints{329888}	\\
 			\hline
 			{\tt swap}
 			%& 2,1 & \cpu{38.77}	& \ints{228}	\\ % pre-ignore_thr_func fix
@@ -1087,6 +1102,8 @@ had on even the correctness tests:
 			%%%% [JOB 4] COMPLETE (38544 interleavings tested; 1h 22m 13s elapsed)
 			%%%% total CPU time consumed: 1h 22m 24s (4944373889 usecs) (core saturation: 25%)
 			% (3,1) without isfree fix
+			% in progress but smth like
+			% [JOB 4] progress: 39726/83689 brs (47.468314%), ETA 3h 27m 10s (elapsed 1h 30m 21s)
 			\hline
 			{\tt lock}
 			& 2,1 & \cpu{12.26} & \ints{31} \\
@@ -1173,14 +1190,14 @@ had on even the correctness tests:
 			% total CPU time consumed: 1h 33m 6s (5586369677 usecs) (core saturation: 25%)
 			\hline
 			{\tt lock\_fast}
-			& 2,1 & \cpu{0} & \ints{0}	\\
+			& 2,1 & \cpu{2.96} & \ints{1}	\\
 			({\tt spin\_fixed})
-			& 9,9 & \cpu{0} & \ints{0}	\\
+			& 9,9 & \cpu{4.33} & \ints{1}	\\
 			\hline
 			{\tt lock\_fast}
-			& 2,1 & \cpu{0} & \ints{0}	\\
+			& 2,1 & \cpu{3.05} & \ints{1}	\\
 			({\tt mutex})
-			& 9,9 & \cpu{0} & \ints{0}	\\
+			& 9,9 & \cpu{4.38} & \ints{1}	\\
 			%\end{tabular}
 			%&
 			%\begin{tabular}{cc||r|r}
