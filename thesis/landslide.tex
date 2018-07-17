@@ -279,6 +279,7 @@ without requiring the student to implement {\tt thr\_join()} and {\tt thr\_exit(
 avoiding which is important for tests to be student-accessible earlier in the project implementation timeline.
 
 \subsubsection{Misbehave}
+\label{sec:landslide-friendly-misbehave}
 
 Many of the supplied P2 test cases invoke the {\tt misbehave()} system call
 with a mysterious argument (usually {\tt BGND\_BRWN >> FGND\_CYAN})
@@ -420,6 +421,11 @@ Following are the less self-explanatory options.
 		rather than declaring a bug.
 	\item {\tt ignore\_dr\_function NAME USERSPACE} - specifies a function whose memory access should not be counted as data races (but still be considered memory conflicts for DPOR).
 		{\tt USERSPACE} should be 0 or 1 to denote a kernel-space or user-space function respectively.
+	\item {\tt thrlib\_function NAME} - specifies a function whose memory accesses should be ignored both by the data race analysis and by DPOR.
+		This is recommended for marking trusted-correct thread library code when testing multithreaded client code thereof,
+		in order to avoid unnecessarily checking, for example,
+		all the different ways {\tt thr\_exit()} and {\tt thr\_join()} could interleave.
+		Users of this option should be careful to enable the proper {\tt thr\_create()} misbehave mode in their test case (\sect{\ref{sec:landslide-friendly-misbehave}}).
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1243,6 +1249,7 @@ which is considered to conflict with accesses to any address therein
 on the grounds that reordering may expose a use-after-free.
 
 \subsubsection{State space exploration}
+\label{sec:landslide-explore}
 
 The core of the DPOR algorithm is implemented in {\tt explore()} in {\tt explore.c}.
 
@@ -1298,7 +1305,7 @@ To summarize, %for each pair of transitions $t_i$ and $t_j$ ($i<j$) in $S$,
 DPOR identifies $I_{ij}$s which will (eventually) reorder each conflicting, concurrent transition pair in $S$
 %executing some $t_j' t_i'$
 to reach a (possibly) new program state not exposed in the current interleaving.
-Prior work \cite{dpor,optimal-dpor} refers to the set of these $I_{ij}$s,
+Prior work \cite{partial-order-methods,dpor,optimal-dpor} refers to the set of these $I_{ij}$s,
 for a given $i$,
 as the {\em persistent set} at the preemption point after $t_{i-1}$.
 
@@ -1377,7 +1384,7 @@ and can be skipped.
 	\label{fig:sleepsets}
 \end{figure}
 Landslide implements this check in {\tt equiv\_already\_explored()}.
-This corresponds to the {\em sleep sets} optimization described by prior work \cite{dpor,optimal-dpor},
+This corresponds to the {\em sleep sets} optimization described by prior work \cite{partial-order-methods,dpor,optimal-dpor},
 so named because it effectively puts $T_1$ ``to sleep'' until after the true conflicting access in $t_c$.
 Further optimizations such as {\em source sets} and {\em wakeup trees},
 which achieve optimality (i.e., executing exactly one interleaving per equivalence class) \cite{optimal-dpor}

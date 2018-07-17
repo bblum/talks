@@ -515,7 +515,41 @@ to force {\tt \_xbegin()} to return the provided code.
 \subsubsection{Tracking abort sets}
 \label{sec:tm-abortsets}
 
+% In contrast to Landslide's implementation of the sleep set reduction (\sect{\ref{sec:landslide-explore}}),
+% blah blah which is implicit and works in retrospect by pruning at tag-sibling time, which figures out what would have been in a sleep set by analyzing the past independences and explored siblings,
+% this cannot work that way,
+% because in the first place, the former works with the "keep running current thread" ordering heuristic,
+% (which automatically takes care of the first half of the sleep set problem)
+% whereas no such similar heuristic exists (can exist??) for xbegin PPs, we always just run the success path first
+
 % TODO
+
+% ok so heres an example of why this is rly hard
+
+% ==== thread 1 ====
+% if (xbegin()) {
+% 	xabort(0) // whatever, executed in a past branch to be aborting in the present
+% } else {
+% 	x++;
+% }
+%
+% ==== thread 3 ====
+% conflict_with_thread_2 = true;
+%
+% ==== thread 2 ====
+% if (xbegin()) {
+% 	conflict_with_thread_2 ++ ; // whatever, just conflict and fail w thr 3
+% } else {
+% 	x++; // conf with thr 1
+% }
+%
+% so we execute this interleaving (T1 abort, T3, T2 abort)
+% dpor sees the conflict between T2 and T1 and wants to tag T2 to run as transition(T1-abort)'s sibling to run
+% it would use the "abort set" of (T2 [CONFLICT], T1 [EXPLICIT])
+% but like, how do we know that thread 3 is necessary to reach this?
+% and even, how do we know that it's valid to inject CONFLCIT in T2?
+% you pretty much hafta reorder T3 (dpor doesn't see why you need to)
+% but if you inject conflict in T2 without also making sure T3 executes "near" it, that might not necessarily be sound
 
 \subsection{Data Race Analysis}
 \label{sec:txn-datarace}
@@ -577,6 +611,8 @@ I pose the following evaluation questions.
 	%\item By the way, should MC research papers quantify variance in their CPU-time performance experiments?
 \end{enumerate}
 
+\subsubsection{Experimental setup}
+
 The evaluation suite comprises several hand-written unit tests,
 microbenchmarks and transactional data structures from \cite{tm-benchmark-cmu},
 a transactional spinlock from \cite{spinlock-rtm-github},
@@ -591,8 +627,8 @@ as follows.
 	\begin{itemize}
 		\item {\tt htm1}: The bug from Figure~\ref{fig:htm-example}. %(assertion failure on {\tt count}).
 		\item {\tt htm2}: The fixed version as in Figure~\ref{fig:htm-fixed}.
-		\item {\tt counter}: Microbenchmark version of {\tt htm2} which replaces the complex failure path with a simple {\tt xadd}.
-		\item {\tt swap}: Microbenchmark that swaps values in an array.
+		\item {\tt counter}: Microbenchmark version of {\tt htm2} which replaces the complex locking failure path with an atomic {\tt xadd}, from \cite{tm-benchmark-cmu}.
+		\item {\tt swap}: Microbenchmark that swaps values in an array, from \cite{tm-benchmark-cmu}.
 		\item {\tt swapbug}: {\tt swap} modified to introduce circular locking in the failure path. %(deadlock).
 	\end{itemize}
 	\item Data structure tests
@@ -624,6 +660,21 @@ To minimize variance in CPU-time measurements,
 I ensured the test machine was not loaded beyond normal web browser use,
 and ran only one instance of Landslide at a time
 \cite{sigbovik-htm}.
+
+Finally, the keen-eyed reader will notice the state space sizes reported here
+differ from those reported in \cite{sigbovik-htm}.
+All experiments have been re-run
+on account of three updates to Landslide's exploration algorithm
+implemented since then:
+the sleep sets optimization for DPOR (\sect{\ref{sec:landslide-explore}}, commit 0447666),
+the {\tt thrlib\_function} directive
+to mark internal thread library logic as trusted (\sect{\ref{sec:landslide-config-landslide}}, commit 64a02e4),
+and fixing a soundness bug in which Landslide could neglect to inject transaction failures
+immediately after a thread switch (commit dcae85b).
+On account of the former two updates, some state spaces may be smaller than before;
+on account of the third, some may be larger.
+These updates do not discredit the bug-finding results (a bug is a bug),
+but the previously-published verification results should be considered outdated.
 
 \newcommand\ETA[1]{\hilight{brownish}{{\em #1}}\xspace}
 \newcommand\cpu[1]{\hilight{darkcyan}{{#1}}\xspace}
@@ -703,6 +754,7 @@ and ran only one instance of Landslide at a time
 Table~\ref{tab:buges}
 presents the bug-finding results.
 I configured Landslide to run Quicksand's Iterative Deepening algorithm, %(\sect{\ref{sec:quicksand-id}}),
+% TODO how many cores?
 shown left,
 as well as to prioritize the maximal state space, %(\sect{\ref{sec:landslide-quicksand-options}}),
 shown right,
@@ -716,7 +768,7 @@ the multiplicative factor in bug-finding speed (2-4x, eyeballing) is generally s
 than that of the total number of interleavings (10-100x).
 In other words,
 should they exist,
-Landslide find bugs reasonably quickly in these transactional programs
+Landslide is likely to find bugs reasonably quickly in these transactional programs
 despite prohibitive exponential explosion in total state space size.
 This corroborates the results from Chapter~\ref{chap:quicksand},
 extending its good news to the world of HTM.
@@ -790,28 +842,6 @@ Landslide also found two bugs in the ``real-world'' transactional algorithms I t
 	so I consider Landslide confirming the bug (and later verifying its absence, in \sect{\ref{sec:tm-verif}})
 	a positive result anyway.
 \end{itemize}
-Note that in the AVL tree bug,
-the code's author was the very same person who proposed the protocol in Figure~\ref{fig:htm-fixed},
-yet still got it wrong once, having to write it out by hand throughout both data structures.
-This motivates the need for model checking such programs,
-no matter how much of a concurrency expert the author may be.
-It also suggests HTM primitives should be encapsulated behind higher-level abstractions,
-such as lock elision \cite{lock-elision}
-or a simple spinlock \cite{spinlock-rtm-github},
-which can be verified in isolation with smaller state spaces
-then trusted in turn when checking their client programs \cite{dbug-phdthesis}.
-\sect{\ref{sec:tm-verif}} explores this further.
-
-As HTM is fundamentally a performance-minded concurrency extension,
-users are likely to care about more probabilistic properties of their code,
-such as requiring a transaction abort rate below a certain threshhold
-owing to the nature of its workload.
-Landslide cannot in general test for performance degradation bugs,
-because all interleavings are equal in Landslide's eyes, and probability is no object.
-However, {\tt lock\_fast} illustrates that model checking can still check some interesting performance properties
-as long as the element of probability can be removed.
-Future work may attempt to verify a wider range of performance properties,
-but with a hybrid approach between model checking and what other technique is not yet known.
 
 \begin{figure}[t]
 	\begin{center}
@@ -840,7 +870,6 @@ but with a hybrid approach between model checking and what other technique is no
 
 \begin{figure}[t]
 	\begin{center}
-		% TODO synhi
 		\begin{tabular}{l}
 		\texttt{\ctype{bool} \call{hle\_spinlock\_isfree}(\ctype{spinlock\_t} *lock) \{} \\
 		\texttt{~~~~\ccomment{// XXX: should be "return lock->v == 0;"}} \\
@@ -873,6 +902,30 @@ but with a hybrid approach between model checking and what other technique is no
 	}
 	\label{fig:spinlockbug}
 \end{figure}
+
+Note that in the AVL tree bug,
+the code's author was the very same person who proposed the protocol in Figure~\ref{fig:htm-fixed},
+yet still got it wrong once, having to write it out by hand throughout both data structures.
+This motivates the need for model checking such programs,
+no matter how much of a concurrency expert the author may be.
+It also suggests HTM primitives should be encapsulated behind higher-level abstractions,
+such as lock elision \cite{lock-elision}
+or a simple spinlock \cite{spinlock-rtm-github},
+which can be verified in isolation with smaller state spaces
+then trusted in turn when checking their client programs \cite{dbug-phdthesis}.
+\sect{\ref{sec:tm-verif}} explores this further.
+
+Regarding the spinlock bug,
+as HTM is fundamentally a performance-minded concurrency extension,
+users are likely to care about more probabilistic properties of their code,
+such as requiring a transaction abort rate below a certain threshhold
+owing to the nature of its workload.
+Landslide cannot in general test for performance degradation bugs,
+because all interleavings are equal in Landslide's eyes, and probability is no object.
+However, {\tt lock\_fast} illustrates that model checking can still check some interesting performance properties
+as long as the element of probability can be removed.
+Future work may attempt to verify a wider range of performance properties,
+but with a hybrid approach between model checking and what other technique is not yet known.
 
 \subsection{Performance}
 
@@ -911,71 +964,49 @@ in Table~\ref{tab:verifs}.
 			\hline
 			\hline
 			{\tt htm2}
-			& 2,1 & \cpu{18.57}	& \ints{294}	\\
-			& 2,2 & \cpu{133.78}	& \ints{4902}	\\
-			& 2,3 &\cpu{1986.98}	& \ints{79017}	\\
-			& 3,1 &\cpu{11672.15}	& \ints{467730}	\\
-			& 3,2 &	\ETAdag{10d 14h}& \ETAdag{13763999}	\\
-			%[JOB 4] progress: 127032/13763999 brs (0.922929%), ETA 10d 13h 52m 44s (elapsed 59m 56s)
-			%[JOB 4] TIMED OUT (0.922929%; ETA 10d 13h 52m 44s)
+			& 2,1 & \cpu{16.30}	& \ints{22}	\\
+			& 2,2 & \cpu{69.80}	& \ints{1970}	\\
+			& 2,3 &\cpu{3510.00}	& \ints{104914}	\\
+			%& 2,4 &	\ETAdag{...}	& \ETAdag{...}	\\
+			& 3,1 &\cpu{41.07}	& \ints{941}	\\
+			& 3,2 &	\ETAdag{todo}	& \ETAdag{todo}	\\
+			& 4,1 & \cpu{12699.65}	& \ints{344240}	\\
 			\hline
 			{\tt counter}
-			& 2,1 & \cpu{5.57}	& \ints{30}	\\
-			& 2,2 & \cpu{15.53}	& \ints{384}	\\
-			& 2,3 &\cpu{155.00}	& \ints{5280}	\\
-			& 2,4 &\cpu{2211.10}	& \ints{75264}	\\
-			& 3,1 & \cpu{57.90}	& \ints{1960}	\\
-			& 3,2 & \cpu{10028.93}	& \ints{329888}	\\
+			& 2,1 & \cpu{5.40}	& \ints{10}	\\
+			& 2,2 & \cpu{10.91}	& \ints{190}	\\
+			& 2,3 & \cpu{134.21}	& \ints{3970}	\\
+			& 2,4 & \cpu{3009.40}	& \ints{86950}	\\
+			& 3,1 & \cpu{8.30}	& \ints{120}	\\
+			& 3,2 & \cpu{2038.90}	& \ints{60606}	\\
+			& 4,1 & \cpu{101.95}	& \ints{3006}	\\
 			\hline
 			{\tt swap}
-			%& 2,1 & \cpu{38.77}	& \ints{228}	\\ % pre-ignore_thr_func fix
-			& 2,1 & \cpu{32.98}	& \ints{193}	\\
-			& 2,2 & \cpu{3652.91}	& \ints{101150}	\\
-			%[JOB 8] progress: 97913/161897 brs (60.478362%), ETA 1h 29m 30s (elapsed 59m 52s)
-			% [JOB 8] TIMED OUT (60.478362%; ETA 1h 29m 30s)
-
-			& 3,1 & \ETAdag{8d 12h} & \ETAdag{411312}	\\
-			%[JOB 8] progress: 103873/411312 brs (25.254021%), ETA 8d 11h 36m 0s (elapsed 59m 42s)
-			%[JOB 8] TIMED OUT (25.254021%; ETA 8d 11h 36m 0s)
+			& 2,1 & \cpu{38.79}	& \ints{99}	\\
+			& 2,2 & \cpu{10299.27}	& \ints{233396}	\\
+			& 3,1 & \ETAdag{todo} & \ETAdag{todo}	\\
 			\hline
 			{\tt avl\_insert}
-			& 2,1 & \cpu{1083.35}	& \ints{40062}	\\
-			%& 2,2 & \multicolumn{2}{c}{\em (bug!)} \\
+			& 2,1 & \cpu{491.98}	& \ints{15056}	\\
 			\hline
 			{\tt avl\_fixed}
-			& 2,1 & \cpu{1079.03} 	& \ints{45078} 	\\
-			& 2,2 & \ETAdag{2762y}	& \ETAdag{8714863} 	\\
-			%[JOB 19] progress: 45863/8714863 brs (0.526262%), ETA 2762y 28d 9h 57m 14s (elapsed 59m 25s)
-			%[JOB 19] TIMED OUT (0.526262%; ETA 2762y 28d 9h 57m 14s)
-			% the below is from avlfixed2,2 after running it overnight
-			% eta is ever worse but i'm using the 1hr one as promised
-			%[JOB 19] progress: 315672/29992026 brs (1.052520%), ETA 321008y 136d 18h 22m 12s (elapsed 6h 58m 15s)
-			& 3,1 & \ETAdag{12d 2h}	& \ETAdag{11498545}	\\
+			& 2,1 & \cpu{572.49} 	& \ints{20420} 	\\
+			& 2,2 & \ETAdag{todo}	& \ETAdag{todo} 	\\
+			& 3,1 & \ETAdag{todo}	& \ETAdag{todo}	\\
 
 			\hline
 			{\tt map\_basic}
-			& 2,1 & \ETAdag{10d 17h} & \ETAdag{16388977} \\
-			%[JOB 15] progress: 70330/16388977 brs (0.429130%), ETA 10d 16h 34m 15s (elapsed 43m 21s)
-			%[JOB 15] TIMED OUT (0.429130%; ETA 10d 16h 34m 15s)
+			& 2,1 & \ETAdag{todo} & \ETAdag{todo} \\
 			\hline
 			{\tt map\_basicer}
-			& 2,1 & \cpu{877.44}& \ints{28635}	\\
-			& 2,2 & \ETAdag{2d 7h} & \ETAdag{5925634} \\
-			& 3,1 & \ETAdag{468d 13h} & \ETAdag{35893653} \\
-			% [JOB 5] progress: 100181/35893653 brs (0.279105%), ETA 1y 103d 12h 50m 47s (elapsed 59m 24s)
-			%[JOB 5] TIMED OUT (0.279105%; ETA 1y 103d 12h 50m 47s)
-			% i don't know what this is but it was hanging out under 3,1 here :<
-			%[JOB 6] progress: 35042/5925634 brs (0.591363%), ETA 2d 6h 40m 30s (elapsed 21m 12s)
-			%[JOB 6] TIMED OUT (0.591363%; ETA 2d 6h 40m 30s)
-
-			\hline
-			\multicolumn{4}{c}{\em everything above this line needs rerun} \\
+			& 2,1 & \cpu{36.17}& \ints{426}	\\
+			& 2,2 & \ETAdag{todo} & \ETAdag{todo} \\ % currently running
+			& 3,1 & \ETAdag{todo} & \ETAdag{todo} \\
 		\end{tabular}
 	\end{center}
 	\caption{Transactional tests verified (or not) by Landslide.
 		Run with {\tt landslide -M -X}, i.e., retry aborts enabled, different xabort codes not distinguished.
 		State space estimates measured after a timeout of 10 hours.
-		{\bf THESIS DRAFT NOTE:} These numbers all need to be re-run on account of some state space reductions and/or soundness fixes that have been added since these numbers were calculated in \cite{sigbovik-htm}.
 		}
 	\label{tab:verifs}
 \end{table}
@@ -1032,7 +1063,7 @@ and {\tt mutex} using Landslide-annotated P2 mutexes (as the AVL and map impleme
 			\texttt{~~~~num\_in\_section++;} \\
 			\texttt{~~~~\flow{if} (!\call{\_xtest()})} \\
 			\texttt{~~~~~~~~\call{thr\_yield}(\const{-1});} \\
-			\texttt{~~~~\flow{assert}(num\_in\_section == \const{1}); } \\
+			\texttt{~~~~\flow{assert}{}(num\_in\_section == \const{1}); } \\
 			\texttt{~~~~num\_in\_section--;} \\
 			\texttt{~~~~\call{rtm\_spinlock\_release}(\&lock);} \\
 			\texttt{\}} \\
@@ -1041,7 +1072,7 @@ and {\tt mutex} using Landslide-annotated P2 mutexes (as the AVL and map impleme
 		\begin{tabular}{ll}
 			\texttt{\flow{for} (\ctype{int} i = \const{0}; i < \const{NITERS}; i++) \{} \\
 			\texttt{~~~~\call{rtm\_spinlock\_acquire}(\&lock);} \\
-			\texttt{~~~~\flow{assert}(\_xtest());} \\
+			\texttt{~~~~\flow{assert}{}(\call{\_xtest}());} \\
 			\texttt{~~~~\call{rtm\_spinlock\_release}(\&lock);} \\
 			\texttt{\}} \\
 		\end{tabular}
@@ -1094,6 +1125,7 @@ had on even the correctness tests:
 			& 2,2 & \cpu{4944.37} & \ints{38544} \\
 			& 2,3 & \\ % \cpu{0} & \ints{0} \\
 			& 3,1 & \\ % \cpu{0} & \ints{0} \\ % TODO currently running, i think,
+			& 3,2 & \\ % \cpu{0} & \ints{0} \\
 			% new spinlock test resulce - htm_spinlock
 			% (2,1) without isfree fix
 			%%%% total time elapsed: 9s
@@ -1111,8 +1143,9 @@ had on even the correctness tests:
 			& 2,1 & \cpu{12.26} & \ints{31} \\
 			({\tt spin\_fixed})
 			& 2,2 & \cpu{1662.21} & \ints{15076} \\
-			& 2,3 & \\ %\cpu{0} & \ints{0} \\
+			& 2,3 & \ETAdag{3d 20h} & \ETAdag{2003906} \\
 			& 3,1 & \cpu{2488.95} & \ints{24970} \\
+			& 3,2 & \\ % \cpu{0} & \ints{0} \\
 			% (2,1) with isfree fix
 			%%%% total time elapsed: 10s
 			%%%% [JOB 4] COMPLETE (31 interleavings tested; 2s elapsed)
@@ -1122,9 +1155,8 @@ had on even the correctness tests:
 			% [JOB 4] COMPLETE (15076 interleavings tested; 27m 28s elapsed)
 			% total CPU time consumed: 27m 42s (1662213886 usecs) (core saturation: 25%)
 			% (2,3)
-			%% this will be an overnight 10hr job
-			% [DBG] [JOB 4] progress: 30353/444731 brs (6.825013%),
-			% [JOB 4] Running (6.825013%; ETA 5d 9h 4m 41s)
+			% [JOB 4] progress: 242266/2003906 brs (12.089688%), ETA 3d 20h 2m 12s (elapsed 9h 59m 49s)
+			% [JOB 4] TIMED OUT (12.089688%; ETA 3d 20h 2m 12s)
 			% (3,1) with isfree fix
 			% hot start confirmed
 			%%%% total time elapsed: 41m 26s
