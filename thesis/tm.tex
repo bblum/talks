@@ -656,6 +656,12 @@ as follows.
 
 The notation {\tt testname}$(K,N)$ will denote a test configuration of $K$ threads, each running $N$ iterations of the test logic.
 All tests were run on an 8-core 2.7GHz Core i7 with 32 GB RAM.
+Reported CPU-times include time spent on all state spaces
+Quicksand saw fit to run,
+not just the maximal or the buggy state space;
+for verification tests (run with {\tt -M}),
+this still includes abandoned smaller jobs that were run to saturate the set of data-race preemption points
+(Chapter~\ref{chap:quicksand}).
 To minimize variance in CPU-time measurements,
 I ensured the test machine was not loaded beyond normal web browser use,
 and ran only one instance of Landslide at a time
@@ -694,40 +700,59 @@ but the previously-published verification results should be considered outdated.
 		\hline
 		\hline
 		{\tt htm1}
-			& 2,1	&\cpu{  45.78}&\wtm{9.70}&\ints{21}& \cpu{*9.47}& \wtm{*6.40}& \ints{21	}& \ETA{213} \\
+			& 2,1	&\cpu{  45.78}&\wtm{9.70}&\ints{21}& \cpu{*8.21}& \wtm{*5.78}& \ints{5	}& \ETA{12} \\
+			% 5 interleavings tested; 1 preemptions; job time 2s; pldi time 5781000; new-fixed pldi cputime 8214902
 		(assertion)
-			& 2,2	&\cpu{  84.14}&\wtm{13.59}&\ints{*33}& \cpu{*10.39}& \wtm{*7.70}& \ints{49	}& \ETA{1536} \\
-			& 2,3	&\cpu{ 131.91}&\wtm{20.44}&\ints{*73}& \cpu{*12.83}& \wtm{*9.67}& \ints{113	}& \ETA{10752} \\
-			& 2,4	&\cpu{ 255.75}&\wtm{37.56}&\ints{257}& \cpu{*18.63}& \wtm{*15.86}& \ints{257	}& \ETA{73728} \\
+			& 2,2	&\cpu{  84.14}&\wtm{13.59}&\ints{*33}& \cpu{*8.42}& \wtm{*5.97}& \ints{9	}& \ETA{102} \\
+			% 9 interleavings tested; 1 preemptions; job time 2s; pldi time 5972944; new-fixed pldi cputime 8418505
+			& 2,3	&\cpu{ 131.91}&\wtm{20.44}&\ints{*73}& \cpu{*8.80}& \wtm{*6.31}& \ints{17	}& \ETA{819} \\
+			% 17 interleavings tested; 1 preemptions; job time 2s; pldi time 6314386; new-fixed pldi cputime 8795639
+			& 2,4	&\cpu{ 255.75}&\wtm{37.56}&\ints{257}& \cpu{*9.72}& \wtm{*7.19}& \ints{33	}& \ETA{6553} \\
+			% 33 interleavings tested; 1 preemptions; job time 3s; pldi time 7193093; new-fixed pldi cputime 9717902
 		\cline{2-9}
-			& 3,1	&\cpu{ 114.06}&\wtm{17.45}&\ints{*15}& \cpu{*9.50}& \wtm{*6.79}& \ints{21	}& \ETA{13653} \\
-			& 3,2	&\cpu{ 109.60}&\wtm{26.16}&\ints{49}& \cpu{*10.72}& \wtm{*7.97}& \ints{49	}& \ETA{393216} \\
-			& 3,3	&\cpu{ 124.80}&\wtm{20.40}&\ints{*73}& \cpu{*13.84}& \wtm{*11.01}& \ints{113	}& \ETA{11010048} \\
-			& 3,4	&\cpu{ 227.49}&\wtm{35.15}&\ints{*161}& \cpu{*31.37}& \wtm{*28.53}& \ints{257	}& \ETA{301989888} \\
+			& 3,1	&\cpu{ 114.06}&\wtm{17.45}&\ints{*15}& \cpu{*8.15}& \wtm{*5.71}& \ints{5	}& \ETA{76} \\
+			% 5 interleavings tested; 1 preemptions; job time 2s; pldi time 5710637; new-fixed pldi cputime 8153919
+			& 3,2	&\cpu{ 109.60}&\wtm{26.16}&\ints{49}& \cpu{*8.37}& \wtm{*5.91}& \ints{9	}& \ETA{3686} \\
+			% 9 interleavings tested; 1 preemptions; job time 2s; pldi time 5907009; new-fixed pldi cputime 8367804
+			& 3,3	&\cpu{ 124.80}&\wtm{20.40}&\ints{*73}& \cpu{*8.71}& \wtm{*6.26}& \ints{17	}& \ETA{176947} \\
+			% 17 interleavings tested; 1 preemptions; job time 2s; pldi time 6263778; new-fixed pldi cputime 8711332
+			& 3,4	&\cpu{ 227.49}&\wtm{35.15}&\ints{*161}& \cpu{*10.36}& \wtm{*7.15}& \ints{33	}& \ETA{8493465} \\
+			% 33 interleavings tested; 1 preemptions; job time 3s; pldi time 7153968; new-fixed pldi cputime 10355961
 		\cline{2-9}
-			& 4,1	&\cpu{ 53.08}&\wtm{9.79}&\ints{*15}& \cpu{*9.82}& \wtm{*7.00}& \ints{21	}& \ETA{873813} \\
-			& 4,2	&\cpu{117.07}&\wtm{19.09}&\ints{*33}& \cpu{*11.54}& \wtm{*8.55}& \ints{49	}& \ETA{100663296} \\
+			& 4,1	&\cpu{ 53.08}&\wtm{9.79}&\ints{*15}& \cpu{*7.77}& \wtm{*5.30}& \ints{5	}& \ETA{460} \\
+			% 5 interleavings tested; 1 preemptions; job time 2s; pldi time 5295360; new-fixed pldi cputime 7770389
+			& 4,2	&\cpu{117.07}&\wtm{19.09}&\ints{*33}& \cpu{*8.32}& \wtm{*5.59}& \ints{9	}& \ETA{132710} \\
+			% 132710 9 interleavings tested; 1 preemptions; job time 2s; pldi time 5588002; new-fixed pldi cputime 8317173
 		\hline
 		{\tt swapbug}
-			& 2,1	&\cpu{ 70.95}&\wtm{13.45}&\ints{*16}& \cpu{*38.96}& \wtm{*13.15}& \ints{109	}& \ETA{194} \\
+			& 2,1	&\cpu{ 70.95}&\wtm{13.45}&\ints{*16}& \cpu{*28.32}& \wtm{*11.29}& \ints{33	}& \ETA{73} \\
+			% 33 interleavings tested; 1 preemptions; job time 3s; pldi time 11286074; new-fixed pldi cputime 28324164
 		(deadlock)
-			& 2,2	&\cpu{ 107.28}&\wtm{*17.45}&\ints{*146}& \cpu{*44.73}& \wtm{19.47}& \ints{281	}& \ETA{1620} \\
-			& 2,3	&\cpu{ 280.05}&\wtm{38.70}&\ints{*352}& \cpu{*60.30}& \wtm{*35.55}& \ints{718	}& \ETA{12748} \\
-			& 2,4	&\cpu{ 617.94}&\wtm{*81.50}&\ints{*834}& \cpu{*108.58}& \wtm{82.60}& \ints{1820	}& \ETA{97823} \\
+			& 2,2	&\cpu{ 107.28}&\wtm{*17.45}&\ints{*146}& \cpu{*30.55}& \wtm{13.50}& \ints{85	}& \ETA{860} \\
+			% 85 interleavings tested; 1 preemptions; job time 5s; pldi time 13499606; new-fixed pldi cputime 30550037
+			& 2,3	&\cpu{ 280.05}&\wtm{38.70}&\ints{*352}& \cpu{*32.27}& \wtm{*19.42}& \ints{217	}& \ETA{9120} \\
+			% 217 interleavings tested; 1 preemptions; job time 11s; pldi time 19419243; new-fixed pldi cputime 37272562
+			& 2,4	&\cpu{ 617.94}&\wtm{*81.50}&\ints{*834}& \cpu{*53.44}& \wtm{35.80}& \ints{537	}& \ETA{91239} \\
+			% 537 interleavings tested; 1 preemptions; job time 27s; pldi time 35796053; new-fixed pldi cputime 53441873
 		\cline{2-9}
-			& 3,1	&\cpu{*1275.04}&\wtm{*163.42}&\ints{*771}&\ETA{--}&\ETA{>30m}&\ETA{--}& \ETA{184984} \\
-			& 3,2	&\ETA{--}&\ETA{>30m}&\ETA{--}&\ETA{--}&\ETA{>30m}&\ETA{--}& \ETA{3099225} \\
+			& 3,1	&\cpu{*1275.04}&\wtm{*163.42}&\ints{*771}&\cpu{*65.13}& \wtm{52.23}& \ints{980   }& \ETA{3417} \\
+			% 980 interleavings tested; 2 preemptions; job time 40s; pldi time 52225013; new-fixed pldi cputime 65125824
+			& 3,2	&\ETA{--}&\ETA{>30m}&\ETA{--}&\ETA{--}&\ETA{>1h}&\ETA{--}& \ETA{2256553} \\
+			% [JOB 8] progress: 63137/2256553 brs (2.797940%), ETA 130d 19h 28m 29s (elapsed 59m 45s)
 		\hline
 		{\tt avl\_insert}
-			& 2,2	&\cpu{488.07}&\wtm{64.77}&\ints{*83}	&\cpu{*81.00}&\wtm{*40.30}&\ints{336}&\ETA{379982} \\
+			& 2,2	&\cpu{488.07}&\wtm{64.77}&\ints{*83}	&\cpu{*66.32}&\wtm{*31.81}&\ints{127}&\ETA{254078} \\
 		(segfault+)
-			& 2,3	&\cpu{2670.87}&\wtm{*330.45}&\ints{*3066}&\cpu{*1331.79}&\wtm{1274.36}&\ints{13926}&\ETA{96248131} \\
-			& 2,4	&\cpu{*3259.37}&\wtm{*436.50}&\ints{*1639}&\ETA{--}&\ETA{>30m}&\ETA{--}& \ETA{36019973} \\
+			& 2,3	&\cpu{2670.87}&\wtm{*330.45}&\ints{*3066}&\cpu{*256.94}&\wtm{193.71}&\ints{1391}&\ETA{22773586} \\
+			& 2,4	&\cpu{*3259.37}&\wtm{*436.50}&\ints{*1639}&\ETA{--}&\ETA{>1h}&\ETA{--}& \ETA{91704203} \\
+			% [JOB 12] progress: 28140/91704203 brs (0.030686%), ETA 18y 54d 18h 42m 58s (elapsed 51m 12s)
 		\cline{2-9}
-			& 3,1	&\cpu{222.02}&\wtm{40.04}&\ints{*28}	&\cpu{*69.99}&\wtm{*24.25}&\ints{78}&\ETA{1572107} \\
-			& 3,2	&\cpu{*1569.09}&\wtm{*216.85}&\ints{*209}&\ETA{--}&\ETA{>30m}&\ETA{--}& \ETA{1402363529} \\
+			& 3,1	&\cpu{222.02}&\wtm{40.04}&\ints{*28}	&\cpu{*64.70}&\wtm{*25.59}&\ints{53}&\ETA{343250} \\
+			% 53 interleavings tested; 3 preemptions; job time 6s; pldi time 25585758; new-fixed pldi cputime 64695226
+			& 3,2	&\cpu{*1569.09}&\wtm{*216.85}&\ints{*209}&\ETA{--}&\ETA{>1h}&\ETA{--}& \ETA{466977272} \\
+			%[JOB 38] progress: 3812/466977272 brs (0.000816%), ETA INF (elapsed 13m 50s)
 		\hline
-			\multicolumn{9}{c}{\em everything above this line needs rerun} \\ \hline
+			\multicolumn{5}{c}{\em every quicksand above this line needs rerun} \\ \hline
 		{\tt lock\_fast}
 		%({\tt spinlock})
 			& 2,1	&\cpu{10.48}&\wtm{3.22}&\ints{2}&\cpu{*2.98}&\wtm{*2.98}&\ints{2}& \ETA{8} \\
@@ -760,6 +785,10 @@ as well as to prioritize the maximal state space, %(\sect{\ref{sec:landslide-qui
 shown right,
 % TODO: make 1 hour
 each with a time limit of 30 minutes.
+Tests {\tt htm1}, {\tt swapbug}, and {\tt avl\_insert} were run with {\tt landslide -X}
+(i.e., retry aborts enabled and different abort codes not distinguished);
+{\tt lock\_fast} was run with {\tt landslide -X -A -S}
+(i.e., suppressing retry aborts, due to the spinlock's use of a retry loop confirmed with manual inspection).
 
 \subsubsection{Finding bugs quickly}
 
@@ -1123,9 +1152,10 @@ had on even the correctness tests:
 			& 2,1 & \cpu{14.23} & \ints{41} \\
 			({\tt spinlock})
 			& 2,2 & \cpu{4944.37} & \ints{38544} \\
-			& 2,3 & \\ % \cpu{0} & \ints{0} \\
-			& 3,1 & \\ % \cpu{0} & \ints{0} \\ % TODO currently running, i think,
-			& 3,2 & \\ % \cpu{0} & \ints{0} \\
+			% if lock(spin_fixed) will time out on 2,3 and 3,2, this is guaranteed to aswell
+			% & 2,3 & \\ % \cpu{0} & \ints{0} \\
+			& 3,1 & \cpu{13649.32} & \ints{97462} \\
+			% & 3,2 & \\ % \cpu{0} & \ints{0} \\
 			% new spinlock test resulce - htm_spinlock
 			% (2,1) without isfree fix
 			%%%% total time elapsed: 9s
@@ -1145,7 +1175,8 @@ had on even the correctness tests:
 			& 2,2 & \cpu{1662.21} & \ints{15076} \\
 			& 2,3 & \ETAdag{3d 20h} & \ETAdag{2003906} \\
 			& 3,1 & \cpu{2488.95} & \ints{24970} \\
-			& 3,2 & \\ % \cpu{0} & \ints{0} \\
+			& 3,2 & \ETAdag{207d 20h} & \ETAdag{6514618} \\
+			& 4,1 & \\ % TODO
 			% (2,1) with isfree fix
 			%%%% total time elapsed: 10s
 			%%%% [JOB 4] COMPLETE (31 interleavings tested; 2s elapsed)
@@ -1162,6 +1193,9 @@ had on even the correctness tests:
 			%%%% total time elapsed: 41m 26s
 			%%%% [JOB 4] COMPLETE (24790 interleavings tested; 41m 18s elapsed)
 			%%%% total CPU time consumed: 41m 28s (2488953483 usecs) (core saturation: 25%)
+			% (3,2)
+			% [JOB 4] progress: 187522/6514618 brs (2.878480%), ETA 207d 20h 23m 10s (elapsed 9h 59m 51s)
+			% [JOB 4] TIMED OUT (2.878480%; ETA 207d 20h 23m 10s)
 			\hline
 			{\tt lock}
 			& 2,1 & \cpu{9.42} & \ints{22}	\\
