@@ -795,9 +795,9 @@ but the previously-published verification results should be considered outdated.
 		\hline
 		{\tt lock\_fast}
 		%({\tt spinlock})
-			& 2,1	&\cpu{10.48}&\wtm{3.22}&\ints{2}&\cpu{*2.98}&\wtm{*2.98}&\ints{2}& \ETA{8} \\
+			& 2,1	&\cpu{8.17}&\wtm{2.65}&\ints{2}&\cpu{*2.39}&\wtm{*2.39}&\ints{2}& \ETA{4} \\
 		(perf)
-			& 9,9	&\cpu{37.41}&\wtm{9.96}&\ints{2}&\cpu{*4.93}&\wtm{*4.93}&\ints{2}& \ETA{inf} \\
+			& 9,9	&\cpu{36.64}&\wtm{9.78}&\ints{2}&\cpu{*4.75}&\wtm{*4.75}&\ints{2}& \ETA{inf} \\
 	\end{tabular}
 	\end{center}
 	\caption{Landslide's bug-finding performance on various test configurations.
@@ -1165,10 +1165,22 @@ summing the testing times of {\tt lock}({\tt mutex})$(K,N)$ and {\tt avl\_mutex}
 produces the same verification as {\tt avl\_fixed}$(K,N)$ far more cheaply.
 Furthermore, {\tt lock}'s verification can be reused,
 whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex verification between them.
-Note also the impact that fixing Figure~\ref{fig:spinlockbug}'s performance bug
+
+Note two curiosities:
+firstly,
+the impact that fixing Figure~\ref{fig:spinlockbug}'s performance bug
 (changing a read+write to a read only)
 had on even the correctness tests:
 {\tt lock}({\tt spin\_fixed})'s state spaces were reduced by more than half compared to {\tt lock}({\tt spinlock}).
+Secondly, {\tt spinlock} and {\tt spin\_fixed} take longer to test per interleaving
+(CPU time divided by state space size)
+than {\tt mutex},
+because while {\tt mutex} abstracts away threads needing to wait their turn for the critical section
+behind an API Landslide understands,
+the spinlock's wait loop is open-coded, and Landslide must fall back on its costlier heuristic synchronization detection
+(\sect{\ref{sec:landslide-blocking}}).
+In this way (and also, of course, because {\tt mutex}'s state spaces are smaller overall),
+{\tt mutex} can be seen in turn as a further abstraction reduction of {\tt spinlock}.
 
 \begin{table}[h]
 	\begin{center}
@@ -1186,12 +1198,12 @@ had on even the correctness tests:
 			\hline
 			\hline
 			{\tt lock}
-			& 2,1 & \cpu{14.23} & \ints{41} \\
+			& 2,1 & \cpu{2.49} & \ints{4} \\ % certified causality ok
 			({\tt spinlock})
-			& 2,2 & \cpu{4944.37} & \ints{38544} \\
+			& 2,2 & \cpu{174.26} & \ints{1702} \\ % certified causality ok
 			% if lock(spin_fixed) will time out on 2,3 and 3,2, this is guaranteed to aswell
 			% & 2,3 & \\ % \cpu{0} & \ints{0} \\
-			& 3,1 & \cpu{13649.32} & \ints{97462} \\
+			& 3,1 & \cpu{26.97} & \ints{246} \\ % certified causality ok
 			% & 3,2 & \\ % \cpu{0} & \ints{0} \\
 			% new spinlock test resulce - htm_spinlock
 			% (2,1) without isfree fix
@@ -1207,12 +1219,12 @@ had on even the correctness tests:
 			% [JOB 4] progress: 39726/83689 brs (47.468314%), ETA 3h 27m 10s (elapsed 1h 30m 21s)
 			\hline
 			{\tt lock}
-			& 2,1 & \cpu{12.26} & \ints{31} \\
+			& 2,1 & \cpu{2.47} & \ints{4} \\ % certified causality ok
 			({\tt spin\_fixed})
-			& 2,2 & \cpu{1662.21} & \ints{15076} \\
-			& 2,3 & \ETAdag{3d 20h} & \ETAdag{2003906} \\
-			& 3,1 & \cpu{2488.95} & \ints{24970} \\
-			& 3,2 & \ETAdag{207d 20h} & \ETAdag{6514618} \\
+			& 2,2 & \cpu{94.64} & \ints{998} \\ % certified causality ok
+			& 2,3 & \ETAdag{todo} & \ETAdag{todo} \\
+			& 3,1 & \cpu{218.02} & \ints{185} \\ % certified causality ok
+			& 3,2 & \ETAdag{todo} & \ETAdag{todo} \\
 			& 4,1 & \\ % TODO
 			% (2,1) with isfree fix
 			%%%% total time elapsed: 10s
@@ -1235,14 +1247,15 @@ had on even the correctness tests:
 			% [JOB 4] TIMED OUT (2.878480%; ETA 207d 20h 23m 10s)
 			\hline
 			{\tt lock}
-			& 2,1 & \cpu{9.42} & \ints{22}	\\
+			& 2,1 & \cpu{2.49} & \ints{4}		\\ % certified causality ok
 			({\tt mutex})
-			& 2,2 & \cpu{44.07} & \ints{1208}	\\
-			& 2,3 & \cpu{2647.38} & \ints{71136}	\\
-			& 2,4 & \ETAdag{2d 1h} & \ETAdag{3223055}	\\
-			& 3,1 & \cpu{42.11} & \ints{1148}	\\
-			& 3,2 & \ETAdag{11d 4h} & \ETAdag{4793666}	\\
-			& 4,1 & \cpu{5586.37} & \ints{159664}	\\
+			& 2,2 & \cpu{12.72} & \ints{180}	\\ % certified causality ok
+			& 2,3 & \cpu{273.45} & \ints{8356}	\\ % certified causality ok
+			& 2,4 & \ETAdag{todo} & \ETAdag{todo}	\\
+			& 3,1 & \cpu{11.21} & \ints{132}	\\ % certified causality ok
+			& 3,2 & \ETAdag{todo} & \ETAdag{todo}	\\
+			& 4,1 & \cpu{493.38} & \ints{15064}	\\ % certified causality ok
+			& 4,2 & \\ % TODO maybe?????? well its 10hrs
 			%%%%%%%%%%% htm_mutex
 			%%%% -- nb. these numbers were obtained with a oops-exploded state space
 			%%%% from a misplaced assert on hm->held
@@ -1295,14 +1308,14 @@ had on even the correctness tests:
 			% total CPU time consumed: 1h 33m 6s (5586369677 usecs) (core saturation: 25%)
 			\hline
 			{\tt lock\_fast}
-			& 2,1 & \cpu{2.96} & \ints{1}	\\
+			& 2,1 & \cpu{2.42} & \ints{1}	\\
 			({\tt spin\_fixed})
-			& 9,9 & \cpu{4.33} & \ints{1}	\\
+			& 9,9 & \cpu{3.69} & \ints{1}	\\
 			\hline
 			{\tt lock\_fast}
-			& 2,1 & \cpu{3.05} & \ints{1}	\\
+			& 2,1 & \cpu{2.35} & \ints{1}	\\
 			({\tt mutex})
-			& 9,9 & \cpu{4.38} & \ints{1}	\\
+			& 9,9 & \cpu{3.79} & \ints{1}	\\
 			%\end{tabular}
 			%&
 			%\begin{tabular}{cc||r|r}
