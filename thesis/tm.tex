@@ -469,11 +469,19 @@ in which case not added to {\tt xabort\_codes\_todo} to avoid duplicate work.
 		representing either STM's policy of failing only when a true memory conflict arises,
 		or a TSX user wrapping all their {\tt \_xbegin()}s in a retry loop such as in \cite{sigbovik-htm}.
 	\item {\tt \_XABORT\_CONFLICT}:
-		Whenever DPOR detects a memory conflict between two preemption points ({\tt shimsham\_shm()}),
+		Whenever DPOR detects a memory conflict between two transitions ({\tt shimsham\_shm()}),
 		if {\tt -A} is set,
-		for each of the two which are within a transaction,
-		it finds the nearest ancestor {\tt xbegin} preemption point by the same thread
-		and adds this code to both lists.
+		% for each of the two which are within a transaction, % no!!!!!!!
+		%it finds the nearest ancestor {\tt xbegin} preemption point by the same thread
+		if the later-executed transition is a transactional success path,
+		it adds this code to both lists of the immediately preceding preemption point.
+		Note that a transaction should suffer a conflict abort
+		only when executed {\em after} a conflicting memory access
+		to avoid circular causality
+		(see {\tt 410user/progs/htm\_causality.c} for rationale).
+		Should the transaction happen to be executed first,
+		DPOR will first try to reorder it as normal,
+		and then abort it as described if the conflict persists.
 	\item {\tt \_XABORT\_EXPLICIT}:
 		Whenever the program invokes {\tt \_xabort()} ({\tt sched\_update\_user\_\allowbreak{}state\_machine()}),
 		if {\tt -A} is set,
@@ -522,8 +530,19 @@ to force {\tt \_xbegin()} to return the provided code.
 % (which automatically takes care of the first half of the sleep set problem)
 % whereas no such similar heuristic exists (can exist??) for xbegin PPs, we always just run the success path first
 
+% don't forget to note that this only applies to xabort retry;
+
+The proof of soundness for this optimization is left to future work;
+while the basic idea is motivated by straightforward analogy to the known-sound sleep sets,
+its intersection with Landslide's other exploration features may cause unforeseen problems.
+Accordingly, I implemented the optimization as conservatively as possible,
+falling back to no pruning in cases where how to prune soundly is not clear
+(for example, when a second pair of conflicting transactions involving a third thread
+interleaves while a first abort set is already being tracked).
+
 % TODO
 
+% TODO - rewrite the following example so that it only uses retry aborts
 % ok so heres an example of why this is rly hard
 
 % ==== thread 1 ====
