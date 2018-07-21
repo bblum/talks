@@ -707,7 +707,7 @@ but the previously-published verification results should be considered outdated.
 \newcommand\ints[1]{\hilight{pinkish}{{#1}}\xspace}
 \newcommand\ETAdag[1]{\ETA{\ensuremath{\dagger}#1}}
 
-\subsection{Bugs}
+\subsection{Bug-finding}
 \label{sec:tm-eval-bugs}
 
 \begin{table*}[p]
@@ -1222,7 +1222,7 @@ In this way (and also, of course, because {\tt mutex}'s state spaces are smaller
 			& 2,1 & \cpu{2.47} & \ints{4} \\ % certified causality ok
 			({\tt spin\_fixed})
 			& 2,2 & \cpu{94.64} & \ints{998} \\ % certified causality ok
-			& 2,3 & \ETAdag{todo} & \ETAdag{todo} \\
+			& 2,3 & \ETAdag{todo} & \ETAdag{todo} \\ % seems like a 1-4 hour job
 			& 3,1 & \cpu{218.02} & \ints{185} \\ % certified causality ok
 			& 3,2 & \ETAdag{todo} & \ETAdag{todo} \\
 			& 4,1 & \\ % TODO
@@ -1251,9 +1251,9 @@ In this way (and also, of course, because {\tt mutex}'s state spaces are smaller
 			({\tt mutex})
 			& 2,2 & \cpu{12.72} & \ints{180}	\\ % certified causality ok
 			& 2,3 & \cpu{273.45} & \ints{8356}	\\ % certified causality ok
-			& 2,4 & \ETAdag{todo} & \ETAdag{todo}	\\
+			& 2,4 & \cpu{13545.35} & \ints{384512}	\\ % certified causality ok
 			& 3,1 & \cpu{11.21} & \ints{132}	\\ % certified causality ok
-			& 3,2 & \ETAdag{todo} & \ETAdag{todo}	\\
+			& 3,2 & \cpu{25434.85} & \ints{718690}	\\ % certified causality ok
 			& 4,1 & \cpu{493.38} & \ints{15064}	\\ % certified causality ok
 			& 4,2 & \\ % TODO maybe?????? well its 10hrs
 			%%%%%%%%%%% htm_mutex
