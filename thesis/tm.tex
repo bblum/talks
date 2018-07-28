@@ -695,7 +695,7 @@ I pose the following evaluation questions.
 		so this was the most convenient test suite to evaluate it on.}
 	\item How well does Landslide's verification scale
 		with increasing thread/iteration count for correct transactional programs?
-	\item What further reduction can be achieved beyond that provided by
+	\item What further reduction can be achieved beyond the baseline provided by
 		the global-lock/failure-injection equivalences?
 	%\item By the way, should MC research papers quantify variance in their CPU-time performance experiments?
 \end{enumerate}
@@ -719,6 +719,9 @@ as follows.
 		\item {\tt counter}: Microbenchmark version of {\tt htm2} which replaces the complex locking failure path with an atomic {\tt xadd}, from \cite{tm-benchmark-cmu}.
 		\item {\tt swap}: Microbenchmark that swaps values in an array, from \cite{tm-benchmark-cmu}.
 		\item {\tt swapbug}: {\tt swap} modified to introduce circular locking in the failure path. %(deadlock).
+			% TODO: make sure figure number reference is right
+		\item {\tt fig63}: Generalized version of Figure~\ref{fig:retry-set-example},
+			contrived to induce as much reduction as possible from the retry sets optimization.
 	\end{itemize}
 	\item Data structure tests
 	\begin{itemize}
@@ -1123,12 +1126,18 @@ in Table~\ref{tab:verifs}.
 			& 2,2 & \cpu{10299.27}	& \ints{233396}	\\
 			& 3,1 & \ETAdag{todo} & \ETAdag{todo}	\\
 			\hline
+			{\tt fig63}
+			& 2,1 & \cpu{todo}	& \ints{todo}	\\
+			& 2,2 & \cpu{todo}	& \ints{todo}	\\
+			& 3,2 & \ETAdag{todo} & \ETAdag{todo}	\\
+			\hline
 			{\tt avl\_insert}
 			& 2,1 & \cpu{491.98}	& \ints{15056}	\\
 			\hline
 			{\tt avl\_fixed}
 			& 2,1 & \cpu{572.49} 	& \ints{20420} 	\\
-			& 2,2 & \ETAdag{todo}	& \ETAdag{todo} 	\\
+			& 2,2 & \ETAdag{133y}	& \ETAdag{51484570} 	\\ % added 10hr but dosent matter
+			% [JOB 19] progress: 408805/51484570 brs (0.794034%), ETA 132y 356d 8h 55m 16s (elapsed 9h 59m 19s)
 			& 3,1 & \ETAdag{todo}	& \ETAdag{todo}	\\
 
 			\hline
@@ -1242,10 +1251,12 @@ firstly,
 the impact that fixing Figure~\ref{fig:spinlockbug}'s performance bug
 (changing a read+write to a read only)
 had on even the correctness tests:
-{\tt lock}({\tt spin\_fixed})'s state spaces were reduced by more than half compared to {\tt lock}({\tt spinlock}).
+{\tt lock}({\tt spin\_fixed})'s state spaces were reduced by more than half compared to {\tt lock}({\tt spinlock}),
+on account of DPOR no longer needing to reorder the (now) read-read access pairs.
 Secondly, {\tt spinlock} and {\tt spin\_fixed} take longer to test per interleaving
-(CPU time divided by state space size)
-than {\tt mutex},
+%(CPU time divided by state space size)
+than {\tt mutex}
+(roughly 9 interleavings per second for the former, 28 for the latter),
 because while {\tt mutex} abstracts away threads needing to wait their turn for the critical section
 behind an API Landslide understands,
 the spinlock's wait loop is open-coded, and Landslide must fall back on its costlier heuristic synchronization detection
@@ -1295,9 +1306,10 @@ In this way (and also, of course, because {\tt mutex}'s state spaces are smaller
 			& 2,2 & \cpu{94.64} & \ints{998} \\ % certified causality ok
 			& 2,3 & \ETAdag{28h 6m} & \ETAdag{486966} \\ % certified causality ok, add 10h ok
 			% [JOB 4] progress: 234307/486966 brs (48.115630%), ETA 18h 5m 37s (elapsed 9h 59m 50s)
-			& 3,1 & \cpu{218.02} & \ints{185} \\ % certified causality ok
-			& 3,2 & \ETAdag{todo} & \ETAdag{todo} \\
-			& 4,1 & \\ % TODO
+			& 3,1 & \cpu{21.68} & \ints{186} \\ % certified causality ok
+			& 3,2 & \ETAdag{8y 153d} & \ETAdag{1590416} \\ % caus ok
+			% [JOB 4] progress: 187162/1590416 brs (11.768113%), ETA 8y 152d 16h 25m 38s (elapsed 9h 59m 49s)
+			& 4,1 & \cpu{30408.58} & \ints {282084} \\ % causality ok
 			% (2,1) with isfree fix
 			%%%% total time elapsed: 10s
 			%%%% [JOB 4] COMPLETE (31 interleavings tested; 2s elapsed)
@@ -1327,7 +1339,6 @@ In this way (and also, of course, because {\tt mutex}'s state spaces are smaller
 			& 3,1 & \cpu{11.21} & \ints{132}	\\ % certified causality ok
 			& 3,2 & \cpu{25434.85} & \ints{718690}	\\ % certified causality ok
 			& 4,1 & \cpu{493.38} & \ints{15064}	\\ % certified causality ok
-			& 4,2 & \\ % TODO maybe?????? well its 10hrs
 			%%%%%%%%%%% htm_mutex
 			%%%% -- nb. these numbers were obtained with a oops-exploded state space
 			%%%% from a misplaced assert on hm->held
