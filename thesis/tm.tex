@@ -496,14 +496,15 @@ in which case not added to {\tt xabort\_codes\_todo} to avoid duplicate work.
 		and execution of the transactional path immediately stops.
 \end{itemize}
 
+{\bf Limitations.}
 Landslide does not yet check for false sharing,
-i.e. read/write or write/write access pairs to different memory addresses that share a cache line.
+i.e. read/write or write/\allowbreak{}write access pairs to different memory addresses that share a cache line.
 On real hardware, these would produce {\tt \_XABORT\_CONFLICT} failures,
 but to find such access pairs would require extending {\tt mem\_shm\_intersect()}'s set intersection algorithm
 to consider a certain degree of ($N$-byte-aligned) fuzziness when comparing addresses,
 as well as adding a command-line option to configure said $N$, the cache-line size to simulate.
 For now, Landslide (wrongly) lumps false sharing in among the ``spurious'' {\tt \_XABORT\_RETRY} failure reasons.
-
+%
 On HTM, even if the user wraps all such spurious failure reasons in a retry loop,
 false sharing should still produce a non-retryable abort,
 begetting a discrepancy with STM,
@@ -511,6 +512,14 @@ which aborts only when the memory addresses match exactly.
 Accordingly, the {\tt -S} option described above provides STM semantics as currently implemented.
 Future work could extend Landslide with an option to configure false sharing conflicts
 to remain faithful to HTM semantics and still abort even under {\tt -S}.
+
+Likewise, Landslide does not check for a transaction's memory footprint exceeding the CPU's cache capacity,
+which on real hardware would trigger a {\tt \_XABORT\_CAPACITY} abort.
+Landslide's memory tracking could simulate this check as well,
+perhaps with a configurable cache size,
+but the implementation would likely be theoretically uninteresting
+(all programs in the upcoming evaluation have trivial memory usage),
+and so is left to future work.
 
 \subsubsection{Injecting abort codes}
 When traversing the state space (\sect{\ref{sec:landslide-statespace}}),
