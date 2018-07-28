@@ -487,7 +487,13 @@ in which case not added to {\tt xabort\_codes\_todo} to avoid duplicate work.
 		Whenever the program invokes {\tt \_xabort()} ({\tt sched\_update\_user\_\allowbreak{}state\_machine()}),
 		if {\tt -A} is set,
 		this code is added to both lists, bitwise-ored with the user-supplied argument code
-		as specified in \cite{htm-gcc}.
+		as specified in \cite{htm-gcc},
+		and execution of the transactional path immediately stops.
+	\item {\tt \_XABORT\_CAPACITY}:
+		Whenever the program invokes a system call during a transaction,
+		if {\tt -A} is set,
+		this code is added to both lists,
+		and execution of the transactional path immediately stops.
 \end{itemize}
 
 Landslide does not yet check for false sharing,
@@ -613,13 +619,13 @@ after their failure paths are split apart into smaller transitions by data-race 
 
 To solve this,
 I extended Landslide
-with an experimental feature called {\em retry set reduction},
-so named after the analogous {\em sleep sets} from prior work
+with {\em retry set reduction},
+an experimental feature named after the analogous {\em sleep sets} from prior work
 (\cite{partial-order-methods,dpor,optimal-dpor}, \sect{\ref{sec:landslide-sleepsets}}).
 Whenever DPOR tags a new branch for exploration (\sect{\ref{sec:landslide-explore}}),
 if either or both sides of a memory conflict were part of a transaction,
 it records a {\em retry set},
-i.e., a pair of {\tt xbegin} results executed by the conflicting threads.
+i.e., the pair of {\tt xbegin} results executed by the conflicting threads.
 % ah-- not compatible after all!
 %in addition to tracking the set of abort codes possible at each preemption point.
 Later, when traversing that new branch,
@@ -628,7 +634,8 @@ and refuses to test any others
 (unless DPOR separately found them, too, in conflict),
 thereby skipping over (i.e., pruning) reorderings of any other {\tt xbegin} results that would be independent.
 The {\tt landslide} repository's {\tt retry-sets} branch implements this feature%
-\footnote{The upcoming evaluation showed it too unstable, let alone not yet proved sound, to include in {\tt master}.}.
+\footnote{The upcoming evaluation showed it too unstable, let alone not yet proved sound, to include in {\tt master}.},
+available with the {\tt -R} command-line option.
 
 % In contrast to Landslide's implementation of the sleep set reduction (\sect{\ref{sec:landslide-explore}}),
 % blah blah which is implicit and works in retrospect by pruning at tag-sibling time, which figures out what would have been in a sleep set by analyzing the past independences and explored siblings,
@@ -1094,48 +1101,67 @@ I simply present their state space sizes and runtime
 (measured under {\tt -M})
 in Table~\ref{tab:verifs}.
 
+% TODO
+% discuss the diff reducion approaches
+
+% Please note that retry sets are a theoretically-founded reduction that should apply to all programs,
+% while distinguishing abort codes to suppress retries is potentially unsound,
+% depending on the user's ability to manually verify the presence (and correctness) of retry loops in the code.
+
 \begin{table}[h]
 	\begin{center}
 		\footnotesize
-		\begin{tabular}{cc|r|r}
-			& & \cpu{\bf cpu (s)} & \ints{\bf SS size} \\
-			\bf test & \bf params & \em (or \ETAdag{\bf \em ETA}) & \em (or \ETAdag{\bf \em est.}) \\
+		\begin{tabular}{cc||r|r||r|r||r|r}
+			& & \multicolumn{2}{c||}{\bf Retry aborts only}
+			  & \multicolumn{2}{c||}{\bf Retry sets ({\tt -R})}
+			  & \multicolumn{2}{c}{\bf Abort codes ({\tt -A -S})} \\
+			& & \cpu{\bf cpu (s)} & \ints{\bf SS size}
+			  & \cpu{\bf cpu (s)} & \ints{\bf SS size}
+			  & \cpu{\bf cpu (s)} & \ints{\bf SS size} \\
+			\bf test & \bf params
+			  & \em (or \ETAdag{\bf \em ETA}) & \em (or \ETAdag{\bf \em est.})
+			  & \em (or \ETAdag{\bf \em ETA}) & \em (or \ETAdag{\bf \em est.})
+			  & \em (or \ETAdag{\bf \em ETA}) & \em (or \ETAdag{\bf \em est.}) \\
 			\hline
 			\hline
 			{\tt htm2}
-			& 2,1 & \cpu{16.30}	& \ints{22}	\\
-			& 2,2 & \cpu{69.80}	& \ints{1970}	\\
-			& 2,3 &\cpu{3510.00}	& \ints{104914}	\\
+			& 2,1 & \cpu{16.30}	& \ints{22}	& \cpu{19.82}	& \ints{17}	& \cpu{3.32}	& \ints{4} \\
+			& 2,2 & \cpu{69.80}	& \ints{1970}	& \cpu{38.71}	& \ints{906}	& \cpu{26.59}	& \ints{288} \\
+			& 2,3 &\cpu{3510.00}	& \ints{104914}	& \cpu{}	& \ints{}	& \cpu{}	& \ints{} \\
 			%& 2,4 &	\ETAdag{...}	& \ETAdag{...}	\\
-			& 3,1 &\cpu{41.07}	& \ints{941}	\\
+			& 3,1 &\cpu{41.07}	& \ints{941}	& \cpu{29.38}	& \ints{553}	& \cpu{23.03}	& \ints{162} \\
 			& 3,2 &	\ETAdag{9d 19h}	& \ETAdag{5058149}	\\ % add 10h ok
 			% [JOB 4] progress: 923822/5058149 brs (18.264030%), ETA 9d 8h 30m 38s (elapsed 9h 59m 55s)
-			& 4,1 & \cpu{12699.65}	& \ints{344240}	\\
+			& 4,1 & \cpu{12699.65}	& \ints{344240}	& \cpu{}	& \ints{}	& \cpu{}	& \ints{} \\
 			\hline
 			{\tt counter}
-			& 2,1 & \cpu{5.40}	& \ints{10}	\\
-			& 2,2 & \cpu{10.91}	& \ints{190}	\\
-			& 2,3 & \cpu{134.21}	& \ints{3970}	\\
-			& 2,4 & \cpu{3009.40}	& \ints{86950}	\\
-			& 3,1 & \cpu{8.30}	& \ints{120}	\\
-			& 3,2 & \cpu{2038.90}	& \ints{60606}	\\
-			& 4,1 & \cpu{101.95}	& \ints{3006}	\\
+			& 2,1 & \cpu{5.40}	& \ints{10}	& \cpu{6.70}	& \ints{8}	& \cpu{3.22}	& \ints{4} \\
+			& 2,2 & \cpu{10.91}	& \ints{190}	& \cpu{14.91}	& \ints{288}	& \cpu{7.90}	& \ints{48} \\
+			& 2,3 & \cpu{134.21}	& \ints{3970}	& \cpu{379.04}	& \ints{11512}	& \cpu{35.00}	& \ints{904} \\
+			& 2,4 & \cpu{3009.40}	& \ints{86950}	& \cpu{}	& \ints{}	& \cpu{}	& \ints{} \\
+			& 3,1 & \cpu{8.30}	& \ints{120}	& \cpu{8.90}	& \ints{74}	& \cpu{7.55}	& \ints{40} \\
+			& 3,2 & \cpu{2038.90}	& \ints{60606}	& \cpu{}	& \ints{}	& \cpu{}	& \ints{} \\
+			& 4,1 & \cpu{101.95}	& \ints{3006}	& \cpu{99.22}	& \ints{2854}	& \cpu{32.95}	& \ints{848} \\
 			\hline
 			{\tt swap}
-			& 2,1 & \cpu{38.79}	& \ints{99}	\\
-			& 2,2 & \cpu{10299.27}	& \ints{233396}	\\
-			& 3,1 & \ETAdag{todo} & \ETAdag{todo}	\\
+			& 2,1 & \cpu{38.79}	& \ints{99}	& \cpu{35.80}	& \ints{84}	& \cpu{3.25}	& \ints{4} \\
+			& 2,2 & \cpu{10299.27}	& \ints{233396}	& \cpu{}	& \ints{}	& \cpu{}	& \ints{} \\
+			& 3,1 & \ETAdag{todo}	& \ETAdag{todo}	& \cpu{}	& \ints{}	& \cpu{}	& \ints{} \\
 			\hline
 			{\tt fig63}
-			& 2,1 & \cpu{todo}	& \ints{todo}	\\
-			& 2,2 & \cpu{todo}	& \ints{todo}	\\
-			& 3,2 & \ETAdag{todo} & \ETAdag{todo}	\\
+			& 2,1 & \cpu{6.66}	& \ints{18}	& \cpu{6.50}	& \ints{6}	& \cpu{3.10}	& \ints{1} \\
+			& 2,2 & \cpu{11.52}	& \ints{244}	& \cpu{10.74}	& \ints{192}	& \cpu{3.12}	& \ints{1} \\
+			& 2,3 & \cpu{107.04}	& \ints{4428}	& \cpu{146.96}	& \ints{6151}	& \cpu{3.13}	& \ints{1} \\
+			& 3,1 & \cpu{13.68}	& \ints{296}	& \cpu{7.29}	& \ints{21}	& \cpu{3.26}	& \ints{1} \\
+			& 3,2 & \ETAdag{todo}	& \ETAdag{todo}	& \cpu{}	& \ints{}	& \cpu{3.35}	& \ints{1} \\
+			& 4,1 & \cpu{220.27}	& \ints{7382}	& \cpu{11.40}	& \ints{157}	& \cpu{3.27}	& \ints{1} \\
 			\hline
 			{\tt avl\_insert}
-			& 2,1 & \cpu{491.98}	& \ints{15056}	\\
+			& 2,1 & \cpu{491.98}	& \ints{15056}	& \cpu{220.53}	& \ints{6332}	& \cpu{98.77}	& \ints{2776} \\
+			% (2,2) - bug found on regular w/ 127 ints, on retry sets w/ 201 ints, and codes w/ 45 ints
 			\hline
 			{\tt avl\_fixed}
-			& 2,1 & \cpu{572.49} 	& \ints{20420} 	\\
+			& 2,1 & \cpu{572.49} 	& \ints{20420} 	& \cpu{271.11}	& \ints{9739}	& \cpu{99.16}	& \ints{2776} \\
 			& 2,2 & \ETAdag{133y}	& \ETAdag{51484570} 	\\ % added 10hr but dosent matter
 			% [JOB 19] progress: 408805/51484570 brs (0.794034%), ETA 132y 356d 8h 55m 16s (elapsed 9h 59m 19s)
 			& 3,1 & \ETAdag{todo}	& \ETAdag{todo}	\\
@@ -1151,7 +1177,11 @@ in Table~\ref{tab:verifs}.
 		\end{tabular}
 	\end{center}
 	\caption{Transactional tests verified (or not) by Landslide.
-		Run with {\tt landslide -M -X}, i.e., retry aborts enabled, different xabort codes not distinguished.
+		Run with {\tt -M -X}, plus any additional reduction options listed.
+		``Retry aborts only'' always tests every abort path without distinguishing among failure reasons;
+		``Retry sets'' skips equivalent retry abort reorderings (\sect{\ref{sec:tm-retrysets}});
+		``Abort codes'' suppresses retries and dynamically detects when to inject conflict aborts and so on
+		(\sect{\ref{sec:txn-abort-codes}}).
 		State space estimates measured after a timeout of 10 hours.
 		}
 	\label{tab:verifs}
