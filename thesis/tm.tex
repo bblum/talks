@@ -766,6 +766,26 @@ I ensured the test machine was not loaded beyond normal web browser use,
 and ran only one instance of Landslide at a time;
 for further discussion of variance see \cite{sigbovik-htm}.
 
+I investigated the popular transactional benchmark suite STAMP \cite{stamp}
+to include in this test suite,
+but found that all transactional code therein was written without failure paths,
+so would likely not contribute any theoretical depth to the evaluation.
+STAMP uses the OpenTM interface \cite{opentm},
+which allows the programmer to specify transactional code regions to be implemented atomically,
+however the underlying architecture may require
+(whether HTM or STM; presumably with retry loops on HTM).
+On one hand,
+this lends credence to my upcoming conclusion
+that HTM programs should be written at a higher abstraction level than calling {\tt \_xbegin()} directly;
+on the other,
+OpenTM's requirement of {\em virtualized transaction} semantics
+(i.e., being unconstrained by memory footprint, able to make system calls, and able to nest arbitrarily)
+is more suited to STM and glosses over many pitfalls of HTM programming.
+%% #overlyhonestmethods
+% I also wanted to test the Eunomia algorithm for transactional search trees \cite{eunomia},
+% but its implementation is not open source,
+% and the authors ignored my email requesting to use it.
+
 Finally, the keen-eyed reader will notice the state space sizes reported here
 differ from those reported in \cite{sigbovik-htm}.
 All experiments have been re-run
