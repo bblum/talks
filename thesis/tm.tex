@@ -453,6 +453,7 @@ while the latter serves as a workqueue that indicates only those not already tes
 (serving an analogous purpose as the {\tt all\_explored} flag for thread scheduling).
 
 \subsubsection{Adding possible abort codes}
+\label{sec:txn-abort-codes}
 
 Up to three abort codes are considered depending on the testing options listed in the previous section.
 All abort codes are simultaneously added to both lists,
@@ -520,56 +521,6 @@ to {\tt cause\_transaction\_failure()},
 which edits the simulation state ({\tt \%eip} and {\tt \%eax})
 to force {\tt \_xbegin()} to return the provided code.
 
-\subsubsection{Tracking abort sets}
-\label{sec:tm-abortsets}
-
-% In contrast to Landslide's implementation of the sleep set reduction (\sect{\ref{sec:landslide-explore}}),
-% blah blah which is implicit and works in retrospect by pruning at tag-sibling time, which figures out what would have been in a sleep set by analyzing the past independences and explored siblings,
-% this cannot work that way,
-% because in the first place, the former works with the "keep running current thread" ordering heuristic,
-% (which automatically takes care of the first half of the sleep set problem)
-% whereas no such similar heuristic exists (can exist??) for xbegin PPs, we always just run the success path first
-
-% don't forget to note that this only applies to xabort retry;
-
-The proof of soundness for this optimization is left to future work;
-while the basic idea is motivated by straightforward analogy to the known-sound sleep sets,
-its intersection with Landslide's other exploration features may cause unforeseen problems.
-Accordingly, I implemented the optimization as conservatively as possible,
-falling back to no pruning in cases where how to prune soundly is not clear
-(for example, when a second pair of conflicting transactions involving a third thread
-interleaves while a first abort set is already being tracked).
-
-% TODO
-
-% TODO - rewrite the following example so that it only uses retry aborts
-% ok so heres an example of why this is rly hard
-
-% ==== thread 1 ====
-% if (xbegin()) {
-% 	xabort(0) // whatever, executed in a past branch to be aborting in the present
-% } else {
-% 	x++;
-% }
-%
-% ==== thread 3 ====
-% conflict_with_thread_2 = true;
-%
-% ==== thread 2 ====
-% if (xbegin()) {
-% 	conflict_with_thread_2 ++ ; // whatever, just conflict and fail w thr 3
-% } else {
-% 	x++; // conf with thr 1
-% }
-%
-% so we execute this interleaving (T1 abort, T3, T2 abort)
-% dpor sees the conflict between T2 and T1 and wants to tag T2 to run as transition(T1-abort)'s sibling to run
-% it would use the "abort set" of (T2 [CONFLICT], T1 [EXPLICIT])
-% but like, how do we know that thread 3 is necessary to reach this?
-% and even, how do we know that it's valid to inject CONFLCIT in T2?
-% you pretty much hafta reorder T3 (dpor doesn't see why you need to)
-% but if you inject conflict in T2 without also making sure T3 executes "near" it, that might not necessarily be sound
-
 \subsection{Data Race Analysis}
 \label{sec:txn-datarace}
 
@@ -588,6 +539,125 @@ it is considered a data race only if at least one thread's {\tt user\_txn} was n
 in addition to the usual conditions; % in multiplication to..? && c.c
 under Pure Happens-Before,
 the vector clocks are simply checked as usual.
+
+\subsection{Retry independence}
+\label{sec:tm-retrysets}
+
+Finally, I identified a specific pattern of transactional code where existing state-space reduction algorithms
+will fail to identify and prune equivalent thread interleavings.
+Figure~\ref{fig:retry-set-example} shows a minimal example program which exhibits this problem.
+In this program, each thread's transactional path conflicts with the other thread's abort path,
+while the two transactional paths (disjoint memory accesses) and the two abort paths (reads only) are pairwise independent.
+
+\begin{figure}[h]
+        \begin{center}
+	% TODO syntax hilight
+        \begin{tabular}{ll}
+		\multicolumn{2}{c}{Initially {\tt \ctype{int} foo, bar = \const{0}; \ctype{mutex\_t} m;}} \\
+                \\
+                \begin{tabular}{l}
+                {\bf Thread 1} \\
+                \hline
+			\texttt{\flow{if} (\call{\_xbegin}() == \const{STARTED}) \{} \\
+			\texttt{~~~~foo++;} \\
+			\texttt{~~~~\call{\_xend}();} \\
+			\texttt{\} \flow{else} \{} \\
+			\texttt{~~~~\call{mutex\_lock}(\&m);} \\
+			\texttt{~~~~\flow{assert}(foo + bar < \const{2});} \\
+			\texttt{~~~~\call{mutex\_unlock}(\&m);} \\
+			\texttt{\}} \\
+                \end{tabular}
+                &
+                \begin{tabular}{l}
+                {\bf Thread 2} \\
+                \hline
+			\texttt{\flow{if} (\call{\_xbegin}() == \const{STARTED}) \{} \\
+			\texttt{~~~~bar++;} \\
+			\texttt{~~~~\call{\_xend}();} \\
+			\texttt{\} \flow{else} \{} \\
+			\texttt{~~~~\call{mutex\_lock}(\&m);} \\
+			\texttt{~~~~\flow{assert}(foo + bar < \const{2});} \\
+			\texttt{~~~~\call{mutex\_unlock}(\&m);} \\
+			\texttt{\}} \\
+                \end{tabular}
+        \end{tabular}
+        \end{center}
+	\caption{Motivating example for retry independence reduction.}
+	\label{fig:retry-set-example}
+\end{figure}
+
+Ordinarily, in the state space subset which schedules thread 1 before thread 2,
+there would be 4 combinations of each thread succeeding or aborting their respective transactions;
+among those, at least one would show a memory conflict,
+causing DPOR to explore into the other half of the state space which schedules thread 2 first,
+where the same 4 combinations of transaction reuslts would be tested in the other order,
+even though 2 are redundant under schedule reordering.
+Consequently, na\"ively testing both success and retry aborts in both threads regardless of reordering
+will unnecessarily execute % oops
+both equivalent interleavings from each such pair;
+to identify such equivalences,
+DPOR must somehow remember which combination of {\tt xbegin} results led to the memory conflict in the first place.
+
+While Figure~\ref{fig:retry-set-example}'s example may seem contrived
+(what program's transactions would just give up and do no work if aborted?),
+it is easy to imagine a larger transactional data structure,
+two insertions into which might operate on disjoint nodes or array indices,
+allowing simultaneous transactions to usually succeed,
+while the more uncommon abort paths might take the opportunity to assert a full consistency check of all elements,
+ultimately resulting in a similar conflict pattern.
+Also, the evaluation will later show
+that even programs with fully conflicting success/abort paths
+may still exhibit some equivalent thread interleavings of this pattern
+after their failure paths are split apart into smaller transitions by data-race preemption points
+(\sect{\ref{sec:tm-eval-retrysets}}).
+
+To solve this,
+I extended Landslide
+with an experimental feature called {\em retry set reduction},
+so named after the analogous {\em sleep sets} from prior work
+(\cite{partial-order-methods,dpor,optimal-dpor}, \sect{\ref{sec:landslide-sleepsets}}).
+Whenever DPOR tags a new branch for exploration (\sect{\ref{sec:landslide-explore}}),
+if either or both sides of a memory conflict were part of a transaction,
+it records a {\em retry set},
+i.e., a pair of {\tt xbegin} results executed by the conflicting threads.
+% ah-- not compatible after all!
+%in addition to tracking the set of abort codes possible at each preemption point.
+Later, when traversing that new branch,
+Landslide remembers those threads' expected {\tt xbegin} results
+and refuses to test any others
+(unless DPOR separately found them, too, in conflict),
+thereby skipping over (i.e., pruning) reorderings of any other {\tt xbegin} results that would be independent.
+The {\tt landslide} repository's {\tt retry-sets} branch implements this feature%
+\footnote{The upcoming evaluation showed it too unstable, let alone not yet proved sound, to include in {\tt master}.}.
+
+% In contrast to Landslide's implementation of the sleep set reduction (\sect{\ref{sec:landslide-explore}}),
+% blah blah which is implicit and works in retrospect by pruning at tag-sibling time, which figures out what would have been in a sleep set by analyzing the past independences and explored siblings,
+% this cannot work that way,
+% because in the first place, the former works with the "keep running current thread" ordering heuristic,
+% (which automatically takes care of the first half of the sleep set problem)
+% whereas no such similar heuristic exists (can exist??) for xbegin PPs, we always just run the success path first
+
+% don't forget to note that this only applies to xabort retry;
+
+The proof of soundness for this optimization is left to future work;
+while the basic idea is motivated by straightforward analogy to the known-sound sleep sets,
+its intersection with Landslide's other exploration features may cause unforeseen problems.
+Accordingly, I implemented the optimization as conservatively as possible,
+falling back to no pruning in cases where how to prune soundly is not clear
+(for example, when a second pair of conflicting transactions involving a third thread
+interleaves while a first retry set is already being tracked).
+Note also that {\tt xbegin} results other than {\tt \_XABORT\_RETRY}
+may depend on the execution logic
+(explicit aborts may be conditional on some change by a conflicting thread,
+and conflict aborts cannot occur before their conflicting transaction to begin with%
+\footnote{See {\tt 410user/progs/htm\_causality.c}; that was a fun realization to have
+already halfway into implementing this feature the wrong way at first.}%
+),
+so how to soundly prune under multiple abort codes
+and/or when retry aborts are suppressed is left to future work.
+For now, retry sets, true to their name,
+are supported only under {\tt landslide -X},
+and incompatible with both the {\tt -A} and {\tt -S} options.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1086,8 +1156,9 @@ in Table~\ref{tab:verifs}.
 While verifying the soundness of Figure~\ref{fig:htm-fixed}'s atomicity protocol is a positive result,
 the previous section's attempts at several larger real-world programs quickly suffered exponential explosion
 for even small thread/iteration counts,
-in one case failing to make any guarantee about even the minimum possible test configuration.
-I explore two possible mitigation approaches.
+in one case failing to make any guarantee about even the minimum possible test configuration,
+and in another failing to verify that a previously-found bug had been fixed.
+I explore three possible mitigation approaches.
 
 \subsubsection{Abstraction reduction}
 
@@ -1120,7 +1191,6 @@ Finally, I parameterized them over how the lock was implemented:
 and {\tt mutex} using Landslide-annotated P2 mutexes (as the AVL and map implementations do).
 
 \begin{figure}[h]
-	% TODO: syn hi
 	\begin{center}
 	\begin{tabular}{p{0.47\textwidth}p{0.5\textwidth}}
 		\begin{tabular}{l}
@@ -1188,7 +1258,7 @@ In this way (and also, of course, because {\tt mutex}'s state spaces are smaller
 		\footnotesize
 		%\begin{tabular}{cc}
 		%\begin{tabular}{cc||r|r||r|r}
-		%	& & \multicolumn{2}{c||}{\bf DPOR} & \multicolumn{2}{c}{\bf DPOR + abort sets} \\
+		%	& & \multicolumn{2}{c||}{\bf DPOR} & \multicolumn{2}{c}{\bf DPOR + retry sets} \\
 		%	& & \cpu{\bf cpu (s)} & \ints{\bf SS size}
 		%	  & \cpu{\bf cpu (s)} & \ints{\bf SS size} \\
 		%	\bf test & \bf params & \em (or \ETAdag{\bf \em ETA}) & \em (or \ETAdag{\bf \em est.})
@@ -1394,17 +1464,16 @@ In this way (and also, of course, because {\tt mutex}'s state spaces are smaller
 		and retry aborts suppressed
 		(both lock implementations include a retry loop).
 		The reduced {\tt avl\_mutex} and {\tt map\_mutex} are, of course, no longer transactional.
-		%% i mean ok xabort sets doesn't really help for ANY test tho
-		%so the abort sets optimization does not apply to them.
 		}
 	\label{tab:verifs2}
 \end{table}
 
-\subsubsection{Abort set reduction}
+\subsubsection{Retry set reduction}
+\label{sec:tm-eval-retrysets}
 
 % TODO
 
-(\sect{\ref{sec:tm-abortsets}}).
+(\sect{\ref{sec:tm-retrysets}}).
 
 % as for the sleep-set-alike optimization,
 % we see it would provide 25% reduction in the example (from thesprop)

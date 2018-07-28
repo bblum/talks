@@ -1325,7 +1325,25 @@ Hence the memory cost of Landslide's DPOR implementation is $O(nk)$,
 $k$ being the maximum runnable threads at any preemption point
 (which in turn is always single digits for model checking tests).
 
-{\bf Further pruning.}
+{\bf Choosing which new interleaving to test next.}
+Among all interleavings chosen by DPOR not already marked as explored,
+Landslide chooses the one with the longest execution prefix matching the current $S$,
+to maintain the depth-first search invariant.
+(In the case of a tie, differing only by which thread to run, it chooses arbitrarily.)
+All other new interleavings are marked to explore later in their corresponding {\tt struct hax},
+and automatically included in the result of any future iterations of DPOR until they are tested.
+Because the one with the longest execution prefix was chosen to test next,
+all others must share their execution prefixes with it,
+preserving the $O(nk)$ memory bound described above.
+%so storing markers for the others during the next execution is still $O(1)$ memory.
+
+{\bf Termination.}
+When DPOR returns no new $I_{ij}$s not already marked in the set of visited subtrees,
+the exploration is complete.
+
+\subsubsection{Sleep set reduction}
+\label{sec:landslide-sleepsets}
+
 In the presence of non-conflicting transitions as well as conflicting ones,
 DPOR's approach as described so far can still end up testing equivalent interleavings.
 For example, consider the execution sequence
@@ -1383,9 +1401,13 @@ and can be skipped.
 	For clarity, threads are labeled here with numbers ($T_n$) and the transitions thereby with letters ($t_i$).}
 	\label{fig:sleepsets}
 \end{figure}
+
 Landslide implements this check in {\tt equiv\_already\_explored()}.
 This corresponds to the {\em sleep sets} optimization described by prior work \cite{partial-order-methods,dpor,optimal-dpor},
 so named because it effectively puts $T_1$ ``to sleep'' until after the true conflicting access in $t_c$.
+Landslide's implementation differs from prior work by not explicitly tracking
+sets of reordered threads and memory accesses they should expect to conflict with,
+and instead identifies where the reduction should take place in subsequent iterations of DPOR.
 Further optimizations such as {\em source sets} and {\em wakeup trees},
 which achieve optimality (i.e., executing exactly one interleaving per equivalence class) \cite{optimal-dpor}
 are not yet implemented,
@@ -1395,22 +1417,6 @@ I suspect (without proof) that sleep-set DPOR is optimal for 2 threads.
 
 % TODO: make sure it's clear that the quicksand chapter expts were run before this optmz was added,
 % and that the HTM expts fro msigbovik paper were re-run for its chapater herein
-
-{\bf Choosing which new interleaving to test next.}
-Among all interleavings chosen by DPOR not already marked as explored,
-Landslide chooses the one with the longest execution prefix matching the current $S$,
-to maintain the depth-first search invariant.
-(In the case of a tie, differing only by which thread to run, it chooses arbitrarily.)
-All other new interleavings are marked to explore later in their corresponding {\tt struct hax},
-and automatically included in the result of any future iterations of DPOR until they are tested.
-Because the one with the longest execution prefix was chosen to test next,
-all others must share their execution prefixes with it,
-preserving the $O(nk)$ memory bound described above.
-%so storing markers for the others during the next execution is still $O(1)$ memory.
-
-{\bf Termination.}
-When DPOR returns no new $I_{ij}$s not already marked in the set of visited subtrees,
-the exploration is complete.
 
 \subsubsection{Example}
 
