@@ -426,6 +426,24 @@ Following are the less self-explanatory options.
 		in order to avoid unnecessarily checking, for example,
 		all the different ways {\tt thr\_exit()} and {\tt thr\_join()} could interleave.
 		Users of this option should be careful to enable the proper {\tt thr\_create()} misbehave mode in their test case (\sect{\ref{sec:landslide-friendly-misbehave}}).
+	\item {\tt TRUSTED\_THR\_JOIN=0} - if set to 1, forces Landslide to add a happens-before edge (\sect{\ref{sec:landslide-dpor-hb}}) between the exiting of some thread $N$ and the end of any subsequent {\tt thr\_join}$(N)$ call,
+		even if that {\tt join} would not ordinarily block.
+		This is useful for state space reduction when testing threaded client code;
+		for example,
+		in the interleaving
+		TID1: {\tt x++; thr\_exit();},
+		TID2: {\tt thr\_join(1); print(x);},
+		%this {\tt join} will wait on no condition variables, just take a few uncontended mutexes, reap the thread,
+		%and go along on its way, so
+		DPOR, not automatically trusting {\tt join}'s behaviour,
+		will attempt to test the TID2, TID1 interleaving to reorder the accesses on {\tt x},
+		whereupon {\tt join} will block, forcing these interleavings to be equivalent.
+		% if you had tested them in the other order to begin with, dpor would detect this dependency,
+		% and would skip the other equivalent interleaving
+		This option allows DPOR to skip checking that {\tt join} behaves properly
+		and prune the second interleaving
+		by teaching it the expected blocking semantics. %to begin with.
+		Obviously, not for use when actually testing {\tt thr\_join} itself!
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1173,6 +1191,7 @@ with each state being a preemption point as identified in \sect{\ref{sec:landsli
 and $T(t_i)$ will denote the thread which was scheduled to produce that transition.
 
 \subsubsection{Happens-before}
+\label{sec:landslide-dpor-hb}
 
 The happens-before relation expresses when two thread transitions can potentially be reordered,
 or in other words, are concurrent (despite the serialized nature of the simulated execution).
