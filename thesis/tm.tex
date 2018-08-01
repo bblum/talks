@@ -391,8 +391,10 @@ Hence, data-race analysis is sound when transaction boundaries are replaced by a
 
 \section{Implementation}
 
-Support for TSX programs in Landslide is implemented in three parts, broadly speaking,
-the user interface plus one internal part corresponding to each proof above.
+Support for TSX programs in Landslide is implemented in four parts, broadly speaking:
+the user interface,
+plus one internal part corresponding to each proof above,
+plus a bonus optimization for pruning equivalent interleavings under the new concurrency model.
 
 \subsection{User Interface}
 
@@ -401,7 +403,7 @@ which matches GCC's interface exactly,
 located in {\tt 410user/inc/htm.h}
 under {\tt pebsim/p2-basecode/}.
 The interface is implemented in {\tt 410user/libhtm/htm.c},
-perhaps surprisingly, as totally empty functions:
+perhaps surprisingly, as totally empty functions;
 Landslide hooks these functions' addresses during instrumentation
 and inserts preemption points, failure injections,
 et cetera as necessary whenever the execution encounters them.
@@ -430,7 +432,7 @@ Each option requires each of the previously-listed options to also be present.
 		and treatment of transactional regions during data-race analysis (\sect{\ref{sec:txn-datarace}}).
 	\item {\tt -A} (for ``xAbort codes'')
 		enables multiple xabort failure codes (\sect{\ref{sec:txn-failure}}).
-	\item {\tt -S} (for ``Stm'')
+	\item {\tt -S} (for ``Stm'' or ``Suppress retries'')
 		disables the {\tt \_XABORT\_RETRY} failure reason,
 		which causes Landslide to match STM's execution semantics rather than HTM.
 		(This feature was used in \cite{sigbovik-htm}~\sect{5}.)
@@ -621,10 +623,10 @@ allowing simultaneous transactions to usually succeed,
 while the more uncommon abort paths might take the opportunity to assert a full consistency check of all elements,
 ultimately resulting in a similar conflict pattern.
 Also, the evaluation will later show
+(\sect{\ref{sec:tm-eval-retrysets}})
 that even programs with fully conflicting success/abort paths
 may still exhibit some equivalent thread interleavings of this pattern
-after their failure paths are split apart into smaller transitions by data-race preemption points
-(\sect{\ref{sec:tm-eval-retrysets}}).
+after their failure paths are split apart into smaller transitions by data-race preemption points.
 
 To solve this,
 I extended Landslide
@@ -642,6 +644,7 @@ Landslide remembers those threads' expected {\tt xbegin} results
 and refuses to test any others
 (unless DPOR separately found them, too, in conflict),
 thereby skipping over (i.e., pruning) reorderings of any other {\tt xbegin} results that would be independent.
+% TODO: make a real commit hash instead; put on master
 The {\tt landslide} repository's {\tt retry-sets} branch implements this feature%
 \footnote{The upcoming evaluation showed it too unstable, let alone not yet proved sound, to include in {\tt master}.},
 available with the {\tt -R} command-line option.
@@ -801,7 +804,7 @@ All experiments have been re-run
 on account of three updates to Landslide's exploration algorithm
 implemented since then:
 the sleep sets optimization for DPOR (\sect{\ref{sec:landslide-sleepsets}}, commit 0447666),
-the {\tt thrlib\_function} directive
+the {\tt thrlib\_function} and {\tt TRUSTED\_THR\_JOIN} directives
 to mark internal thread library logic as trusted (\sect{\ref{sec:landslide-config-landslide}}, commit 64a02e4),
 and fixing a soundness bug in which Landslide could neglect to inject transaction failures
 immediately after a thread switch (commit dcae85b).
@@ -1203,7 +1206,7 @@ I report their estimated state space size and runtime measured after that timeou
 			& 3,1 & \cpu{10.40}	& \ints{148}	& \cpu{7.72}	& \ints{22}	& \cpu{3.33}	& \ints{1} \\
 			& 3,2 & \cpu{708.86}	& \ints{21642}	& \cpu{196.45}	& \ints{6467}	& \cpu{3.23}	& \ints{1} \\
 			& 4,1 & \cpu{106.21}	& \ints{3064}	& \cpu{11.29}	& \ints{130}	& \cpu{3.43}	& \ints{1} \\
-			& 4,2 & \cpu{qqq} 	& \ints{qqq} 	& \cpu{qqq}	& \ints{todo atm}	& \cpu{3.28}	& \ints{1} \\
+			& 4,2 & \ETAdag{qqq} 	& \ETAdag{qqq} 	& \ETAdag{qqq}	& \ETAdag{todo atm}	& \cpu{3.28}	& \ints{1} \\
 			% measured with !CONSIDER_ONLY_MOST_RECENT_DPOR_PREFERRED_TID
 			%& 2,2 & \cpu{9.40}	& \ints{108}	& \cpu{8.92}	& \ints{76}	& \cpu{3.37}	& \ints{1} \\
 			%& 3,1 & \cpu{10.30}	& \ints{132}	& \cpu{7.50}	& \ints{21}	& \cpu{3.64}	& \ints{1} \\
@@ -1371,22 +1374,22 @@ reached among Landslide's verifications
 In the case of {\tt htm2},
 it is easy to look at the program with human intuition and judge that,
 because the protocol's only state is stored in a single boolean,
-with no use of unbounded-capacity data structures or 
+with no unbounded-capacity data structures or
 contention-dependent exponential backoff loops,
 it would be unimaginable that adding a 5th thread to the system
 could make any difference in correctness where 4 threads could not,
 or that a 4th repetition between 2 threads could make a difference where 3 could not,
 and ultimately that it must safely generalize to all $(K, N)$.
 % under certain invisible assumptions like the system runs with SC memory! (spoilers!!)
-For more complicated algorithms,
-which may involve complex conflict patterns such as tree rebalancing or map resizing,
-generalizing the verification is not so straightforward;
+Generalizing the verification is not so straightforward
+for more complicated algorithms,
+which may involve complex conflict patterns such as tree rebalancing or map resizing;
 other formal verification approaches aside,
 the user must ultimately be content with the probabilistic assurance that
-as $K$ and $N$ increase,
+as verified $K$ and $N$ increase,
 the likelihood that a bug exists which requires more threads or iterations to expose grows ever lower
 % (in the author's fancy, it may as well drop exponentially in the same way as the state spaces grow)
-(none of the bugs in \sect{\ref{sec:tm-eval-bugs}} required any higher parameters than $(2,2)$ to expose).
+(for example, none of the bugs in \sect{\ref{sec:tm-eval-bugs}} required any higher parameters than $(2,2)$ to expose).
 % and by analogy with ICB, none of the bugs in quicksand evaluation took more than a preemption bound of 3 to expose
 % but it's not clear how to state this "analogy" concisely in text
 
@@ -1422,12 +1425,14 @@ In the following subsections I explore three possible mitigation approaches.
 % we see it would provide 25% reduction in the example (from thesprop)
 % however, evaluating its potential impact in general is tantamount to implementing it.
 
+\subsubsection{Abort code (STM) reduction}
+\label{sec:tm-eval-stm}
 
 \subsubsection{Abstraction reduction}
 
 Visual inspection of the AVL tree and separate-chaining map implementations \cite{tm-benchmark-cmu},
 after correcting the former's atomicity bug (Figure~\ref{fig:avlbug}),
-reveals that every use of HTM followed exactly the same pattern,
+reveals that every use of HTM followed exactly the same pattern:
 running identical data structure logic in both the transactional and abort paths,
 as though HTM were merely a mutual exclusion lock with fancy performance characteristics.
 % this citation is a lil problematic
@@ -1439,7 +1444,7 @@ effectively turning multiplicative state space size factors into additive ones.
 In this case, I split the lock-like HTM use
 and the mutually-exclusive data structure code
 into separate tests,
-{\tt lock}, which checks the use of HTM guarantees mutual exclusion,
+{\tt lock}, which checks that the use of HTM guarantees mutual exclusion,
 and {\tt avl\_mutex}/{\tt map\_mutex},
 which replace the open-coded HTM use with an already-trusted P2 mutex.
 {\tt lock\_fast},
@@ -1447,11 +1452,11 @@ a bonus test,
 checks the transactional lock's performance by asserting that
 its internal logic won't trigger conflict aborts
 even when the client's accesses are independent.
-Figure~\ref{fig:htm-lock} shows the core logic of these tests.
+Figure~\ref{fig:htm-lock} shows their core logic.
 Finally, I parameterized them over how the lock was implemented:
-{\tt spinlock} ``real-world'' code from \cite{spinlock-rtm-github},
-{\tt spin\_fixed} the same with the performance bug from \sect{\ref{sec:tm-eval-bugs}} fixed,
-and {\tt mutex} using Landslide-annotated P2 mutexes (as the AVL and map implementations do).
+a real-world {\tt spinlock} implementation from \cite{spinlock-rtm-github},
+{\tt spin\_fixed}, the same with the performance bug from \sect{\ref{sec:tm-eval-bugs}} fixed,
+and {\tt mutex}, using Landslide-annotated P2 mutexes (as the AVL and map implementations do).
 
 \begin{figure}[h]
 	\begin{center}
@@ -1500,28 +1505,10 @@ produces the same verification as {\tt avl\_fixed}$(K,N)$ far more cheaply.
 Furthermore, {\tt lock}'s verification can be reused,
 whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex verification between them.
 
-Note two curiosities:
-firstly,
-the impact that fixing Figure~\ref{fig:spinlockbug}'s performance bug
-(changing a read+write to a read only)
-had on even the correctness tests:
-{\tt lock}({\tt spin\_fixed})'s state spaces were reduced by more than half compared to {\tt lock}({\tt spinlock}),
-on account of DPOR no longer needing to reorder the (now) read-read access pairs.
-Secondly, {\tt spinlock} and {\tt spin\_fixed} take longer to test per interleaving
-%(CPU time divided by state space size)
-than {\tt mutex}
-(roughly 9 interleavings per second for the former, 28 for the latter),
-because while {\tt mutex} abstracts away threads needing to wait their turn for the critical section
-behind an API Landslide understands,
-the spinlock's wait loop is open-coded, and Landslide must fall back on its costlier heuristic synchronization detection
-(\sect{\ref{sec:landslide-blocking}}).
-In this way (and also, of course, because {\tt mutex}'s state spaces are smaller overall),
-{\tt mutex} can be seen in turn as a further abstraction reduction of {\tt spinlock}.
-
-\begin{table}[h]
+\begin{table}[t]
 	\begin{center}
 		\footnotesize
-		%\begin{tabular}{cc}
+		\begin{tabular}{cc}
 		%\begin{tabular}{cc||r|r||r|r}
 		%	& & \multicolumn{2}{c||}{\bf DPOR} & \multicolumn{2}{c}{\bf DPOR + retry sets} \\
 		%	& & \cpu{\bf cpu (s)} & \ints{\bf SS size}
@@ -1653,11 +1640,11 @@ In this way (and also, of course, because {\tt mutex}'s state spaces are smaller
 			& 2,1 & \cpu{2.35} & \ints{1}	\\
 			({\tt mutex})
 			& 9,9 & \cpu{3.79} & \ints{1}	\\
-			%\end{tabular}
-			%&
-			%\begin{tabular}{cc||r|r}
-			%& & \cpu{\bf cpu (s)} & \ints{\bf SS size} \\
-			%\bf test & \bf params & \em (or \ETAdag{\bf \em ETA}) & \em (or \ETAdag{\bf \em est.}) \\
+			\end{tabular}
+			&
+			\begin{tabular}{cc||r|r}
+			& & \cpu{\bf cpu (s)} & \ints{\bf SS size} \\
+			\bf test & \bf params & \em (or \ETAdag{\bf \em ETA}) & \em (or \ETAdag{\bf \em est.}) \\
 			\hline
 			\hline
 			{\tt avl\_mutex}
@@ -1718,22 +1705,47 @@ In this way (and also, of course, because {\tt mutex}'s state spaces are smaller
 			& 3,1 & \\ %\cpu{0} & \ints{0} \\
 			& 3,2 & \\ %\cpu{0} & \ints{0} \\
 			\hline \multicolumn{4}{c}{everything above this line needs rerun} \\
+			\\
+			\\
 		\end{tabular}
-		%\end{tabular}
+		\\
+		\\
+		(a) Verifying HTM locks alone.
+		&
+		(b) Verifying the lock's client code.
+		\end{tabular}
 	\end{center}
-	\caption{Continuation of Table~\ref{tab:tm-verifs}.
-		Demonstrates abstraction reduction \cite{dbug-phdthesis}
+	\caption{Continuation of Table~\ref{tab:tm-verifs},
+		demonstrating abstraction reduction \cite{dbug-phdthesis}
 		on the {\tt avl\_fixed} and {\tt map\_basic} tests
 		by verifying HTM mutex implementations separately.
 		Run with {\tt landslide -M -X -A -S}, i.e.,
 		conflict and explicit aborts tested separately,
 		and retry aborts suppressed
 		(both lock implementations include a retry loop).
-		The reduced {\tt avl\_mutex} and {\tt map\_mutex} are, of course, no longer transactional.
+		The reduced {\tt avl\_mutex} and {\tt map\_mutex} are, of course, no longer transactional at all.
 		{\bf RERUN NOTE: this entire table needs to be rerun on account of dpor-preferred-tid}
 		}
 	\label{tab:tm-verifs2}
 \end{table}
+
+Note two curiosities:
+firstly,
+the impact that fixing Figure~\ref{fig:spinlockbug}'s performance bug
+(changing a read+write to a read only)
+had on even the correctness tests:
+{\tt lock}({\tt spin\_fixed})'s state spaces were reduced by more than half compared to {\tt lock}({\tt spinlock}),
+on account of DPOR no longer needing to reorder the (now) read-read access pairs.
+Secondly, {\tt spinlock} and {\tt spin\_fixed} take longer to test per interleaving
+%(CPU time divided by state space size)
+than {\tt mutex}
+(roughly 9 interleavings per second for the former, 28 for the latter),
+because while {\tt mutex} abstracts away threads needing to wait their turn for the critical section
+behind an API Landslide understands,
+the spinlock's wait loop is open-coded, and Landslide must fall back on its costlier heuristic synchronization detection
+(\sect{\ref{sec:landslide-blocking}}).
+In this way (and also, of course, because {\tt mutex}'s state spaces are smaller overall),
+{\tt mutex} can be seen in turn as a further abstraction reduction of {\tt spinlock}.
 
 %%%% map mutex
 % % TODO - bc of this weird nonlinear behaviour around 2,1+, yo ushoud prob try 2,2 for map_basic as well
