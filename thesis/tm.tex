@@ -777,6 +777,7 @@ To minimize variance in CPU-time measurements,
 I ensured the test machine was not loaded beyond normal web browser use,
 and ran only one instance of Landslide at a time;
 for further discussion of variance see \cite{sigbovik-htm}.
+The number of interleavings in each state space are, of course, deterministic and do not vary across runs.
 
 I investigated the popular transactional benchmark suite STAMP \cite{stamp}
 to include in this test suite,
@@ -1169,7 +1170,7 @@ I report their estimated state space size and runtime measured after that timeou
 			{\tt htm2}
 			& 2,1 & \cpu{19.82}	& \ints{22}	& \cpu{19.01}	& \ints{15}	& \cpu{3.45}	& \ints{4} \\
 			& 2,2 &\cpu{73.02}	& \ints{1970}	& \cpu{26.96}	& \ints{356}	& \cpu{27.38}	& \ints{288} \\
-			& 2,3 &\cpu{qqq}	& \ints{qqq}	& \cpu{qqq}	& \ints{qqq}	& \cpu{910.80}	& \ints{22409} \\
+			& 2,3 &\cpu{3923.32}	& \ints{104914}	& \cpu{230.71}	& \ints{7528}	& \cpu{910.80}	& \ints{22409} \\
 			& 2,4 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
 			& 3,1 & \cpu{40.74}	& \ints{774}	& \cpu{24.27}	& \ints{224}	& \cpu{23.26}	& \ints{140} \\
 			& 3,2 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
@@ -1181,17 +1182,17 @@ I report their estimated state space size and runtime measured after that timeou
 			%[JOB 4] progress: 709997/3456001 brs (20.543887%), ETA 4d 10h 36m 25s (elapsed 9h 59m 54s)
 			\hline
 			{\tt counter}
-			& 2,1 & \cpu{qqq}	& \ints{qqq}	& \cpu{qqq}	& \ints{qqq}	& \cpu{qqq}	& \ints{qqq} \\
+			& 2,1 & \cpu{6.90}	& \ints{10}	& \cpu{7.04}	& \ints{8}	& \cpu{3.35}	& \ints{4} \\
 			& 2,2 & \cpu{12.81}	& \ints{190}	& \cpu{10.58}	& \ints{102}	& \cpu{8.19}	& \ints{48} \\
 			& 2,3 & \cpu{144.83}	& \ints{3970}	& \cpu{65.66}	& \ints{1558}	& \cpu{38.18}	& \ints{904} \\
-			& 2,4 & \cpu{qqq}	& \ints{qqq}	& \cpu{qqq}	& \ints{qqq}	& \cpu{qqq}	& \ints{qqq} \\
+			& 2,4 & \cpu{3433.08}	& \ints{86950}	& \cpu{1134.62}	& \ints{25398}	& \cpu{752.51}	& \ints{19128} \\
 			& 3,1 & \cpu{10.57}	& \ints{120}	& \cpu{92.30}	& \ints{64}	& \cpu{7.88}	& \ints{40} \\
-			& 3,2 & \cpu{qqq}	& \ints{qqq}	& \cpu{qqq}	& \ints{qqq}	& \cpu{qqq}	& \ints{qqq} \\
+			& 3,2 & \cpu{2492.17}	& \ints{60606}	& \cpu{2040.98}	& \ints{44862}	& \cpu{565.97}	& \ints{14304} \\
 			& 4,1 & \cpu{121.96}	& \ints{3006}	& \cpu{61.85}	& \ints{1296}	& \cpu{39.23}	& \ints{848} \\
 			\hline
 			{\tt swap}
 			& 2,1 & \cpu{38.76}	& \ints{99}	& \cpu{36.91}	& \ints{59}	& \cpu{3.29}	& \ints{4} \\
-			& 2,2 & \cpu{qqq}	& \ints{qqq}	& \cpu{qqq}	& \ints{qqq}	& \cpu{qqq}	& \ints{qqq} \\
+			& 2,2 & \cpu{qqq}	& \ints{qqq}	& \cpu{497.11}	& \ints{11427}	& \cpu{461.54}	& \ints{9046} \\
 			& 3,1 & \cpu{2975.30}	& \ints{60912}	& \cpu{522.07}	& \ints{10706}	& \cpu{86.21}	& \ints{1014} \\
 			% measured with !CONSIDER_ONLY_MOST_RECENT_DPOR_PREFERRED_TID
 			%& 2,1 & \cpu{38.43}	& \ints{99}	& \cpu{36.12}	& \ints{59}	& \cpu{3.34}	& \ints{4} \\
@@ -1206,7 +1207,9 @@ I report their estimated state space size and runtime measured after that timeou
 			& 3,1 & \cpu{10.40}	& \ints{148}	& \cpu{7.72}	& \ints{22}	& \cpu{3.33}	& \ints{1} \\
 			& 3,2 & \cpu{708.86}	& \ints{21642}	& \cpu{196.45}	& \ints{6467}	& \cpu{3.23}	& \ints{1} \\
 			& 4,1 & \cpu{106.21}	& \ints{3064}	& \cpu{11.29}	& \ints{130}	& \cpu{3.43}	& \ints{1} \\
-			& 4,2 & \ETAdag{qqq} 	& \ETAdag{qqq} 	& \ETAdag{qqq}	& \ETAdag{todo atm}	& \cpu{3.28}	& \ints{1} \\
+			& 4,2 & \ETAdag{qqq} 	& \ETAdag{qqq} 	& \ETAdag{22d 17h}	& \ETAdag{3129034}	& \cpu{3.28}	& \ints{1} \\
+			%[JOB 1] progress: 827215/3129034 brs (26.436748%), ETA 22d 7h 18m 34s (elapsed 9h 59m 56s)
+
 			% measured with !CONSIDER_ONLY_MOST_RECENT_DPOR_PREFERRED_TID
 			%& 2,2 & \cpu{9.40}	& \ints{108}	& \cpu{8.92}	& \ints{76}	& \cpu{3.37}	& \ints{1} \\
 			%& 3,1 & \cpu{10.30}	& \ints{132}	& \cpu{7.50}	& \ints{21}	& \cpu{3.64}	& \ints{1} \\
@@ -1331,7 +1334,7 @@ as even their baseline DPOR checked only 4096 interleavings on that test.
 Table~\ref{tab:tm-test-case-evence} confers a sense of the complexity of this evaluation's test suite,
 with the final column showing the approximate maximum number of preemption points
 reached among Landslide's verifications
-(i.e., $({\sf txn}+{\sf sync}+{\sf race})*K*N$ for the highest $(K,N)$ completed.
+(i.e., $({\sf txn}+{\sf sync}+{\sf race}) \times K \times N$ for the highest $K \times N$ completed.
 %%%% on second thought, i'm not gonna do this -- any branch that xend shows up in, is gonna lose any of the pps coming
 %%%% from the failure path's mxes or data races, so xend will never be an *additional* pp
 %%%% and of course it will scare the committee
@@ -1345,6 +1348,7 @@ reached among Landslide's verifications
 
 \begin{table}[h]
 	\begin{center}
+		\small
 		\begin{tabular}{c||c|c|c||c}
 			{\bf test} & {\bf \#txn} & {\bf \#sync} & {\bf \#race} & {\bf max events verified} \\
 			\hline
@@ -1389,7 +1393,7 @@ the user must ultimately be content with the probabilistic assurance that
 as verified $K$ and $N$ increase,
 the likelihood that a bug exists which requires more threads or iterations to expose grows ever lower
 % (in the author's fancy, it may as well drop exponentially in the same way as the state spaces grow)
-(for example, none of the bugs in \sect{\ref{sec:tm-eval-bugs}} required any higher parameters than $(2,2)$ to expose).
+(for example, none of the bugs in \sect{\ref{sec:tm-eval-bugs}} required any higher parameters than (2,2) to expose).
 % and by analogy with ICB, none of the bugs in quicksand evaluation took more than a preemption bound of 3 to expose
 % but it's not clear how to state this "analogy" concisely in text
 
@@ -1427,6 +1431,12 @@ In the following subsections I explore three possible mitigation approaches.
 
 \subsubsection{Abort code (STM) reduction}
 \label{sec:tm-eval-stm}
+
+As an example, note how STM semantics reduced {\tt fig63}'s state space on all $(K,N)$ configurations to 1.
+Because its transactional paths are all mutually independent,
+DPOR identifies no need either to inject conflict aborts or to reorder threads.
+However, this skips the slow-path consistency assertion completely,
+which the programmer may have intended to run ``every so often''
 
 \subsubsection{Abstraction reduction}
 
