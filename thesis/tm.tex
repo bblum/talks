@@ -800,7 +800,7 @@ differ from those reported in \cite{sigbovik-htm}.
 All experiments have been re-run
 on account of three updates to Landslide's exploration algorithm
 implemented since then:
-the sleep sets optimization for DPOR (\sect{\ref{sec:landslide-explore}}, commit 0447666),
+the sleep sets optimization for DPOR (\sect{\ref{sec:landslide-sleepsets}}, commit 0447666),
 the {\tt thrlib\_function} directive
 to mark internal thread library logic as trusted (\sect{\ref{sec:landslide-config-landslide}}, commit 64a02e4),
 and fixing a soundness bug in which Landslide could neglect to inject transaction failures
@@ -907,6 +907,7 @@ but the previously-published verification results should be considered outdated.
 			& 2,1	&\cpu{8.17}&\wtm{2.65}&\ints{2}&\cpu{*2.39}&\wtm{*2.39}&\ints{2}& \ETA{4} \\
 		(perf)
 			& 9,9	&\cpu{36.64}&\wtm{9.78}&\ints{2}&\cpu{*4.75}&\wtm{*4.75}&\ints{2}& \ETA{inf} \\
+			\hline \multicolumn{4}{c}{everything above this line needs rerun} \\
 	\end{tabular}
 	\end{center}
 	\caption{Landslide's bug-finding performance on various test configurations.
@@ -920,11 +921,12 @@ but the previously-published verification results should be considered outdated.
 		Lastly, state space estimation (\sect{\ref{sec:landslide-estimate}}),
 		though approximate at best,
 		confers a sense of the exponential explosion.
+		{\bf RERUN NOTE: this entire table needs to be rerun on account of dpor-preferred-tid}
 	}
-	\label{tab:buges}
+	\label{tab:tm-buges}
 \end{table*}
 
-Table~\ref{tab:buges}
+Table~\ref{tab:tm-buges}
 presents the bug-finding results.
 I configured Landslide to run Quicksand's Iterative Deepening algorithm on 8 cores, %(\sect{\ref{sec:quicksand-id}}),
 shown left,
@@ -1043,7 +1045,8 @@ Landslide also found two bugs in the ``real-world'' transactional algorithms I t
 	\label{fig:avlbug}
 \end{figure}
 
-\begin{figure}[t]
+% TODO check figure placement
+\begin{figure}[h]
 	\begin{center}
 		\begin{tabular}{l}
 		\texttt{\ctype{bool} \call{hle\_spinlock\_isfree}(\ctype{spinlock\_t} *lock) \{} \\
@@ -1068,7 +1071,6 @@ Landslide also found two bugs in the ``real-world'' transactional algorithms I t
 		\texttt{\}} \\
 		\end{tabular}
 	\end{center}
-	% TODO describe
 	\caption{Code from {\tt spinlock-rtm.c}, modified only to remove unrelated logic for brevity,
 		showing the performance bug Landslide found in {\tt lock\_fast}({\tt spinlock}).
 		The {\tt isfree()} routine uses an atomic read-and-write operation where just a read would suffice,
@@ -1106,7 +1108,7 @@ but with a hybrid approach between model checking and what other technique is no
 
 Quicksand's ability to find bugs in fewer distinct interleavings (i.e., overall smaller state spaces)
 does not necessarily correlate with better performance in terms of CPU-time.
-Comparing Table~\ref{tab:buges}'s trends
+Comparing Table~\ref{tab:tm-buges}'s trends
 to the break-even point in Quicksand's evaluation (\sect{\ref{sec:quicksand-eval}}),
 most of these tests are too small for its approach to pay off,
 % TODO: re check this after re running
@@ -1124,26 +1126,34 @@ both for smaller tests and for verification.
 \subsection{Verification}
 \label{sec:tm-verif}
 
-Landslide proved the following tests correct.
-With no bugs to find, comparing the different testing modes against each other is meaningless;
-I simply present their state space sizes and runtime
-(measured under {\tt -M})
-in Table~\ref{tab:verifs}.
+For the test cases with no bugs found, I sought to provide Landslide's verification guarantee
+% TODO better section reference
+(\sect{\ref{sec:quicksand-id}})
+for up to as many threads and test iterations as possible under a reasonable time limit.
+The results, obtained using the same {\tt -X -M} configuration options as
+in the previous section,
+%were used in Table~\ref{tab:tm-buges},
+are shown in Table~\ref{tab:tm-verifs} in the ``Baseline DPOR'' column.
+%Of course, because stateless model checking is a perpetual existence
+%of staring up the sheer cliff face that is the exponential curve,
+%many tests were only able to achieve verification for only modest values of $(K, N)$
+%before becoming intractable.
+%After a timeout of 10 wall-clock hours,
+%I measured these tests'
+%estimated remaining time and state space size and list those instead,
+%\ETAdag{emphasized thusly}.
+For test configurations which could not be verified
+within 10 wall-clock hours,
+I report their estimated state space size and runtime measured after that timeout instead,
+\ETAdag{typeset thusly}.
 
-% TODO
-% discuss the diff reducion approaches
-
-% Please note that retry sets are a theoretically-founded reduction that should apply to all programs,
-% while distinguishing abort codes to suppress retries is potentially unsound,
-% depending on the user's ability to manually verify the presence (and correctness) of retry loops in the code.
-
-\begin{table}[h]
+\begin{table}[p]
 	\begin{center}
 		\footnotesize
 		\begin{tabular}{cc||r|r||r|r||r|r}
-			& & \multicolumn{2}{c||}{\bf Retry aborts only}
+			& & \multicolumn{2}{c||}{\bf Baseline DPOR}
 			  & \multicolumn{2}{c||}{\bf Retry sets ({\tt -R})}
-			  & \multicolumn{2}{c}{\bf Abort codes ({\tt -A -S})} \\
+			  & \multicolumn{2}{c}{\bf STM ({\tt -A -S})} \\
 			& & \cpu{\bf cpu (s)} & \ints{\bf SS size}
 			  & \cpu{\bf cpu (s)} & \ints{\bf SS size}
 			  & \cpu{\bf cpu (s)} & \ints{\bf SS size} \\
@@ -1154,80 +1164,264 @@ in Table~\ref{tab:verifs}.
 			\hline
 			\hline
 			{\tt htm2}
-			& 2,1 & \cpu{16.30}	& \ints{22}	& \cpu{17.93}	& \ints{15}	& \cpu{3.32}	& \ints{4} \\
-			& 2,2 & \cpu{69.80}	& \ints{1970}	& \cpu{27.87}	& \ints{408}	& \cpu{26.59}	& \ints{288} \\
-			& 2,3 &\cpu{3510.00}	& \ints{104914}	& \cpu{}	& \ints{}	& \cpu{}	& \ints{} \\
-			%& 2,4 &	\ETAdag{...}	& \ETAdag{...}	\\
-			& 3,1 &\cpu{41.07}	& \ints{941}	& \cpu{23.86}	& \ints{273}	& \cpu{23.03}	& \ints{162} \\
-			& 3,2 &	\ETAdag{9d 19h}	& \ETAdag{5058149}	\\ % add 10h ok
-			% [JOB 4] progress: 923822/5058149 brs (18.264030%), ETA 9d 8h 30m 38s (elapsed 9h 59m 55s)
-			& 4,1 & \cpu{12699.65}	& \ints{344240}	& \cpu{}	& \ints{}	& \cpu{}	& \ints{} \\
+			& 2,1 & \cpu{19.82}	& \ints{22}	& \cpu{19.01}	& \ints{15}	& \cpu{3.45}	& \ints{4} \\
+			& 2,2 &\cpu{73.02}	& \ints{1970}	& \cpu{26.96}	& \ints{356}	& \cpu{27.38}	& \ints{288} \\
+			& 2,3 &\cpu{qqq}	& \ints{qqq}	& \cpu{qqq}	& \ints{qqq}	& \cpu{910.80}	& \ints{22409} \\
+			& 2,4 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
+			& 3,1 & \cpu{40.74}	& \ints{774}	& \cpu{24.27}	& \ints{224}	& \cpu{23.26}	& \ints{140} \\
+			& 3,2 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
+			& 4,1 & \cpu{8202.71}	& \ints{212146}	& \cpu{333.26}	& \ints{11973}	& \cpu{1794.06}	& \ints{44995} \\
+			% measured with !CONSIDER_ONLY_MOST_RECENT_DPOR_PREFERRED_TID
+			%& 2,2 & \cpu{72.40}	& \ints{1970}	& \cpu{27.28}	& \ints{356}	& \cpu{26.84}	& \ints{288} \\
+			%& 3,1 &\cpu{38.76}	& \ints{708}	& \cpu{23.84}	& \ints{224}	& \cpu{23.38}	& \ints{140} \\
+			%& 3,2 &\ETAdag{vvv}	& \ETAdag{vvv}	& \ETAdag{vvv}	& \ETAdag{vvv}	&\ETAdag{4d 21h}&\ETAdag{3456001}\\
+			%[JOB 4] progress: 709997/3456001 brs (20.543887%), ETA 4d 10h 36m 25s (elapsed 9h 59m 54s)
 			\hline
 			{\tt counter}
-			& 2,1 & \cpu{5.40}	& \ints{10}	& \cpu{7.00}	& \ints{8}	& \cpu{3.22}	& \ints{4} \\
-			& 2,2 & \cpu{10.91}	& \ints{190}	& \cpu{10.57}	& \ints{122}	& \cpu{7.90}	& \ints{48} \\
-			& 2,3 & \cpu{134.21}	& \ints{3970}	& \cpu{85.29}	& \ints{2376}	& \cpu{35.00}	& \ints{904} \\
-			& 2,4 & \cpu{3009.40}	& \ints{86950}	& \cpu{}	& \ints{}	& \cpu{}	& \ints{} \\
-			& 3,1 & \cpu{8.30}	& \ints{120}	& \cpu{9.40}	& \ints{74}	& \cpu{7.55}	& \ints{40} \\
-			& 3,2 & \cpu{2038.90}	& \ints{60606}	& \cpu{}	& \ints{}	& \cpu{}	& \ints{} \\
-			& 4,1 & \cpu{101.95}	& \ints{3006}	& \cpu{82.16}	& \ints{2148}	& \cpu{32.95}	& \ints{848} \\
+			& 2,1 & \cpu{qqq}	& \ints{qqq}	& \cpu{qqq}	& \ints{qqq}	& \cpu{qqq}	& \ints{qqq} \\
+			& 2,2 & \cpu{12.81}	& \ints{190}	& \cpu{10.58}	& \ints{102}	& \cpu{8.19}	& \ints{48} \\
+			& 2,3 & \cpu{144.83}	& \ints{3970}	& \cpu{65.66}	& \ints{1558}	& \cpu{38.18}	& \ints{904} \\
+			& 2,4 & \cpu{qqq}	& \ints{qqq}	& \cpu{qqq}	& \ints{qqq}	& \cpu{qqq}	& \ints{qqq} \\
+			& 3,1 & \cpu{10.57}	& \ints{120}	& \cpu{92.30}	& \ints{64}	& \cpu{7.88}	& \ints{40} \\
+			& 3,2 & \cpu{qqq}	& \ints{qqq}	& \cpu{qqq}	& \ints{qqq}	& \cpu{qqq}	& \ints{qqq} \\
+			& 4,1 & \cpu{121.96}	& \ints{3006}	& \cpu{61.85}	& \ints{1296}	& \cpu{39.23}	& \ints{848} \\
 			\hline
 			{\tt swap}
-			& 2,1 & \cpu{38.79}	& \ints{99}	& \cpu{37.33}	& \ints{59}	& \cpu{3.25}	& \ints{4} \\
-			& 2,2 & \cpu{10299.27}	& \ints{233396}	& \cpu{}	& \ints{}	& \cpu{}	& \ints{} \\
-			& 3,1 & \cpu{2359.85}	& \ints{59850}	& \cpu{}	& \ints{}	& \cpu{}	& \ints{} \\
+			& 2,1 & \cpu{38.76}	& \ints{99}	& \cpu{36.91}	& \ints{59}	& \cpu{3.29}	& \ints{4} \\
+			& 2,2 & \cpu{qqq}	& \ints{qqq}	& \cpu{qqq}	& \ints{qqq}	& \cpu{qqq}	& \ints{qqq} \\
+			& 3,1 & \cpu{2975.30}	& \ints{60912}	& \cpu{522.07}	& \ints{10706}	& \cpu{86.21}	& \ints{1014} \\
+			% measured with !CONSIDER_ONLY_MOST_RECENT_DPOR_PREFERRED_TID
+			%& 2,1 & \cpu{38.43}	& \ints{99}	& \cpu{36.12}	& \ints{59}	& \cpu{3.34}	& \ints{4} \\
+			%& 3,1 & \cpu{vvv}	& \ints{vvv}	& \cpu{730.94}	& \ints{17112}	& \cpu{74.53}	& \ints{1064} \\
 			\hline
 			{\tt fig63}
-			& 2,1 & \cpu{6.66}	& \ints{18}	& \cpu{6.98}	& \ints{6}	& \cpu{3.10}	& \ints{1} \\
-			& 2,2 & \cpu{11.52}	& \ints{244}	& \cpu{8.75}	& \ints{76}	& \cpu{3.12}	& \ints{1} \\
-			& 2,3 & \cpu{107.04}	& \ints{4428}	& \cpu{32.26}	& \ints{1060}	& \cpu{3.13}	& \ints{1} \\
-			& 3,1 & \cpu{13.68}	& \ints{296}	& \cpu{7.55}	& \ints{21}	& \cpu{3.26}	& \ints{1} \\
-			& 3,2 & \ETAdag{todo}	& \ETAdag{todo}	& \cpu{}	& \ints{}	& \cpu{3.35}	& \ints{1} \\
-			& 4,1 & \cpu{220.27}	& \ints{7382}	& \cpu{11.13}	& \ints{130}	& \cpu{3.27}	& \ints{1} \\
+			& 2,1 & \cpu{7.03}	& \ints{10}	& \cpu{6.96}	& \ints{6}	& \cpu{3.42}	& \ints{1} \\
+			& 2,2 & \cpu{9.32}	& \ints{108}	& \cpu{8.78}	& \ints{76}	& \cpu{3.43}	& \ints{1} \\
+			& 2,3 & \cpu{54.41}	& \ints{1934}	& \cpu{31.65}	& \ints{977}	& \cpu{3.27}	& \ints{1} \\
+			& 2,4 & \cpu{997.09} 	& \ints{36600} 	& \cpu{414.27}	& \ints{14512}	& \cpu{3.34}	& \ints{1} \\
+			% nb this 22 would be a 21 with !CONSIDER_ONLY... ..but, if it's the biggest loss, really n b d
+			& 3,1 & \cpu{10.40}	& \ints{148}	& \cpu{7.72}	& \ints{22}	& \cpu{3.33}	& \ints{1} \\
+			& 3,2 & \cpu{708.86}	& \ints{21642}	& \cpu{196.45}	& \ints{6467}	& \cpu{3.23}	& \ints{1} \\
+			& 4,1 & \cpu{106.21}	& \ints{3064}	& \cpu{11.29}	& \ints{130}	& \cpu{3.43}	& \ints{1} \\
+			& 4,2 & \cpu{qqq} 	& \ints{qqq} 	& \cpu{qqq}	& \ints{todo atm}	& \cpu{3.28}	& \ints{1} \\
+			% measured with !CONSIDER_ONLY_MOST_RECENT_DPOR_PREFERRED_TID
+			%& 2,2 & \cpu{9.40}	& \ints{108}	& \cpu{8.92}	& \ints{76}	& \cpu{3.37}	& \ints{1} \\
+			%& 3,1 & \cpu{10.30}	& \ints{132}	& \cpu{7.50}	& \ints{21}	& \cpu{3.64}	& \ints{1} \\
 			\hline
 			{\tt avl\_insert}
-			& 2,1 & \cpu{491.98}	& \ints{15056}	& \cpu{228.23}	& \ints{6296}	& \cpu{98.77}	& \ints{2776} \\
-			% (2,2) - bug found on regular w/ 127 ints, on retry sets w/ 201 ints, and codes w/ 45 ints
+			& 2,1 & \cpu{545.45}	& \ints{15052}	& \cpu{244.20}	& \ints{6288}	& \cpu{109.84}	& \ints{2774} \\
+			% (2,2) - bug found on regular w/ ?? ints, on retry sets w/ ?? ints, and codes w/ ?? ints
 			\hline
 			{\tt avl\_fixed}
-			& 2,1 & \cpu{572.49} 	& \ints{20420} 	& \cpu{284.37}	& \ints{9685}	& \cpu{99.16}	& \ints{2776} \\
-			& 2,2 & \ETAdag{133y 2d}	& \ETAdag{51484570} 	\\ % added 10hr but dosent matter
-			% [JOB 19] progress: 408805/51484570 brs (0.794034%), ETA 132y 356d 8h 55m 16s (elapsed 9h 59m 19s)
-			& 3,1 & \ETAdag{30y 320d}	& \ETAdag{93493027}	\\
-			% [JOB 18] progress: 492976/93493027 brs (0.011233%), ETA 30y 319d 14h 48m 32s (elapsed 9h 59m 35s)
+			& 2,1 & \cpu{642.73} 	& \ints{20416} 	& \cpu{293.70}	& \ints{9677}	& \cpu{108.69}	& \ints{2774} \\
+			& 2,2 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
+			& 3,1 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
 			\hline
 			{\tt map\_basic}
-			& 2,1 & \ETAdag{todo} & \ETAdag{todo} \\
+			& 2,1 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
 			\hline
 			{\tt map\_basicer}
-			& 2,1 & \cpu{36.17}& \ints{426}	\\ % TODO make sure this gets updated if you update the test
-			& 2,2 & \ETAdag{todo} & \ETAdag{todo} \\
-			& 3,1 & \ETAdag{todo} & \ETAdag{todo} \\
+			& 2,1 & \cpu{qqq} 	& \ints{qqq} 	& \cpu{qqq}	& \ints{qqq}	& \cpu{qqq}	& \ints{qqq} \\
+			& 2,2 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
+			& 3,1 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
+
+			%%%% nb. below is a fake version of the results, basically measured with abort set reduction,
+			%%%% after implementing abort set coalescing/merging, but not with either "dpor preferred tid"
+			%%%% or "trust thr join" optimizations.
+			%%%% this causes both (1) baseline to look worse than it should, and (2) abort sets to be
+			%%%% pretty inconsistent about whether they actually provide reduction, or accidentally inflate
+			%%%% the state space instead.
+			%%%% nevertheless, i'm keeping it around for posterity so you can compare, e.g., this fake baseline
+			%%%% against real baseline, to evaluate the impact of the non-abort-set dpor optimizations alone.
+			% {\tt htm2}
+			% & 2,1 & \cpu{16.30}	& \ints{22}	& \cpu{17.93}	& \ints{15}	& \cpu{3.32}	& \ints{4} \\
+			% & 2,2 & \cpu{69.80}	& \ints{1970}	& \cpu{27.87}	& \ints{408}	& \cpu{26.59}	& \ints{288} \\
+			% & 2,3 &\cpu{3510.00}	& \ints{104914}	& \cpu{}	& \ints{}	& \cpu{}	& \ints{} \\
+			% %& 2,4 &	\ETAdag{...}	& \ETAdag{...}	\\
+			% & 3,1 &\cpu{41.07}	& \ints{941}	& \cpu{23.86}	& \ints{273}	& \cpu{23.03}	& \ints{162} \\
+			% & 3,2 &	\ETAdag{9d 19h}	& \ETAdag{5058149}	\\ % add 10h ok
+			% % [JOB 4] progress: 923822/5058149 brs (18.264030%), ETA 9d 8h 30m 38s (elapsed 9h 59m 55s)
+			% & 4,1 & \cpu{12699.65}	& \ints{344240}	& \cpu{}	& \ints{}	& \cpu{}	& \ints{} \\
+			% \hline
+			% {\tt counter}
+			% & 2,1 & \cpu{5.40}	& \ints{10}	& \cpu{7.00}	& \ints{8}	& \cpu{3.22}	& \ints{4} \\
+			% & 2,2 & \cpu{10.91}	& \ints{190}	& \cpu{10.57}	& \ints{122}	& \cpu{7.90}	& \ints{48} \\
+			% & 2,3 & \cpu{134.21}	& \ints{3970}	& \cpu{85.29}	& \ints{2376}	& \cpu{35.00}	& \ints{904} \\
+			% & 2,4 & \cpu{3009.40}	& \ints{86950}	& \cpu{}	& \ints{}	& \cpu{}	& \ints{} \\
+			% & 3,1 & \cpu{8.30}	& \ints{120}	& \cpu{9.40}	& \ints{74}	& \cpu{7.55}	& \ints{40} \\
+			% & 3,2 & \cpu{2038.90}	& \ints{60606}	& \cpu{}	& \ints{60140}	& \cpu{486.56}	& \ints{14304} \\
+			% & 4,1 & \cpu{101.95}	& \ints{3006}	& \cpu{82.16}	& \ints{2148}	& \cpu{32.95}	& \ints{848} \\
+			% \hline
+			% {\tt swap}
+			% % these definitely have a different retry sets data point, run with some coalescing updates,
+			% % but i think before the dpor-preferred-tid search ordering fix
+			% % i think fig63 might have been updated this way as well? but not sure
+			% %& 2,1 & \cpu{38.79}	& \ints{99}	& \cpu{37.33}	& \ints{59}	& \cpu{3.25}	& \ints{4} \\
+			% %& 2,2 & \cpu{10299.27}	& \ints{233396}	& \cpu{433.01}	& \ints{11588}	& \cpu{382.28}	& \ints{9046} \\
+			% %& 3,1 & \cpu{2359.85}	& \ints{59850}	& \cpu{382.27}	& \ints{9712}	& \cpu{71.41}	& \ints{1014} \\
+			% & 2,1 & \cpu{38.79}	& \ints{99}	& \cpu{}	& \ints{}	& \cpu{3.25}	& \ints{4} \\
+			% & 2,2 & \cpu{10299.27}	& \ints{233396}	& \cpu{}	& \ints{}	& \cpu{382.28}	& \ints{9046} \\
+			% & 3,1 & \cpu{2359.85}	& \ints{59850}	& \cpu{}	& \ints{}	& \cpu{71.41}	& \ints{1014} \\
+			% \hline
+			% {\tt fig63}
+			% & 2,1 & \cpu{6.66}	& \ints{18}	& \cpu{6.97}	& \ints{6}	& \cpu{3.10}	& \ints{1} \\
+			% & 2,2 & \cpu{11.52}	& \ints{244}	& \cpu{8.75}	& \ints{76}	& \cpu{3.12}	& \ints{1} \\
+			% & 2,3 & \cpu{107.04}	& \ints{4428}	& \cpu{32.26}	& \ints{1060}	& \cpu{3.13}	& \ints{1} \\
+			% & 3,1 & \cpu{13.68}	& \ints{296}	& \cpu{7.55}	& \ints{21}	& \cpu{3.26}	& \ints{1} \\
+			% & 3,2 & \ETAdag{}	& \ETAdag{}	& \cpu{126.65}	& \ints{4042}	& \cpu{3.35}	& \ints{1} \\
+			% & 4,1 & \cpu{220.27}	& \ints{7382}	& \cpu{11.13}	& \ints{130}	& \cpu{3.27}	& \ints{1} \\
+			% \hline
+			% {\tt avl\_insert}
+			% & 2,1 & \cpu{491.98}	& \ints{15056}	& \cpu{228.23}	& \ints{6296}	& \cpu{98.77}	& \ints{2776} \\
+			% % (2,2) - bug found on regular w/ 127 ints, on retry sets w/ 201 ints, and codes w/ 45 ints
+			% \hline
+			% {\tt avl\_fixed}
+			% & 2,1 & \cpu{572.49} 	& \ints{20420} 	& \cpu{284.37}	& \ints{9685}	& \cpu{99.16}	& \ints{2776} \\
+			% & 2,2 & \ETAdag{133y}	& \ETAdag{51484570} % added 10hr but dosent matter
+			% % the order of magnitude of these time estimates is basically completely random
+			% % and fluctuates wildly from branch to branch
+			% % [JOB 19] progress: 408805/51484570 brs (0.794034%), ETA 132y 356d 8h 55m 16s (elapsed 9h 59m 19s)
+			% 	& \ETAdag{}	& \ETAdag{}
+			% 	& \ETAdag{1060y}	& \ETAdag{31302769} \\
+			% % for example if this one had timed out just 7 branches earlier, it woulda been 6y 246d instead
+			% % [JOB 19] progress: 321936/31302769 brs (1.028459%), ETA 1059y 260d 9h 16m 8s (elapsed 9h 59m 0s)
+			% & 3,1 & \ETAdag{30y 320d}	& \ETAdag{93493027}	\\
+			% % [JOB 18] progress: 492976/93493027 brs (0.011233%), ETA 30y 319d 14h 48m 32s (elapsed 9h 59m 35s)
 		\end{tabular}
 	\end{center}
 	\caption{Transactional tests verified (or not) by Landslide.
 		Run with {\tt -M -X}, plus any additional reduction options listed.
-		``Retry aborts only'' always tests every abort path and does not distinguish among failure reasons,
-		as the baseline;
+		``Baseline DPOR'' always tests every abort path, without distinguish among failure reasons
+		(i.e., injecting only {\tt \_XABORT\_RETRY}).
 		``Retry sets'' skips equivalent success path and/or retry abort reorderings (\sect{\ref{sec:tm-retrysets}});
-		``Abort codes'' suppresses retries and dynamically detects when to inject conflict aborts and so on
-		(\sect{\ref{sec:txn-abort-codes}}).
+		``STM'' suppresses retry aborts and dynamically detects when to inject conflict aborts and so on
+		(\sect{\ref{sec:txn-abort-codes}}),
+		ultimately matching STM's execution semantics.
 		State space estimates measured after a timeout of 10 hours.
 		}
-	\label{tab:verifs}
+	\label{tab:tm-verifs}
 \end{table}
 
-% TODO rephrase the outdated para from sigbovik here,
-% probably after rerunning expts
+\subsubsection{Interpreting the verification guarantee}
 
-\subsection{Reduction}
+Landslide was able to verify most of these tests for a fair range of thread and iteration counts,
+often reaching up to 2 threads with 3 iterations each, 3 with 2 each, or 4 with 1.
+In the case of {\tt htm2}, for example,
+verifying up to $(K, N)$ represents a guarantee that,
+even repeating Figure~\ref{fig:htm-fixed}'s atomicity protocol $N$ times
+in any scheduling sequence or combination of transaction aborts,
+it is impossible for $K$ threads to violate the intended atomicity property
+(i.e., get 2 threads in the critical section simultaneously).
 
-While verifying the soundness of Figure~\ref{fig:htm-fixed}'s atomicity protocol is a positive result,
-the previous section's attempts at several larger real-world programs quickly suffered exponential explosion
+It is difficult to discern from prior work a concrete standard
+for what values of $(K, N)$ constitute a ``good'' degree of verification.
+One recent paper \cite{tsopso},
+which likewise extended DPOR with a new dimension of concurrency (weak memory orderings)
+reported verifying programs with up to 10 concurrent events,
+presumably shared memory accesses.
+Another \cite{optimal-dpor}
+reported test cases with as many as 19 threads,
+although with what must be very little synchronization or memory conflicts,
+%although with what nature of synchronization or memory conflicts is not clear,
+as even their baseline DPOR checked only 4096 interleavings on that test.
+%
+Table~\ref{tab:tm-test-case-evence} confers a sense of the complexity of this evaluation's test suite,
+with the final column showing the approximate maximum number of preemption points
+reached among Landslide's verifications
+(i.e., $({\sf txn}+{\sf sync}+{\sf race})*K*N$ for the highest $(K,N)$ completed.
+%%%% on second thought, i'm not gonna do this -- any branch that xend shows up in, is gonna lose any of the pps coming
+%%%% from the failure path's mxes or data races, so xend will never be an *additional* pp
+%%%% and of course it will scare the committee
+% \footnote{The 1.5 multiplier on {\sf txn} represents the fact that for each transaction,
+% the {\tt xend} preemption point marking the end of its success path shows up about half the time,
+% the other half being failure injections.
+% % in reality it's usually less than half, because (1) drpps can show up in failure paths, which will get interleaved around,
+% % thereby giving the abort path more interleavings, and (2) under -A -S, you might get multiple codes for duplicate abort paths
+% % abort sets could theoretically push them above half but probably not in any test case here
+% }).
+
+\begin{table}[h]
+	\begin{center}
+		\begin{tabular}{c||c|c|c||c}
+			{\bf test} & {\bf \#txn} & {\bf \#sync} & {\bf \#race} & {\bf max events verified} \\
+			\hline
+			{\tt htm2}		& 1	& 2	& 4	& 42	\\ % 2,3
+			{\tt counter}		& 1	& 0	& 1	& 16	\\ % 2,4
+			{\tt swap}		& 1	& 4	& 8	& 52	\\ % 2,2
+			{\tt fig63}		& 1	& 0	& $K$	& 24	\\ % 3,2 k=3 -> 24; 4,2 -> 40 (not yet); 2,4 -> 24
+			{\tt avl\_insert}	& 1	& 2	& 7	& 20	\\ % 2,1 nb. only 5 drpps under -A -S but w/e
+			{\tt avl\_fixed}	& 1	& 2	& 9	& 24	\\ % 2,1 nb. again, only 5 under -A -S
+			% the extra 2 over basicer is from resize, which only 1 thread does, but K*N is 0 here anyway so vov
+			{\tt map\_basic}	& 1	& 4	& ?	& 0	\\ % lol
+			{\tt map\_basicer}	& 1	& 2	& ?	& ?	\\
+		\end{tabular}
+	\end{center}
+	\caption{Number of concurrency events per iteration of each test case.
+	Note that no test used any synchronization besides mutexes % ;
+	%while they do use the P2 thread API, %in the first place,
+	(the P2 thread API was annotated as trusted (\sect{\ref{sec:landslide-config-landslide}})
+	and so does not contribute to state space size).
+	Also note that ``\#race'' means the number of unique accesses identified as racy,
+	rather than racing pairs
+	(the other half of a pair might well be within a transaction, which cannot be preempted on).
+	}
+	\label{tab:tm-test-case-evence}
+\end{table}
+
+In the case of {\tt htm2},
+it is easy to look at the program with human intuition and judge that,
+because the protocol's only state is stored in a single boolean,
+with no use of unbounded-capacity data structures or 
+contention-dependent exponential backoff loops,
+it would be unimaginable that adding a 5th thread to the system
+could make any difference in correctness where 4 threads could not,
+or that a 4th repetition between 2 threads could make a difference where 3 could not,
+and ultimately that it must safely generalize to all $(K, N)$.
+% under certain invisible assumptions like the system runs with SC memory! (spoilers!!)
+For more complicated algorithms,
+which may involve complex conflict patterns such as tree rebalancing or map resizing,
+generalizing the verification is not so straightforward;
+other formal verification approaches aside,
+the user must ultimately be content with the probabilistic assurance that
+as $K$ and $N$ increase,
+the likelihood that a bug exists which requires more threads or iterations to expose grows ever lower
+% (in the author's fancy, it may as well drop exponentially in the same way as the state spaces grow)
+(none of the bugs in \sect{\ref{sec:tm-eval-bugs}} required any higher parameters than $(2,2)$ to expose).
+% and by analogy with ICB, none of the bugs in quicksand evaluation took more than a preemption bound of 3 to expose
+% but it's not clear how to state this "analogy" concisely in text
+
+Nevertheless, pushing $K$ and $N$ higher is obviously desirable,
+even if it means applying reductions that require human intuition to trust are sound.
+Moreover, much as verifying {\tt htm2}'s soundness is a positive result,
+the attempts at larger data structures quickly suffered exponential explosion
 for even small thread/iteration counts,
 in one case failing to make any guarantee about even the minimum possible test configuration,
 and in another failing to verify that a previously-found bug had been fixed.
-I explore three possible mitigation approaches.
+In the following subsections I explore three possible mitigation approaches.
+
+\subsubsection{Retry set reduction}
+\label{sec:tm-eval-retrysets}
+
+% TODO
+% discuss the diff reducion approaches
+
+% Please note that retry sets are a theoretically-founded reduction that should apply to all programs,
+% while distinguishing abort codes to suppress retries is potentially unsound,
+% depending on the user's ability to manually verify the presence (and correctness) of retry loops in the code.
+
+% TODO
+
+% discussion items
+
+% note that even programs which have fully conflicting txn/abort paths, under SSS-MC abort sets have nothing to reduce,
+% but once you split those abort paths apart by dr pps, abort sets become useful again
+
+(\sect{\ref{sec:tm-retrysets}}).
+
+% as for the sleep-set-alike optimization,
+% we see it would provide 25% reduction in the example (from thesprop)
+% however, evaluating its potential impact in general is tantamount to implementing it.
+
 
 \subsubsection{Abstraction reduction}
 
@@ -1293,7 +1487,7 @@ and {\tt mutex} using Landslide-annotated P2 mutexes (as the AVL and map impleme
 	\label{fig:htm-lock}
 \end{figure}
 
-Table~\ref{tab:verifs2} shows the new resulting levels of verification
+Table~\ref{tab:tm-verifs2} shows the new resulting levels of verification
 Landslide reached before the same 10-hour timeout.
 Provided that one trusts the {\tt lock} tests correctly check the desired properties,
 and that open-coding hadn't introduced any new bugs (such as Figure~\ref{fig:avlbug}'s),
@@ -1523,10 +1717,11 @@ In this way (and also, of course, because {\tt mutex}'s state spaces are smaller
 			& 2,3 & \\ %\cpu{0} & \ints{0} \\
 			& 3,1 & \\ %\cpu{0} & \ints{0} \\
 			& 3,2 & \\ %\cpu{0} & \ints{0} \\
+			\hline \multicolumn{4}{c}{everything above this line needs rerun} \\
 		\end{tabular}
 		%\end{tabular}
 	\end{center}
-	\caption{Continuation of Table~\ref{tab:verifs}.
+	\caption{Continuation of Table~\ref{tab:tm-verifs}.
 		Demonstrates abstraction reduction \cite{dbug-phdthesis}
 		on the {\tt avl\_fixed} and {\tt map\_basic} tests
 		by verifying HTM mutex implementations separately.
@@ -1535,20 +1730,10 @@ In this way (and also, of course, because {\tt mutex}'s state spaces are smaller
 		and retry aborts suppressed
 		(both lock implementations include a retry loop).
 		The reduced {\tt avl\_mutex} and {\tt map\_mutex} are, of course, no longer transactional.
+		{\bf RERUN NOTE: this entire table needs to be rerun on account of dpor-preferred-tid}
 		}
-	\label{tab:verifs2}
+	\label{tab:tm-verifs2}
 \end{table}
-
-\subsubsection{Retry set reduction}
-\label{sec:tm-eval-retrysets}
-
-% TODO
-
-(\sect{\ref{sec:tm-retrysets}}).
-
-% as for the sleep-set-alike optimization,
-% we see it would provide 25% reduction in the example (from thesprop)
-% however, evaluating its potential impact in general is tantamount to implementing it.
 
 %%%% map mutex
 % % TODO - bc of this weird nonlinear behaviour around 2,1+, yo ushoud prob try 2,2 for map_basic as well
