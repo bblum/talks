@@ -1427,6 +1427,10 @@ so named because it effectively puts $T_1$ ``to sleep'' until after the true con
 Landslide's implementation differs from prior work by not explicitly tracking
 sets of reordered threads and memory accesses they should expect to conflict with,
 and instead identifies where the reduction should take place in subsequent iterations of DPOR.
+% KEEP_RUNNING_DPORS_CHOSEN_TID
+This approach also relies on the search ordering strategy ({\tt arbiter\_choose()})
+to prefer scheduling the thread previously chosen for reordering by DPOR,
+to force whatever its conflicting memory access was to happen before the other, preempted thread gets a chance to run.
 Further optimizations such as {\em source sets} and {\em wakeup trees},
 which achieve optimality (i.e., executing exactly one interleaving per equivalence class) \cite{optimal-dpor}
 are not yet implemented,
