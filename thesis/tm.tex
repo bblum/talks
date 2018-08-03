@@ -1177,7 +1177,8 @@ I report their estimated state space size and runtime measured after that timeou
 			& 2,4 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{20h 50m}	& \ETAdag{1814844} \\
 			% [JOB 4] progress: 805070/1814844 brs (44.360267%), ETA 10h 49m 33s (elapsed 9h 59m 54s)
 			& 3,1 & \cpu{40.74}	& \ints{774}	& \cpu{24.27}	& \ints{224}	& \cpu{23.26}	& \ints{140} \\
-			& 3,2 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
+			& 3,2 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{8d 8h}& \ETAdag{2562278} \\
+			% [JOB 4] progress: 713090/2562278 brs (27.830313%), ETA 7d 22h 27m 42s (elapsed 9h 59m 54s)
 			& 4,1 & \cpu{8202.71}	& \ints{212146}	& \cpu{333.26}	& \ints{11973}	& \cpu{1794.06}	& \ints{44995} \\
 			% measured with !CONSIDER_ONLY_MOST_RECENT_DPOR_PREFERRED_TID
 			%& 2,2 & \cpu{72.40}	& \ints{1970}	& \cpu{27.28}	& \ints{356}	& \cpu{26.84}	& \ints{288} \\
@@ -1420,25 +1421,96 @@ In the following subsections I explore three possible mitigation approaches.
 \subsubsection{Retry set reduction}
 \label{sec:tm-eval-retrysets}
 
-% TODO
-% discuss the diff reducion approaches
+Firstly, the middle column of Table~\ref{tab:tm-verifs}
+shows the impact of Landslide's experimental retry set reduction (\sect{\ref{sec:tm-retrysets}}).
+The biggest win is apparent in {\tt fig63},
+the test contrived to induce as much retry set reduction as possible
+using transactional paths that conflict only with abort paths and not with each other, and vice versa.
+Retry set reduction provides
+In {\tt fig63}(2,1), corresponding to Figure~\ref{fig:retry-set-example},
+retry-set-enabled DPOR correctly prunes down to the optimal 6 interleavings,
+while the baseline treats it identically to the fully-conflicting {\tt counter}(2,1).
+Figure~\ref{fig:retry-reduction} visualizes the difference between the state spaces explored by the two approaches.
 
-% Please note that retry sets are a theoretically-founded reduction that should apply to all programs,
-% while distinguishing abort codes to suppress retries is potentially unsound,
-% depending on the user's ability to manually verify the presence (and correctness) of retry loops in the code.
+\begin{figure}[h]
+	\begin{center}
+		\includegraphics[width=\textwidth]{retry-sets.pdf}
+	\end{center}
+	\caption{Visualization of retry set state space reduction.
+	On both {\tt counter}(2,1) and {\tt fig63}(2,1), baseline DPOR tests % oops
+	all 10 interleavings pictured,
+	with the middle 2 arising from the data-race preemption point within the abort path.
+	On {\tt counter}, all transitions marked as memory conflicts conflict with each other;
+	on {\tt fig63}, only pairs of one {\tt xend} and one {\tt data race} each conflict.
+	}
+	\label{fig:retry-reduction}
+\end{figure}
 
-% TODO
+Perhaps surprisingly, retry sets also provide reduction even on tests with fully conflicting transactions
+(i.e., all tests besides {\tt fig63}).
+With just synchronization preemption points (including {\tt \_xbegin()} and {\tt \_xend()}),
+both the baseline and retry sets would explore exactly all 8 permutations of success and abort between the two threads.
+However, in the presence of data-race preemption points,
+even for example on {\tt counter}(2,1)
+(whose abort path is just 1 {\tt xadd},
+and whose optimal state space size should be 8 regardless of data-race preemption points),
+baseline DPOR tests reorderings of one thread's transaction both with the other's failure path,
+and with the other's data race therein.
+Retry sets on the other hand identify and skip that equivalence
+(technically speaking, retry set DPOR reorders with the data race first during depth-first search,
+then skips generating a retry set for reordering the full abort path).
 
-% discussion items
+% --- counter-retry       2018-08-03 13:50:37.324021777 -0400
+% +++ counter-baseline    2018-08-03 13:50:53.059021559 -0400
+%  0--1@105c41 1-4@105c41 2-5@xbeg-delay 3-5@xbegin 4-5@xend 5-5@105c41 6-4@1001042 7-4@105c41 8-6@xbeg-delay 9-6@xbegin 10-6@xend 11-6@105c41 12-4@1001042 13-4@105c41 14-3@1028e9
+% #[EXPLORE]       dbg #2/tid5 retry set: {TID6 (1,0), TID5 (1,0)}
+% #[EXPLORE]       from #14/tid3, chose tid 6 (xabort injection), child of #9/tid6
+%  0--1@105c41 1-4@105c41 2-5@xbeg-delay 3-5@xbegin 4-5@xend 5-5@105c41 6-4@1001042 7-4@105c41 8-6@xbeg-delay 9-6@xbegin 10-6@datarace-a 11-6@105c41 12-4@1001042 13-4@105c41 14-3@1028e9
+% #[EXPLORE]       dbg #2/tid5 retry set: {TID6 (1,0), TID5 (1,0)}
+% #[EXPLORE]       dbg #2/tid5 retry set: {TID6 (0,1), TID5 (1,0)}
+% #[EXPLORE]       from #14/tid3, chose tid 5 (xabort injection), child of #3/tid5
+%  0--1@105c41 1-4@105c41 2-5@xbeg-delay 3-5@xbegin 4-5@datarace-a 5-5@105c41 6-4@1001042 7-4@105c41 8-6@xbeg-delay 9-6@xbegin 10-6@xend 11-6@105c41 12-4@1001042 13-4@105c41 14-3@1028e9
+% #[EXPLORE]       from #14/tid3, chose tid 6 (xabort injection), child of #9/tid6
+%  0--1@105c41 1-4@105c41 2-5@xbeg-delay 3-5@xbegin 4-5@datarace-a 5-5@105c41 6-4@1001042 7-4@105c41 8-6@xbeg-delay 9-6@xbegin 10-6@datarace-a 11-6@105c41 12-4@1001042 13-4@105c41 14-3@1028e9
+% #[EXPLORE]       from #14/tid3, chose tid 6, child of #4/tid5
+%  0--1@105c41 1-4@105c41 2-5@xbeg-delay 3-5@xbegin 4-5@datarace-a 5-6@xbeg-delay 6-6@xbegin 7-6@xend 8-6@105c41 9-5@105c41 10-4@1001042 11-4@1001042 12-4@105c41 13-3@1028e9
+% #[EXPLORE]       from #13/tid3, chose tid 6 (xabort injection), child of #6/tid6
+%  0--1@105c41 1-4@105c41 2-5@xbeg-delay 3-5@xbegin 4-5@datarace-a 5-6@xbeg-delay 6-6@xbegin 7-6@datarace-a 8-6@105c41 9-5@105c41 10-4@1001042 11-4@1001042 12-4@105c41 13-3@1028e9
+% #[EXPLORE]       from #13/tid3, chose tid 6, child of #2/tid5
+% #[D-MAIL]        tt'ing abort set: {TID6 (1,0), TID5 (1,0)}
+%  0--1@105c41 1-4@105c41 2-5@xbeg-delay 3-6@xbeg-delay 4-6@xbegin 5-6@xend 6-6@105c41 7-5@xbegin 8-5@xend 9-5@105c41 10-4@1001042 11-4@1001042 12-4@105c41 13-3@1028e9
+% #[EXPLORE]       from #13/tid3, chose tid 6, child of #2/tid5
+% #[D-MAIL]        tt'ing abort set: {TID6 (0,1), TID5 (1,0)}
+% +0--1@105c41 1-4@105c41 2-5@xbeg-delay 3-6@xbeg-delay 4-6@xbegin 5-6@xend 6-6@105c41 7-5@xbegin 8-5@datarace-a 9-5@105c41 10-4@1001042 11-4@1001042 12-4@105c41 13-3@1028e9
+%  0--1@105c41 1-4@105c41 2-5@xbeg-delay 3-6@xbeg-delay 4-6@xbegin 5-6@datarace-a 6-6@105c41 7-5@xbegin 8-5@xend 9-5@105c41 10-4@1001042 11-4@1001042 12-4@105c41 13-3@1028e9
+% +0--1@105c41 1-4@105c41 2-5@xbeg-delay 3-6@xbeg-delay 4-6@xbegin 5-6@datarace-a 6-6@105c41 7-5@xbegin 8-5@datarace-a 9-5@105c41 10-4@1001042 11-4@1001042 12-4@105c41 13-3@1028e9
 
-% note that even programs which have fully conflicting txn/abort paths, under SSS-MC abort sets have nothing to reduce,
-% but once you split those abort paths apart by dr pps, abort sets become useful again
+% --- fig-retry   2018-08-03 16:41:45.910879780 -0400
+% +++ fig-baseline        2018-08-03 16:42:02.822879546 -0400
+% @@ -16 +110 @@
+%  7-5@xbegin 8-5@xend 9-5@105c41 10-6@105c41 11-4@105c41 12-6@105c41 13-4@105c41 14-6@1008178 15-6@xbegin 16-6@xend 17-6@105c41 18-3@1028e9
+%  7-5@xbegin 8-5@xend 9-5@105c41 10-6@105c41 11-4@105c41 12-6@105c41 13-4@105c41 14-6@1008178 15-6@xbegin 16-6@datarace-a 17-6@datarace 18-6@105c41 19-3@1028e9
+% #[EXPLORE]       dbg #6/tid5 retry set: {TID6 (0,1), TID5 (1,0)}
+% #[EXPLORE]       from #19/tid3, chose tid 5 (xbegin failure injection), child of #7/tid5
+%  7-5@xbegin 8-5@datarace-a 9-5@datarace 10-5@105c41 11-6@105c41 12-4@105c41 13-6@105c41 14-4@105c41 15-6@1008178 16-6@xbegin 17-6@xend 18-6@105c41 19-3@1028e9
+% #[EXPLORE]       dbg #9/tid5 retry set: {TID6 (1,0), TID5 (1,1)}
+% #[EXPLORE]       dbg #6/tid5 retry set: {TID6 (0,1), TID5 (1,0)}
+% #[EXPLORE]       from #19/tid3, chose tid 6 (xbegin failure injection), child of #16/tid6
+%  7-5@xbegin 8-5@datarace-a 9-5@datarace 10-5@105c41 11-6@105c41 12-4@105c41 13-6@105c41 14-4@105c41 15-6@1008178 16-6@xbegin 17-6@datarace-a 18-6@datarace 19-6@105c41 20-3@1028e9
+% #[EXPLORE]       dbg #9/tid5 retry set: {TID6 (1,0), TID5 (1,1)}
+% #[EXPLORE]       dbg #6/tid5 retry set: {TID6 (0,1), TID5 (1,0)}
+% #[EXPLORE]       from #20/tid3, chose tid 6, child of #9/tid5
+% #[D-MAIL]        tt'ing abort set: {TID6 (1,0), TID5 (1,1)}
+%  7-5@xbegin 8-5@datarace-a 9-5@datarace 10-6@105c41 11-4@105c41 12-6@105c41 13-4@105c41 14-6@1008178 15-6@xbegin 16-6@xend 17-6@105c41 18-5@105c41 19-3@1028e9
+% #[EXPLORE]       dbg #6/tid5 retry set: {TID6 (0,1), TID5 (1,0)}
+% #[EXPLORE]       from #19/tid3, chose tid 6, child of #6/tid5
+% #[D-MAIL]        tt'ing abort set: {TID6 (0,1), TID5 (1,0)}
+% +7-5@xbegin 8-5@datarace-a 9-5@datarace 10-6@105c41 11-4@105c41 12-6@105c41 13-4@105c41 14-6@1008178 15-6@xbegin 16-6@datarace-a 17-6@datarace 18-6@105c41 19-5@105c41 20-3@1028e9
+% +7-6@105c41 8-4@105c41 9-6@105c41 10-4@105c41 11-6@1008178 12-6@xbegin 13-6@xend 14-6@105c41 15-5@xbegin 16-5@xend 17-5@105c41 18-3@1028e9
+% +7-6@105c41 8-4@105c41 9-6@105c41 10-4@105c41 11-6@1008178 12-6@xbegin 13-6@xend 14-6@105c41 15-5@xbegin 16-5@datarace-a 17-5@datarace 18-5@105c41 19-3@1028e9
+%  7-6@105c41 8-4@105c41 9-6@105c41 10-4@105c41 11-6@1008178 12-6@xbegin 13-6@datarace-a 14-6@datarace 15-6@105c41 16-5@xbegin 17-5@xend 18-5@105c41 19-3@1028e9
+% +7-6@105c41 8-4@105c41 9-6@105c41 10-4@105c41 11-6@1008178 12-6@xbegin 13-6@datarace-a 14-6@datarace 15-6@105c41 16-5@xbegin 17-5@datarace-a 18-5@datarace 19-5@105c41 20-3@1028e9
 
-(\sect{\ref{sec:tm-retrysets}}).
-
-% as for the sleep-set-alike optimization,
-% we see it would provide 25% reduction in the example (from thesprop)
-% however, evaluating its potential impact in general is tantamount to implementing it.
 
 \subsubsection{Abort code (STM) reduction}
 \label{sec:tm-eval-stm}
@@ -1642,8 +1714,8 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 			& 2,4 & \cpu{13545.35} & \ints{384512}	\\ % certified causality ok
 			& 3,1 & \cpu{11.21} & \ints{132}	\\ % certified causality ok
 			& 3,2 & \cpu{25434.85} & \ints{718690}	\\ % certified causality ok
-			& 4,1 & \cpu{493.38} & \ints{15064}	\\ % certified causality ok
 			\hline \multicolumn{4}{c}{everything above this line needs rerun} \\
+			& 4,1 & \cpu{547.96} & \ints{15064}	\\
 			%%%%%%%%%%% htm_mutex
 			%%%% -- nb. these numbers were obtained with a oops-exploded state space
 			%%%% from a misplaced assert on hm->held
