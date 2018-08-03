@@ -457,7 +457,7 @@ while the latter serves as a workqueue that indicates only those not already tes
 \subsubsection{Adding possible abort codes}
 \label{sec:txn-abort-codes}
 
-Up to three abort codes are considered depending on the testing options listed in the previous section.
+Up to four abort codes are considered depending on the testing options listed in the previous section.
 All abort codes are simultaneously added to both lists,
 unless already present on {\tt xabort\_codes\_ever},
 in which case not added to {\tt xabort\_codes\_todo} to avoid duplicate work.
@@ -508,7 +508,8 @@ as well as adding a command-line option to configure said $N$, the cache-line si
 For now, Landslide (wrongly) lumps false sharing in among the ``spurious'' {\tt \_XABORT\_RETRY} failure reasons.
 %
 On HTM, even if the user wraps all such spurious failure reasons in a retry loop,
-false sharing should still produce a non-retryable abort,
+false sharing (i.e., disjoint memory accesses that share a cache line)
+should still produce a non-retryable abort,
 begetting a discrepancy with STM,
 which aborts only when the memory addresses match exactly.
 Accordingly, the {\tt -S} option described above provides STM semantics as currently implemented.
@@ -905,13 +906,13 @@ but the previously-published verification results should be considered outdated.
 			% 233 interleavings tested; 3 preemptions; job time 30s; pldi time 325806017; new-fixed pldi cputime 2445895897)
 			% was also found with 169 interleavings but later on
 			%[JOB 38] progress: 3812/466977272 brs (0.000816%), ETA INF (elapsed 13m 50s)
+			\hline \multicolumn{9}{c}{everything above this line needs rerun for dpor-preferred tid} \\
 		\hline
 		{\tt lock\_fast}
 		%({\tt spinlock})
-			& 2,1	&\cpu{8.17}&\wtm{2.65}&\ints{2}&\cpu{*2.39}&\wtm{*2.39}&\ints{2}& \ETA{4} \\
+			& 2,1	&\cpu{12.33}&\wtm{3.69}&\ints{2}&\cpu{*3.32}&\wtm{*3.32}&\ints{2}& \ETA{4} \\
 		(perf)
-			& 9,9	&\cpu{36.64}&\wtm{9.78}&\ints{2}&\cpu{*4.75}&\wtm{*4.75}&\ints{2}& \ETA{inf} \\
-			\hline \multicolumn{4}{c}{everything above this line needs rerun} \\
+			& 9,9	&\cpu{20.49}&\wtm{5.74}&\ints{2}&\cpu{*4.78}&\wtm{*4.78}&\ints{2}& \ETA{inf} \\
 	\end{tabular}
 	\end{center}
 	\caption{Landslide's bug-finding performance on various test configurations.
@@ -968,9 +969,9 @@ Landslide also found two bugs in the ``real-world'' transactional algorithms I t
 	% landslide-trace-1521093835.18927.html
 	This manifested
 	alternately
-	as a segfault (for test parameters (2,2) and (3,1)) % TODO double check
-	% landslide-trace-1521092404.23772.html
+	as a segfault (for test parameters (2,2) and (3,1))
 	and
+	% landslide-trace-1533274266.417257.html
 	as a consistency-check assertion failure (for test parameters (2,3)).
 	The presence of {\tt while (\_retry);} makes the necessary preemption window extremely small
 	(between it and {\tt \_xbegin()}),
@@ -978,17 +979,19 @@ Landslide also found two bugs in the ``real-world'' transactional algorithms I t
 	but Landslide is blind to such matters of chance.
 
 	As a matter of full disclosure,
-	while editing this test to make it Landslide-friendly,
 	I noted that the loop does not affect the test's possible behaviours,
 	only its {\em likely} ones,
-	and so removed it to keep the state space size manageable.
-	One could then argue that manual inspection is at least partly to credit for this result.
-	% TODO justify this
-	However, adding the loop back in to dispel any doubt,
-	% converting it to a {\tt yield()} loop % TODO: necessary?
-	Landslide still finds the bug,
-	albeit slightly slower,
-	in % TODO how much time
+	and so removed it to make the test more Landslide-friendly.
+	%keep the state space size manageable.
+	%Lest any reader think I hacked the test after already knowing about the bug,
+	To dispel any doubt about bias or test hacking,
+	I confirmed that Landslide still finds the bug with the spin loop unmodified,
+	on (3,1) in the same 53 interleavings,
+	although it suffers resource exhaustion
+	% from dealing with the loop
+	on parameters of (2,2) or greater.
+	% specifically, it runs out of file descriptors, since on bochs you need 1 fd per PP,
+	% and the branch just gets 1000+ PPs deep
 	\item
 	{\bf Spurious spinlock abort.}
 	{\tt lock\_fast} discovered a spurious transactional-path write conflict
@@ -1012,7 +1015,7 @@ Landslide also found two bugs in the ``real-world'' transactional algorithms I t
 	whose author had also noticed and corrected this problem in the same way.
 
 	As another matter of full disclosure,
-	I noticed this bug through manual inspection,
+	I noticed this bug through manual inspection
 	while adapting the spinlock's client code to be Landslide-friendly,
 	then wrote {\tt lock\_fast} specifically to target this behaviour,
 	so unlike {\tt avl\_insert}, it does not count as Landslide finding a previously-unknown bug.
@@ -1162,16 +1165,17 @@ I report their estimated state space size and runtime measured after that timeou
 			  & \cpu{\bf cpu (s)} & \ints{\bf SS size}
 			  & \cpu{\bf cpu (s)} & \ints{\bf SS size} \\
 			\bf test & \bf params
-			  & \em (or \ETAdag{\bf \em ETA}) & \em (or \ETAdag{\bf \em est.})
-			  & \em (or \ETAdag{\bf \em ETA}) & \em (or \ETAdag{\bf \em est.})
-			  & \em (or \ETAdag{\bf \em ETA}) & \em (or \ETAdag{\bf \em est.}) \\
+			  & \em (or \ETAdag{\bf \em est.}) & \em (or \ETAdag{\bf \em est.})
+			  & \em (or \ETAdag{\bf \em est.}) & \em (or \ETAdag{\bf \em est.})
+			  & \em (or \ETAdag{\bf \em est.}) & \em (or \ETAdag{\bf \em est.}) \\
 			\hline
 			\hline
 			{\tt htm2}
 			& 2,1 & \cpu{19.82}	& \ints{22}	& \cpu{19.01}	& \ints{15}	& \cpu{3.45}	& \ints{4} \\
 			& 2,2 &\cpu{73.02}	& \ints{1970}	& \cpu{26.96}	& \ints{356}	& \cpu{27.38}	& \ints{288} \\
 			& 2,3 &\cpu{3923.32}	& \ints{104914}	& \cpu{230.71}	& \ints{7528}	& \cpu{910.80}	& \ints{22409} \\
-			& 2,4 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
+			& 2,4 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{20h 50m}	& \ETAdag{1814844} \\
+			% [JOB 4] progress: 805070/1814844 brs (44.360267%), ETA 10h 49m 33s (elapsed 9h 59m 54s)
 			& 3,1 & \cpu{40.74}	& \ints{774}	& \cpu{24.27}	& \ints{224}	& \cpu{23.26}	& \ints{140} \\
 			& 3,2 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
 			& 4,1 & \cpu{8202.71}	& \ints{212146}	& \cpu{333.26}	& \ints{11973}	& \cpu{1794.06}	& \ints{44995} \\
@@ -1192,7 +1196,7 @@ I report their estimated state space size and runtime measured after that timeou
 			\hline
 			{\tt swap}
 			& 2,1 & \cpu{38.76}	& \ints{99}	& \cpu{36.91}	& \ints{59}	& \cpu{3.29}	& \ints{4} \\
-			& 2,2 & \cpu{qqq}	& \ints{qqq}	& \cpu{497.11}	& \ints{11427}	& \cpu{461.54}	& \ints{9046} \\
+			& 2,2 & \cpu{12009.77}	& \ints{233396}	& \cpu{497.11}	& \ints{11427}	& \cpu{461.54}	& \ints{9046} \\
 			& 3,1 & \cpu{2975.30}	& \ints{60912}	& \cpu{522.07}	& \ints{10706}	& \cpu{86.21}	& \ints{1014} \\
 			% measured with !CONSIDER_ONLY_MOST_RECENT_DPOR_PREFERRED_TID
 			%& 2,1 & \cpu{38.43}	& \ints{99}	& \cpu{36.12}	& \ints{59}	& \cpu{3.34}	& \ints{4} \\
@@ -1206,6 +1210,8 @@ I report their estimated state space size and runtime measured after that timeou
 			% nb this 22 would be a 21 with !CONSIDER_ONLY... ..but, if it's the biggest loss, really n b d
 			& 3,1 & \cpu{10.40}	& \ints{148}	& \cpu{7.72}	& \ints{22}	& \cpu{3.33}	& \ints{1} \\
 			& 3,2 & \cpu{708.86}	& \ints{21642}	& \cpu{196.45}	& \ints{6467}	& \cpu{3.23}	& \ints{1} \\
+			% 3,3 with -R was tried for about 90 min, and stopped with ETA of 2367715 / 2d22h
+			% without -R would of course be bigger still
 			& 4,1 & \cpu{106.21}	& \ints{3064}	& \cpu{11.29}	& \ints{130}	& \cpu{3.43}	& \ints{1} \\
 			& 4,2 & \ETAdag{qqq} 	& \ETAdag{qqq} 	& \ETAdag{22d 17h}	& \ETAdag{3129034}	& \cpu{3.28}	& \ints{1} \\
 			%[JOB 1] progress: 827215/3129034 brs (26.436748%), ETA 22d 7h 18m 34s (elapsed 9h 59m 56s)
@@ -1361,6 +1367,11 @@ reached among Landslide's verifications
 			% the extra 2 over basicer is from resize, which only 1 thread does, but K*N is 0 here anyway so vov
 			{\tt map\_basic}	& 1	& 4	& ?	& 0	\\ % lol
 			{\tt map\_basicer}	& 1	& 2	& ?	& ?	\\
+
+			{\tt lock}({\tt spinlock})	& 1	& 2	& 4	& 28	\\ % 2,2
+			{\tt lock}({\tt spin\_fixed})	& 1	& 2	& 4	& 28	\\ % 2,2 or 4,1
+			{\tt lock}({\tt mutex})		& 1	& 2	& 2	& 40	\\ % 2,4
+			% not putting lock_fast because it like, doesn't have a "state space" per se
 		\end{tabular}
 	\end{center}
 	\caption{Number of concurrency events per iteration of each test case.
@@ -1432,11 +1443,64 @@ In the following subsections I explore three possible mitigation approaches.
 \subsubsection{Abort code (STM) reduction}
 \label{sec:tm-eval-stm}
 
+Secondly, the state spaces could be reduced
+simply by restricting the concurrency model
+to only a subset of nondeterministic {\tt xbegin} outcomes possible under HTM.
+Concretely speaking,
+the {\tt -X -A -S} combination of Landslide options
+suppresses retry aborts
+(\sect{\ref{sec:txn-abort-codes}}),
+which must be checked at every transactional preemption point,
+replacing them with explicit and conflict aborts,
+which Landslide injects only after identifying memory conflicts through DPOR
+or encountering an {\tt xabort},
+respectively,
+ultimately simulating the semantics of STM rather than HTM.
+This can allow for state space reduction %result in smaller state spaces compared to the baseline
+when transactions happen to be non-conflicting,
+but more impactfully,
+conflict aborts can occur only {\em after} the other thread's conflicting access,
+so between a pair of transactions
+% only the first two during execution, not true for subsequent pairs, if they are in conflict with previous pairs at all
+only the success, success and success, abort sequences need be tested;
+abort, success and abort, abort may (in fact, must) be skipped.
+The final column in Table~\ref{tab:tm-verifs} shows the result of STM semantics verification,
+which always results in at least 2x reduction compared to the baseline,
+although retry sets can make up some of the lost ground in some cases.
+
+However, suppressing retry aborts is not guaranteed to faithfully test all possible behaviours
+observable under HTM%
+\footnote{A user who wishes to distinguish conflict aborts, retry aborts, and so on during testing
+without glossing over any of HTM's peculiarities
+could supply {\tt -X -A} without {\tt -S};
+however, this could produce only state spaces at least as large as the baseline.}.
 As an example, note how STM semantics reduced {\tt fig63}'s state space on all $(K,N)$ configurations to 1.
 Because its transactional paths are all mutually independent,
 DPOR identifies no need either to inject conflict aborts or to reorder threads.
-However, this skips the slow-path consistency assertion completely,
-which the programmer may have intended to run ``every so often''
+However, this skips the slow-path consistency assertion completely.
+If the programmer had intended it to run ``every so often'' at the whim of the timer interrupt,
+applying this reduction would be unsound.
+Also note the state space size of 4 for many $(2,1)$ test configurations,
+corresponding exactly to the aforementioned success, success and success, abort sequences
+(times two ways to interleave the two threads).
+Because of the scheduling dependency for conflict aborts,
+Landslide cannot recognize the failure path's data races
+without a third freely-reorderable iteration;
+STM mode must be run with $K \times N \ge 3$ to meaningfully test conflicts between failure and success paths at all.
+
+On the other hand, some programs may clearly annotate their intention
+for abort paths to be executed only in case of actual memory conflicts.
+{\tt swap}, {\tt avl\_insert}, and {\tt map\_basic} abstract their {\tt \_xbegin()} calls
+behind an interface which can be implemented either with or without retry loops,
+while {\tt lock}({\tt spinlock}) and {\tt lock}({\tt mutex}) implement the retry loop directly.
+In these cases, the user can check this reduction's soundness by visual inspection.
+Future work could automatically identify a program's retry loops
+and give up on {\tt \_XABORT\_RETRY} by switching to STM mode on-the-fly,
+much like Landslide's heuristic synchronization detection does for yield loops (\sect{\ref{sec:landslide-blocking}})%
+\footnote{Landslide's current implementation gets stuck in infinitely deep interleavings
+when it encounters a retry loop,
+so for now the user must inspect the test case to determine which testing mode to use.
+}.
 
 \subsubsection{Abstraction reduction}
 
@@ -1526,38 +1590,27 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 		%	\bf test & \bf params & \em (or \ETAdag{\bf \em ETA}) & \em (or \ETAdag{\bf \em est.})
 		%	  & \em (or \ETAdag{\bf \em ETA}) & \em (or \ETAdag{\bf \em est.}) \\
 		\begin{tabular}{cc||r|r}
+			& & \multicolumn{2}{c}{\bf STM ({\tt -A -S})} \\
 			& & \cpu{\bf cpu (s)} & \ints{\bf SS size} \\
-			\bf test & \bf params & \em (or \ETAdag{\bf \em ETA}) & \em (or \ETAdag{\bf \em est.}) \\
+			\bf test & \bf params & \em (or \ETAdag{\bf \em est.}) & \em (or \ETAdag{\bf \em est.}) \\
 			\hline
 			\hline
 			{\tt lock}
-			& 2,1 & \cpu{2.49} & \ints{4} \\ % certified causality ok
+			& 2,1 & \cpu{3.19} & \ints{4} \\
 			({\tt spinlock})
-			& 2,2 & \cpu{174.26} & \ints{1702} \\ % certified causality ok
+			& 2,2 & \cpu{184.51} & \ints{1702} \\
 			% if lock(spin_fixed) will time out on 2,3 and 3,2, this is guaranteed to aswell
 			% & 2,3 & \\ % \cpu{0} & \ints{0} \\
-			& 3,1 & \cpu{26.97} & \ints{246} \\ % certified causality ok
+			& 3,1 & \cpu{33.29} & \ints{246} \\
 			% & 3,2 & \\ % \cpu{0} & \ints{0} \\
-			% new spinlock test resulce - htm_spinlock
-			% (2,1) without isfree fix
-			%%%% total time elapsed: 9s
-			%%%% [JOB 4] COMPLETE (41 interleavings tested; 3s elapsed)
-			%%%% total CPU time consumed: 14s (14231661 usecs) (core saturation: 37%)
-			% (2,2) without isfree fix
-			%%%% total time elapsed: 1h 22m 20s
-			%%%% [JOB 4] COMPLETE (38544 interleavings tested; 1h 22m 13s elapsed)
-			%%%% total CPU time consumed: 1h 22m 24s (4944373889 usecs) (core saturation: 25%)
-			% (3,1) without isfree fix
-			% in progress but smth like
-			% [JOB 4] progress: 39726/83689 brs (47.468314%), ETA 3h 27m 10s (elapsed 1h 30m 21s)
 			\hline
 			{\tt lock}
-			& 2,1 & \cpu{2.47} & \ints{4} \\ % certified causality ok
+			& 2,1 & \cpu{qqq} & \ints{4} \\
 			({\tt spin\_fixed})
-			& 2,2 & \cpu{94.64} & \ints{998} \\ % certified causality ok
-			& 2,3 & \ETAdag{28h 6m} & \ETAdag{486966} \\ % certified causality ok, add 10h ok
-			% [JOB 4] progress: 234307/486966 brs (48.115630%), ETA 18h 5m 37s (elapsed 9h 59m 50s)
-			& 3,1 & \cpu{21.68} & \ints{186} \\ % certified causality ok
+			& 2,2 & \cpu{104.77} & \ints{998} \\
+			& 2,3 & \ETAdag{qqq} & \ETAdag{qqq} \\
+			& 3,1 & \cpu{26.96} & \ints{186} \\
+			\hline \multicolumn{4}{c}{everything below this line needs rerun} \\
 			& 3,2 & \ETAdag{8y 153d} & \ETAdag{1590416} \\ % caus ok
 			% [JOB 4] progress: 187162/1590416 brs (11.768113%), ETA 8y 152d 16h 25m 38s (elapsed 9h 59m 49s)
 			& 4,1 & \cpu{30408.58} & \ints {282084} \\ % causality ok
@@ -1590,9 +1643,11 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 			& 3,1 & \cpu{11.21} & \ints{132}	\\ % certified causality ok
 			& 3,2 & \cpu{25434.85} & \ints{718690}	\\ % certified causality ok
 			& 4,1 & \cpu{493.38} & \ints{15064}	\\ % certified causality ok
+			\hline \multicolumn{4}{c}{everything above this line needs rerun} \\
 			%%%%%%%%%%% htm_mutex
 			%%%% -- nb. these numbers were obtained with a oops-exploded state space
 			%%%% from a misplaced assert on hm->held
+			%%%% (nb. also before dpor-preferred-tid, although that doesn't seem to affect ss size)
 			% % 2,1
 			% total time elapsed: 6s
 			% [JOB 2] COMPLETE (24 interleavings tested; 3s elapsed)
@@ -1642,17 +1697,18 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 			% total CPU time consumed: 1h 33m 6s (5586369677 usecs) (core saturation: 25%)
 			\hline
 			{\tt lock\_fast}
-			& 2,1 & \cpu{2.42} & \ints{1}	\\
+			& 2,1 & \cpu{3.36} & \ints{1}	\\
 			({\tt spin\_fixed})
-			& 9,9 & \cpu{3.69} & \ints{1}	\\
+			& 9,9 & \cpu{4.91} & \ints{1}	\\
 			\hline
 			{\tt lock\_fast}
-			& 2,1 & \cpu{2.35} & \ints{1}	\\
+			& 2,1 & \cpu{3.40} & \ints{1}	\\
 			({\tt mutex})
-			& 9,9 & \cpu{3.79} & \ints{1}	\\
+			& 9,9 & \cpu{4.71} & \ints{1}	\\
 			\end{tabular}
 			&
 			\begin{tabular}{cc||r|r}
+			& & \multicolumn{2}{c}{\bf Non-transactional} \\
 			& & \cpu{\bf cpu (s)} & \ints{\bf SS size} \\
 			\bf test & \bf params & \em (or \ETAdag{\bf \em ETA}) & \em (or \ETAdag{\bf \em est.}) \\
 			\hline
@@ -1729,11 +1785,12 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 		demonstrating abstraction reduction \cite{dbug-phdthesis}
 		on the {\tt avl\_fixed} and {\tt map\_basic} tests
 		by verifying HTM mutex implementations separately.
-		Run with {\tt landslide -M -X -A -S}, i.e.,
-		conflict and explicit aborts tested separately,
-		and retry aborts suppressed
-		(both lock implementations include a retry loop).
-		The reduced {\tt avl\_mutex} and {\tt map\_mutex} are, of course, no longer transactional at all.
+		Tested with STM semantics, as both lock implementations include a retry loop.
+		%Run with {\tt landslide -M -X -A -S}, i.e.,
+		%conflict and explicit aborts tested separately,
+		%and retry aborts suppressed
+		%(both lock implementations include a retry loop).
+		%The reduced {\tt avl\_mutex} and {\tt map\_mutex} are, of course, no longer transactional at all.
 		{\bf RERUN NOTE: this entire table needs to be rerun on account of dpor-preferred-tid}
 		}
 	\label{tab:tm-verifs2}
