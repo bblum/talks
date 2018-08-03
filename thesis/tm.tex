@@ -1440,8 +1440,12 @@ Figure~\ref{fig:retry-reduction} depicts the difference between the state spaces
 	On both {\tt counter}(2,1) and {\tt fig63}(2,1), baseline DPOR tests % oops
 	all 10 interleavings pictured,
 	with the middle 2 arising from the data-race preemption point within the abort path.
-	On {\tt counter}, all transitions marked as memory conflicts conflict with each other;
-	on {\tt fig63}, only pairs of one {\tt xend} and one {\tt data race} each conflict.
+	%On {\tt counter}, all transitions marked as memory conflicts conflict with each other;
+	%on {\tt fig63}, only pairs of one {\tt xend} and one {\tt data race} each conflict.
+	When {\tt -R} is supplied, however,
+	after the 4th and 6th branches Landslide activates the retry set
+	indicated at the top of the next upcoming subtree
+	to remember which parts of it to skip.
 	}
 	\label{fig:retry-reduction}
 \end{figure}
