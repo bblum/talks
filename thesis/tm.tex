@@ -110,8 +110,7 @@ with $N_i$ a thread ID and $L_i$ a code line number,
 denote the execution sequence of a program as it runs according to the specified thread interleaving.
 This serialization of concurrent execution is told from the perspective of all CPUs at once
 and hence assumes sequential consistency.
-% TODO: fix sect refrance
-For discussion of relaxed memory models refer to Section~\ref{sec:warpzone}.
+For discussion of relaxed memory models refer to Section~\ref{sec:tm-warpzone-relaxed}.
 
 \subsection{Example}
 
@@ -285,8 +284,7 @@ Then, without loss of generality (for any number of other threads \tjj/\tkk, and
 	If so, then the hardware will abort \tii's transaction, discarding the effects of $\tiiat{\beta_1}\dots\tiiat{\beta_n}$
 	and jumping to $\tiiat{\phi_1}$,
 	satisfying case 1.
-	% TODO: give a secrion referenace
-	Otherwise, by DPOR's definition of transition dependence \cite{dpor}, %,landslide-phdthesis},
+	Otherwise, by DPOR's definition of transition dependence (\cite{dpor}, \sect{\ref{sec:landslide-dpor-hb}}),
 	$\tiiat{\beta_{b+1}}\dots\tiiat{\beta_n}$ is independent with the transitions of \tjj and \tkk,
 	may be successfully executed until transaction commit,
 	and reordering them produces an equivalent interleaving,
@@ -539,7 +537,7 @@ will pop off the {\tt xabort\_codes\_todo} queue
 when it's time to explore that preemption point in the usual depth-first manner%
 \footnote{The search order prioritizes abort codes before scheduling other threads
 at such preemption points,
-which is just an implementation detail, not theoretically necessary}.
+which is just an implementation detail, not theoretically necessary.}.
 The optional abort code is then passed through {\tt arbiter\_append\_choice()}/{\tt arbiter\_pop\_choice()}
 to {\tt cause\_transaction\_failure()},
 which edits the simulation state ({\tt \%eip} and {\tt \%eax})
@@ -575,7 +573,6 @@ while the two transactional paths (disjoint memory accesses) and the two abort p
 
 \begin{figure}[h]
         \begin{center}
-	% TODO syntax hilight
         \begin{tabular}{ll}
 		\multicolumn{2}{c}{Initially {\tt \ctype{int} foo, bar = \const{0}; \ctype{mutex\_t} m;}} \\
                 \\
@@ -651,9 +648,8 @@ Landslide remembers those threads' expected {\tt xbegin} results
 and refuses to test any others
 (unless DPOR separately found them, too, in conflict),
 thereby skipping over (i.e., pruning) reorderings of any other {\tt xbegin} results that would be independent.
-% TODO: make a real commit hash instead; put on master
-The {\tt landslide} repository's {\tt retry-sets} branch implements this feature%
-\footnote{The upcoming evaluation showed it too unstable, let alone not yet proved sound, to include in {\tt master}.},
+%The {\tt landslide} repository's {\tt retry-sets} branch implements this feature,
+This feature is implemented in commit 86657c7,
 available with the {\tt -R} command-line option.
 
 % In contrast to Landslide's implementation of the sleep set reduction (\sect{\ref{sec:landslide-explore}}),
@@ -706,7 +702,7 @@ I pose the following evaluation questions.
 
 \subsubsection{Experimental setup}
 
-The evaluation suite comprises several hand-written unit tests,
+The evaluation suite comprises several unit tests hand-written by yours truly,
 microbenchmarks and transactional data structures from \cite{tm-benchmark-cmu},
 a transactional spinlock from \cite{spinlock-rtm-github},
 and various combinations thereof,
@@ -716,7 +712,7 @@ as follows.
 % counter: tests k threads on n iterations, benchmark xchg-aways vs txn. removed benchmarking, added assertion that no counts are lost.
 
 \begin{itemize}
-	\item Microbenchmarks
+	\item Unit tests and microbenchmarks
 	\begin{itemize}
 		\item {\tt htm1}: The bug from Figure~\ref{fig:htm-example}. %(assertion failure on {\tt count}).
 		\item {\tt htm2}: The fixed version as in Figure~\ref{fig:htm-fixed}.
@@ -789,9 +785,10 @@ differ from those reported in \cite{sigbovik-htm}.
 All experiments have been re-run
 on account of three updates to Landslide's exploration algorithm
 implemented since then:
-the sleep sets optimization for DPOR (\sect{\ref{sec:landslide-sleepsets}}, commit 0447666),
+the sleep sets optimization for DPOR (\sect{\ref{sec:landslide-sleepsets}}, commits 0447666 and 588687c),
 the {\tt thrlib\_function} and {\tt TRUSTED\_THR\_JOIN} directives
-to mark internal thread library logic as trusted (\sect{\ref{sec:landslide-config-landslide}}, commit 64a02e4),
+to mark internal thread library logic as trusted
+(\sect{\ref{sec:landslide-config-landslide}}, commits 64a02e4 and a50d4ea),
 and fixing a soundness bug in which Landslide could neglect to inject transaction failures
 immediately after a thread switch (commit dcae85b).
 On account of the former two updates, some state spaces may be smaller than before;
@@ -808,7 +805,7 @@ but the previously-published verification results should be considered outdated.
 \subsection{Bug-finding}
 \label{sec:tm-eval-bugs}
 
-\begin{table*}[p]
+\begin{table*}[t]
 	\begin{center}
 		\footnotesize
 	\begin{tabular}{cc||r|r|r||r|r|r|r}
@@ -1036,7 +1033,6 @@ Landslide also found two bugs in the ``real-world'' transactional algorithms I t
 	\label{fig:avlbug}
 \end{figure}
 
-% TODO check figure placement
 \begin{figure}[h]
 	\begin{center}
 		\begin{tabular}{l}
@@ -1175,7 +1171,7 @@ I report their estimated state space size and runtime measured after that timeou
 			& 2,2 & \cpu{12.81}	& \ints{190}	& \cpu{10.58}	& \ints{102}	& \cpu{8.19}	& \ints{48} \\
 			& 2,3 & \cpu{144.83}	& \ints{3970}	& \cpu{65.66}	& \ints{1558}	& \cpu{38.18}	& \ints{904} \\
 			& 2,4 & \cpu{3433.08}	& \ints{86950}	& \cpu{1134.62}	& \ints{25398}	& \cpu{752.51}	& \ints{19128} \\
-			& 3,1 & \cpu{10.57}	& \ints{120}	& \cpu{92.30}	& \ints{64}	& \cpu{7.88}	& \ints{40} \\
+			& 3,1 & \cpu{10.57}	& \ints{120}	& \cpu{9.23}	& \ints{64}	& \cpu{7.88}	& \ints{40} \\
 			& 3,2 & \cpu{2492.17}	& \ints{60606}	& \cpu{2040.98}	& \ints{44862}	& \cpu{565.97}	& \ints{14304} \\
 			& 4,1 & \cpu{121.96}	& \ints{3006}	& \cpu{61.85}	& \ints{1296}	& \cpu{39.23}	& \ints{848} \\
 			\hline
@@ -1509,7 +1505,7 @@ then skips generating a retry set for reordering the full abort path).
 % +7-6@105c41 8-4@105c41 9-6@105c41 10-4@105c41 11-6@1008178 12-6@xbegin 13-6@datarace-a 14-6@datarace 15-6@105c41 16-5@xbegin 17-5@datarace-a 18-5@datarace 19-5@105c41 20-3@1028e9
 
 
-\subsubsection{Abort code (STM) reduction}
+\subsubsection{STM (abort code) reduction}
 \label{sec:tm-eval-stm}
 
 Secondly, the state spaces could be reduced
@@ -1804,11 +1800,14 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 			& 2,1 & \\ %\cpu{0} & \ints{0} \\
 			& 2,2 & \\ %\cpu{0} & \ints{0} \\
 			& 2,3 & \\ %\cpu{0} & \ints{0} \\
+			& 2,4 & \\ %\cpu{0} & \ints{0} \\
 			& 3,1 & \\ %\cpu{0} & \ints{0} \\
 			& 3,2 & \\ %\cpu{0} & \ints{0} \\
+			& 3,3 & \\ %\cpu{0} & \ints{0} \\
+			& 3,4 & \\ %\cpu{0} & \ints{0} \\
+			& 4,1 & \\ %\cpu{0} & \ints{0} \\
+			%& 4,2 & \\ %\cpu{0} & \ints{0} \\
 			\hline \multicolumn{4}{c}{everything above this line needs rerun} \\
-			\\
-			\\
 		\end{tabular}
 		\\
 		\\
