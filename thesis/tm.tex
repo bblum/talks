@@ -515,14 +515,20 @@ which aborts only when the memory addresses match exactly.
 Accordingly, the {\tt -S} option described above provides STM semantics as currently implemented.
 Future work could extend Landslide with an option to configure false sharing conflicts
 to remain faithful to HTM semantics and still abort even under {\tt -S}.
-
+%
 Likewise, Landslide does not check for a transaction's memory footprint exceeding the CPU's cache capacity,
 which on real hardware would trigger a {\tt \_XABORT\_CAPACITY} abort.
 Landslide's memory tracking could simulate this check as well,
 perhaps with a configurable cache size,
-but the implementation would likely be theoretically uninteresting
+but would likely be theoretically uninteresting
 (all programs in the upcoming evaluation have trivial memory usage),
-and so is left to future work.
+and so is left unimplemented for now.
+%
+Finally,
+{\tt \_XABORT\_NESTED},
+the last abort code specified by \cite{htm-gcc},
+depends on currently-unsupported {\tt xbegin} nesting, which I discuss further in
+\sect{\ref{sec:tm-warpzone-nested}}.
 
 \subsubsection{Injecting abort codes}
 When traversing the state space (\sect{\ref{sec:landslide-statespace}}),
@@ -656,28 +662,6 @@ available with the {\tt -R} command-line option.
 % because in the first place, the former works with the "keep running current thread" ordering heuristic,
 % (which automatically takes care of the first half of the sleep set problem)
 % whereas no such similar heuristic exists (can exist??) for xbegin PPs, we always just run the success path first
-
-% don't forget to note that this only applies to xabort retry;
-
-The proof of soundness for this optimization is left to future work;
-while the basic idea is motivated by straightforward analogy to the known-sound sleep sets,
-its intersection with Landslide's other exploration features may cause unforeseen problems.
-Accordingly, I implemented the optimization as conservatively as possible,
-falling back to no pruning in cases where how to prune soundly is not clear
-(for example, when a second pair of conflicting transactions involving a third thread
-interleaves while a first retry set is already being tracked).
-Note also that {\tt xbegin} results other than {\tt \_XABORT\_RETRY}
-may depend on the execution logic
-(explicit aborts may be conditional on some change by a conflicting thread,
-and conflict aborts cannot occur before their conflicting transaction to begin with%
-\footnote{See {\tt 410user/progs/htm\_causality.c}; that was a fun realization to have
-already halfway into implementing this feature the wrong way at first.}%
-),
-so how to soundly prune under multiple abort codes
-and/or when retry aborts are suppressed is left to future work.
-For now, retry sets, true to their name,
-are supported only under {\tt landslide -X},
-and incompatible with both the {\tt -A} and {\tt -S} options.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1423,10 +1407,11 @@ In the following subsections I explore three possible mitigation approaches.
 
 Firstly, the middle column of Table~\ref{tab:tm-verifs}
 shows the impact of Landslide's experimental retry set reduction (\sect{\ref{sec:tm-retrysets}}).
+Despite its conservative implementation,
+it provides roughly 2-6x reduction in most tests, with up to 20x in extreme cases.
 The biggest win is apparent in {\tt fig63},
-the test contrived to induce as much retry set reduction as possible
-using transactional paths that conflict only with abort paths and not with each other, and vice versa.
-Retry set reduction provides
+the test contrived to induce as much reduction as possible
+using transactional paths that conflict only with aborts and not with each other, and vice versa.
 In {\tt fig63}(2,1), corresponding to Figure~\ref{fig:retry-set-example},
 retry-set-enabled DPOR correctly prunes down to the optimal 6 interleavings,
 while the baseline treats it identically to the fully-conflicting {\tt counter}(2,1).
@@ -1442,7 +1427,7 @@ Figure~\ref{fig:retry-reduction} depicts the difference between the state spaces
 	with the middle 2 arising from the data-race preemption point within the abort path.
 	%On {\tt counter}, all transitions marked as memory conflicts conflict with each other;
 	%on {\tt fig63}, only pairs of one {\tt xend} and one {\tt data race} each conflict.
-	When {\tt -R} is supplied, however,
+	With the reduction enabled,
 	after the 4th and 6th branches Landslide activates the retry set
 	indicated at the top of the next upcoming subtree
 	to remember which parts of it to skip.
@@ -1450,16 +1435,24 @@ Figure~\ref{fig:retry-reduction} depicts the difference between the state spaces
 	\label{fig:retry-reduction}
 \end{figure}
 
-Perhaps surprisingly, retry sets also provide reduction even on tests with fully conflicting transactions
+Perhaps surprisingly, retry sets also provide reduction
+even when transactional success and abort paths are fully conflicting,
 (i.e., all tests besides {\tt fig63}).
 With just synchronization preemption points (including {\tt \_xbegin()} and {\tt \_xend()}),
-both the baseline and retry sets would explore exactly all 8 permutations of success and abort between the two threads.
+both the baseline and retry sets would explore exactly all 8 permutations of success and abort between two threads.
 However, in the presence of data-race preemption points,
 even for example on {\tt counter}(2,1)
-(whose abort path is just 1 {\tt xadd},
+(whose abort path is just 1 {\tt xadd} operation),
 and whose optimal state space size should be 8 regardless of data-race preemption points),
 baseline DPOR tests reorderings of one thread's transaction both with the other's failure path,
-and with the other's data race therein.
+and with the other's data race therein%
+\footnote{
+Not pictured in Figure~\ref{fig:retry-reduction} is the symmetric subtree of branches 5-6 in the right half of the state space,
+which would occur after branch 10, reordering the blue thread before the pink's data race.
+Such would be equivalent to branches 2 and 4,
+and is pruned by the normal sleep set algorithm (\sect{\ref{sec:landslide-sleepsets}}, {\tt equiv\_already\_explored()})
+even in baseline DPOR, with no need for retry sets.
+}.
 Retry sets on the other hand identify and skip that equivalence
 (technically speaking, retry set DPOR reorders with the data race first during depth-first search,
 then skips generating a retry set for reordering the full abort path).
@@ -1544,41 +1537,8 @@ The final column in Table~\ref{tab:tm-verifs} shows the result of STM semantics 
 which always results in at least 2x reduction compared to the baseline,
 although retry sets can make up some of the lost ground in some cases.
 
-However, suppressing retry aborts is not guaranteed to faithfully test all possible behaviours
-observable under HTM%
-\footnote{A user who wishes to distinguish conflict aborts, retry aborts, and so on during testing
-without glossing over any of HTM's peculiarities
-could supply {\tt -X -A} without {\tt -S};
-however, this could produce only state spaces at least as large as the baseline.}.
-As an example, note how STM semantics reduced {\tt fig63}'s state space on all $(K,N)$ configurations to 1.
-Because its transactional paths are all mutually independent,
-DPOR identifies no need either to inject conflict aborts or to reorder threads.
-However, this skips the slow-path consistency assertion completely.
-If the programmer had intended it to run ``every so often'' at the whim of the timer interrupt,
-applying this reduction would be unsound.
-Also note the state space size of 4 for many $(2,1)$ test configurations,
-corresponding exactly to the aforementioned success, success and success, abort sequences
-(times two ways to interleave the two threads).
-Because of the scheduling dependency for conflict aborts,
-Landslide cannot recognize the failure path's data races
-without a third freely-reorderable iteration;
-STM mode must be run with $K \times N \ge 3$ to meaningfully test conflicts between failure and success paths at all.
-
-On the other hand, some programs may clearly annotate their intention
-for abort paths to be executed only in case of actual memory conflicts.
-{\tt swap}, {\tt avl\_insert}, and {\tt map\_basic} abstract their {\tt \_xbegin()} calls
-behind an interface which can be implemented either with or without retry loops,
-while {\tt lock}({\tt spinlock}) and {\tt lock}({\tt mutex}) implement the retry loop directly.
-In these cases, the user can check this reduction's soundness by visual inspection.
-Future work could automatically identify a program's retry loops
-and give up on {\tt \_XABORT\_RETRY} by switching to STM mode on-the-fly,
-much like Landslide's heuristic synchronization detection does for yield loops (\sect{\ref{sec:landslide-blocking}})%
-\footnote{Landslide's current implementation gets stuck in infinitely deep interleavings
-when it encounters a retry loop,
-so for now the user must inspect the test case to determine which testing mode to use.
-}.
-
 \subsubsection{Abstraction reduction}
+\label{sec:tm-abstraction}
 
 Visual inspection of the AVL tree and separate-chaining map implementations \cite{tm-benchmark-cmu},
 after correcting the former's atomicity bug (Figure~\ref{fig:avlbug}),
@@ -1931,3 +1891,154 @@ In this way (and also, of course, because {\tt mutex}'s state spaces are smaller
 % reflects on the numbers one might see betwee the original reduction in theorem so-and-so that lets us
 % treat transactional success paths as mutually-exclusive (and, once started, abort-proof) to begin with"
 % this sentence is a complete mess....
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Discussion}
+
+In this section I review some of the evaluation's results in a broader context,
+list the current limitations of Landslide's implementation,
+and discuss open problems for future work.
+
+\subsubsection{Retry set optimality}
+
+For all the reduction retry sets demonstrated in Table~\ref{tab:tm-verifs},
+some inefficiencies remain in its strategy.
+For example, it is not clear how to prune soundly
+when three or more threads must be reorderd around one transactional preemption point,
+or when a second pair of partially-independent transactions interleaves while an existing retry set is already active.
+Accordingly, I implemented the optimization as conservatively as possible in these cases,
+``saturating'' the retry sets to fall back to no pruning
+({\tt update\_hax\_abort\_set()} and
+{\tt update\_hax\_abandon\_abort\_set()}, respectively).
+Similarly, {\tt xbegin} results other than {\tt \_XABORT\_RETRY}
+may depend on the execution logic
+(explicit aborts may be conditional on some change by a conflicting thread,
+and conflict aborts cannot occur before their conflicting transaction to begin with%
+\footnote{See {\tt 410user/progs/htm\_causality.c}; that was a fun realization to have
+already halfway into implementing this feature the wrong way at first.}%
+),
+so how to soundly prune either success paths or retry aborts
+while other abort codes are in play
+remains an open problem.
+For now, retry sets, true to their name,
+%are supported only under {\tt landslide -X},
+are incompatible with both the {\tt -A} and {\tt -S} options.
+
+Even so, I must also leave a soundness proof for this optimization to future work.
+While
+%the basic idea is
+motivated by straightforward analogy to the known-sound sleep sets,
+its intersection with Landslide's other exploration features may cause unforeseen problems.
+For now, its use is prohibited in conjunction with other state-space-affecting features
+such as ICB (\sect{\ref{sec:landslide-icb}})
+as well as multiple abort codes.
+I personally believe retry set reduction to be sound under these restrictions,
+having carefully scrutinized its behaviour
+while constructing Figure~\ref{fig:retry-set-example}
+and from inspecting larger test parameters' state spaces while implementing it;
+nevertheless, this is no formal proof.
+
+\subsubsection{STM reduction soundness}
+
+In \sect{\ref{sec:tm-eval-stm}} I showed that state spaces could be reduced even further than with retry sets
+by assuming an HTM interface which abstracts away {\tt \_XABORT\_RETRY} behind a loop.
+However, suppressing retry aborts is not guaranteed to faithfully test all possible behaviours
+observable under HTM.
+As an example, note in Table~\ref{tab:tm-verifs}
+how STM semantics reduced % oops
+{\tt fig63}'s state space on all $(K,N)$ configurations to 1.
+Because its transactional paths are all mutually independent,
+DPOR identifies no need either to inject conflict aborts or to reorder threads.
+However, this skips the slow-path consistency assertion completely.
+If the programmer had intended it to run ``every so often'' at the whim of the timer interrupt,
+applying this reduction would be unsound.
+Also note the state space size of 4 for many $(2,1)$ test configurations,
+corresponding exactly to the aforementioned success, success and success, abort sequences
+(times two ways to interleave the two threads).
+Because of the scheduling dependency for conflict aborts,
+Landslide cannot recognize the failure path's data races
+without a third freely-reorderable iteration;
+STM mode must be run with $K \times N \ge 3$ to meaningfully test conflicts between failure and success paths at all.
+A user wishing to distinguish conflict aborts, retry aborts, and so on during testing
+without glossing over any of HTM's peculiarities
+could supply the {\tt -X -A} options without {\tt -S};
+however, this will inevitably result in state spaces at least as large as the baseline.
+
+On the other hand, some programs may clearly annotate their intention
+for abort paths to be executed only in case of actual memory conflicts.
+{\tt swap}, {\tt avl\_insert}, and {\tt map\_basic} abstract their {\tt \_xbegin()} calls
+behind an interface which can be implemented either with or without retry loops,
+while {\tt lock}({\tt spinlock}) and {\tt lock}({\tt mutex}) implement the retry loop directly.
+In these cases, the user can assure themself of STM reduction's soundness by visual inspection.
+In fact, Landslide's current implementation gets stuck in infinitely deep interleavings
+whenever it encounters a retry loop
+% not actually sure why, as it should be around-a-pp and not on the 1st branch...
+(bypassing even its heuristic infinite loop detection),
+so for now the user must inspect the test case to determine which testing mode to use.
+Future work could automatically identify a program's retry loops
+and give up on {\tt \_XABORT\_RETRY} by switching to STM mode on-the-fly,
+much like Landslide's heuristic synchronization detection does for yield loops (\sect{\ref{sec:landslide-blocking}}).
+
+\subsubsection{Nested transactions}
+\label{sec:tm-warpzone-nested}
+
+Whenever {\tt \_xbegin()} is called with a transaction already active, or {\tt \_xend()} while not,
+Landslide's current implementation immediately stops and reports a bug.
+However, just as concurrent programs often hold multiple locks simultaneously,
+one may wish to conduct multiple transactional routines simultaneously,
+especially as they may be abstracted across different code modules when projects grow in scale.
+Recent work \cite{hybrid-htm-stm,relaxed-transactions-popl} has developed
+both implementations and formal semantics for executing nested transactions,
+so future work should extend the verification concurrency model to permit such programs.
+For now, the best Landslide can offer is to check the transactional components and their client code
+separately against their APIs
+with abstraction reduction (\sect{\ref{sec:tm-abstraction}}),
+then check the rest of the program with (for example) traditional mutexes that can nest safely.
+
+\subsubsection{Relaxed memory orderings}
+\label{sec:tm-warpzone-relaxed}
+
+Section~\ref{sec:tm-design}'s formalization of thread interleavings does not account for read/write reorderings
+possible on relaxed consistency architectures \cite{memory-consistency-models}.
+In fact,
+even after \cite{tm-benchmark-cmu}'s proposed fix to the atomicity protocol in Figure~\ref{fig:htm-fixed},
+it is still incorrect on Total Store Order (TSO) architectures such as x86,
+let alone on weaker memory models.
+Despite stores being totally-ordered, x86 may still reorder stores after subsequent loads
+\cite{sully-thesis}.
+Accordingly, an execution of lines $8,9a,9b,9c$
+may be locally visible to another thread as $9a,8,9b,9c$,
+and hence an apparent interleaving of
+\[
+        \tiat{1},\tjat{1-5},\tiat{7},\underline{\tiat{9a}},\tkat{1-5},\underline{\tiat{8}},\tiat{9b-B}
+\]
+is possible
+(reordered accesses underlined for emphasis).
+An acquire barrier is needed between lines 8 and 9 to solve this problem on TSO \cite{tsx-need-barrier}.
+(on x86, either {\tt mfence} or {\tt xchg}/{\tt xadd}).
+% gcc generates the latter for its __sync_lock_test_and_set intrinsic
+On Partial Store Order (PSO) architectures,
+%even more barriers may be necessary.
+a release barrier is necessary before line A, likewise.
+Recent work \cite{relaxed-transactions-pldi} also discovered similar unsoundness in lock elision on ARMv8 (PSO).
+
+Because Landslide's concurrency model includes only instruction-level thread nondeterminism,
+not per-CPU memory buffer reorderings,
+its current HTM implementation cannot find this bug.
+In fact, it erroneously verifies the corresponding test {\tt htm2}(3,1)
+%% sigbovik version, probably pre-thrlib-function and definitely pre-dpor-preferred-tid and pre-trusted-join
+% in 3 CPU-hours,
+% with 467730 distinct interleavings in total,
+in 40 CPU-seconds,
+with 774 interleavings in total,
+none of which include the above-listed sequence.
+Recent work has extended DPOR to support TSO and PSO memory nondeterminism \cite{tsopso},
+as well as proposed formal execution semantics for HTM on these architectures
+\cite{relaxed-transactions-popl,relaxed-transactions-pldi};
+if both of these advances were incorporated into Landslide's concurrency model,
+it could find or verify the absence of such bugs.
+Visual inspection of \cite{tm-benchmark-cmu}'s HTM data structures found no barriers used in this implementation pattern;
+I would urge any reader interested in using those to add them in by hand first.
+The test case {\tt lock}({\tt mutex}) ({\tt 410user/progs/htm\_mutex.c} in the repository)
+provides an example of how to use compiler intrinsics to emit the necessary barriers.
