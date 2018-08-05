@@ -52,11 +52,13 @@ and may abort for STM's reason above \cite{htm-experience},
 or additionally whenever a conflict is detected between one transaction's traced access and {\em any} other memory access,
 or whenever a conflict occurs on the same cache line, not necessarily the same address,
 or in case of any system interrupt or cache overflow.
+Intel's commercial implementation of HTM has a rocky history of hardware bugs \cite{intel-disable-tsx,intel-tsx-update},
+attesting to the feature's complexity and the need for formal verification on both sides of its API.
 
 {\bf Terminology.}
 The world of hardware transactional memory is home to several more confusing acronyms in addition to ``HTM''.
 Transactional Synchronization Extensions (TSX)
-refers to Intel's implementation of HTM on the Haswell microarchitecture
+refers to Intel's implementation of HTM on Haswell and more recent microarchitectures
 \cite{htm-haswell}.
 Restricted Transactional Memory (RTM)
 refers to the {\tt xbegin}, {\tt xend}, and {\tt xabort} subset of TSX instructions,
@@ -71,7 +73,7 @@ optimized for simplicity for locking-like synchronization patterns
 % other possible things to cite here:
 % https://lwn.net/Articles/534758/
 % https://software.intel.com/en-us/node/683688
-\cite{hardware-lock-elision}.
+\cite{speculative-lock-elision,lock-elision}
 In this thesis I focus on RTM, the more general (i.e., expressive (i.e., bug-prone)) interface,
 and among all these acronyms restrict myself to ``HTM''
 (when referring to transactional memory as a concurrency primitive in the abstract)
@@ -204,22 +206,34 @@ which shows that correctly synchronizing even the simplest transactions may be s
 
 In the previous section's examples,
 the way I stated interleavings such as $\tiat{1-2c}, \tjat{1-3}, \tiat{4-7}$%
-\footnote{For a clearer example here I have reordered \ti's write to {\tt x} before \tj's part, compared to before.}
-glossed over the HTM execution semantics underlying how such a sequence of operations would be carried out.
-For example, thread 1's write during $2c$ is not actually visible to thread 2,
-such as it would be under a thread-scheduling-only concurrency model.
+\footnote{For a clearer example to follow, I have reordered \ti's write to {\tt x} before \tj's part, compared to before.}
+glossed over
+%the HTM execution semantics underlying how such a sequence of operations would be carried out.
+how such a sequence of operations would be carried out under HTM.
+For example, \ti's write during $2c$ is not actually visible to \tj,
+although it would be under a thread-scheduling-only concurrency model.
 
-Intel's official TSX documentation summarizes its interface and behaviour in prose \cite{intel-tsx-overview};
-to the best of my knowledge,
-no formal definition exists which could be verified in a mechanized logical framework \cite{x86-semantics}.
-Hence the proofs in this section will likewise be in prose.
+Intel's official TSX documentation summarizes its interface and behaviour in prose \cite{intel-tsx-overview}.
+Recent work has used proof assistants to formalize some of the execution semantics
+of x86 in general \cite{x86-semantics}
+and of transactions in particular (at both hardware- and language-level) \cite{relaxed-transactions-pldi}.
+However, state-of-the-art advances in model checking algorithms
+still state their theorems and proofs in prose \cite{bpor,optimal-dpor,tsopso,satcheck,mcr,quicksand},
+so this section's proofs will regrettably do likewise,
+leaving the rigor of mechanization to future work.
+The reader may at least draw assurance from the existing formal verifications of
+the transactional semantics required herein.
+
 To summarize HTM's execution semantics:
 
-% TODO FIXME: this is not genral semantics, this is jut as epplies to the examineple. rephrase
 \begin{enumerate}
-	\item any modifications to shared state (such as $2c$) by \ti are not visible to \tj during its execution,
-		despite \tj being executed afterwards, and
-	\item all local and global state changes by \ti between lines $1$ and $2c$ are discarded when jumping to line $4$.
+	\item Any modifications to shared state (such as $2c$) by a transacting thread
+		are not visible to any other during the transaction
+		(such as $2c$ in this example, despite \tj executing afterwards).
+	\item All local and global state changes during a transaction
+		(such as \ti's lines $1-2c$ in this example)
+		are discarded when returning an abort code from {\tt xbegin}
+		(jumping to line $4$, in this example).
 \end{enumerate}
 
 % there shouldbe a better word than 'requires' here.. benefits from.. "the point of it is"..
@@ -420,7 +434,7 @@ on a (hopefully) correct P2 as usual.
 Several example HTM tests are provided as {\tt 410user/progs/htm*.c}.
 
 Finally, Quicksand supports the following command-line options to enable various sets of HTM features within Landslide.
-Each option requires each of the previously-listed options to also be present.
+%Each option requires each of the previously-listed options to also be present.
 \begin{itemize}
 	\item {\tt -X} (for ``tsX'' or ``Xbegin'') enables the basic features:
 		preemption points on each {\tt \_xbegin()} and {\tt \_xend()} call,
@@ -430,10 +444,16 @@ Each option requires each of the previously-listed options to also be present.
 		and treatment of transactional regions during data-race analysis (\sect{\ref{sec:txn-datarace}}).
 	\item {\tt -A} (for ``xAbort codes'')
 		enables multiple xabort failure codes (\sect{\ref{sec:txn-failure}}).
+		Requires {\tt -X}.
 	\item {\tt -S} (for ``Stm'' or ``Suppress retries'')
 		disables the {\tt \_XABORT\_RETRY} failure reason,
-		which causes Landslide to match STM's execution semantics rather than HTM.
-		(This feature was used in \cite{sigbovik-htm}~\sect{5}.)
+		causing Landslide to emulate the semantics of STM rather than HTM.
+		%(This feature was used in \cite{sigbovik-htm}~\sect{5}.)
+		Requires {\tt -X -A}.
+	\item {\tt -R} (for ``Retry sets'')
+		enables state space reduction based on independences between individual {\tt xbegin} results
+		(\sect{\ref{sec:tm-retrysets}}).
+		Requires {\tt -X} and {\em not} {\tt -A}.
 \end{itemize}
 
 \subsection{Failure Injection}
@@ -632,10 +652,10 @@ that even programs with fully conflicting success/abort paths
 may still exhibit some equivalent thread interleavings of this pattern
 after their failure paths are split apart into smaller transitions by data-race preemption points.
 
-To solve this,
+To address this,
 I extended Landslide
-with {\em retry set reduction},
-an experimental feature named after the analogous {\em sleep sets} from prior work
+with {\em retry set reduction} (commit 86657c7),
+an experimental feature named after prior work's analogous {\em sleep sets}
 (\cite{partial-order-methods,dpor,optimal-dpor}, \sect{\ref{sec:landslide-sleepsets}}).
 Whenever DPOR tags a new branch for exploration (\sect{\ref{sec:landslide-explore}}),
 if either or both sides of a memory conflict were part of a transaction,
@@ -646,11 +666,10 @@ i.e., the pair of {\tt xbegin} results executed by the conflicting threads.
 Later, when traversing that new branch,
 Landslide remembers those threads' expected {\tt xbegin} results
 and refuses to test any others
-(unless DPOR separately found them, too, in conflict),
+(unless DPOR separately found them, too, to conflict),
 thereby skipping over (i.e., pruning) reorderings of any other {\tt xbegin} results that would be independent.
 %The {\tt landslide} repository's {\tt retry-sets} branch implements this feature,
-This feature is implemented in commit 86657c7,
-available with the {\tt -R} command-line option.
+Upcoming in the evaluation, Figure~\ref{fig:retry-reduction} will visualize the reduction achieved in two test cases.
 
 % In contrast to Landslide's implementation of the sleep set reduction (\sect{\ref{sec:landslide-explore}}),
 % blah blah which is implicit and works in retrospect by pruning at tag-sibling time, which figures out what would have been in a sleep set by analyzing the past independences and explored siblings,
@@ -714,7 +733,8 @@ as follows.
 \begin{itemize}
 	\item Unit tests and microbenchmarks
 	\begin{itemize}
-		\item {\tt htm1}: The bug from Figure~\ref{fig:htm-example}. %(assertion failure on {\tt count}).
+		\item {\tt htm1}: The bug from Figure~\ref{fig:htm-example}/\ref{fig:htm-example-reproduced}.
+			%(assertion failure on {\tt count}).
 		\item {\tt htm2}: The fixed version as in Figure~\ref{fig:htm-fixed}.
 		\item {\tt counter}: Microbenchmark version of {\tt htm2} which replaces the complex locking failure path with an atomic {\tt xadd}, from \cite{tm-benchmark-cmu}.
 		\item {\tt swap}: Microbenchmark that swaps values in an array, from \cite{tm-benchmark-cmu}.
@@ -901,13 +921,12 @@ but the previously-published verification results should be considered outdated.
 		is compared against Maximal State Space mode (\sect{\ref{sec:landslide-quicksand-options}}),
 		optimized for fast verification.
 		For each, I list the CPU-time and wall-clock time elapsed,
-		plus the number of interleavings tested in the ultimately buggy state space,
-		before the bug was found.
+		plus the number of interleavings tested in the ultimately buggy state space
+		until the bug was found.
 		* marks the winning measurements between each series.
-		Lastly, state space estimation (\sect{\ref{sec:landslide-estimate}}),
-		though approximate at best,
+		Lastly, state space estimation (\sect{\ref{sec:landslide-estimate}})
+		%though approximate at best,
 		confers a sense of the exponential explosion.
-		{\bf RERUN NOTE: this entire table needs to be rerun on account of dpor-preferred-tid}
 	}
 	\label{tab:tm-buges}
 \end{table*}
@@ -928,10 +947,10 @@ Tests {\tt htm1}, {\tt swapbug}, and {\tt avl\_insert} were run with {\tt landsl
 
 As the test parameters increase,
 the multiplicative factor in bug-finding speed (2-4x, eyeballing) is generally smaller
-than that of the total number of interleavings (10-100x).
+than that of the total number of interleavings (10-1000x).
 In other words,
-should they exist,
-Landslide is likely to find bugs reasonably quickly in these transactional programs
+should transactional bugs exist,
+Landslide is likely to find them reasonably quickly %in these transactional programs
 despite prohibitive exponential explosion in total state space size.
 This corroborates the results from Chapter~\ref{chap:quicksand},
 extending its good news to the world of HTM.
@@ -1091,7 +1110,7 @@ as long as the element of probability can be removed.
 Future work may attempt to verify a wider range of performance properties,
 but with a hybrid approach between model checking and what other technique is not yet known.
 
-\subsection{Performance}
+\subsubsection{Performance}
 
 Quicksand's ability to find bugs in fewer distinct interleavings (i.e., overall smaller state spaces)
 does not necessarily correlate with better performance in terms of CPU-time.
@@ -1298,7 +1317,7 @@ I report their estimated state space size and runtime measured after that timeou
 \subsubsection{Interpreting the verification guarantee}
 
 Landslide was able to verify most of these tests for a fair range of thread and iteration counts,
-often reaching up to 2 threads with 3 iterations each, 3 with 2 each, or 4 with 1.
+often reaching up to 2 threads with 3-4 iterations each, 3 with 2 each, or 4 with 1.
 In the case of {\tt htm2}, for example,
 verifying up to $(K, N)$ represents a guarantee that,
 even repeating Figure~\ref{fig:htm-fixed}'s atomicity protocol $N$ times
@@ -1309,7 +1328,7 @@ it is impossible for $K$ threads to violate the intended atomicity property
 It is difficult to discern from prior work a concrete standard
 for what values of $(K, N)$ constitute a ``good'' degree of verification.
 One recent paper \cite{tsopso},
-which likewise extended DPOR with a new dimension of concurrency (weak memory orderings)
+which likewise extended DPOR with a new dimension of concurrency (weak memory orderings),
 reported verifying programs with up to 10 concurrent events,
 presumably shared memory accesses.
 Another \cite{optimal-dpor}
@@ -1342,7 +1361,7 @@ reached among Landslide's verifications
 			{\tt htm2}		& 1	& 2	& 4	& 42	\\ % 2,3
 			{\tt counter}		& 1	& 0	& 1	& 16	\\ % 2,4
 			{\tt swap}		& 1	& 4	& 8	& 52	\\ % 2,2
-			{\tt fig63}		& 1	& 0	& $K$	& 24	\\ % 3,2 k=3 -> 24; 4,2 -> 40 (not yet); 2,4 -> 24
+			{\tt fig63}		& 1	& 0	& $K$-1	& 18	\\ % 3,2 k=3 -> 18; 2,4 -> 16
 			{\tt avl\_insert}	& 1	& 2	& 7	& 20	\\ % 2,1 nb. only 5 drpps under -A -S but w/e
 			{\tt avl\_fixed}	& 1	& 2	& 9	& 24	\\ % 2,1 nb. again, only 5 under -A -S
 			% the extra 2 over basicer is from resize, which only 1 thread does, but K*N is 0 here anyway so vov
@@ -1379,8 +1398,8 @@ and ultimately that it must safely generalize to all $(K, N)$.
 % under certain invisible assumptions like the system runs with SC memory! (spoilers!!)
 Generalizing the verification is not so straightforward
 for more complicated algorithms,
-which may involve complex conflict patterns such as tree rebalancing or map resizing;
-other formal verification approaches aside,
+which may involve complex conflict patterns such as tree rebalancing or map resizing.
+Other formal verification approaches aside,
 the user must ultimately be content with the probabilistic assurance that
 as verified $K$ and $N$ increase,
 the likelihood that a bug exists which requires more threads or iterations to expose grows ever lower
@@ -1424,9 +1443,13 @@ Figure~\ref{fig:retry-reduction} depicts the difference between the state spaces
 	%On {\tt counter}, all transitions marked as memory conflicts conflict with each other;
 	%on {\tt fig63}, only pairs of one {\tt xend} and one {\tt data race} each conflict.
 	With the reduction enabled,
-	after the 4th and 6th branches Landslide activates the retry set
-	indicated at the top of the next upcoming subtree
-	to remember which parts of it to skip.
+	after the 4th and 6th branches
+	(i.e., when preempting to reorder threads),
+	Landslide activates the retry set
+	indicated at the top of the next upcoming subtree,
+	allowing it to identify and skip 2 redundant branches in {\tt counter}
+	and 4 in {\tt fig63}.
+	%to remember which parts of it to skip.
 	}
 	\label{fig:retry-reduction}
 \end{figure}
@@ -1915,7 +1938,7 @@ may depend on the execution logic
 (explicit aborts may be conditional on some change by a conflicting thread,
 and conflict aborts cannot occur before their conflicting transaction to begin with%
 \footnote{See {\tt 410user/progs/htm\_causality.c}; that was a fun realization to have
-already halfway into implementing this feature the wrong way at first.}%
+already halfway into implementing retry sets the wrong way at first.}%
 ),
 so how to soundly prune either success paths or retry aborts
 while other abort codes are in play
@@ -1936,7 +1959,7 @@ I personally believe retry set reduction to be sound under these restrictions,
 having carefully scrutinized its behaviour
 while constructing Figure~\ref{fig:retry-set-example}
 and from inspecting larger test parameters' state spaces while implementing it;
-nevertheless, this is no formal proof.
+nevertheless, this falls well short of formal proof.
 
 \subsubsection{STM reduction soundness}
 
@@ -1952,7 +1975,7 @@ DPOR identifies no need either to inject conflict aborts or to reorder threads.
 However, this skips the slow-path consistency assertion completely.
 If the programmer had intended it to run ``every so often'' at the whim of the timer interrupt,
 applying this reduction would be unsound.
-Also note the state space size of 4 for many $(2,1)$ test configurations,
+Also note the state space size of 4 for many (2,1) test configurations,
 corresponding exactly to the aforementioned success, success and success, abort sequences
 (times two ways to interleave the two threads).
 Because of the scheduling dependency for conflict aborts,
@@ -1986,7 +2009,7 @@ Whenever {\tt \_xbegin()} is called with a transaction already active, or {\tt \
 Landslide's current implementation immediately stops and reports a bug.
 However, just as concurrent programs often hold multiple locks simultaneously,
 one may wish to conduct multiple transactional routines simultaneously,
-especially as they may be abstracted across different code modules when projects grow in scale.
+especially as they may be abstracted across different code modules as a project grows in scale.
 Recent work \cite{hybrid-htm-stm,relaxed-transactions-popl} has developed
 both implementations and formal semantics for executing nested transactions,
 so future work should extend the verification concurrency model to permit such programs.
@@ -2014,13 +2037,21 @@ and hence an apparent interleaving of
 \]
 is possible
 (reordered accesses underlined for emphasis).
-An acquire barrier is needed between lines 8 and 9 to solve this problem on TSO \cite{tsx-need-barrier}.
+An acquire barrier is needed between lines 8 and 9 to solve this problem on TSO \cite{tsx-need-barrier}
 (on x86, either {\tt mfence} or {\tt xchg}/{\tt xadd}).
 % gcc generates the latter for its __sync_lock_test_and_set intrinsic
-On Partial Store Order (PSO) architectures,
-%even more barriers may be necessary.
-a release barrier is necessary before line A, likewise.
-Recent work \cite{relaxed-transactions-pldi} also discovered similar unsoundness in lock elision on ARMv8 (PSO).
+Recent work \cite{relaxed-transactions-pldi} also demonstrated unsoundness
+in a similar lock elision implementation on ARMv8 (PSO),
+in which the transactional path reads the lock's internal state directly
+rather than using a separate flag.
+in Figure~\ref{fig:htm-fixed}, a release barrier before line A is also necessary under PSO.
+% On Partial Store Order (PSO) architectures,
+% %even more barriers may be necessary.
+% a release barrier is necessary before line A as well.
+% Recent work \cite{relaxed-transactions-pldi} also discovered similar unsoundness
+% in lock elision \cite{speculative-lock-elision}
+% on ARMv8 (PSO).
+% Recent work \cite{relaxed-transactions-pldi} also discovered similar unsoundness
 
 Because Landslide's concurrency model includes only instruction-level thread nondeterminism,
 not per-CPU memory buffer reorderings,
