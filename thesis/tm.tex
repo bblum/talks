@@ -218,11 +218,11 @@ Recent work has used proof assistants to formalize some of the execution semanti
 of x86 in general \cite{x86-semantics}
 and of transactions in particular (at both hardware- and language-level) \cite{relaxed-transactions-pldi}.
 However, state-of-the-art advances in model checking algorithms
-still state their theorems and proofs in prose \cite{bpor,optimal-dpor,tsopso,satcheck,mcr,quicksand},
+still state their theorems and proofs in prose \cite{bpor,optimal-dpor,tsopso,satcheck,mcr,quicksand,cpp-model-checking},
 so this section's proofs will regrettably do likewise,
 leaving the rigor of mechanization to future work.
-The reader may at least draw assurance from the existing formal verifications of
-the transactional semantics required herein.
+The reader may at least rest assured that the proofs herein
+rely on transactional semantics that have themselves been formally verified.
 
 To summarize HTM's execution semantics:
 
@@ -1933,7 +1933,12 @@ Accordingly, I implemented the optimization as conservatively as possible in the
 ``saturating'' the retry sets to fall back to no pruning
 ({\tt update\_hax\_abort\_set()} and
 {\tt update\_hax\_abandon\_abort\_set()}, respectively).
-Similarly, {\tt xbegin} results other than {\tt \_XABORT\_RETRY}
+
+Likewise, the cases of {\tt htm2}(2,3) and (4,1),
+in which retry sets achieved better reduction than STM mode,
+show that the latter does not necessarily subsume the former,
+and that combining the two could in theory achieve further reduction still.
+However, {\tt xbegin} results other than {\tt \_XABORT\_RETRY}
 may depend on the execution logic
 (explicit aborts may be conditional on some change by a conflicting thread,
 and conflict aborts cannot occur before their conflicting transaction to begin with%
@@ -1943,23 +1948,19 @@ already halfway into implementing retry sets the wrong way at first.}%
 so how to soundly prune either success paths or retry aborts
 while other abort codes are in play
 remains an open problem.
-For now, retry sets, true to their name,
-%are supported only under {\tt landslide -X},
-are incompatible with both the {\tt -A} and {\tt -S} options.
 
-Even so, I must also leave a soundness proof for this optimization to future work.
 While
 %the basic idea is
 motivated by straightforward analogy to the known-sound sleep sets,
-its intersection with Landslide's other exploration features may cause unforeseen problems.
+the intersection of retry sets with Landslide's other exploration features may cause unforeseen problems.
 For now, its use is prohibited in conjunction with other state-space-affecting features
 such as ICB (\sect{\ref{sec:landslide-icb}})
 as well as multiple abort codes.
 I personally believe retry set reduction to be sound under these restrictions,
 having carefully scrutinized its behaviour
 while constructing Figure~\ref{fig:retry-set-example}
-and from inspecting larger test parameters' state spaces while implementing it;
-nevertheless, this falls well short of formal proof.
+and from inspecting state spaces arising from larger test parameters as well; %while implementing it;
+nevertheless, this falls well short of formal proof, which I must leave to future work.
 
 \subsubsection{STM reduction soundness}
 
@@ -2044,7 +2045,7 @@ Recent work \cite{relaxed-transactions-pldi} also demonstrated unsoundness
 in a similar lock elision implementation on ARMv8 (PSO),
 in which the transactional path reads the lock's internal state directly
 rather than using a separate flag.
-in Figure~\ref{fig:htm-fixed}, a release barrier before line A is also necessary under PSO.
+In Figure~\ref{fig:htm-fixed}, a release barrier before line A is also necessary under PSO.
 % On Partial Store Order (PSO) architectures,
 % %even more barriers may be necessary.
 % a release barrier is necessary before line A as well.
