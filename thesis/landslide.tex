@@ -109,17 +109,17 @@ The following ``secret'' arguments also exist, primarily for my own use in runni
 	\item {\tt -M}: enable Maximal State Space mode,
 		which prioritizes the maximal state space to optimize for fast verification,
 		abandoning all subset jobs even if they might find bugs faster
-		% TODO: more speicfic sectio nreference
-		(\sect{\ref{chap:tm}}, incompatible with {\tt -C})
+		(\sect{\ref{sec:tm-eval}}, incompatible with {\tt -C})
 	\item {\tt -H}: use Limited Happens-Before for data-race analysis (\sect{\ref{sec:background-hb}})
 		(default for Pebbles kernelspace mode)
 	\item {\tt -V}: use vector-clock-based Pure Happens-Before for data-race analysis (\sect{\ref{sec:background-hb}})
 		(default for P2/PSU userspace and Pintos modes)
 	\item {\tt -X}: support transactional memory (Chapter~\ref{chap:tm})
-		% TODO: make a more specific section reference
-	\item {\tt -A}: support multiple abort codes during transaction failure (Chapter~\ref{chap:tm});
+	\item {\tt -A}: support multiple abort codes during transaction failure (\sect{\ref{sec:tm-implementation}});
 		required for testing programs which behave differently under different abort circumstances,
 		but impacts the state space size
+	\item {\tt -S}: suppress retry aborts during transaction failure (\sect{\ref{sec:tm-implementation}})
+	\item {\tt -R}: enable retry-set state space reduction for transactional tests (\sect{\ref{sec:tm-implementation}})
 	\item {\tt -P}: support Pintos architecture (enabled automatically when {\tt pintos-setup.sh} is run)
 	\item {\tt -4}: support Pebbles architecture (enabled automatically when either {\tt p2-setup.sh} or {\tt psu-setup.sh} is run)
 		% TODO: put a section reference
@@ -710,13 +710,14 @@ Whether or not Landslide wants that instruction to execute before triggering a t
 		(provided no timer interrupt is simultaneously pending).
 		Only {\tt a-z}, {\tt 0-9}, {\tt \_}, space, and newline are supported (enough to name any Pebbles test case).
 	\item {\tt interrupts\_enabled()} queries the CPU's interrupt flag ({\tt eflags:IF}).
+	\item {\tt cause\_transaction\_failure()} forces {\tt \_xbegin()} to return a specified abort code.
 \end{itemize}
 
 Note that {\tt kern\_ready\_for\_timer\_interrupt()} should generally be invoked separately
 from {\tt interrupts\_enabled()} if needed;
 while {\tt interrupts\_enabled()} must be true before invoking {\tt cause\_timer\_interrupt()},
 if the kernel is not ready the interrupt may not be received for a long time.
-Also, use of {\tt cause\_timer\_interrupt\_immediately()} must not be used while the kernel is not ready.
+Also, {\tt cause\_timer\_interrupt\_immediately()} must not be used while the kernel is not ready.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

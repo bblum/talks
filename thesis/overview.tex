@@ -214,7 +214,22 @@ The example program in Figure~\ref{fig:htm-example} demonstrates how these primi
 using GCC's compiler intrinsics \cite{htm-gcc}.
 
 \begin{figure}[h]
-	\input{fig-htm-example}
+	\begin{center}
+		\begin{tabular}{l}
+		\texttt{\ctype{void} \call{count}() \{} \\
+		\texttt{~~~~\flow{for} (\ctype{int} i = \const{0}; i < \const{1000}; i++) \{} \\
+		\texttt{~~~~~~~~\flow{if} ((status = \call{\_xbegin}()) == \const{\_XBEGIN\_STARTED}) \{} \\
+		\texttt{~~~~~~~~~~~~x++;} \\
+		\texttt{~~~~~~~~~~~~\call{\_xend}();} \\
+		\texttt{~~~~~~~~\} \flow{else} \{} \\
+		\texttt{~~~~~~~~~~~~\call{mutex\_lock}(\&m);} \\
+		\texttt{~~~~~~~~~~~~x++;} \\
+		\texttt{~~~~~~~~~~~~\call{mutex\_unlock}(\&m);} \\
+		\texttt{~~~~~~~~\}} \\
+		\texttt{~~~~\}} \\
+		\texttt{\}} \\
+		\end{tabular}
+	\end{center}
 	\caption{The example {\tt count} routine from Figure~\ref{fig:mutex}, rewritten to use HTM.
 		If the transaction in the top branch aborts,
 		whether from a memory conflict or random system interrupt,

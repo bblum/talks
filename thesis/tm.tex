@@ -22,19 +22,19 @@ discarded with an error code returned to allow the programmer to write a synchro
 %
 Transactional memory specifications typically have three API functions, abstractly speaking:
 \begin{itemize}
-	\item  {\sf begin} begins a transaction,
-		staging any subsequent shared memory accesses in some temporary thread-local storage,
+	\item  {\sf xbegin} begins a transaction,
+		staging any subsequent shared memory accesses in some temporary thread-/processor-local storage,
 		and checking for conflicts with the accesses of any other threads or CPUs.
 		If the transaction is unsuccessful, as described below,
 		{\sf begin} instead returns an error code
 		indicating the programmer should fall back to some other, possibly slower, synchronization method.
-	\item {\sf end} ends a transaction,
+	\item {\sf xend} ends a transaction,
 		attempting to commit all staged accesses to the shared memory atomically with respect to
 		reads or writes from other concurrently-executing code.
 		If any of those accesses conflict (i.e., read/write or write/write)
 		with any other access to the same memory since the transaction started,
 		they are instead discarded and execution state reverts to the {\sf begin} with an error code as described above.
-	\item {\sf abort} explicitly aborts a transaction,
+	\item {\sf xabort} explicitly aborts a transaction,
 		regardless of any memory conflicts,
 		discarding changes and reverting execution as described above.
 		Some implementations allow an arbitrary abort code to be specified
@@ -85,7 +85,18 @@ The example TSX program from Figure~\ref{fig:htm-example} (\sect{\ref{sec:overvi
 is reproduced here for the reader's convenience.
 
 \begin{figure}[h]
-	\input{fig-htm-example}
+	\begin{center}
+		\begin{tabular}{cl}
+			1 & \texttt{\flow{if} ((status = \call{\_xbegin}()) == \const{\_XBEGIN\_STARTED}) \{} \\
+			2 & \texttt{~~~~x++;} \\
+			3 & \texttt{~~~~\call{\_xend}();} \\
+			4 & \texttt{\} \flow{else} \{} \\
+			5 & \texttt{~~~~\call{mutex\_lock}(\&m);} \\
+			6 & \texttt{~~~~x++;} \\
+			7 & \texttt{~~~~\call{mutex\_unlock}(\&m);} \\
+			8 & \texttt{\}} \\
+		\end{tabular}
+	\end{center}
 	\caption{Example TSX program.}
 	\label{fig:htm-example-reproduced}
 \end{figure}
@@ -119,8 +130,6 @@ For discussion of relaxed memory models refer to Section~\ref{sec:tm-warpzone-re
 Consider again the program in Figure~\ref{fig:htm-example-reproduced}.
 Note that the C-style {\tt x++} operations, when compiled into assembly, %\cite{printy},
 results in multiple memory accesses which can be interleaved with other threads.
-% TODO: fix line numbers
-% TODO: put "void count" back in the mario-fixed example program, and fix ALL line numbers thruout proofs
 \[
 \begin{tabular}{ll}
 	$2a$ & \texttt{temp <- x;} \\
@@ -402,6 +411,7 @@ Hence, data-race analysis is sound when transaction boundaries are replaced by a
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Implementation}
+\label{sec:tm-implementation}
 
 Support for TSX programs in Landslide is implemented in four parts, broadly speaking:
 the user interface,
@@ -603,9 +613,9 @@ while the two transactional paths (disjoint memory accesses) and the two abort p
 			\texttt{~~~~foo++;} \\
 			\texttt{~~~~\call{\_xend}();} \\
 			\texttt{\} \flow{else} \{} \\
-			\texttt{~~~~\call{mutex\_lock}(\&m);} \\
-			\texttt{~~~~\flow{assert}(foo + bar < \const{2});} \\
-			\texttt{~~~~\call{mutex\_unlock}(\&m);} \\
+			%\texttt{~~~~\call{mutex\_lock}(\&m);} \\
+			\texttt{~~~~\flow{assert}{}(foo + bar < \const{2});} \\
+			%\texttt{~~~~\call{mutex\_unlock}(\&m);} \\
 			\texttt{\}} \\
                 \end{tabular}
                 &
@@ -616,9 +626,9 @@ while the two transactional paths (disjoint memory accesses) and the two abort p
 			\texttt{~~~~bar++;} \\
 			\texttt{~~~~\call{\_xend}();} \\
 			\texttt{\} \flow{else} \{} \\
-			\texttt{~~~~\call{mutex\_lock}(\&m);} \\
-			\texttt{~~~~\flow{assert}(foo + bar < \const{2});} \\
-			\texttt{~~~~\call{mutex\_unlock}(\&m);} \\
+			%\texttt{~~~~\call{mutex\_lock}(\&m);} \\
+			\texttt{~~~~\flow{assert}{}(foo + bar < \const{2});} \\
+			%\texttt{~~~~\call{mutex\_unlock}(\&m);} \\
 			\texttt{\}} \\
                 \end{tabular}
         \end{tabular}
@@ -681,6 +691,7 @@ Upcoming in the evaluation, Figure~\ref{fig:retry-reduction} will visualize the 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Evaluation}
+\label{sec:tm-eval}
 
 While prior work has focused on verifying implementations of transactional memory themselves
 \cite{specifying-verifying-tm,tm-correctness,tm-completeness,mc-tm-with-spin},
@@ -1092,8 +1103,7 @@ does not necessarily correlate with better performance in terms of CPU-time.
 Comparing Table~\ref{tab:tm-buges}'s trends
 to the break-even point in Quicksand's evaluation (\sect{\ref{sec:quicksand-eval}}),
 most of these tests are too small for its approach to pay off,
-% TODO: re check this after re running
-with {\tt swapbug}(3,1) and {\tt avl\_insert} as its notable wins.
+with {\tt swapbug} and {\tt avl\_insert} as its notable wins.
 While plenty more wins were observed in \sect{\ref{sec:quicksand-eval}},
 %an upper bound also exists:
 %in {\tt swapbug}(3,2),
@@ -1108,8 +1118,7 @@ both for smaller tests and for verification.
 \label{sec:tm-verif}
 
 For the test cases with no bugs found, I sought to provide Landslide's verification guarantee
-% TODO better section reference
-(\sect{\ref{sec:quicksand-id}})
+(\sect{\ref{sec:quicksand-soundness}})
 for up to as many threads and test iterations as possible under a reasonable time limit.
 The results, obtained using the same {\tt -X -M} configuration options as
 in the previous section,
@@ -1273,15 +1282,12 @@ I report their estimated state space size and runtime measured after that timeou
 	\end{center}
 	\caption{Transactional tests verified (or not) by Landslide.
 		Run with {\tt -M -X}, plus any additional reduction options listed.
-		``Baseline DPOR'' always tests every abort path, without distinguish among failure reasons
+		``Baseline DPOR'' always tests every abort path, without distinguishing among failure reasons
 		(i.e., injecting only {\tt \_XABORT\_RETRY}).
 		``Retry sets'' skips equivalent success path and/or retry abort reorderings (\sect{\ref{sec:tm-retrysets}});
 		``STM'' suppresses retry aborts and dynamically detects when to inject conflict aborts and so on
-		(\sect{\ref{sec:txn-abort-codes}}),
-		ultimately matching STM's execution semantics.
-		State space estimates measured after a timeout of 10 hours.
-		{\em Thesis draft note: I need to rerun these tests to ensure consistent cpu times with the next table,
-		but I expect the state space sizes not to change substantially.}
+		(\sect{\ref{sec:txn-abort-codes}}).
+		State space estimates measured after a timeout of 10 hours (and include those 10 hours in the predicted total).
 		}
 	\label{tab:tm-verifs}
 \end{table}
@@ -1312,7 +1318,7 @@ as even their baseline DPOR checked only 4096 interleavings on that test.
 Table~\ref{tab:tm-test-case-evence} confers a sense of the complexity of this evaluation's test suite,
 with the final column showing the approximate maximum number of preemption points
 reached among Landslide's verifications
-(i.e., $({\sf txn}+{\sf sync}+{\sf race}) \times K \times N$ for the highest $K \times N$ completed.
+(i.e., $({\sf txn}+{\sf sync}+{\sf race}) \times K \times N$ for the highest $K \times N$ completed).
 %%%% on second thought, i'm not gonna do this -- any branch that xend shows up in, is gonna lose any of the pps coming
 %%%% from the failure path's mxes or data races, so xend will never be an *additional* pp
 %%%% and of course it will scare the committee
@@ -1603,7 +1609,8 @@ Landslide reached before the same 10-hour timeout.
 Provided that one trusts the {\tt lock} tests correctly check the desired properties,
 and that open-coding hadn't introduced any new bugs (such as Figure~\ref{fig:avlbug}'s),
 the benefit is clear:
-the data structure tests suddenly reach unprecedented thread/iteration counts with ease,
+the data structure tests' state spaces become much more tractable,
+%the data structure tests suddenly reach unprecedented thread/iteration counts with ease,
 % 'so on' here includes free/re-malloc mem conflicts; see comment in avl_mutex.cpp
 their state space growth now defined only by their internal conflicts from tree rebalancing, map resizing, and so on.
 In total,
@@ -1716,7 +1723,7 @@ Secondly, {\tt spinlock} and {\tt spin\_fixed} take longer to test per interleav
 %(CPU time divided by state space size)
 than {\tt mutex}
 % TODO recalc
-(roughly 9 interleavings per second for the former, 14 for the latter),
+(roughly 9 interleavings per second for the former, 22 for the latter),
 because while {\tt mutex} abstracts away threads needing to wait their turn for the critical section
 behind an API Landslide understands,
 the spinlock's wait loop is open-coded, and Landslide must fall back on its costlier heuristic synchronization detection
