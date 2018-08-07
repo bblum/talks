@@ -835,85 +835,60 @@ but the previously-published verification results should be considered outdated.
 		\hline
 		{\tt htm1}
 			& 2,1	&\cpu{  26.48}&\wtm{6.48}&\ints{5}& \cpu{*8.21}& \wtm{*5.78}& \ints{5	}& \ETA{12} \\
-			% 5 interleavings tested; 1 preemptions; job time 3s; pldi time 6482137; new-fixed pldi cputime 26480574
-			% 5 interleavings tested; 1 preemptions; job time 2s; pldi time 5781000; new-fixed pldi cputime 8214902
 		(assertion)
 			& 2,2	&\cpu{  45.23}&\wtm{8.28}&\ints{9}& \cpu{*8.42}& \wtm{*5.97}& \ints{9	}& \ETA{102} \\
-			% 9 interleavings tested; 1 preemptions; job time 4s; pldi time 8281422; new-fixed pldi cputime 45289375
-			% 9 interleavings tested; 1 preemptions; job time 2s; pldi time 5972944; new-fixed pldi cputime 8418505
 			& 2,3	&\cpu{ 53.88}&\wtm{9.92}&\ints{17}& \cpu{*8.80}& \wtm{*6.31}& \ints{17	}& \ETA{819} \\
-			% 17 interleavings tested; 1 preemptions; job time 5s; pldi time 9921305; new-fixed pldi cputime 53884499
-			% 17 interleavings tested; 1 preemptions; job time 2s; pldi time 6314386; new-fixed pldi cputime 8795639
 			& 2,4	&\cpu{ 90.24}&\wtm{14.63}&\ints{33}& \cpu{*9.72}& \wtm{*7.19}& \ints{33	}& \ETA{6553} \\
-			% 33 interleavings tested; 1 preemptions; job time 7s; pldi time 14629409; new-fixed pldi cputime 90244293
-			% 33 interleavings tested; 1 preemptions; job time 3s; pldi time 7193093; new-fixed pldi cputime 9717902
 		\cline{2-9}
 			& 3,1	&\cpu{ 39.75}&\wtm{8.21}&\ints{5}& \cpu{*8.15}& \wtm{*5.71}& \ints{5	}& \ETA{76} \\
-			% 5 interleavings tested; 1 preemptions; job time 4s; pldi time 8213084; new-fixed pldi cputime 39752062
-			% 5 interleavings tested; 1 preemptions; job time 2s; pldi time 5710637; new-fixed pldi cputime 8153919
 			& 3,2	&\cpu{ 46.91}&\wtm{8.40}&\ints{9}& \cpu{*8.37}& \wtm{*5.91}& \ints{9	}& \ETA{3686} \\
-			% 9 interleavings tested; 1 preemptions; job time 4s; pldi time 8397105; new-fixed pldi cputime 46909424
-			% 9 interleavings tested; 1 preemptions; job time 2s; pldi time 5907009; new-fixed pldi cputime 8367804
 			& 3,3	&\cpu{ 41.39}&\wtm{8.50}&\ints{17}& \cpu{*8.71}& \wtm{*6.26}& \ints{17	}& \ETA{176947} \\
-			% 17 interleavings tested; 1 preemptions; job time 4s; pldi time 8503682; new-fixed pldi cputime 41386987
-			% 17 interleavings tested; 1 preemptions; job time 2s; pldi time 6263778; new-fixed pldi cputime 8711332
 			& 3,4	&\cpu{ 92.98}&\wtm{15.19}&\ints{33}& \cpu{*10.36}& \wtm{*7.15}& \ints{33	}& \ETA{8493465} \\
-			% 33 interleavings tested; 1 preemptions; job time 8s; pldi time 15185585; new-fixed pldi cputime 92982811
-			% 33 interleavings tested; 1 preemptions; job time 3s; pldi time 7153968; new-fixed pldi cputime 10355961
 		\cline{2-9}
 			& 4,1	&\cpu{ 45.13}&\wtm{8.56}&\ints{5}& \cpu{*7.77}& \wtm{*5.30}& \ints{5	}& \ETA{460} \\
-			% 5 interleavings tested; 1 preemptions; job time 4s; pldi time 8556561; new-fixed pldi cputime 45128135
-			% 5 interleavings tested; 1 preemptions; job time 2s; pldi time 5295360; new-fixed pldi cputime 7770389
 			& 4,2	&\cpu{64.99}&\wtm{11.33}&\ints{9}& \cpu{*8.32}& \wtm{*5.59}& \ints{9	}& \ETA{132710} \\
-			% 9 interleavings tested; 1 preemptions; job time 5s; pldi time 11333162; new-fixed pldi cputime 64991248
-			% 132710 9 interleavings tested; 1 preemptions; job time 2s; pldi time 5588002; new-fixed pldi cputime 8317173
 		\hline
 		{\tt swapbug}
-			& 2,1	&\cpu{ 84.26}&\wtm{15.49}&\ints{*6}& \cpu{*28.32}& \wtm{*11.29}& \ints{33	}& \ETA{73} \\
-			% 6 interleavings tested; 1 preemptions; job time 5s; pldi time 15485317; new-fixed pldi cputime 84260417
-			% 33 interleavings tested; 1 preemptions; job time 3s; pldi time 11286074; new-fixed pldi cputime 28324164
+			& 2,1	&\cpu{104.37}&\wtm{17.00}&\ints{*6}& \cpu{*43.76}& \wtm{*12.51}& \ints{33	}& \ETA{73} \\
 		(deadlock)
-			& 2,2	&\cpu{ 64.65}&\wtm{*11.90}&\ints{*38}& \cpu{*30.55}& \wtm{13.50}& \ints{85	}& \ETA{860} \\
-			% 38 interleavings tested; 2 preemptions; job time 6s; pldi time 11899011; new-fixed pldi cputime 64653180
-			% 85 interleavings tested; 1 preemptions; job time 5s; pldi time 13499606; new-fixed pldi cputime 30550037
-			& 2,3	&\cpu{ 94.59}&\wtm{*14.68}&\ints{*48}& \cpu{*32.27}& \wtm{19.42}& \ints{217	}& \ETA{9120} \\
-			% 48 interleavings tested; 2 preemptions; job time 9s; pldi time 14681610; new-fixed pldi cputime 94594891
-			% 217 interleavings tested; 1 preemptions; job time 11s; pldi time 19419243; new-fixed pldi cputime 37272562
-			& 2,4	&\cpu{ 109.37}&\wtm{*17.05}&\ints{*68}& \cpu{*53.44}& \wtm{35.80}& \ints{537	}& \ETA{91239} \\
-			% 68 interleavings tested; 2 preemptions; job time 10s; pldi time 17049141; new-fixed pldi cputime 109374628
-			% 537 interleavings tested; 1 preemptions; job time 27s; pldi time 35796053; new-fixed pldi cputime 53441873
+			& 2,2	&\cpu{ 66.47}&\wtm{*12.42}&\ints{*38}& \cpu{*45.22}& \wtm{15.30}& \ints{85	}& \ETA{860} \\
+			& 2,3	&\cpu{ 99.41}&\wtm{*15.92}&\ints{*48}& \cpu{*53.57}& \wtm{21.34}& \ints{217	}& \ETA{9120} \\
+			& 2,4	&\cpu{125.23}&\wtm{*19.46}&\ints{*68}& \cpu{*71.01}& \wtm{38.86}& \ints{537	}& \ETA{91239} \\
 		\cline{2-9}
-			& 3,1	&\cpu{221.58}&\wtm{*33.44}&\ints{*32}&\cpu{*65.13}& \wtm{52.23}& \ints{980   }& \ETA{3417} \\
-			% 32 interleavings tested; 4 preemptions; job time 6s; pldi time 33442378; new-fixed pldi cputime 221580261
-			% 980 interleavings tested; 2 preemptions; job time 40s; pldi time 52225013; new-fixed pldi cputime 65125824
-			& 3,2	&\cpu{*3283.16}&\wtm{*413.59}&\ints{*260}&\ETA{--}&\ETA{>1h}&\ETA{--}& \ETA{2256553} \\
-			% 260 interleavings tested; 4 preemptions; job time 32s; pldi time 413587352; new-fixed pldi cputime 3283157217
-			% [JOB 8] progress: 63137/2256553 brs (2.797940%), ETA 130d 19h 28m 29s (elapsed 59m 45s)
+			& 3,1	&\cpu{313.36}&\wtm{*44.50}&\ints{*34}&\cpu{*78.23}& \wtm{60.49}& \ints{1016	}& \ETA{3543} \\
+			& 3,2	&\cpu{*6500.36}&\wtm{*816.27}&\ints{*262}&\ETA{--}&\ETA{>1h}&\ETA{--}& \ETA{2161715} \\
 		\hline
 		{\tt avl\_insert}
-			& 2,2	&\cpu{862.54}&\wtm{111.64}&\ints{*57}	&\cpu{*66.32}&\wtm{*31.81}&\ints{127}&\ETA{254078} \\
-			% 57 interleavings tested; 1 preemptions; job time 13s; pldi time 111641721; new-fixed pldi cputime 862539202
+			& 2,2	&\cpu{1355.05}&\wtm{174.09}&\ints{*29}	&\cpu{*93.28}&\wtm{*30.37}&\ints{79}&\ETA{157286} \\
 		(segfault+)
-			& 2,3	&\cpu{1490.20}&\wtm{*191.56}&\ints{*221}&\cpu{*256.94}&\wtm{193.71}&\ints{1391}&\ETA{22773586} \\
-			% 221 interleavings tested; 2 preemptions; job time 27s; pldi time 191557235; new-fixed pldi cputime 1490204572
-			& 2,4	&\cpu{*7598.19}&\wtm{*970.67}&\ints{*2633}&\ETA{--}&\ETA{>1h}&\ETA{--}& \ETA{91704203} \\
-			% 2633 interleavings tested; 3 preemptions; job time 5m 31s; pldi time 970674411; new-fixed pldi cputime 7598188798
-			% [JOB 12] progress: 28140/91704203 brs (0.030686%), ETA 18y 54d 18h 42m 58s (elapsed 51m 12s)
+			& 2,3	&\cpu{402.91}&\wtm{*54.60}&\ints{*33}&\cpu{*228.16}&\wtm{125.89}&\ints{835}&\ETA{13664151} \\
+			% TODO: these 2,3 ones alone are new + ok
+			% 33 interleavings; 1 preemptions; job time 12s; pldi time 179368977; new-fixed pldi cputime 1403360474
+			% 835 interleavings; 1 preemptions; job time 1m 42s; pldi time 135292827; new-fixed pldi cputime 235664920
+			& 2,4	&\ETA{--}&\ETA{>1h}&\ETA{--}&\ETA{--}&\ETA{>1h}&\ETA{--}& \ETA{79020639} \\
+			% this quicksand jerk required ulimit -n higher than 1024
+			%
+			% the jerk didn't even find the bug anymore, after dpor-preferred tid
+			% heres the stats from how it did before
+			% & 2,4	&\cpu{*7598.19}&\wtm{*970.67}&\ints{*2633}&\ETA{--}&\ETA{>1h}&\ETA{--}& \ETA{79020639} \\
+			% anyway this was the maximal
+			%
 		\cline{2-9}
-			& 3,1	&\cpu{62.69}&\wtm{*10.36}&\ints{*23}	&\cpu{*64.70}&\wtm{25.59}&\ints{53}&\ETA{343250} \\
-			% 23 interleavings tested; 3 preemptions; job time 6s; pldi time 10359882; new-fixed pldi cputime 62690171
-			% 53 interleavings tested; 3 preemptions; job time 6s; pldi time 25585758; new-fixed pldi cputime 64695226
-			& 3,2	&\cpu{*2445.90}&\wtm{*325.81}&\ints{*233}&\ETA{--}&\ETA{>1h}&\ETA{--}& \ETA{466977272} \\
-			% 233 interleavings tested; 3 preemptions; job time 30s; pldi time 325806017; new-fixed pldi cputime 2445895897)
-			% was also found with 169 interleavings but later on
-			%[JOB 38] progress: 3812/466977272 brs (0.000816%), ETA INF (elapsed 13m 50s)
-			\hline \multicolumn{9}{c}{everything above this line needs rerun for dpor-preferred tid} \\
+			& 3,1	&\cpu{*86.43}&\wtm{*14.10}&\ints{*23}	&\cpu{91.97}&\wtm{24.80}&\ints{53}&\ETA{343250} \\
+			& 3,2	&\cpu{*2177.86}&\wtm{*287.66}&\ints{*169}&\ETA{--}&\ETA{>1h}&\ETA{--}& \ETA{425939133} \\
+			% TODO
+			%\multicolumn{9}{c}{everything above this line needs rerun for dpor-preferred tid + thr_bottom1} \\
+
 		\hline
 		{\tt lock\_fast}
 		%({\tt spinlock})
-			& 2,1	&\cpu{12.33}&\wtm{3.69}&\ints{2}&\cpu{*3.32}&\wtm{*3.32}&\ints{2}& \ETA{4} \\
+			& 2,1	&\cpu{18.33}&\wtm{5.19}&\ints{2}&\cpu{*3.12}&\wtm{*3.12}&\ints{2}& \ETA{4} \\
+			% 2 interleavings; 0 preemptions; job time 4s; pldi time 5191170; new-fixed pldi cputime 18328224
+			% 2 interleavings; 0 preemptions; job time 2s; pldi time 3119081; new-fixed pldi cputime 3118912
 		(perf)
-			& 9,9	&\cpu{20.49}&\wtm{5.74}&\ints{2}&\cpu{*4.78}&\wtm{*4.78}&\ints{2}& \ETA{inf} \\
+			& 9,9	&\cpu{22.43}&\wtm{6.24}&\ints{2}&\cpu{*4.71}&\wtm{*4.71}&\ints{2}& \ETA{inf} \\
+			% 2 interleavings; 0 preemptions; job time 3s; pldi time 6238515; new-fixed pldi cputime 22431755
+			% 2 interleavings; 0 preemptions; job time 3s; pldi time 4712012; new-fixed pldi cputime 4711884
 	\end{tabular}
 	\end{center}
 	\caption{Landslide's bug-finding performance on various test configurations.
@@ -1202,39 +1177,34 @@ I report their estimated state space size and runtime measured after that timeou
 			%& 2,1 & \cpu{38.43}	& \ints{99}	& \cpu{36.12}	& \ints{59}	& \cpu{3.34}	& \ints{4} \\
 			%& 3,1 & \cpu{vvv}	& \ints{vvv}	& \cpu{730.94}	& \ints{17112}	& \cpu{74.53}	& \ints{1064} \\
 			\hline
+			% TODO: everything above this line needs rerun
+			% TODO: everything below is fine up to dpor-preferred & thr_bottom1 updates
 			{\tt fig63}
-			& 2,1 & \cpu{7.03}	& \ints{10}	& \cpu{6.96}	& \ints{6}	& \cpu{3.42}	& \ints{1} \\
-			& 2,2 & \cpu{9.32}	& \ints{108}	& \cpu{8.78}	& \ints{76}	& \cpu{3.43}	& \ints{1} \\
-			& 2,3 & \cpu{54.41}	& \ints{1934}	& \cpu{31.65}	& \ints{977}	& \cpu{3.27}	& \ints{1} \\
-			& 2,4 & \cpu{997.09} 	& \ints{36600} 	& \cpu{414.27}	& \ints{14512}	& \cpu{3.34}	& \ints{1} \\
+			& 2,1 & \cpu{7.12}	& \ints{10}	& \cpu{6.92}	& \ints{6}	& \cpu{3.40}	& \ints{1} \\
+			& 2,2 & \cpu{9.24}	& \ints{108}	& \cpu{8.61}	& \ints{76}	& \cpu{3.46}	& \ints{1} \\
+			& 2,3 & \cpu{54.68}	& \ints{1934}	& \cpu{31.76}	& \ints{977}	& \cpu{3.39}	& \ints{1} \\
+			& 2,4 & \cpu{1054.80} 	& \ints{36600} 	& \cpu{417.99}	& \ints{14512}	& \cpu{3.58}	& \ints{1} \\
 			% nb this 22 would be a 21 with !CONSIDER_ONLY... ..but, if it's the biggest loss, really n b d
-			& 3,1 & \cpu{10.40}	& \ints{148}	& \cpu{7.72}	& \ints{22}	& \cpu{3.33}	& \ints{1} \\
-			& 3,2 & \cpu{708.86}	& \ints{21642}	& \cpu{196.45}	& \ints{6467}	& \cpu{3.23}	& \ints{1} \\
-			% 3,3 with -R was tried for about 90 min, and stopped with ETA of 2367715 / 2d22h
-			% without -R would of course be bigger still
-			& 4,1 & \cpu{106.21}	& \ints{3064}	& \cpu{11.29}	& \ints{130}	& \cpu{3.43}	& \ints{1} \\
-			& 4,2 & \ETAdag{qqq} 	& \ETAdag{qqq} 	& \ETAdag{22d 17h}	& \ETAdag{3129034}	& \cpu{3.28}	& \ints{1} \\
-			%[JOB 1] progress: 827215/3129034 brs (26.436748%), ETA 22d 7h 18m 34s (elapsed 9h 59m 56s)
-
-			% measured with !CONSIDER_ONLY_MOST_RECENT_DPOR_PREFERRED_TID
-			%& 2,2 & \cpu{9.40}	& \ints{108}	& \cpu{8.92}	& \ints{76}	& \cpu{3.37}	& \ints{1} \\
-			%& 3,1 & \cpu{10.30}	& \ints{132}	& \cpu{7.50}	& \ints{21}	& \cpu{3.64}	& \ints{1} \\
+			& 3,1 & \cpu{11.15}	& \ints{148}	& \cpu{7.76}	& \ints{22}	& \cpu{3.53}	& \ints{1} \\
+			& 3,2 & \cpu{717.53}	& \ints{21642}	& \cpu{217.30}	& \ints{6467}	& \cpu{3.52}	& \ints{1} \\
+			& 4,1 & \cpu{111.83}	& \ints{3064}	& \cpu{11.32}	& \ints{130}	& \cpu{3.49}	& \ints{1} \\
 			\hline
 			{\tt avl\_insert}
-			& 2,1 & \cpu{545.45}	& \ints{15052}	& \cpu{244.20}	& \ints{6288}	& \cpu{109.84}	& \ints{2774} \\
-			% (2,2) - bug found on regular w/ ?? ints, on retry sets w/ ?? ints, and codes w/ ?? ints
+			& 2,1 & \cpu{672.68}	& \ints{15125}	& \cpu{307.94}	& \ints{6287}	& \cpu{136.60}	& \ints{2774} \\
 			\hline
 			{\tt avl\_fixed}
-			& 2,1 & \cpu{642.73} 	& \ints{20416} 	& \cpu{293.70}	& \ints{9677}	& \cpu{108.69}	& \ints{2774} \\
+			& 2,1 & \cpu{739.60} 	& \ints{20459} 	& \cpu{332.32}	& \ints{9675}	& \cpu{122.40}	& \ints{2774} \\
 			& 2,2 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
 			& 3,1 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
 			\hline
 			{\tt map\_basic}
-			& 2,1 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
+			& 2,1 & \cpu{1950.48}	& \ints{30719}	& \cpu{867.68}	& \ints{13237}	& \cpu{367.91}	& \ints{5446} \\
+			& 2,2 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
+			& 3,1 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
 			\hline
 			{\tt map\_basicer}
-			& 2,1 & \cpu{qqq} 	& \ints{qqq} 	& \cpu{qqq}	& \ints{qqq}	& \cpu{qqq}	& \ints{qqq} \\
-			& 2,2 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
+			& 2,1 & \cpu{28.40} 	& \ints{150} 	& \cpu{94}	& \ints{26.55}	& \cpu{14.88}	& \ints{9} \\
+			& 2,2 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \cpu{1285.06}	& \ints{21684} \\
 			& 3,1 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
 
 			%%%% nb. below is a fake version of the results, basically measured with abort set reduction,
@@ -1310,6 +1280,8 @@ I report their estimated state space size and runtime measured after that timeou
 		(\sect{\ref{sec:txn-abort-codes}}),
 		ultimately matching STM's execution semantics.
 		State space estimates measured after a timeout of 10 hours.
+		{\em Thesis draft note: I need to rerun these tests to ensure consistent cpu times with the next table,
+		but I expect the state space sizes not to change substantially.}
 		}
 	\label{tab:tm-verifs}
 \end{table}
@@ -1363,14 +1335,17 @@ reached among Landslide's verifications
 			{\tt swap}		& 1	& 4	& 8	& 52	\\ % 2,2
 			{\tt fig63}		& 1	& 0	& $K$-1	& 18	\\ % 3,2 k=3 -> 18; 2,4 -> 16
 			{\tt avl\_insert}	& 1	& 2	& 7	& 20	\\ % 2,1 nb. only 5 drpps under -A -S but w/e
+			% nb less than 9 on stm
 			{\tt avl\_fixed}	& 1	& 2	& 9	& 24	\\ % 2,1 nb. again, only 5 under -A -S
-			% the extra 2 over basicer is from resize, which only 1 thread does, but K*N is 0 here anyway so vov
-			{\tt map\_basic}	& 1	& 4	& ?	& 0	\\ % lol
-			{\tt map\_basicer}	& 1	& 2	& ?	& ?	\\
+			% nb stm takes it down from 13 to 10 races
+			{\tt map\_basic}	& 1	& 4	& 13	& 36	\\ % 2,1
+			% mysteriously had this at 6 at one point but ive no idea where that came from
+			{\tt map\_basicer}	& 1	& 2	& 5	& 32	\\ % 2,2
 
+			% TODO: check these again, will 2,4 even complete on mutex
 			{\tt lock}({\tt spinlock})	& 1	& 2	& 4	& 28	\\ % 2,2
 			{\tt lock}({\tt spin\_fixed})	& 1	& 2	& 4	& 28	\\ % 2,2 or 4,1
-			{\tt lock}({\tt mutex})		& 1	& 2	& 2	& 40	\\ % 2,4
+			{\tt lock}({\tt mutex})		& 1	& 2	& 2	& 30	\\ % 2,3 gives 30; 2,4 would give 40
 			% not putting lock_fast because it like, doesn't have a "state space" per se
 		\end{tabular}
 	\end{center}
@@ -1413,8 +1388,10 @@ even if it means applying reductions that require human intuition to trust are s
 Moreover, much as verifying {\tt htm2}'s soundness is a positive result,
 the attempts at larger data structures quickly suffered exponential explosion
 for even small thread/iteration counts,
-in one case failing to make any guarantee about even the minimum possible test configuration,
-and in another failing to verify that a previously-found bug had been fixed.
+in one case
+%failing to make any guarantee about even the minimum possible test configuration,
+%and in another
+failing to verify whether or not a previously-found bug had actually been fixed.
 In the following subsections I explore three possible mitigation approaches.
 
 \subsubsection{Retry set reduction}
@@ -1627,6 +1604,7 @@ Provided that one trusts the {\tt lock} tests correctly check the desired proper
 and that open-coding hadn't introduced any new bugs (such as Figure~\ref{fig:avlbug}'s),
 the benefit is clear:
 the data structure tests suddenly reach unprecedented thread/iteration counts with ease,
+% 'so on' here includes free/re-malloc mem conflicts; see comment in avl_mutex.cpp
 their state space growth now defined only by their internal conflicts from tree rebalancing, map resizing, and so on.
 In total,
 summing the testing times of {\tt lock}({\tt mutex})$(K,N)$ and {\tt avl\_mutex}$(K,N)$
@@ -1638,12 +1616,6 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 	\begin{center}
 		\footnotesize
 		\begin{tabular}{cc}
-		%\begin{tabular}{cc||r|r||r|r}
-		%	& & \multicolumn{2}{c||}{\bf DPOR} & \multicolumn{2}{c}{\bf DPOR + retry sets} \\
-		%	& & \cpu{\bf cpu (s)} & \ints{\bf SS size}
-		%	  & \cpu{\bf cpu (s)} & \ints{\bf SS size} \\
-		%	\bf test & \bf params & \em (or \ETAdag{\bf \em ETA}) & \em (or \ETAdag{\bf \em est.})
-		%	  & \em (or \ETAdag{\bf \em ETA}) & \em (or \ETAdag{\bf \em est.}) \\
 		\begin{tabular}{cc||r|r}
 			& & \multicolumn{2}{c}{\bf STM ({\tt -A -S})} \\
 			& & \cpu{\bf cpu (s)} & \ints{\bf SS size} \\
@@ -1651,115 +1623,41 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 			\hline
 			\hline
 			{\tt lock}
-			& 2,1 & \cpu{3.19} & \ints{4} \\
+			& 2,1 & \cpu{3.41} & \ints{4} \\
 			({\tt spinlock})
-			& 2,2 & \cpu{184.51} & \ints{1702} \\
+			& 2,2 & \cpu{198.77} & \ints{1702} \\
 			% if lock(spin_fixed) will time out on 2,3 and 3,2, this is guaranteed to aswell
-			% & 2,3 & \\ % \cpu{0} & \ints{0} \\
-			& 3,1 & \cpu{33.29} & \ints{246} \\
-			% & 3,2 & \\ % \cpu{0} & \ints{0} \\
+			& 3,1 & \cpu{35.28} & \ints{246} \\
 			\hline
 			{\tt lock}
-			& 2,1 & \cpu{qqq} & \ints{4} \\
+			& 2,1 & \cpu{3.55} & \ints{4} \\
 			({\tt spin\_fixed})
-			& 2,2 & \cpu{104.77} & \ints{998} \\
+			& 2,2 & \cpu{105.57} & \ints{998} \\
 			& 2,3 & \ETAdag{qqq} & \ETAdag{qqq} \\
-			& 3,1 & \cpu{26.96} & \ints{186} \\
-			\hline \multicolumn{4}{c}{everything below this line needs rerun} \\
-			& 3,2 & \ETAdag{8y 153d} & \ETAdag{1590416} \\ % caus ok
-			% [JOB 4] progress: 187162/1590416 brs (11.768113%), ETA 8y 152d 16h 25m 38s (elapsed 9h 59m 49s)
-			& 4,1 & \cpu{30408.58} & \ints {282084} \\ % causality ok
-			% (2,1) with isfree fix
-			%%%% total time elapsed: 10s
-			%%%% [JOB 4] COMPLETE (31 interleavings tested; 2s elapsed)
-			%%%% total CPU time consumed: 13s (13256415 usecs) (core saturation: 30%)
-			% (2,2) with isfree fix
-			% total time elapsed: 27m 39s
-			% [JOB 4] COMPLETE (15076 interleavings tested; 27m 28s elapsed)
-			% total CPU time consumed: 27m 42s (1662213886 usecs) (core saturation: 25%)
-			% (2,3)
-			% [JOB 4] progress: 242266/2003906 brs (12.089688%), ETA 3d 20h 2m 12s (elapsed 9h 59m 49s)
-			% [JOB 4] TIMED OUT (12.089688%; ETA 3d 20h 2m 12s)
-			% (3,1) with isfree fix
-			% hot start confirmed
-			%%%% total time elapsed: 41m 26s
-			%%%% [JOB 4] COMPLETE (24790 interleavings tested; 41m 18s elapsed)
-			%%%% total CPU time consumed: 41m 28s (2488953483 usecs) (core saturation: 25%)
-			% (3,2)
-			% [JOB 4] progress: 187522/6514618 brs (2.878480%), ETA 207d 20h 23m 10s (elapsed 9h 59m 51s)
-			% [JOB 4] TIMED OUT (2.878480%; ETA 207d 20h 23m 10s)
+			& 3,1 & \cpu{28.27} & \ints{186} \\
+			& 3,2 & \ETAdag{qqq} & \ETAdag{qqq} \\
+			& 4,1 & \cpu{qqq} & \ints {qqq} \\ % was: 30408, 282084 pre mkrun
 			\hline
 			{\tt lock}
-			& 2,1 & \cpu{2.49} & \ints{4}		\\ % certified causality ok
+			& 2,1 & \cpu{3.44} & \ints{4}		\\
 			({\tt mutex})
-			& 2,2 & \cpu{12.72} & \ints{180}	\\ % certified causality ok
-			& 2,3 & \cpu{273.45} & \ints{8356}	\\ % certified causality ok
-			& 2,4 & \cpu{13545.35} & \ints{384512}	\\ % certified causality ok
-			& 3,1 & \cpu{11.21} & \ints{132}	\\ % certified causality ok
-			& 3,2 & \cpu{25434.85} & \ints{718690}	\\ % certified causality ok
-			\hline \multicolumn{4}{c}{everything above this line needs rerun} \\
-			& 4,1 & \cpu{547.96} & \ints{15064}	\\
-			%%%%%%%%%%% htm_mutex
-			%%%% -- nb. these numbers were obtained with a oops-exploded state space
-			%%%% from a misplaced assert on hm->held
-			%%%% (nb. also before dpor-preferred-tid, although that doesn't seem to affect ss size)
-			% % 2,1
-			% total time elapsed: 6s
-			% [JOB 2] COMPLETE (24 interleavings tested; 3s elapsed)
-			% total CPU time consumed: 9s (9642348 usecs) (core saturation: 35%)
-			% % 2,2
-			% total time elapsed: 1m 20s
-			% [JOB 2] COMPLETE (2672 interleavings tested; 1m 16s elapsed)
-			% total CPU time consumed: 1m 23s (83001932 usecs) (core saturation: 25%)
-			% % 2,3
-			% total time elapsed: 2h 3m 45s
-			% [JOB 2] COMPLETE (220338 interleavings tested; 2h 3m 40s elapsed)
-			% total CPU time consumed: 2h 3m 47s (7427873599 usecs) (core saturation: 25%)
-			% % 3,1
-			% total time elapsed: 51s
-			% [JOB 2] COMPLETE (1594 interleavings tested; 47s elapsed)
-			% total CPU time consumed: 54s (54572810 usecs) (core saturation: 26%)
-			%%%% -- nb. better version
-			% % 2,1
-			% total time elapsed: 6s
-			% [JOB 2] COMPLETE (22 interleavings tested; 2s elapsed)
-			% total CPU time consumed: 9s (9415448 usecs) (core saturation: 34%)
-			% % 2,2
-			% total time elapsed: 40s
-			% [JOB 2] COMPLETE (1208 interleavings tested; 37s elapsed)
-			% total CPU time consumed: 44s (44068381 usecs) (core saturation: 27%)
-			% % 2,3
-			% total time elapsed: 44m 4s
-			% [JOB 2] COMPLETE (71136 interleavings tested; 44m 0s elapsed)
-			% total CPU time consumed: 44m 7s (2647380230 usecs) (core saturation: 25%)
-			% % 2,4
-			% [JOB 2] progress: 957248/3223055 brs (29.700013%), ETA 2d 1h 24m 44s (elapsed 9h 59m 56s)
-			% total time elapsed: 10h 0s
-			% [JOB 2] TIMED OUT (29.700013%; ETA 2d 1h 24m 44s)
-			% total CPU time consumed: 10h 3s (36003560403 usecs) (core saturation: 25%)
-			% % 3,1
-			% total time elapsed: 38s
-			% [JOB 2] COMPLETE (1148 interleavings tested; 35s elapsed)
-			% total CPU time consumed: 42s (42108005 usecs) (core saturation: 27%)
-			% % 3,2
-			% [JOB 2] progress: 920684/4793666 brs (19.206260%), ETA 11d 4h 17m 50s (elapsed 9h 59m 56s)
-			% total time elapsed: 10h 0s
-			% [JOB 2] TIMED OUT (19.206260%; ETA 11d 4h 17m 50s)
-			% total CPU time consumed: 10h 3s (36003199876 usecs) (core saturation: 25%)
-			% % 4,1
-			% total time elapsed: 1h 33m 3s
-			% [JOB 2] COMPLETE (159664 interleavings tested; 1h 32m 59s elapsed)
-			% total CPU time consumed: 1h 33m 6s (5586369677 usecs) (core saturation: 25%)
+			& 2,2 & \cpu{16.83} & \ints{180}	\\
+			& 2,3 & \cpu{405.21} & \ints{9372}	\\
+			& 2,4 & \cpu{qqq} & \ints{qqq}	\\ % was: 15266 sec 384512 pre mkrun
+			& 3,1 & \cpu{15.00} & \ints{132}	\\
+			%& 3,2 & \cpu{29432.87} & \ints{707086}	\\ % pre mkrun fix (let alone bottom1)
+			& 3,2 & \ETAdag{qqq} & \ETAdag{qqq} \\
+			& 4,1 & \cpu{665.89} & \ints{15064}	\\
 			\hline
 			{\tt lock\_fast}
-			& 2,1 & \cpu{3.36} & \ints{1}	\\
+			& 2,1 & \cpu{3.25} & \ints{1}	\\
 			({\tt spin\_fixed})
-			& 9,9 & \cpu{4.91} & \ints{1}	\\
+			& 9,9 & \cpu{4.61} & \ints{1}	\\
 			\hline
 			{\tt lock\_fast}
-			& 2,1 & \cpu{3.40} & \ints{1}	\\
+			& 2,1 & \cpu{3.19} & \ints{1}	\\
 			({\tt mutex})
-			& 9,9 & \cpu{4.71} & \ints{1}	\\
+			& 9,9 & \cpu{4.62} & \ints{1}	\\
 			\end{tabular}
 			&
 			\begin{tabular}{cc||r|r}
@@ -1769,68 +1667,28 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 			\hline
 			\hline
 			{\tt avl\_mutex}
-			& 2,1 & \cpu{2.49} & \ints{3} \\
-			& 2,2 & \cpu{2.44} & \ints{3} \\
-			& 2,3 & \cpu{2.45} & \ints{3} \\
-			& 2,4 & \cpu{2.41} & \ints{3} \\
-			& 3,1 & \cpu{2.69} & \ints{12} \\
-			& 3,2 & \cpu{2.67} & \ints{12} \\
-			& 3,3 & \cpu{2.76} & \ints{13} \\
-			& 3,4 & \cpu{2.74} & \ints{13} \\
-			& 4,1 & \cpu{4.03} & \ints{60} \\
-			& 4,2 & \cpu{4.34} & \ints{66} \\
-			& 4,3 & \cpu{4.53} & \ints{71} \\
-			& 4,4 & \cpu{4.75} & \ints{73} \\
-			%%%% avl_mutex
-			% % 2,1
-			% [JOB 0] COMPLETE (3 interleavings tested; 2s elapsed)
-			% total CPU time consumed: 2s (2489515 usecs) (core saturation: 24%)
-			% % 2,2
-			% [JOB 0] COMPLETE (3 interleavings tested; 1s elapsed)
-			% total CPU time consumed: 2s (2443451 usecs) (core saturation: 24%)
-			% % 2,3
-			% [JOB 0] COMPLETE (3 interleavings tested; 1s elapsed)
-			% total CPU time consumed: 2s (2448127 usecs) (core saturation: 24%)
-			% % 2,4
-			% [JOB 0] COMPLETE (3 interleavings tested; 1s elapsed)
-			% total CPU time consumed: 2s (2407903 usecs) (core saturation: 24%)
-			% % 3,1
-			% [JOB 0] COMPLETE (12 interleavings tested; 2s elapsed)
-			% total CPU time consumed: 2s (2685913 usecs) (core saturation: 24%)
-			% %3,2
-			% [JOB 0] COMPLETE (12 interleavings tested; 2s elapsed)
-			% total CPU time consumed: 2s (2666826 usecs) (core saturation: 24%)
-			% % 3,3
-			% [JOB 0] COMPLETE (13 interleavings tested; 2s elapsed)
-			% total CPU time consumed: 2s (2761157 usecs) (core saturation: 24%)
-			% % 3,4
-			% [JOB 0] COMPLETE (13 interleavings tested; 2s elapsed)
-			% total CPU time consumed: 2s (2738169 usecs) (core saturation: 24%)
-			% % 4,1
-			% [JOB 0] COMPLETE (60 interleavings tested; 3s elapsed)
-			% total CPU time consumed: 4s (4034411 usecs) (core saturation: 24%)
-			% % 4,2
-			% [JOB 0] COMPLETE (66 interleavings tested; 3s elapsed)
-			% total CPU time consumed: 4s (4338442 usecs) (core saturation: 24%)
-			% % 4,3
-			% [JOB 0] COMPLETE (71 interleavings tested; 4s elapsed)
-			% total CPU time consumed: 4s (4526641 usecs) (core saturation: 24%)
-			% % 4,4
-			% [JOB 0] COMPLETE (73 interleavings tested; 4s elapsed)
-			% total CPU time consumed: 4s (4752864 usecs) (core saturation: 24%)
+			& 2,1 & \cpu{3.48} & \ints{7} \\
+			& 2,2 & \cpu{6.25} & \ints{85} \\
+			& 2,3 & \cpu{24.69} & \ints{561} \\
+			& 2,4 & \cpu{217.98} & \ints{4984} \\
+			& 3,1 & \cpu{8.26} & \ints{129} \\
+			& 3,2 & \cpu{1403.46} & \ints{30653} \\
+			& 3,3 & \ETAdag{qqq} & \ETAdag{qqq} \\
+			& 4,1 & \cpu{199.96} & \ints{4488} \\
+			& 4,2 & \ETAdag{qqq} & \ETAdag{qqq} \\
 			\cline{1-4}
 			{\tt map\_mutex}
-			& 2,1 & \\ %\cpu{0} & \ints{0} \\
-			& 2,2 & \\ %\cpu{0} & \ints{0} \\
-			& 2,3 & \\ %\cpu{0} & \ints{0} \\
-			& 2,4 & \\ %\cpu{0} & \ints{0} \\
-			& 3,1 & \\ %\cpu{0} & \ints{0} \\
-			& 3,2 & \\ %\cpu{0} & \ints{0} \\
-			& 3,3 & \\ %\cpu{0} & \ints{0} \\
-			& 3,4 & \\ %\cpu{0} & \ints{0} \\
-			& 4,1 & \\ %\cpu{0} & \ints{0} \\
-			%& 4,2 & \\ %\cpu{0} & \ints{0} \\
-			\hline \multicolumn{4}{c}{everything above this line needs rerun} \\
+			& 2,1 & \cpu{39.81} & \ints{83} \\
+			& 2,2 & \cpu{qqq} & \ints{qqq} \\ % 30k and rising, looks like mb 5 hr? or 10+hr. 50/50 odds
+			& 2,3 & \ETAdag{qqq} & \ETAdag{qqq} \\
+			& 3,1 & \cpu{qqq} & \ints{qqq} \\ % 200k and rising, same tbh
+			& 3,2 & \ETAdag{qqq} & \ETAdag{qqq} \\
+			& 4,1 & \ETAdag{qqq} & \ETAdag{qqq} \\
+			\\
+			\\
+			\\
+			\\
+			\\
 		\end{tabular}
 		\\
 		\\
@@ -1843,14 +1701,7 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 		demonstrating abstraction reduction \cite{dbug-phdthesis}
 		on the {\tt avl\_fixed} and {\tt map\_basic} tests
 		by verifying HTM mutex implementations separately.
-		Tested with STM semantics, as both lock implementations include a retry loop.
-		%Run with {\tt landslide -M -X -A -S}, i.e.,
-		%conflict and explicit aborts tested separately,
-		%and retry aborts suppressed
-		%(both lock implementations include a retry loop).
-		%The reduced {\tt avl\_mutex} and {\tt map\_mutex} are, of course, no longer transactional at all.
-		{\bf RERUN NOTE: this entire table needs to be rerun on account of dpor-preferred-tid}
-		}
+		Tested with STM semantics, as both lock implementations include a retry loop.}
 	\label{tab:tm-verifs2}
 \end{table}
 
@@ -1864,7 +1715,8 @@ on account of DPOR no longer needing to reorder the (now) read-read access pairs
 Secondly, {\tt spinlock} and {\tt spin\_fixed} take longer to test per interleaving
 %(CPU time divided by state space size)
 than {\tt mutex}
-(roughly 9 interleavings per second for the former, 28 for the latter),
+% TODO recalc
+(roughly 9 interleavings per second for the former, 14 for the latter),
 because while {\tt mutex} abstracts away threads needing to wait their turn for the critical section
 behind an API Landslide understands,
 the spinlock's wait loop is open-coded, and Landslide must fall back on its costlier heuristic synchronization detection
@@ -1872,39 +1724,10 @@ the spinlock's wait loop is open-coded, and Landslide must fall back on its cost
 In this way (and also, of course, because {\tt mutex}'s state spaces are smaller overall),
 {\tt mutex} can be seen in turn as a further abstraction reduction of {\tt spinlock}.
 
-%%%% map mutex
-% % TODO - bc of this weird nonlinear behaviour around 2,1+, yo ushoud prob try 2,2 for map_basic as well
-% % 2,1
-% total time elapsed: 19s
-% [JOB 7] COMPLETE (57 interleavings tested; 5s elapsed)
-%        PPs: { 'mutex_lock' 'mutex_unlock' 'DR @ 0x100053b' [NONDET] 'DR @ 0x1000552' [NONDET] 'DR @ 0x1000521' [NONDET]
-%        'DR @ 0x100055d' [NONDET] 'DR @ 0x100055a' [NONDET] 'DR @ 0x1000916' [NONDET] 'DR @ 0x1000919' [NONDET] }
-% total CPU time consumed: 31s (31198379 usecs) (core saturation: 39%)
-% % 2,2
-% total time elapsed: 3s
-% [JOB 0] COMPLETE (6 interleavings tested; 2s elapsed)
-%        PPs: { 'mutex_lock' 'mutex_unlock' }
-% =========================
-% progress report thr exiting
-% total CPU time consumed: 3s (3192831 usecs) (core saturation: 24%)
-% % 2,3
-% ==== PROGRESS REPORT ====
-% total time elapsed: 3s
-% [JOB 0] COMPLETE (6 interleavings tested; 2s elapsed)
-%        PPs: { 'mutex_lock' 'mutex_unlock' }
-% =========================
-% progress report thr exiting
-% total CPU time consumed: 3s (3240367 usecs) (core saturation: 24%)
-% 2,4
-% 3,1
-% 3,2
-
-
 % commentary -- writing this test case well requires expert knowledge of noobs (of writing landslide friendly tests)
 % - placing the asserts well, using sync_test_and_set and asserting on the result rather than having a separate read,
 %   has an impact on the state space, as seen above
 % - design of critical_section and how it uses xtest to yield only in failure path, and why that's justified
-
 
 % other one to test -
 % https://github.com/vamsikc/leveldb-tsx/blob/master/ext/xsync/include/scope.hpp
