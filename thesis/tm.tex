@@ -888,7 +888,7 @@ but the previously-published verification results should be considered outdated.
 			& 3,1	&\cpu{*86.43}&\wtm{*14.10}&\ints{*23}	&\cpu{91.97}&\wtm{24.80}&\ints{53}&\ETA{343250} \\
 			& 3,2	&\cpu{*2177.86}&\wtm{*287.66}&\ints{*169}&\ETA{--}&\ETA{>1h}&\ETA{--}& \ETA{425939133} \\
 			% TODO
-			%\multicolumn{9}{c}{everything above this line needs rerun for dpor-preferred tid + thr_bottom1} \\
+			\multicolumn{9}{c}{everything above this line needs rerun for dpor-preferred tid + thr\_bottom1} \\
 
 		\hline
 		{\tt lock\_fast}
@@ -1175,19 +1175,18 @@ I report their estimated state space size and runtime measured after that timeou
 			& 2,3 & \cpu{144.83}	& \ints{3970}	& \cpu{65.66}	& \ints{1558}	& \cpu{38.18}	& \ints{904} \\
 			& 2,4 & \cpu{3433.08}	& \ints{86950}	& \cpu{1134.62}	& \ints{25398}	& \cpu{752.51}	& \ints{19128} \\
 			& 3,1 & \cpu{10.57}	& \ints{120}	& \cpu{9.23}	& \ints{64}	& \cpu{7.88}	& \ints{40} \\
-			& 3,2 & \cpu{2492.17}	& \ints{60606}	& \cpu{2040.98}	& \ints{44862}	& \cpu{565.97}	& \ints{14304} \\
-			& 4,1 & \cpu{121.96}	& \ints{3006}	& \cpu{61.85}	& \ints{1296}	& \cpu{39.23}	& \ints{848} \\
-			\hline
-			{\tt swap}
-			& 2,1 & \cpu{38.76}	& \ints{99}	& \cpu{36.91}	& \ints{59}	& \cpu{3.29}	& \ints{4} \\
-			& 2,2 & \cpu{12009.77}	& \ints{233396}	& \cpu{497.11}	& \ints{11427}	& \cpu{461.54}	& \ints{9046} \\
-			& 3,1 & \cpu{2975.30}	& \ints{60912}	& \cpu{522.07}	& \ints{10706}	& \cpu{86.21}	& \ints{1014} \\
-			% measured with !CONSIDER_ONLY_MOST_RECENT_DPOR_PREFERRED_TID
-			%& 2,1 & \cpu{38.43}	& \ints{99}	& \cpu{36.12}	& \ints{59}	& \cpu{3.34}	& \ints{4} \\
-			%& 3,1 & \cpu{vvv}	& \ints{vvv}	& \cpu{730.94}	& \ints{17112}	& \cpu{74.53}	& \ints{1064} \\
-			\hline
+			% stm ok, rts ok, baseline alone needs redo
+			& 3,2 & \cpu{2492.17}	& \ints{60606}	& \cpu{2363.41}	& \ints{44862}	& \cpu{639.62}	& \ints{14304} \\
 			% TODO: everything above this line needs rerun
 			% TODO: everything below is fine up to dpor-preferred & thr_bottom1 updates
+			\multicolumn{8}{c}{everything above this line needs rerun for dpor-preferred tid + thr\_bottom1} \\
+			& 4,1 & \cpu{129.25}	& \ints{3006}	& \cpu{64.91}	& \ints{1296}	& \cpu{40.78}	& \ints{848} \\
+			\hline
+			{\tt swap}
+			& 2,1 & \cpu{65.72}	& \ints{99}	& \cpu{66.05}	& \ints{59}	& \cpu{3.40}	& \ints{4} \\
+			& 2,2 & \cpu{18124.06}	& \ints{277824}	& \cpu{1030.23}	& \ints{19542}	& \cpu{703.82}	& \ints{11600} \\
+			& 3,1 & \cpu{3820.64}	& \ints{60912}	& \cpu{608.48}	& \ints{10706}	& \cpu{89.69}	& \ints{1014} \\
+			\hline
 			{\tt fig63}
 			& 2,1 & \cpu{7.12}	& \ints{10}	& \cpu{6.92}	& \ints{6}	& \cpu{3.40}	& \ints{1} \\
 			& 2,2 & \cpu{9.24}	& \ints{108}	& \cpu{8.61}	& \ints{76}	& \cpu{3.46}	& \ints{1} \\
@@ -1288,6 +1287,9 @@ I report their estimated state space size and runtime measured after that timeou
 		``STM'' suppresses retry aborts and dynamically detects when to inject conflict aborts and so on
 		(\sect{\ref{sec:txn-abort-codes}}).
 		State space estimates measured after a timeout of 10 hours (and include those 10 hours in the predicted total).
+		{\em Thesis draft note: Some of these tests still need to be rerun on account of landslide implementation updates
+		to ensure consistent cpu times with the next table,
+		but I expect the state space sizes not to change substantially.}
 		}
 	\label{tab:tm-verifs}
 \end{table}
@@ -1686,11 +1688,10 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 			\cline{1-4}
 			{\tt map\_mutex}
 			& 2,1 & \cpu{39.81} & \ints{83} \\
-			& 2,2 & \cpu{qqq} & \ints{qqq} \\ % 30k and rising, looks like mb 5 hr? or 10+hr. 50/50 odds
-			& 2,3 & \ETAdag{qqq} & \ETAdag{qqq} \\
-			& 3,1 & \cpu{qqq} & \ints{qqq} \\ % 200k and rising, same tbh
-			& 3,2 & \ETAdag{qqq} & \ETAdag{qqq} \\
-			& 4,1 & \ETAdag{qqq} & \ETAdag{qqq} \\
+			& 2,2 & \ETAdag{26h 21m} & \ETAdag{1085126} \\
+			% [JOB 9] progress: 496530/1085126 brs (45.757812%), ETA 16h 21m 0s (elapsed 9h 59m 38s)
+			% total CPU time consumed: 10h 19s (36019507965 usecs) (core saturation: 12%)
+			& 3,1 & \ETAdag{qqq} & \ETAdag{qqq} \\
 			\\
 			\\
 			\\
