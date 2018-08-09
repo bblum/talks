@@ -109,7 +109,10 @@ The following ``secret'' arguments also exist, primarily for my own use in runni
 	\item {\tt -M}: enable Maximal State Space mode,
 		which prioritizes the maximal state space to optimize for fast verification,
 		abandoning all subset jobs even if they might find bugs faster
-		(\sect{\ref{sec:tm-eval}}, incompatible with {\tt -C})
+		(\sect{\ref{sec:tm-eval}}, incompatible with {\tt -C}).
+		According to \sect{\ref{sec:quicksand-soundness}}'s soundness proofs,
+		this is equivalent to {\tt -0}
+		(and according to my experience, way faster as well).
 	\item {\tt -H}: use Limited Happens-Before for data-race analysis (\sect{\ref{sec:background-hb}})
 		(default for Pebbles kernelspace mode)
 	\item {\tt -V}: use vector-clock-based Pure Happens-Before for data-race analysis (\sect{\ref{sec:background-hb}})
@@ -1163,13 +1166,6 @@ and the following {\tt within}/{\tt without\_user\_function} combinations:
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{State space estimation}
-\label{sec:landslide-estimate}
-
-% TODO
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \subsection{Dynamic Partial Order Reduction}
 \label{sec:landslide-dpor}
 
@@ -1361,9 +1357,113 @@ preserving the $O(nk)$ memory bound described above.
 When DPOR returns no new $I_{ij}$s not already marked in the set of visited subtrees,
 the exploration is complete.
 
+\subsubsection{Example}
+
+Although a superhuman reader may quickly reach intuitive understanding
+of complex algorithms from dense prose and mathematical notation alone,
+I also present here a friendly example of using DPOR on Figure~\ref{fig:concurrency-bug}'s example program,
+whose original state space is shown in Figure~\ref{fig:tree}.
+%Acknowledging that quickly gaining an intuitive understanding for an algorithm
+%is basically impossible from just paragraphs of text,
+%I conclude this section with an example of a single iteration of DPOR
+%on the example state space from Figures~\ref{fig:concurrency-bug} and \ref{fig:tree}.
+First, let us consider a single iteration of DPOR, applied after executing the first branch.
+The result is shown in Figure~\ref{fig:dpor-example-0}.
+
+\begin{figure}[h]
+	\begin{center}
+		\includegraphics[width=\textwidth]{dpor-example-0.pdf}
+	\end{center}
+	\caption{Result of a single iteration of DPOR.}
+	\label{fig:dpor-example-0}
+\end{figure}
+
+In this interleaving, DPOR identifies 3 memory conflicts, two read/write and one write/write,
+among the threads' 4 accesses to {\tt x}.
+For each such pair, it ``marks'' an alternate interleaving,
+which shall begin by preempting the thread of the first half of the conflict just before its execution thereof.
+The ultimate goal is to execute an interleaving which reorders the conflict, which may expose new behaviour.
+These marked interleavings form a work-queue which defines the exploration.
+DPOR consumes from this set in depth-first order
+(note the reversed order of $\bigstar$1 and $\bigstar$2)
+to avoid storing in memory any representation of exponentially-sized subtrees outside of the current branch.
+Note also that in $\bigstar$2,
+the reordered {\tt tmp2 <- x} is not directly part of the memory conflict which marked it,
+but it must be executed first to reach the conflicting {\tt x <- tmp2}.
+
+Now, let us run multiple iterations of DPOR
+to advance through the first half of the full state space shown in Figure~\ref{fig:tree}(b).
+Figure~\ref{fig:dpor-example-1} shows the outcome
+(with the previously-marked $\bigstar$2, now re-labeled as $\bigstar$3, having its subtree abbreviated).
+
+\begin{figure}[h]
+	\begin{center}
+		\includegraphics[width=\textwidth]{dpor-example-1.pdf}
+	\end{center}
+	\caption{Result of 3 DPOR iterations, pruning 7 redundant branches.}
+	\label{fig:dpor-example-1}
+\end{figure}
+
+After marking $\bigstar$1 and $\bigstar$3 from Figure~\ref{fig:dpor-example-0}'s interleaving, now labeled A,
+DPOR advances to interleaving B, preferring to schedule the second thread before switching back to the first
+to ensure the memory access is properly reordered.
+From there, it identifies a new memory conflict, marks $\bigstar$2, and advances to C,
+where it finds no memory conflicts that would mark anything not already marked and/or explored
+(memory conflicts that were already reordered in old branches are not highlighted with arrows).
+From C, $\bigstar$3 alone remains in the work-queue,
+so DPOR advances to the second (symmetric) half of the state space,
+skipping (thereby pruning) branches D through J.
+
+To see why branches D through J need not be tested, consider that each thread's {\tt tmpN++} is a thread-local event,
+participating in no memory conflicts,
+and hence any two interleavings differing only by reordering {\tt tmpN++}s must be equivalent.
+The dashed blue arrows denote such equivalences;
+note the two disjoint equivalence classes \{B,E,G,I\} and \{C,D,F,H,J\},
+distinguished by the order of the two final {\tt x <- tmpN}s.
+Note also that
+%(as shown in Figure~\ref{fig:tree}(b)),
+although B and C also have the same outcome ({\tt x==1}),
+this depends on the {\em values} written to memory rather than {\em addresses}
+(and would change if one thread's {\tt tmpN++} were a {\tt tmpN+=2}, for example),
+which DPOR does not consider.
+Recent work \cite{mcr} has extended DPOR to find such value-based equivalences,
+although is beyond this explanation's scope.
+
+Finally, let us consider the final result after DPOR runs out of remaining unexplored marked branches,
+shown in Figure~\ref{fig:dpor-example-2}.
+
+\begin{figure}[h]
+	\begin{center}
+		\includegraphics[width=\textwidth]{dpor-example-2.pdf}
+	\end{center}
+	\caption{DPOR's termination state, having reduced 20 interleavings to 6.}
+	\label{fig:dpor-example-2}
+\end{figure}
+
+Ultimately, the second half of the state space is pruned symmetrically.
+In general, the number of ways to interleave two threads executing $N$ and $M$ events each is given by ${N+M \choose N}$;
+in this case, the original state space's size was ${3+3 \choose 3} = 20$.
+DPOR's reduction is characterized by replacing $N$ and $M$ with the number of {\em conflicting} events only;
+in this case, ignoring all {\tt tmpN++} reorderings and testing only ${2+2 \choose 2} = 6$ branches.
+
+However, as the legend spoils, this subset of the state space still contains redundant interleavings,
+arising from the fact that one pair of those 4 events is two reads, and hence not actually in conflict.
+Visual inspection shows that $\bigstar$5, while locally justified in trying to reorder {\tt tmp1 <- x} before {\tt x <- tmp2},
+effectively serves % oops
+only to reorder it with {\tt tmp2 <- x}
+relative to the first symmetric subtree.
+Landslide identifies this equivalence by checking,
+%in this case during the iteration of DPOR after interleaving K,
+in this case after K,
+that if the first event to be reordered (here, {\tt tmp <- x})
+has already been tested in an equivalent reordering around any number of preceding events (here, {\tt tmp2 <- x} and {\tt tmp2++}),
+then the newly marked subtree is safe to prune.
+The next section describes the implementation of this check in general.
+
 \subsubsection{Sleep set reduction}
 \label{sec:landslide-sleepsets}
 
+% TODO: condense this by removing the 'new' example and just continuing with the previous section's
 In the presence of non-conflicting transitions as well as conflicting ones,
 DPOR's approach as described so far can still end up testing equivalent interleavings.
 For example, consider the execution sequence
@@ -1442,14 +1542,47 @@ I suspect (without proof) that sleep-set DPOR is optimal for 2 threads.
 % TODO: make sure it's clear that the quicksand chapter expts were run before this optmz was added,
 % and that the HTM expts fro msigbovik paper were re-run for its chapater herein
 
-\subsubsection{Example}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Acknowledging that quickly gaining an intuitive understanding for an algorithm
-is basically impossible from just paragraphs of text,
-I conclude this section with an example of a single iteration of DPOR
-on the example state space from Figures~\ref{fig:concurrency-bug} and \ref{fig:tree}.
+\subsection{State space estimation}
+\label{sec:landslide-estimate}
 
-% TODO
+For both the user's convenience and for Quicksand's prioritization algorithm (\sect{\ref{sec:quicksand-id}}),
+Landslide attempts to guess how big partially-explored state spaces will ultimately end up being upon completion.
+Because the backtracking implementation uses checkpointing
+rather than replaying similar interleavings' shared execution prefixes from the beginning \sect{\ref{sec:landslide-timetravel}},
+the total number of interleavings (i.e., leaf nodes in the execution tree)
+must be estimated separately from the total runtime (i.e., sum of all edge weights in the tree).
+
+% TODO: once dpor example tree is made
+% switch this to that
+As a concrete example, consider the state space of Figure~\ref{fig:tree}(b) (untouched by DPOR),
+and suppose each transition to the next preemption point takes 1 second to execute.
+While the first branch executes in 5 seconds,
+the second branch, sharing the first transition as a common prefix, takes 4 seconds,
+and the one after that only 2;
+the state space being ultimately completed in 33 seconds.
+Even with perfect hindsight,
+na\"ively multiplying the total interleavings (10)
+by the total execution time per branch (5) would double-count common prefixes
+and grossly overestimate (50) the total runtime.
+
+Hence, Landslide uses two differently suitable algorithms for each of size and runtime estimation:
+the Weighted Backtrack Estimator (WBE) and the Recursive Estimator (RE), respectively,
+first introduced in \cite{estimating-search-tree-size} and later adapted to DPOR by \cite{estimation}.
+In principle, both calculate the current progress as a proportion of the expected total
+by counting how many branches DPOR has marked for future exploration (\sect{\ref{sec:landslide-explore}})
+and assuming the sizes of their resulting subtrees are predicted by the known sizes of similar already-explored subtrees.
+In practice, the calculation strategy differs between the two approaches,
+which can occasionally result in drastically differing outputs (\sect{\ref{sec:tm-verif}}).
+I summarize their respective implementations here.
+% TODO more specific section reference
+Chapter~\ref{chap:warpzone} will discuss their limitations and some opportunities for future improvement.
+
+\subsubsection{Size (Weighted Backtrack) estimation}
+
+\subsubsection{Runtime (Recursive) estimation}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

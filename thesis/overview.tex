@@ -275,7 +275,7 @@ Figure~\ref{fig:tree}(a) shows all possible execution interleavings of the compi
 		combined as ``preemption points'', forming a tree.
 	\end{tabular}
 	\caption{Visualization of interleaving state space for the program in Figure~\ref{fig:concurrency-bug}.
-	Thread 1 is represented by blue ovals, thread 2 by orange squares, and time flows from top to bottom.
+	Thread 1 is represented by purple ovals, thread 2 by yellow squares, and time flows from top to bottom.
 	As the two threads execute the same code, without loss of generality thread 1 is fixed to run first --
 	the full state space is twice the size, and the other half is symmetric to the one shown.}
 	\label{fig:tree}
@@ -331,7 +331,7 @@ or {\bf search heuristics}.
 
 \subsubsection{Reduction techniques}
 
-Dynamic Partial Order Reduction \cite{dpor} (henceforth, DPOR) is the premier algorithm for mitigating the exponential explosion that arises as program size increases.
+Dynamic Partial Order Reduction \cite{dpor} (henceforth, DPOR) is the most popular algorithm for mitigating the exponential explosion that arises as program size increases.
 
 {\bf Abstractly speaking:}
 Let {\em independent transitions} denote a pair of executions of two threads, each from one preemption point to the next,
