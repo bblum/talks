@@ -1154,15 +1154,14 @@ I report their estimated state space size and runtime measured after that timeou
 			\hline
 			\hline
 			{\tt htm2}
-			& 2,1 & \cpu{19.82}	& \ints{22}	& \cpu{19.01}	& \ints{15}	& \cpu{3.45}	& \ints{4} \\
-			& 2,2 &\cpu{73.02}	& \ints{1970}	& \cpu{26.96}	& \ints{356}	& \cpu{27.38}	& \ints{288} \\
-			& 2,3 &\cpu{3923.32}	& \ints{104914}	& \cpu{230.71}	& \ints{7528}	& \cpu{910.80}	& \ints{22409} \\
-			& 2,4 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{20h 50m}	& \ETAdag{1814844} \\
-			% [JOB 4] progress: 805070/1814844 brs (44.360267%), ETA 10h 49m 33s (elapsed 9h 59m 54s)
-			& 3,1 & \cpu{40.74}	& \ints{774}	& \cpu{24.27}	& \ints{224}	& \cpu{23.26}	& \ints{140} \\
-			& 3,2 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{8d 8h}& \ETAdag{2562278} \\
-			% [JOB 4] progress: 713090/2562278 brs (27.830313%), ETA 7d 22h 27m 42s (elapsed 9h 59m 54s)
-			& 4,1 & \cpu{8202.71}	& \ints{212146}	& \cpu{333.26}	& \ints{11973}	& \cpu{1794.06}	& \ints{44995} \\
+			& 2,1 & \cpu{18.26}	& \ints{22}	& \cpu{17.99}	& \ints{15}	& \cpu{3.25}	& \ints{4} \\
+			& 2,2 & \cpu{63.61}	& \ints{1446}	& \cpu{26.40}	& \ints{334}	& \cpu{28.04}	& \ints{286} \\
+			& 2,3 & \cpu{3429.04}	& \ints{86536}	& \cpu{196.18}	& \ints{6366}	& \cpu{997.91}	& \ints{24740} \\
+			& 2,4 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
+			& 3,1 & \cpu{43.24}	& \ints{774}	& \cpu{24.02}	& \ints{224}	& \cpu{22.79}	& \ints{140} \\
+			& 3,2 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
+			& 4,1 & \cpu{9225.52}	& \ints{212146}	& \cpu{376.70}	& \ints{11973}	& \cpu{2158.93}	& \ints{44995} \\
+			%% i don't even remember which test case this commented stuff was for anymore
 			% measured with !CONSIDER_ONLY_MOST_RECENT_DPOR_PREFERRED_TID
 			%& 2,2 & \cpu{72.40}	& \ints{1970}	& \cpu{27.28}	& \ints{356}	& \cpu{26.84}	& \ints{288} \\
 			%& 3,1 &\cpu{38.76}	& \ints{708}	& \cpu{23.84}	& \ints{224}	& \cpu{23.38}	& \ints{140} \\
@@ -1170,16 +1169,12 @@ I report their estimated state space size and runtime measured after that timeou
 			%[JOB 4] progress: 709997/3456001 brs (20.543887%), ETA 4d 10h 36m 25s (elapsed 9h 59m 54s)
 			\hline
 			{\tt counter}
-			& 2,1 & \cpu{6.90}	& \ints{10}	& \cpu{7.04}	& \ints{8}	& \cpu{3.35}	& \ints{4} \\
-			& 2,2 & \cpu{12.81}	& \ints{190}	& \cpu{10.58}	& \ints{102}	& \cpu{8.19}	& \ints{48} \\
-			& 2,3 & \cpu{144.83}	& \ints{3970}	& \cpu{65.66}	& \ints{1558}	& \cpu{38.18}	& \ints{904} \\
-			& 2,4 & \cpu{3433.08}	& \ints{86950}	& \cpu{1134.62}	& \ints{25398}	& \cpu{752.51}	& \ints{19128} \\
-			& 3,1 & \cpu{10.57}	& \ints{120}	& \cpu{9.23}	& \ints{64}	& \cpu{7.88}	& \ints{40} \\
-			% stm ok, rts ok, baseline alone needs redo
-			& 3,2 & \cpu{2492.17}	& \ints{60606}	& \cpu{2363.41}	& \ints{44862}	& \cpu{639.62}	& \ints{14304} \\
-			% TODO: everything above this line needs rerun
-			% TODO: everything below is fine up to dpor-preferred & thr_bottom1 updates
-			\multicolumn{8}{c}{everything above this line needs rerun for dpor-preferred tid + thr\_bottom1} \\
+			& 2,1 & \cpu{6.92}	& \ints{10}	& \cpu{6.81}	& \ints{8}	& \cpu{3.28}	& \ints{4} \\
+			& 2,2 & \cpu{13.27}	& \ints{190}	& \cpu{10.59}	& \ints{102}	& \cpu{8.73}	& \ints{48} \\
+			& 2,3 & \cpu{155.09}	& \ints{3970}	& \cpu{67.82}	& \ints{1558}	& \cpu{40.08}	& \ints{904} \\
+			& 2,4 & \cpu{3664.66}	& \ints{86950}	& \cpu{1150.34}	& \ints{25398}	& \cpu{805.85}	& \ints{19128} \\
+			& 3,1 & \cpu{11.26}	& \ints{120}	& \cpu{9.30}	& \ints{64}	& \cpu{8.26}	& \ints{40} \\
+			& 3,2 & \cpu{2572.13}	& \ints{60606}	& \cpu{2363.41}	& \ints{44862}	& \cpu{639.62}	& \ints{14304} \\
 			& 4,1 & \cpu{129.25}	& \ints{3006}	& \cpu{64.91}	& \ints{1296}	& \cpu{40.78}	& \ints{848} \\
 			\hline
 			{\tt swap}
@@ -1287,9 +1282,6 @@ I report their estimated state space size and runtime measured after that timeou
 		``STM'' suppresses retry aborts and dynamically detects when to inject conflict aborts and so on
 		(\sect{\ref{sec:txn-abort-codes}}).
 		State space estimates measured after a timeout of 10 hours (and include those 10 hours in the predicted total).
-		{\em Thesis draft note: Some of these tests still need to be rerun on account of landslide implementation updates
-		to ensure consistent cpu times with the next table,
-		but I expect the state space sizes not to change substantially.}
 		}
 	\label{tab:tm-verifs}
 \end{table}
