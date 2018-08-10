@@ -869,27 +869,36 @@ but the previously-published verification results should be considered outdated.
 			& 3,1	&\cpu{313.36}&\wtm{*44.50}&\ints{*34}&\cpu{*78.23}& \wtm{60.49}& \ints{1016	}& \ETA{3543} \\
 			& 3,2	&\cpu{*6500.36}&\wtm{*816.27}&\ints{*262}&\ETA{--}&\ETA{>1h}&\ETA{--}& \ETA{2161715} \\
 		\hline
+			\multicolumn{9}{c}{everything above this line needs rerun for dpor-preferred tid + thr\_bottom1} \\
 		{\tt avl\_insert}
-			& 2,2	&\cpu{1355.05}&\wtm{174.09}&\ints{*29}	&\cpu{*93.28}&\wtm{*30.37}&\ints{79}&\ETA{157286} \\
+			& 2,2	&\cpu{2494.77}&\wtm{315.46}&\ints{*29}	&\cpu{*95.53}&\wtm{*30.56}&\ints{79}&\ETA{158505} \\
+			% 79 interleavings; 1 preemptions; job time 9s; pldi time 30558236; new-fixed pldi cputime 95530430
+			% 29 interleavings; 1 preemptions; job time 14s; pldi time 315461192; new-fixed pldi cputime 2494772471
 		(segfault+)
-			& 2,3	&\cpu{402.91}&\wtm{*54.60}&\ints{*33}&\cpu{*228.16}&\wtm{125.89}&\ints{835}&\ETA{13664151} \\
-			% TODO: these 2,3 ones alone are new + ok
-			% 33 interleavings; 1 preemptions; job time 12s; pldi time 179368977; new-fixed pldi cputime 1403360474
-			% 835 interleavings; 1 preemptions; job time 1m 42s; pldi time 135292827; new-fixed pldi cputime 235664920
-			& 2,4	&\ETA{--}&\ETA{>1h}&\ETA{--}&\ETA{--}&\ETA{>1h}&\ETA{--}& \ETA{79020639} \\
-			% this quicksand jerk required ulimit -n higher than 1024
+			& 2,3	&\cpu{308.10}&\wtm{*43.95}&\ints{*33}&\cpu{*249.42}&\wtm{144.33}&\ints{835}&\ETA{13664203} \\
+			% 835 interleavings; 1 preemptions; job time 1m 50s; pldi time 144332259; new-fixed pldi cputime 249418666
+			% 33 interleavings; 1 preemptions; job time 10s; pldi time 43954391; new-fixed pldi cputime 308100075
+			& 2,4	&\cpu{*2979.29}&\wtm{*390.34}&\ints{*1457}&\ETA{--}&\ETA{>1h}&\ETA{--}& \ETA{61882736} \\
+			% 1457 interleavings; 4 preemptions; job time 3m 11s; pldi time 390342652; new-fixed pldi cputime 2979291067
+			% maximal: progress: 22854/61882736 brs (0.036931%), ETA 9y 307d 18h 4m 41s (elapsed 51m 54s)
+			% update for below, post thr-bottom1 fix - ok it FABed after all;
+			% not sure if higher ulimit still necessary but i still used it to be safe
+			% (old comment:) this quicksand jerk required ulimit -n higher than 1024
 			%
 			% the jerk didn't even find the bug anymore, after dpor-preferred tid
-			% heres the stats from how it did before
+			% heres the stats from how it did before (older comment:)
 			% & 2,4	&\cpu{*7598.19}&\wtm{*970.67}&\ints{*2633}&\ETA{--}&\ETA{>1h}&\ETA{--}& \ETA{79020639} \\
-			% anyway this was the maximal
-			%
 		\cline{2-9}
-			& 3,1	&\cpu{*86.43}&\wtm{*14.10}&\ints{*23}	&\cpu{91.97}&\wtm{24.80}&\ints{53}&\ETA{343250} \\
-			& 3,2	&\cpu{*2177.86}&\wtm{*287.66}&\ints{*169}&\ETA{--}&\ETA{>1h}&\ETA{--}& \ETA{425939133} \\
-			% TODO
-			\multicolumn{9}{c}{everything above this line needs rerun for dpor-preferred tid + thr\_bottom1} \\
-
+			& 3,1	&\cpu{*87.10}&\wtm{*14.81}&\ints{*14}	&\cpu{94.08}&\wtm{23.60}&\ints{24}&\ETA{207575} \\
+			% 14 interleavings tested; 3 preemptions; job time 8s; pldi time 14807247; new-fixed pldi cputime 87102600
+			% 24 interleavings tested; 3 preemptions; job time 5s; pldi time 23600679; new-fixed pldi cputime 94082790
+			& 3,2	&\cpu{*3672.84}&\wtm{*475.03}&\ints{*145}&\ETA{--}&\ETA{>1h}&\ETA{--}& \ETA{1635075071} \\
+			% maximal: progress: 6571/1635075071 brs (0.000402%), ETA 489418866284y 68d 4h 41m 44s (elapsed 29m 54s)
+			% nb. this quicksand one is actually the slower of 2 FABs, but so close in time to each other
+			% that the one with substantially fewer interleavings. they were:
+			% 145 interleavings; 1 preemptions; job time 23s; pldi time 475030016; new-fixed pldi cputime 3672836411
+			% 225 interleavings; 2 preemptions; job time 32s; pldi time 465874053; new-fixed pldi cputime 3601564200
+			% not like maximal found the bug at all so it's not like there's a comparison to make fair/unfair anyway
 		\hline
 		{\tt lock\_fast}
 		%({\tt spinlock})
@@ -952,12 +961,13 @@ Landslide also found two bugs in the ``real-world'' transactional algorithms I t
 	{\tt avl\_insert} with any parameters higher than (2,1)
 	exposed a previously-unknown bug in the transactional AVL tree.
 	Figure~\ref{fig:avlbug} shows the root cause, essentially the {\tt htm1} bug in disguise.
-	% landslide-trace-1521093835.18927.html
 	This manifested
 	alternately
+	% landslide-trace-1533850116.527842.html
+	% landslide-trace-1533850236.873032.html
 	as a segfault (for test parameters (2,2) and (3,1))
 	and
-	% landslide-trace-1533274266.417257.html
+	% landslide-trace-1533854371.201589.html
 	as a consistency-check assertion failure (for test parameters (2,3)).
 	The presence of {\tt while (\_retry);} makes the necessary preemption window extremely small
 	(between it and {\tt \_xbegin()}),
@@ -1197,7 +1207,8 @@ I report their estimated state space size and runtime measured after that timeou
 			\hline
 			{\tt avl\_fixed}
 			& 2,1 & \cpu{739.60} 	& \ints{20459} 	& \cpu{332.32}	& \ints{9675}	& \cpu{122.40}	& \ints{2774} \\
-			& 2,2 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
+			& 2,2 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	&\ETAdag{36393y}&\ETAdag{35094477}\\
+			% progress: 302022/35094477 brs (0.860597%), ETA 36392y 304d 6h 53m 45s (elapsed 9h 58m 49s)
 			& 3,1 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
 			\hline
 			{\tt map\_basic}
@@ -1207,8 +1218,8 @@ I report their estimated state space size and runtime measured after that timeou
 			\hline
 			{\tt map\_basicer}
 			& 2,1 & \cpu{28.40} 	& \ints{150} 	& \cpu{94}	& \ints{26.55}	& \cpu{14.88}	& \ints{9} \\
-			& 2,2 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \cpu{1285.06}	& \ints{21684} \\
-			& 3,1 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
+			& 2,2 & \ETAdag{qqq}	& \ETAdag{qqq}	&\cpu{16455.24}	& \ints{283756}	& \cpu{1285.06}	& \ints{21684} \\
+			& 3,1 & \ETAdag{qqq}	& \ETAdag{qqq}	&\cpu{21153.64}	& \ints{366030}	& \cpu{705.04}	& \ints{12707} \\
 
 			%%%% nb. below is a fake version of the results, basically measured with abort set reduction,
 			%%%% after implementing abort set coalescing/merging, but not with either "dpor preferred tid"
@@ -1400,7 +1411,7 @@ In the following subsections I explore three possible mitigation approaches.
 Firstly, the middle column of Table~\ref{tab:tm-verifs}
 shows the impact of Landslide's experimental retry set reduction (\sect{\ref{sec:tm-retrysets}}).
 Despite its conservative implementation,
-it provides roughly 2-6x reduction in most tests, with up to 20x in extreme cases.
+it provides roughly 2-6x reduction in most tests, with up to 17x in extreme cases.
 The biggest win is apparent in {\tt fig63},
 the test contrived to induce as much reduction as possible
 using transactional paths that conflict only with aborts and not with each other, and vice versa.
