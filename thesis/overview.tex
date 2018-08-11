@@ -254,13 +254,23 @@ to highlight the importance of researching advanced testing techniques in antici
 
 \section{Stateless Model Checking}
 
+Model checking \cite{verisoft} is a testing technique for systematically exploring the possible thread interleavings of a concurrent program.
+A model checker executes the program repeatedly, each time according to a new thread interleaving, until all interleavings have been tested or the CPU budget is exhausted.
+During each execution, it forces threads to execute serially, thereby confining the program's nondeterminism to scheduler thread switches.
+It then controls the scheduling decisions
+%, choosing a different thread from one chosen before at a certain execution states
+to guarantee a unique interleaving is tested each iteration.
+
 \subsection{The state space}
 
-Model checking \cite{verisoft} is a testing technique for systematically exploring the possible thread interleavings of a concurrent program.
-A model checker executes the program repeatedly, each time according to a new thread interleaving, until the state space (or the CPU budget) is exhausted.
-During each execution, it forces threads to execute serially, thereby confining the program's nondeterminism to controlled thread switches.
-Using a single iteration of the {\tt x++;} loop from Figure~\ref{fig:concurrency-bug} as an example,
-Figure~\ref{fig:tree}(a) shows all possible execution interleavings of the compiled code between 2 threads.
+To understand what it means to exhaustively test all possible thread interleavings,
+one must define the possible execution sequences as a finite {\em state space}.
+To visualize this,
+using a single iteration of the {\tt x++;} loop from Figure~\ref{fig:concurrency-bug} as an example,
+with {\tt x++;} expanded into its three corresponding pseudo-assembly instructions,
+Figure~\ref{fig:tree}(a) shows all possible execution interleavings
+%of the compiled code
+between 2 threads.
 
 \begin{figure}[p]
 	\begin{tabular}{c}
@@ -280,12 +290,6 @@ Figure~\ref{fig:tree}(a) shows all possible execution interleavings of the compi
 	the full state space is twice the size, and the other half is symmetric to the one shown.}
 	\label{fig:tree}
 \end{figure}
-
-Some model checkers explicitly store the set of visited program states as a means of identifying equivalent interleavings \cite{spin}.
-This approach is called {\em stateful} model checking.
-In this thesis, I focus on {\em stateless} model checking,
-which instead analyzes the sequence of execution events to avoid a prohibitive memory footprint.
-Henceforth I will abbreviate ``stateless model checking'' simply as ``model checking'' for brevity.
 
 \subsubsection{Static versus dynamic analysis}
 
@@ -309,13 +313,26 @@ These so-called {\em preemption points} may be identified by any combination of 
 Typical preemption points include the boundaries of synchronization APIs (e.g., {\tt mutex\_lock}) or accesses to shared variables.
 Considering that at each preemption point multiple threads exist as options to run next,
 the set of possible ways to execute the program can be viewed as a tree.
-Figure~\ref{fig:tree}(b) shows a visualization of the corresponding tree from our example program.
+Figure~\ref{fig:tree}(b) shows a visualization of the corresponding tree from our example program,
+using each pseudo-assembly instruction as a preemption point.
 
 The number of preemption points in each execution defines the depth of this tree,
 and the number of threads available to run defines the branching factor.
 Hence, in a program with $n$ preemption points and $k$ threads available to run at each, the state space size is $O(n^k)$.
 Nevertheless, to fully test all of a program's possible behaviours, we must check the executions corresponding to every branch of the tree.
 Addressing the scaling problem in this exponential relation is the central research problem for all model checkers.
+
+Some model checkers explicitly store the set of visited program states as a means of identifying equivalent interleavings \cite{spin}.
+From the perspective of such tools, state spaces such as these wherein equivalent states may be reached by multiple paths
+are represented as a directed acyclic graph (DAG) instead of as a tree.
+This approach is called {\em stateful} model checking.
+In this thesis, I focus on {\em stateless} model checking (and execution trees, not DAGs),
+which instead analyzes the sequence of execution events to avoid a prohibitive memory footprint.
+Henceforth I will abbreviate ``stateless model checking'' simply as ``model checking'' for brevity.
+Also, the term ``state space'' was originally coined to refer to the stateful approach's emphasis on the DAG's nodes
+(i.e., program states);
+while stateless checkers emphasize the tree's branches (i.e., execution sequences) instead,
+I will continue to use ``state space'' for consistency with prior work.
 
 \subsection{On the size of state spaces}
 
@@ -715,6 +732,7 @@ This section provides a convenient reference of terminology used throughout the 
 % interleaving
 % DPOR
 % estimation (WBE, RE)
+% ETA
 % landslide
 % quicksand
 % iterative deepening
