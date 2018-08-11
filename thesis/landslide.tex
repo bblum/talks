@@ -1646,8 +1646,8 @@ The WBE, used to estimate total number of interleavings,
 computes the {\em proportion} of the total size
 that the already-explored branches are expected to comprise,
 using DPOR's workqueue to anticipate how many unexplored marked branches remain.
-This serves as a ``progress bar'' that represents the estimated overall progress \cite{progress-bar},
-approaching 1 (not necessarily monotonically) as exploration continues.
+This serves as a progress bar \cite{progress-bar} that represents the estimated percentage towards completion,
+approaching 100\% (not necessarily monotonically) as exploration continues.
 
 Summarizing prior work's formal definition \cite{estimation},
 the proportion at a terminal node $v_n$%
@@ -1679,7 +1679,7 @@ Simplified from \cite{estimation}: $t(b)$, the time for each branch, is 1, becau
 It is easy to see how these formulas might fit into DPOR's incremental search procedure:
 at the end of each branch compute its $\mathsf{proportion}$ and add it in to a global $\mathsf{estimate}$ value.
 However, DPOR may tag new branches to explore that would affect past branches' proportions,
-in which case they would have to be recomputed,
+requiring them to be recomputed,
 which is not feasible without storing the entire exponentially-sized tree in memory.
 Instead, Landslide also stores per-subtree estimates at intermediate $v_i$ nodes, $1 < i < n$,
 along the current branch.
@@ -1723,22 +1723,47 @@ Suppose for RE that each transition takes 1 second to execute.
 
 \begin{enumerate}
 	\item After branch A, two tags exist, $\bigstar$1 and $\bigstar$3.
+		Under WBE, the subtree estimate at \dporTA{{\tt tmp1++}} will first be 1/2
+		(half its children being fully explored),
+		and the root estimate will be 1/4,
+		half that,
+		which is propagated back down to \dporTA{{\tt tmp1++}}, becoming also 1/4.
+		Dividing the current progress (1) by that yields 4 total branches, an underestimate.
 
-		Under RE, the estimate at \dporTA{{\tt tmp1++}} will be 9 seconds,
+		Under RE, the estimate at \dporTA{{\tt tmp1++}} will be 9 seconds
+		(incorrectly assuming $\bigstar$1's subtree will be 1 branch),
 		and the root estimate will be 20 seconds, an underestimate.
 	\item After branch B, $\bigstar$2 is now marked.
+		Under WBE, the subtree estimate at \dporTB{{\tt tmp2++}} is 1/2,
+		which at \dporTA{{\tt tmp1++}} is then divided by its $\mathsf{marked~children}$
+		and added to its estimate, yielding 3/4.
+		Note that it has ``forgotten'' that only branch A, alone, contributed to its original 1/2,
+		rather than two branches as in this subtree.
+		The root
+		the subtree estimate at \dporTA{{\tt tmp1++}} is updated (and propagated down) to 3/8.
+		Dividing the current progress (2) by that yields 5.33 branches, an underestimate.
 
 		Under RE, the estimate at \dporTB{{\tt tmp2++}} is 5 seconds,
 		the estimate at \dporTA{{\tt tmp1++}} is updated to 11 seconds,
 		and the root estimate to 24 seconds, accurate.
 	\item After branch C, nothing new was marked.
+		The subtree estimate at \dporTB{{\tt tmp2++}} is 1
+		(having been completely explored)
+		and the root estimate is 1/2.
+		Dividing the current progress (3) by that yields 6, accurate.
 
 		Under RE, no estimates change from after B.
 	\item After branch K, $\bigstar$4 now exists.
+		\dporTB{{\tt tmp2++}}'s subtree estimate is at first 1/2,
+		then the root estimate and it get updated to 3/4.
+		Dividing into the current progress (4), 5.33, an underestimate.
 
 		Under RE, the estimate at \dporTB{{\tt tmp2++}} is 9 seconds,
 		and the root estimate is 22 seconds, an underestimate.
 	\item After branch L, $\bigstar$5 joins the party.
+		\dporTB{{\tt tmp2++}}'s estimate is updated to 3/4,
+		and the root estimate ultimately becomes 7/8.
+		Dividing into the current progress (5), 5.7, an underestimate.
 
 		Under RE, the estimate at \dporTB{{\tt tmp2++}} is 11 seconds,
 		and the root estimate is 24 seconds, accurate.
@@ -1751,7 +1776,8 @@ except with the $\bigstar$4 subtree also pruned by DPOR's sleep sets extension (
 i.e., only branches A, B, C, and K remain,
 with an 18 second execution time.
 Both estimators' behaviour is identical through branch C,
-only now WBE's prediction is accurate at A but overestimates at B and C,
+only now WBE's prediction happens to be accurate at A (although for the wrong reasons),
+but overestimates at B and C,
 while RE's predictions are all overestimates.
 As before, both reach perfect accuracy upon completion, now occurring at K.
 Intuitively speaking, the estimators underpredict when DPOR keeps finding new branches to tag as it makes progress,
