@@ -543,7 +543,7 @@ which then dispatches to various other modules their respective analyses, descri
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Execution Tree}
+\subsection{Execution tree}
 \label{sec:landslide-save}
 
 The execution tree
@@ -765,7 +765,7 @@ to figure out which alternate branch to try executing next.
 Its contents are largely algorithmic rather than architectural
 and hence further described in \sect{\ref{sec:landslide-dpor}} and \sect{\ref{sec:landslide-icb}}.
 
-\subsubsection{Time Travel}
+\subsubsection{Time travel}
 \label{sec:landslide-timetravel}
 
 After the explorer picks a past point of the program to preempt, % sorry this started out like that and i just had to roll with it
@@ -1041,7 +1041,10 @@ for interpreting the current program state with respect to these values.
 When should Landslide sunder the universe into alternate realities,
 in which each a different thread executes immediately following the current instruction?
 This singular question determines to what extent the state space of possible interleavings explodes exponentially.
-While other parts of the research decide which lock API calls to consider,
+While other parts of
+%the research
+the great work % :relaxed:
+decide which lock API calls to consider,
 or which memory accesses constitute a data race,
 interpreting those combinations of preemption point {\em predicates}
 to decide if the current program state constitutes a single preemption {\em point}
@@ -1364,6 +1367,8 @@ Although a superhuman reader may quickly reach intuitive understanding
 of complex algorithms from dense prose and mathematical notation alone,
 I also present here a friendly example of using DPOR on Figure~\ref{fig:concurrency-bug}'s example program,
 whose original state space is shown in Figure~\ref{fig:tree}.
+In this program both threads are always enabled, imposing no scheduling constraints,
+so memory conflicts alone will drive exploration.
 %Acknowledging that quickly gaining an intuitive understanding for an algorithm
 %is basically impossible from just paragraphs of text,
 %I conclude this section with an example of a single iteration of DPOR
@@ -1476,10 +1481,10 @@ Figure~\ref{fig:sleepsets} summarizes the relevant interleavings to highlight on
 		\begin{tabular}{p{0.30\textwidth}p{0.30\textwidth}p{0.30\textwidth}}
 	\begin{center}
 	\begin{tabular}{l}
-		\dporTAcode{tmp1 <- x} \\
-		\dporTBcode{tmp2 <- x} \\
-		\dporTAcode{x <- tmp1} \\
-		\dporTBcode{x <- tmp2} \\
+		\dporTAcode{tmp1 <- x (read)} \\
+		\dporTBcode{tmp2 <- x (read)} \\
+		\dporTAcode{x <- tmp1 (write)} \\
+		\dporTBcode{x <- tmp2 (write)} \\
 		% old example, pre dpor-example figure
 		%$T_1$@$t_a$: \texttt{write~x} \\
 		%$T_2$@$t_b$: \texttt{read~y} \\
@@ -1489,10 +1494,10 @@ Figure~\ref{fig:sleepsets} summarizes the relevant interleavings to highlight on
 	&
 	\begin{center}
 	\begin{tabular}{l}
-		\dporTBcode{tmp2 <- x} \\
-		\dporTBcode{x <- tmp2} \\
-		\dporTAcode{tmp1 <- x} \\
-		\dporTAcode{x <- tmp1} \\
+		\dporTBcode{tmp2 <- x (read)} \\
+		\dporTBcode{x <- tmp2 (write)} \\
+		\dporTAcode{tmp1 <- x (read)} \\
+		\dporTAcode{x <- tmp1 (write)} \\
 		%$T_2$@$t_{b'}$: \texttt{read~y} \\
 		%$T_2$@$t_{c'}$: \texttt{read~x} \\
 		%$T_1$@$t_{a'}$: \texttt{write~x} \\
@@ -1501,10 +1506,10 @@ Figure~\ref{fig:sleepsets} summarizes the relevant interleavings to highlight on
 	&
 	\begin{center}
 	\begin{tabular}{l}
-		\dporTBcode{tmp2 <- x} \\
-		\dporTAcode{tmp1 <- x} \\
-		\dporTAcode{x <- tmp1} \\
-		\dporTBcode{x <- tmp2} \\
+		\dporTBcode{tmp2 <- x (read)} \\
+		\dporTAcode{tmp1 <- x (read)} \\
+		\dporTAcode{x <- tmp1 (write)} \\
+		\dporTBcode{x <- tmp2 (write)} \\
 		%$T_2$@$t_{b'}$: \texttt{read~y} \\
 		%$T_1$@$t_{a''}$: \texttt{write~x} \\
 		%$T_2$@$t_{c''}$: \texttt{read~x} \\
@@ -1524,9 +1529,9 @@ Figure~\ref{fig:sleepsets} summarizes the relevant interleavings to highlight on
 	\end{center}
 	\end{tabular}
 	\end{center}
-	\caption{Motivating example for the sleep sets optimization,
-	highlighting three interleavings from Figure~\ref{fig:dpor-example-2}.
-	The always-independent {\tt tmpN++}s are omitted for brevity.
+	\caption{Motivating example for the sleep sets optimization.
+	Three of Figure~\ref{fig:dpor-example-2}'s interleavings are highlighted,
+	with the always-independent {\tt tmpN++}s omitted for brevity.
 	}
 	\label{fig:sleepsets}
 \end{figure}
@@ -1557,10 +1562,14 @@ that if the first event to be reordered (here, \dporTA{{\tt tmp1 <- x}})
 has already been tested in an equivalent reordering around any number of preceding events
 (here, \dporTB{{\tt tmp2 <- x}} and \dporTB{{\tt tmp2++}}),
 then the newly marked subtree is safe to prune.
+Note that this does not require storing any full subtrees outside of the current branch;
+only the subtree's root node need be saved to
+prove that an equivalent interleaving beginning with \dporTA{$\mathbf{T_1}$} therein was already checked,
+preserving DPOR's $O(n)$ memory footprint.
+
 This corresponds to the {\em sleep sets} optimization described by prior work \cite{partial-order-methods,dpor,optimal-dpor},
 so named because it effectively puts \dporTA{$\mathbf{T_1}$}
 ``to sleep'' until after the true conflicting access of \dporTB{{\tt x <- tmp2}}.
-
 Landslide's implementation differs from prior work,
 which explicitly tracks sets of reordered threads and expected conflicting accesses,
 by instead identifying
@@ -1598,18 +1607,16 @@ rather than replaying similar interleavings' shared execution prefixes from the 
 the total number of interleavings (i.e., leaf nodes in the execution tree)
 must be estimated separately from the total runtime (i.e., sum of all edge weights in the tree).
 
-% TODO: once dpor example tree is made
-% switch this to that
-As a concrete example, consider the state space of Figure~\ref{fig:tree}(b) (untouched by DPOR),
+As a concrete example, consider the state space of Figure~\ref{fig:dpor-example-2},
 and suppose each transition to the next preemption point takes 1 second to execute.
-While the first branch executes in 5 seconds,
+While the first branch executes in 6 seconds,
 the second branch, sharing the first transition as a common prefix, takes 4 seconds,
 and the one after that only 2;
-the state space being ultimately completed in 33 seconds.
+the state space being ultimately completed in 24 seconds.
 Even with perfect hindsight,
-na\"ively multiplying the total interleavings (10)
-by the total execution time per branch (5) would double-count common prefixes
-and grossly overestimate (50) the total runtime.
+na\"ively multiplying the total interleavings (6)
+by the total execution time per branch (6) would double-count common prefixes
+and grossly overestimate (36) the total runtime.
 
 Hence, Landslide uses two differently suitable algorithms for each of size and runtime estimation:
 the Weighted Backtrack Estimator (WBE) and the Recursive Estimator (RE), respectively,
@@ -1619,14 +1626,138 @@ by counting how many branches DPOR has marked for future exploration (\sect{\ref
 and assuming the sizes of their resulting subtrees are predicted by the known sizes of similar already-explored subtrees.
 In practice, the calculation strategy differs between the two approaches,
 which can occasionally result in drastically differing outputs (\sect{\ref{sec:tm-verif}}).
-I summarize their respective implementations here.
+
+Implementation-wise, Landslide reports size estimates as both the percentage and as a total number of branches,
+and time estimates as an ETA.
+Quicksand's {\tt -v} option (\sect{\ref{sec:landslide-quicksand-options}})
+will cause it to print them each time a new interleaving is tested; for example:
+\begin{center}
+	{\tt \small [JOB 1] progress: 66101/94825 brs (69.708252\%), ETA 13m 37s (elapsed 46m 10s)}
+\end{center}
+Both estimates are computed simultaneously in {\tt \_estimate()} in {\tt estimate.c}
+(which, I might add, is well-commented in case the following prose is insufficient).
+%I summarize their respective implementations here.
 % TODO more specific section reference
 Chapter~\ref{chap:warpzone} will discuss their limitations and some opportunities for future improvement.
 
 \subsubsection{Size (Weighted Backtrack) estimation}
 
+The WBE, used to estimate total number of interleavings,
+computes the {\em proportion} of the total size
+that the already-explored branches are expected to comprise,
+using DPOR's workqueue to anticipate how many unexplored marked branches remain.
+This serves as a ``progress bar'' that represents the estimated overall progress,
+approaching 1 (not necessarily monotonically) as exploration continues.
+
+Summarizing prior work's formal definition \cite{estimation},
+the proportion at a terminal node $v_n$%
+\footnote{Prior work \cite{estimating-search-tree-size,estimation} refers to this instead as {\em probability},
+i.e., the probability that the node will appear in a branch chosen uniformly at random from the completed tree.
+I find ``proportion'' to be more illuminating on how the algorithm works.
+},
+preceded by an execution sequence $(v_1 \dots v_{n-1})$,
+is computed as:%
+\footnote{
+Simplified from \cite{estimation}: the missing $F(v_i)$ is 0, using the empty fit strategy.
+}
+
+\[
+	\mathsf{proportion}(v_1 \dots v_n) = \displaystyle\prod_{i=1}^{n-1} \frac{1}{|\mathsf{marked~children}(v_i)|}
+\]
+
+where $\mathsf{marked~children}(v_i)$ is the number of enabled thread transitions at $v_i$
+which have either already been explored or been marked by DPOR.
+Then, the total estimate is given as the sum over all branches $b = (v_1 \dots v_n)$ explored so far:%
+\footnote{
+Simplified from \cite{estimation}: $t(b)$, the time for each branch, is 1, because we are counting them.
+}
+
+\[
+	\mathsf{estimate} = \frac{1}{\sum_{b \in B} \mathsf{proportion}(b)}
+\]
+
+It is easy to see how these formulas might fit into DPOR's incremental search procedure:
+at the end of each branch compute its $\mathsf{proportion}$ and add it in to a global $\mathsf{estimate}$ value.
+However, DPOR may tag new branches to explore that would affect past branches' proportions,
+in which case they would have to be recomputed,
+which is not feasible without storing the entire exponentially-sized tree in memory.
+Instead, Landslide also stores per-subtree estimates at intermediate $v_i$ nodes, $1 < i < n$,
+along the current branch.
+Whenever DPOR marks a new $k$th branch for exploration
+at some $v_i$
+%with $\mathsf{marked~children}(v_i) = k$,
+its estimate
+is multiplied by $(k-1)/k$ to retroactively adjust all past branches' proportions contributing to that estimate.
+The change is also propagated to its sub-subtrees,
+whose estimates must also incorporate the new $\mathsf{marked~children}$ value.
+This allows Landslide to update the global estimate after each branch in $O(n)$ time and memory,
+without recomputing past branch proportions individually.
+
 \subsubsection{Runtime (Recursive) estimation}
 
+The RE, used to estimate total execution time,
+computes at each node the expected time to execute all subtrees rooted at children of that node,
+assuming unvisited subtrees' times will be an average of their visited siblings.
+This estimate at the root node, minus the current time elapsed so far,
+serves as a guess at how long until completion.
+Let $\mathsf{usecs}(v_i)$ denote the time elapsed during execution of the transition $v_{i-1} \rightarrow v_i$.
+Then a node's estimate is given by:
+
+\[
+	\mathsf{estimate}(v_i) = \mathsf{usecs}(v_i) +
+	\frac{|\mathsf{marked~children}(v_i)|}{|\mathsf{explored~children}(v_i)|}
+	\sum_{v_j \in \mathsf{explored~children}(v_i)} \mathsf{estimate}(v_j)
+\]
+
+Like the WBE, whenever DPOR tags a new $k$th child at some $v_i$,
+its estimate is multiplied by $k/(k-1)$ (note the reciprocal of before)
+to retroactively re-weight previously explored subtrees' estimates.
+Unlike the WBE, this change does not need to be propagated to descendant subtrees' estimates.
+This estimate also takes $O(n)$ time and memory.
+
+\subsubsection{Accuracy example}
+
+To illustrate how the two estimators can under-estimate the total tree size and/or diverge from each other,
+consider the state space from Figure~\ref{fig:dpor-example-2}, of size 6.
+Suppose for RE that each transition takes 1 second to execute.
+
+\begin{enumerate}
+	\item After branch A, two tags exist, $\bigstar$1 and $\bigstar$3.
+
+		Under RE, the estimate at \dporTA{{\tt tmp1++}} will be 9 seconds,
+		and the root estimate will be 20 seconds, an underestimate.
+	\item After branch B, $\bigstar$2 is now marked.
+
+		Under RE, the estimate at \dporTB{{\tt tmp2++}} is 5 seconds,
+		the estimate at \dporTA{{\tt tmp1++}} is updated to 11 seconds,
+		and the root estimate to 24 seconds, accurate.
+	\item After branch C, nothing new was marked.
+
+		Under RE, no estimates change from after B.
+	\item After branch K, $\bigstar$4 now exists.
+
+		Under RE, the estimate at \dporTB{{\tt tmp2++}} is 9 seconds,
+		and the root estimate is 22 seconds, an underestimate.
+	\item After branch L, $\bigstar$5 joins the party.
+
+		Under RE, the estimate at \dporTB{{\tt tmp2++}} is 11 seconds,
+		and the root estimate is 24 seconds, accurate.
+	\item After branch M, both estimators have perfect information and converge to accuracy.
+\end{enumerate}
+
+To illustrate how the estimators can over-estimate the total tree size,
+consider the same state space,
+except with the $\bigstar$4 subtree also pruned by DPOR's sleep sets extension (\sect{\ref{sec:landslide-sleepsets}});
+i.e., only branches A, B, C, and K remain,
+with an 18 second execution time.
+Both estimators' behaviour is identical through branch C,
+only now WBE's prediction is accurate at A but overestimates at B and C,
+while RE's predictions are all overestimates.
+As before, both reach perfect accuracy upon completion, now occurring at K.
+Intuitively speaking, the estimators underpredict when DPOR keeps finding new branches to tag as it makes progress,
+and overpredict when sleep set reduction achieves extra pruning on right subtrees.
+Not shown in this example, interleaving-dependent control flow can, of course,
+beget unexpected state space structure in essentially arbitrary other ways.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
