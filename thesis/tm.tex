@@ -481,6 +481,9 @@ store possible error codes this {\tt \_xbegin()} call should be tested to possib
 The former list stores all such error codes, whether already tested or yet to be tested,
 while the latter serves as a workqueue that indicates only those not already tested yet
 (serving an analogous purpose as the {\tt all\_explored} flag for thread scheduling).
+The state space estimators (\sect{\ref{sec:landslide-estimate}})
+check the length of these lists, in addition to DPOR's tagged threads,
+when computing the number of marked children.
 
 \subsubsection{Adding possible abort codes}
 \label{sec:txn-abort-codes}
@@ -670,10 +673,13 @@ an experimental feature named after prior work's analogous {\em sleep sets}
 Whenever DPOR tags a new branch for exploration (\sect{\ref{sec:landslide-explore}}),
 if either or both sides of a memory conflict were part of a transaction,
 it records a {\em retry set},
-i.e., the pair of {\tt xbegin} results executed by the conflicting threads.
+i.e., the pair of {\tt xbegin} results executed by the conflicting threads,
+to accompany that branch.
+Like the {\tt xabort\_codes} lists, the state space estimators (\sect{\ref{sec:landslide-estimate}})
+check the number of retry sets when counting the number of marked children.
 % ah-- not compatible after all!
 %in addition to tracking the set of abort codes possible at each preemption point.
-Later, when traversing that new branch,
+Later, when traversing the new branch,
 Landslide remembers those threads' expected {\tt xbegin} results
 and refuses to test any others
 (unless DPOR separately found them, too, to conflict),
@@ -871,6 +877,9 @@ but the previously-published verification results should be considered outdated.
 		\hline
 			\multicolumn{9}{c}{everything above this line needs rerun for dpor-preferred tid + thr\_bottom1} \\
 		{\tt avl\_insert}
+			% note the somewhat chaotic behaviour between quicksand 2,2 and 2,3; the latter surprisingly FABs faster
+			% this is likely because non-drpp SSes were not big enough to defer for longer in 2,2,
+			% whereas in 2,3 it went straight to the buggy SS asap
 			& 2,2	&\cpu{2494.77}&\wtm{315.46}&\ints{*29}	&\cpu{*95.53}&\wtm{*30.56}&\ints{79}&\ETA{158505} \\
 			% 79 interleavings; 1 preemptions; job time 9s; pldi time 30558236; new-fixed pldi cputime 95530430
 			% 29 interleavings; 1 preemptions; job time 14s; pldi time 315461192; new-fixed pldi cputime 2494772471
@@ -1648,7 +1657,9 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 			& 2,3 & \ETAdag{qqq} & \ETAdag{qqq} \\
 			& 3,1 & \cpu{28.27} & \ints{186} \\
 			& 3,2 & \ETAdag{qqq} & \ETAdag{qqq} \\
-			& 4,1 & \cpu{qqq} & \ints {qqq} \\ % was: 30408, 282084 pre mkrun
+			& 4,1 & \ETAdag{16h 26m} & \ETAdag{432628} \\ % was: 30408, 282084 pre mkrun
+			% [JOB 4] progress: 286910/432628 brs (66.317896%), ETA 6h 26m 25s (elapsed 9h 59m 48s)
+			% total CPU time consumed: 10h 4s (36004288982 usecs) (core saturation: 12%)
 			\hline
 			{\tt lock}
 			& 2,1 & \cpu{3.44} & \ints{4}		\\
@@ -1694,7 +1705,9 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 			& 2,2 & \ETAdag{26h 21m} & \ETAdag{1085126} \\
 			% [JOB 9] progress: 496530/1085126 brs (45.757812%), ETA 16h 21m 0s (elapsed 9h 59m 38s)
 			% total CPU time consumed: 10h 19s (36019507965 usecs) (core saturation: 12%)
-			& 3,1 & \ETAdag{qqq} & \ETAdag{qqq} \\
+			& 3,1 & \ETAdag{173d 17h} & \ETAdag{12572187} \\
+			% [JOB 9] progress: 496281/12572187 brs (3.947451%), ETA 173d 6h 38m 55s (elapsed 9h 59m 43s)
+			% total CPU time consumed: 10h 20s (36020148608 usecs) (core saturation: 12%)
 			\\
 			\\
 			\\
@@ -1721,7 +1734,7 @@ firstly,
 the impact that fixing Figure~\ref{fig:spinlockbug}'s performance bug
 (changing a read+write to a read only)
 had on even the correctness tests:
-{\tt lock}({\tt spin\_fixed})'s state spaces were reduced by more than half compared to {\tt lock}({\tt spinlock}),
+{\tt lock}({\tt spin\_fixed})'s state spaces were reduced by nearly half compared to {\tt lock}({\tt spinlock}),
 on account of DPOR no longer needing to reorder the (now) read-read access pairs.
 Secondly, {\tt spinlock} and {\tt spin\_fixed} take longer to test per interleaving
 %(CPU time divided by state space size)
