@@ -1186,6 +1186,7 @@ and constitutes the bulk of the algorithm.
 In this section $t_i$ will denote a transition between two program states during execution,
 with each state being a preemption point as identified in \sect{\ref{sec:landslide-pps}},
 and $T(t_i)$ will denote the thread which was scheduled to produce that transition.
+A visual example will be given at the end to help reinforce the intuition behind the formalism.
 
 \subsubsection{Happens-before}
 \label{sec:landslide-dpor-hb}
@@ -1378,6 +1379,12 @@ The result is shown in Figure~\ref{fig:dpor-example-0}.
 	\label{fig:dpor-example-0}
 \end{figure}
 
+% trying to approximate the pastel background colors in something dark enough to render text in
+\newcommand\dporTA[1]{\hilight{darklavender}{#1}\xspace}
+\newcommand\dporTB[1]{\hilight{goldish}     {#1}\xspace}
+\newcommand\dporTAcode[1]{\dporTA{\ensuremath{\mathbf{T_1}}: {\tt #1}}\xspace}
+\newcommand\dporTBcode[1]{\dporTB{\ensuremath{\mathbf{T_2}}: {\tt #1}}\xspace}
+
 In this interleaving, DPOR identifies 3 memory conflicts, two read/write and one write/write,
 among the threads' 4 accesses to {\tt x}.
 For each such pair, it ``marks'' an alternate interleaving,
@@ -1388,8 +1395,8 @@ DPOR consumes from this set in depth-first order
 (note the reversed order of $\bigstar$1 and $\bigstar$2)
 to avoid storing in memory any representation of exponentially-sized subtrees outside of the current branch.
 Note also that in $\bigstar$2,
-the reordered {\tt tmp2 <- x} is not directly part of the memory conflict which marked it,
-but it must be executed first to reach the conflicting {\tt x <- tmp2}.
+the reordered \dporTB{{\tt tmp2 <- x}} is not directly part of the memory conflict which marked it,
+but it must be executed first to reach the conflicting \dporTB{{\tt x <- tmp2}}.
 
 Now, let us run multiple iterations of DPOR
 to advance through the first half of the full state space shown in Figure~\ref{fig:tree}(b).
@@ -1446,101 +1453,138 @@ in this case, the original state space's size was ${3+3 \choose 3} = 20$.
 DPOR's reduction is characterized by replacing $N$ and $M$ with the number of {\em conflicting} events only;
 in this case, ignoring all {\tt tmpN++} reorderings and testing only ${2+2 \choose 2} = 6$ branches.
 
-However, as the legend spoils, this subset of the state space still contains redundant interleavings,
-arising from the fact that one pair of those 4 events is two reads, and hence not actually in conflict.
-Visual inspection shows that $\bigstar$5, while locally justified in trying to reorder {\tt tmp1 <- x} before {\tt x <- tmp2},
-effectively serves % oops
-only to reorder it with {\tt tmp2 <- x}
-relative to the first symmetric subtree.
-Landslide identifies this equivalence by checking,
-%in this case during the iteration of DPOR after interleaving K,
-in this case after K,
-that if the first event to be reordered (here, {\tt tmp <- x})
-has already been tested in an equivalent reordering around any number of preceding events (here, {\tt tmp2 <- x} and {\tt tmp2++}),
-then the newly marked subtree is safe to prune.
-The next section describes the implementation of this check in general.
-
 \subsubsection{Sleep set reduction}
 \label{sec:landslide-sleepsets}
 
-% TODO: condense this by removing the 'new' example and just continuing with the previous section's
 In the presence of non-conflicting transitions as well as conflicting ones,
 DPOR's approach as described so far can still end up testing equivalent interleavings.
-For example, consider the execution sequence
-in Figure~\ref{fig:sleepsets}(a).
-After executing this interleaving, DPOR will detect the conflict between $t_a$ and $t_c$,
-and tag $I_{a2}$ (i.e., $T_2$ to run before $t_a$), causing us to next execute
-Figure~\ref{fig:sleepsets}(b).
-However, DPOR does not ``remember'' why it wanted to reorder $T_2$ with $T_1$
-(i.e., whether $t_b$ or $t_c$ was the important one to run before $t_a$),
-so from this branch,
-it next tags $I_{c'1}$, causing
-Figure~\ref{fig:sleepsets}(c).
-to be tested next, which is regrettably equivalent to the original interleaving
-($t_a$ and $t_b$ having been reordered all told, which are independent).
-To recover our forgotten original purpose,
-which was already fulfilled by testing the second interleaving,
-DPOR can check just before tagging a new interleaving (here, $I_{c'1}$),
-among all preceding transitions equivalent to the conflicting one (here, $t_{b'}$ equivalent to $t_{a'}$),
-for an already-explored interleaving beginning with the target thread.
-If such exists,
-%then because of the depth-first search ordering,
-the new interleaving is guaranteed to be equivalent to one already checked,
-and can be skipped.
+As the presence of more equivalence arrows in Figure~\ref{fig:dpor-example-2} hints,
+its reduced subset state space still contains redundancy,
+arising from the fact that one pair of those 4 events is two reads, and hence not actually in conflict.
+Visual inspection shows that $\bigstar$4, while locally justified
+in trying to reorder \dporTA{{\tt tmp1 <- x}} before \dporTB{{\tt x <- tmp2}},
+effectively serves % oops
+only to reorder it with \dporTB{{\tt tmp2 <- x}}
+relative to the first symmetric subtree ($\bigstar$1).
+In other words,
+even though DPOR marked each new branch with the intent only to reorder conflicting accesses,
+$\bigstar$1 and $\bigstar$4 contained interleavings equivalent up to independent reorderings anyway.
+Figure~\ref{fig:sleepsets} summarizes the relevant interleavings to highlight one such equivalence.
 
 \begin{figure}[h]
 	\begin{center}
-		\begin{tabular}{p{0.3\textwidth}p{0.25\textwidth}p{0.35\textwidth}}
+		\begin{tabular}{p{0.30\textwidth}p{0.30\textwidth}p{0.30\textwidth}}
+	\begin{center}
 	\begin{tabular}{l}
-	$T_1$@$t_a$: \texttt{write~x} \\
-	$T_2$@$t_b$: \texttt{read~y} \\
-	$T_2$@$t_c$: \texttt{read~x} \\
-	\end{tabular}
-	&
-	\begin{tabular}{l}
-	$T_2$@$t_{b'}$: \texttt{read~y} \\
-	$T_2$@$t_{c'}$: \texttt{read~x} \\
-	$T_1$@$t_{a'}$: \texttt{write~x} \\
-	\end{tabular}
-	&
-	\begin{tabular}{l}
-	$T_2$@$t_{b'}$: \texttt{read~y} \\
-	$T_1$@$t_{a''}$: \texttt{write~x} \\
-	$T_2$@$t_{c''}$: \texttt{read~x} \\
-	\end{tabular}
-	\\
-	\\
-	(a) Original interleaving.
-	&
-	(b) Goal interleaving.
-	&
-	(c) Redundant interleaving.
+		\dporTAcode{tmp1 <- x} \\
+		\dporTBcode{tmp2 <- x} \\
+		\dporTAcode{x <- tmp1} \\
+		\dporTBcode{x <- tmp2} \\
+		% old example, pre dpor-example figure
+		%$T_1$@$t_a$: \texttt{write~x} \\
+		%$T_2$@$t_b$: \texttt{read~y} \\
+		%$T_2$@$t_c$: \texttt{read~x} \\
 	\end{tabular}
 	\end{center}
-	\caption{Motivating example for the sleep sets optimization.
-	For clarity, threads are labeled here with numbers ($T_n$) and the transitions thereby with letters ($t_i$).}
+	&
+	\begin{center}
+	\begin{tabular}{l}
+		\dporTBcode{tmp2 <- x} \\
+		\dporTBcode{x <- tmp2} \\
+		\dporTAcode{tmp1 <- x} \\
+		\dporTAcode{x <- tmp1} \\
+		%$T_2$@$t_{b'}$: \texttt{read~y} \\
+		%$T_2$@$t_{c'}$: \texttt{read~x} \\
+		%$T_1$@$t_{a'}$: \texttt{write~x} \\
+	\end{tabular}
+	\end{center}
+	&
+	\begin{center}
+	\begin{tabular}{l}
+		\dporTBcode{tmp2 <- x} \\
+		\dporTAcode{tmp1 <- x} \\
+		\dporTAcode{x <- tmp1} \\
+		\dporTBcode{x <- tmp2} \\
+		%$T_2$@$t_{b'}$: \texttt{read~y} \\
+		%$T_1$@$t_{a''}$: \texttt{write~x} \\
+		%$T_2$@$t_{c''}$: \texttt{read~x} \\
+	\end{tabular}
+	\end{center}
+	\\
+	\begin{center}
+	(a) Original branch (C).
+	\end{center}
+	&
+	\begin{center}
+	(b) Goal branch (K).
+	\end{center}
+	&
+	\begin{center}
+	(c) Redundant branch (L).
+	\end{center}
+	\end{tabular}
+	\end{center}
+	\caption{Motivating example for the sleep sets optimization,
+	highlighting three interleavings from Figure~\ref{fig:dpor-example-2}.
+	The always-independent {\tt tmpN++}s are omitted for brevity.
+	}
 	\label{fig:sleepsets}
 \end{figure}
 
-Landslide implements this check in {\tt equiv\_already\_explored()}.
+Intuitively speaking,
+when DPOR entered the $\bigstar$3 subtree,
+it did not ``remember'' which memory conflict it wanted to reorder \dporTA{$\mathbf{T_1}$} around
+(i.e., that \dporTB{{\tt x <- tmp2}} should come before \dporTA{{\tt tmp1 <- x}}).
+Upon witnessing the conflict in the new (intended) order,
+it then tried to reorder it again,
+producing interleavings regrettably equivalent to ones already tested
+(all told, only \dporTB{{\tt tmp2 <- x}} and \dporTB{{\tt tmp2++}} having been reordered around \dporTA{{\tt tmp1 <- x}}).
+%
+To ``remember'' the original purpose of testing subtree $\bigstar$3,
+which was already fulfilled by testing K,
+DPOR can check just before tagging a new subtree (here, $\bigstar$4)
+among all preceding transitions independent with the conflicting one
+(here, \dporTB{{\tt tmp2 <- x}} and \dporTB{{\tt tmp2++}} independent with \dporTA{{\tt tmp1 <- x}})
+for an already-explored interleaving beginning with the target thread.
+%(here, the original sibling of $\bigstar 3$).
+If such exists,
+the new subtree is guaranteed to be equivalent to one already checked,
+and can safely be skipped.
+
+Landslide implements this check in {\tt equiv\_already\_explored()},
+which checks (in this case after executing K),
+that if the first event to be reordered (here, \dporTA{{\tt tmp1 <- x}})
+has already been tested in an equivalent reordering around any number of preceding events
+(here, \dporTB{{\tt tmp2 <- x}} and \dporTB{{\tt tmp2++}}),
+then the newly marked subtree is safe to prune.
 This corresponds to the {\em sleep sets} optimization described by prior work \cite{partial-order-methods,dpor,optimal-dpor},
-so named because it effectively puts $T_1$ ``to sleep'' until after the true conflicting access in $t_c$.
-Landslide's implementation differs from prior work by not explicitly tracking
-sets of reordered threads and memory accesses they should expect to conflict with,
-and instead identifies where the reduction should take place in subsequent iterations of DPOR.
+so named because it effectively puts \dporTA{$\mathbf{T_1}$}
+``to sleep'' until after the true conflicting access of \dporTB{{\tt x <- tmp2}}.
+
+Landslide's implementation differs from prior work,
+which explicitly tracks sets of reordered threads and expected conflicting accesses,
+by instead identifying
+where the reduction should occur
+during subsequent DPOR iterations.
 % KEEP_RUNNING_DPORS_CHOSEN_TID
 This approach also relies on the search ordering strategy ({\tt arbiter\_choose()})
 to prefer scheduling the thread previously chosen for reordering by DPOR,
-to force whatever its conflicting memory access was to happen before the other, preempted thread gets a chance to run.
+to ensure the conflicting access happens before the preempted thread gets a chance to run again.
+%to force whatever its conflicting memory access was to happen before the other, preempted thread gets a chance to run.
 Further optimizations such as {\em source sets} and {\em wakeup trees},
-which achieve optimality (i.e., executing exactly one interleaving per equivalence class) \cite{optimal-dpor}
-are not yet implemented,
-although to the best of my knowledge,
+which prior work has shown achieve optimality
+(i.e., executing exactly one interleaving per equivalence class) \cite{optimal-dpor}
+are not yet implemented.
+To the best of my knowledge,
 they provide further reduction only in cases of 3 or more threads;
 I suspect (without proof) that sleep-set DPOR is optimal for 2 threads.
 
-% TODO: make sure it's clear that the quicksand chapter expts were run before this optmz was added,
-% and that the HTM expts fro msigbovik paper were re-run for its chapater herein
+Chapter~\ref{chap:quicksand}'s experiments and Chapter~\ref{chap:education}'s user studies
+were conducted before this optimization was implemented.
+Note that its absence has no bearing on DPOR's soundness, only its efficiency,
+and that Landslide showed good bug-finding performance even without it.
+Chapter~\ref{chap:tm}'s experiments include this optimization,
+because its presence was required to fairly compare the other reduction strategies presented therein.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
