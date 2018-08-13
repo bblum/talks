@@ -110,6 +110,7 @@ The rest of this dissertation is organized as follows.
 	\item {\bf Landslide:} Chapter~\ref{chap:landslide} explains the design and implementation of Landslide
 		%the core of my stateless model checking framework,
 		and all the special features it's been equipped with over the years.
+		It is the foundation upon which all three contributions above build.
 	\item {\bf Quicksand:} Chapter~\ref{chap:quicksand} presents the Iterative Deepening framework which more intelligently chooses which state spaces to test, corresponding to contribution 1 above.
 	\item {\bf Education:} Chapter~\ref{chap:education} discusses my evaluation of Landslide
 		in CMU's 15-410 class environment using the Pebbles kernel,
@@ -119,8 +120,49 @@ The rest of this dissertation is organized as follows.
 	%\item {\bf Pintos:} Chapter~\ref{chap:410} discusses my evaluation of Landslide in the University of Chicago's and Berkeley's OS class environments using the Pintos kernel, corresponding to contribution 2 above.
 	\item {\bf Transactional Memory:} Chapter~\ref{chap:tm} presents my extension of Landslide's concurrency model to handle transactional concurrency and the evaluation thereof, corresponding to contribution 3 above.
 	\item {\bf Related Work:} Chapter~\ref{chap:relatedwork} honors my neighbours and ancestors in research spirit.
+	\item {\bf Future Work:} Chapter~\ref{chap:warpzone} % TODO
 	\item {\bf Conclusion:} Chapter~\ref{chap:conclusion} provides some thoughts on the future of the field.
 \end{itemize}
+
+\subsubsection{How to read this thesis}
+
+I have made an effort to make this document accessible to readers of all programming experience levels,
+although some of the research being theoretical and several layers of abstractions deep,
+I cannot promise all easy reading.
+The Background chapter~(\ref{chap:background}) provides what I hope are friendly concrete examples
+to help an reader feel comfortable with each level of intuition that upcoming algorithms will build upon.
+These should suffice for the experiments and overall contributions,
+if not necessarily the details of each algorithm or soundness proof.
+The Education chapter~(\ref{chap:education}) in particular
+may be approached with no knowledge of concurrency or model checking,
+taking it merely as a study of a magic new debugging tool in the classroom setting.
+The more ambitious reader may proceed to the Landslide chapter's further examples~(\sect{\ref{sec:landslide-algs}}),
+which should equip them to understand every detail herein.
+Readers who did not come to read this end-to-end should at least consult the glossary~(\sect{\ref{sec:glossary}})
+to help clarify any terminology confusion.
+
+Color will be used in figures and graphs to add visual contrast and make the data easier to navigate at a glance,
+but only in redundant ways also signaled by symbols.
+I have made some effort to choose palettes friendly to color-blindness,
+but should the reader find contrasts too low anyway,
+whether being color-blind or reading a physical copy printed in greyscale,
+they may be assured all important distinctions still render in monochrome;
+for example, ovals and rectangles to depict different threads,
+or $\dagger$ to distinguish state space estimates from completed verifications.
+
+Pronoun use will vary between specific singular and ambiguously-singular-or-plural to convey additional nuance.
+The singular ``I'' will present my own research contributions,
+while the royal ``we'' should be taken to include the reader,
+such as when surveying background material or related work,
+to which the author's and reader's relationships are more similar.
+The abstract ``the programmer'' (or ``the user'') will be referred to as ``she''
+to highlight her role as the intended audience for concurrency testing tools
+rather than the underlying research,
+although real students who participated in the user studies will be given the more inclusive ``they''.
+Gender-neutral pronouns are to be used on the author themself.
+
+% TODO:
+% Finally, this thesis also contains a small puzzle-hunt to reward dedicated readers who make it all the way through.
 
 \newpage
 \thispagestyle{empty}
