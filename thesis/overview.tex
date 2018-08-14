@@ -32,7 +32,7 @@ but may also provide surprising execution results.
 \subsubsection{Simultaneity}
 This simultaneity of threads is achieved either by executing each one on a separate CPU, or by interleaving them nondeterministically (as controlled by clock interrupts) on the same CPU.
 Because clock interrupts can occur at any instruction\footnote{
-	With some exceptions in kernel-level programming, which I discuss later.
+	With some exceptions in kernel-level programming, discussed later.
 },
 we consider single-CPU multithreading to be simultaneous at the granularity of individual instructions.
 %
@@ -176,7 +176,7 @@ one may include some computational understanding of the behaviour of any, or all
 Annotating a certain abstraction's semantics treats it as a trusted concurrency primitive in its own right,
 and allows the testing tool to reduce the possible space of interleavings (or the set of false positive data-race candidates reported, etc.),
 at the cost of increasing the implementation and theoretical complexity of the analysis.
-In this thesis, I will consider locks and descheduling to be the only concurrency primitives,
+This thesis will consider locks, descheduling, and transaction begin/end as the only concurrency primitives,
 and assume the others listed above are implemented using those as building blocks (an exercise for the reader \cite{thrlib}).
 
 Locks (or {\em mutexes}, short for ``mutual exclusion locks'') are objects, shared by multiple threads, which allow the programmer to mark certain {\em critical sections} of code that must not interleave with each other.
@@ -240,9 +240,9 @@ Concerning possible execution patterns,
 the main difference between STM and HTM is the circumstances under which a transaction may abort.
 A software-backed transaction will abort if and only if a memory conflict occurs therein with another thread.
 HTM, however, is backed by the CPU's cache, and is therefore subject to other circumstances such as cache capacity or interrupt-triggered cache flushes which may force an abort even when no memory conflict occurs.
-I will explore the consequences of this difference further in Chapter~\ref{chap:tm}.
-
-In this thesis, I will focus on HTM as my platform for testing transactional programs,
+Chapter~\ref{chap:tm} will explore the consequences of this difference further.
+%
+This thesis will focus on HTM as my platform for testing transactional programs,
 to highlight the importance of researching advanced testing techniques in anticipation of upcoming hardware features.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -321,9 +321,9 @@ Some model checkers explicitly store the set of visited program states as a mean
 From the perspective of such tools, state spaces such as these wherein equivalent states may be reached by multiple paths
 are represented as a directed acyclic graph (DAG) instead of as a tree.
 This approach is called {\em stateful} model checking.
-In this thesis, I focus on {\em stateless} model checking (and execution trees, not DAGs),
+This thesis focuses on {\em stateless} model checking (and execution trees, not DAGs),
 which instead analyzes the sequence of execution events to avoid a prohibitive memory footprint.
-Henceforth I will abbreviate ``stateless model checking'' simply as ``model checking'' for brevity.
+Henceforth ``stateless model checking'' will be abbreviated simply as ``model checking'' for brevity.
 Also, the term ``state space'' was originally coined to refer to the stateful approach's emphasis on the DAG's nodes
 (i.e., program states);
 while stateless checkers emphasize the tree's branches (i.e., execution sequences) instead,
@@ -371,7 +371,7 @@ if the transitions of threads 1 and 2 are {\em independent},
 DPOR deduces that the subsequent program states (indicated by the red arrow) are equivalent.
 Thence, only one of the two interleavings and its respective subtree needs to be executed
 in order to check all possible program states.
-I explain how DPOR implements such a deduction in more detail in \sect{\ref{sec:landslide-dpor}}.
+\sect{\ref{sec:landslide-dpor}} explains how DPOR implements such a deduction in more detail.
 
 Over the years, researchers have developed many enhancements to DPOR, such as Optimal DPOR \cite{optimal-dpor}, parallelizable DPOR \cite{parallel-dpor}, SAT-directed model checking \cite{satcheck}, Maximal Causality Reduction \cite{mcr}, and DPOR for relaxed memory architectures \cite{tsopso}.
 
@@ -513,7 +513,7 @@ Chapter~\ref{chap:quicksand} includes a comparison of the two approaches for the
 \section{Education}
 \label{sec:overview-edu}
 
-In this thesis I will tackle Pebbles and Pintos, two different system architectures used in educational operating systems courses.
+This thesis will tackle Pebbles and Pintos, two different system architectures used in educational operating systems courses.
 This section describes the projects which students implement and which Landslide tests.
 
 \subsection{Pebbles}
@@ -653,7 +653,7 @@ which is otherwise very unlikely to arise in normal execution.
 The reference kernel specification \cite{kspec} does not define the {\tt misbehave} modes' behaviours,
 as doing so would deprive students of the learning experience of discovering the interleaving in question on their own.
 %
-In this thesis I will occasionally use intentionally vague phrasing to preserve the mystery of these bugs.
+I will occasionally use intentionally vague phrasing to preserve the mystery of these bugs.
 
 \subsubsection{Use at other universities}
 \label{sec:overview-psu}
@@ -702,7 +702,7 @@ Although there is some variety in supplemental assignments, all Pintos courses i
 \end{itemize}
 
 Some schools further offer a virtual memory project, extending the provided VM with a frame table and supplemental page table and fault handler \cite{standford-cs140,uchicago-cs230}, or supplemental HTTP server and {\tt malloc} assignments \cite{berkeley-cs162}.
-Being largely architectural/algorithmic projects rather than concurrency-oriented ones, I am not concerned with these assignments in this thesis.
+Being largely architectural/algorithmic projects rather than concurrency-oriented ones, this thesis is not concerned with these assignments.
 The main concurrency challenges in Pintos projects arise from the {\em threads} and {\em userprog} assignments:
 implementing a correct {\tt alarm} routine,
 ensuring the priority scheduler remains safe in the presence of concurrent threads of the same priority,
