@@ -124,21 +124,21 @@ The rest of this dissertation is organized as follows.
 	\item {\bf Conclusion:} Chapter~\ref{chap:conclusion} provides some thoughts on the future of the field.
 \end{itemize}
 
-\subsubsection{How to read this thesis}
+\subsubsection{Notes on reading this thesis}
 
-I have made an effort to make this document accessible to readers of all programming experience levels,
+I have tried to make this document accessible to readers of all programming experience levels,
 although some of the research being theoretical and several layers of abstractions deep,
 I cannot promise all easy reading.
-The Background chapter~(\ref{chap:background}) provides what I hope are friendly concrete examples
-to help an reader feel comfortable with each level of intuition that upcoming algorithms will build upon.
+Chapter~\ref{chap:background}, Background, provides what I hope are friendly concrete examples
+to help the reader feel comfortable with each level of intuition that upcoming algorithms will build upon.
 These should suffice for the experiments and overall contributions,
 if not necessarily the details of each algorithm or soundness proof.
-The Education chapter~(\ref{chap:education}) in particular
+In particular, Chapter~\ref{chap:education}, Education,
 may be approached with no knowledge of concurrency or model checking,
 taking it merely as a study of a magic new debugging tool in the classroom setting.
-The more ambitious reader may proceed to the Landslide chapter's further examples~(\sect{\ref{sec:landslide-algs}}),
+The more ambitious reader may proceed to the Landslide chapter's algorithm walkthroughs~(\sect{\ref{sec:landslide-algs}}),
 which should equip them to understand every detail herein.
-Readers who did not come to read this end-to-end should at least consult the glossary~(\sect{\ref{sec:glossary}})
+Readers who are here only to skim and skip around should at least be aware of the glossary~(\sect{\ref{sec:glossary}})
 to help clarify any terminology confusion.
 
 Color will be used in figures and graphs to add visual contrast and make the data easier to navigate at a glance,
@@ -150,16 +150,24 @@ they may be assured all important distinctions still render in monochrome;
 for example, ovals and rectangles to depict different threads,
 or $\dagger$ to distinguish state space estimates from completed verifications.
 
-Pronoun use will vary between specific singular and ambiguously-singular-or-plural to convey additional nuance.
-The singular ``I'' will present my own research contributions,
+Pronoun use will vary between more specific and more ambiguous to convey additional nuance.
+The singular ``I'' is associated with my own research contributions,
 while the royal ``we'' should be taken to include the reader,
 such as when surveying background material or related work,
-to which the author's and reader's relationships are more similar.
-The abstract ``the programmer'' (or ``the user'') will be referred to as ``she''
-to highlight her role as the intended audience for concurrency testing tools
-rather than the underlying research,
-although real students who participated in the user studies will be given the more inclusive ``they''.
-Gender-neutral pronouns are to be used on the author themself.
+to which the author and reader share more similar relationships.
+The impersonal ``the programmer'' will be referred to as she/her
+to distinguish her from the thesis audience concerned with the underlying research,
+and also to challenge readers' unconscious bias about gender in computer science.
+Individual students who participated in the user studies will be given the more inclusive they/them.
+Gender-neutral pronouns are also to be used on the author themself.
+
+This document is, in a way, only half the work of the thesis, the other half being Landslide's implementation.
+While some readers may prefer to be taught in prose and/or mathematical notation how an algorithm works,
+others may find that disorienting and wish to see things in a way a compiler would understand.
+The beginning of Chapter~\ref{chap:landslide} provides source code links,
+and the rest of it serves as a guide to browsing the repository.
+Later chapters will often make parenthetical references to specific files and/or functions
+therein which implement a feature under discussion.
 
 % TODO:
 % Finally, this thesis also contains a small puzzle-hunt to reward dedicated readers who make it all the way through.

@@ -177,7 +177,7 @@ this highlights MC's dependence on its test cases to produce meaningful state sp
 Prior work \cite{tm-benchmark-cmu} proposed the idiom shown in Figure~\ref{fig:htm-fixed}
 to exclude this family of interleavings,
 which shows that correctly synchronizing even the simplest transactions may be surprisingly difficult or complex.
-%further motivating our research.
+%further motivating the research.
 
 \begin{figure}[t]
 	\begin{center}
@@ -273,7 +273,7 @@ Stated formally, let:
 	\item $\tiiat{\phi_1}\dots\tiiat{\phi_m}$ be the failure path, and
 	\item $\tiiat{\omega_1}\dots\tiiat{\omega_l}$ be the subsequent code executed unconditionally.
 \end{itemize}
-Note that arbitrary code may not be structured to distinguish these as nicely as in our examples;
+Note that arbitrary code may not be structured to distinguish these as nicely as in the examples;
 e.g., more code may exist in the success branch after {\tt \_xend()};
 such would be considered part of $\omega$ here.
 
@@ -501,7 +501,7 @@ in which case not added to {\tt xabort\_codes\_todo} to avoid duplicate work.
 		for reasons outside of the programmer's control such as system interrupts or cache eviction.
 		If {\tt -S} is set they are initialized to empty,
 		representing either STM's policy of failing only when a true memory conflict arises,
-		or a TSX user wrapping all their {\tt \_xbegin()}s in a retry loop such as in \cite{sigbovik-htm}.
+		or a TSX user wrapping all her {\tt \_xbegin()}s in a retry loop such as in \cite{sigbovik-htm}.
 	\item {\tt \_XABORT\_CONFLICT}:
 		Whenever DPOR detects a memory conflict between two transitions ({\tt shimsham\_shm()}),
 		if {\tt -A} is set,
@@ -1114,7 +1114,7 @@ then trusted in turn when checking their client programs \cite{dbug-phdthesis}.
 
 Regarding the spinlock bug,
 as HTM is fundamentally a performance-minded concurrency extension,
-users are likely to care about more probabilistic properties of their code,
+the user may also care about more probabilistic properties of her code,
 such as requiring a transaction abort rate below a certain threshhold
 owing to the nature of its workload.
 Landslide cannot in general test for performance degradation bugs,
@@ -1635,7 +1635,7 @@ the benefit is clear:
 the data structure tests' state spaces become much more tractable,
 %the data structure tests suddenly reach unprecedented thread/iteration counts with ease,
 % 'so on' here includes free/re-malloc mem conflicts; see comment in avl_mutex.cpp
-their state space growth now defined only by their internal conflicts from tree rebalancing, map resizing, and so on.
+their state space growth now defined only by internal conflicts from tree rebalancing, map resizing, and so on.
 In total,
 summing the testing times of {\tt lock}({\tt mutex})$(K,N)$ and {\tt avl\_mutex}$(K,N)$
 produces the same verification as {\tt avl\_fixed}$(K,N)$ far more cheaply.
@@ -1766,7 +1766,7 @@ In this way (and also, of course, because {\tt mutex}'s state spaces are smaller
 % other one to test -
 % https://github.com/vamsikc/leveldb-tsx/blob/master/ext/xsync/include/scope.hpp
 
-% "Although we skipped implementing it to begin with, the sheer size of this reduction also
+% "Although I skipped implementing it to begin with, the sheer size of this reduction also
 % reflects on the numbers one might see betwee the original reduction in theorem so-and-so that lets us
 % treat transactional success paths as mutually-exclusive (and, once started, abort-proof) to begin with"
 % this sentence is a complete mess....
@@ -1850,7 +1850,7 @@ for abort paths to be executed only in case of actual memory conflicts.
 {\tt swap}, {\tt avl\_insert}, and {\tt map\_basic} abstract their {\tt \_xbegin()} calls
 behind an interface which can be implemented either with or without retry loops,
 while {\tt lock}({\tt spinlock}) and {\tt lock}({\tt mutex}) implement the retry loop directly.
-In these cases, the user can assure themself of STM reduction's soundness by visual inspection.
+In these cases, the user can assure herself of STM reduction's soundness by visual inspection.
 In fact, Landslide's current implementation gets stuck in infinitely deep interleavings
 whenever it encounters a retry loop
 % not actually sure why, as it should be around-a-pp and not on the 1st branch...

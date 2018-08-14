@@ -148,11 +148,11 @@ These include:
 		rather than using the prescribed synchronization API,
 		such as {\tt while (!flag) yield();} or {\tt while (xchg(...)) continue;},
 		and treats them as synchronization points as described in \sect{\ref{sec:landslide-blocking}}.
-	\item Landslide finds ``too suspicious'' spinwait-loops in the students' mutex implementations
+	\item Landslide finds ``too suspicious'' spinwait-loops in mutex implementations
 		which are neither yield- nor {\tt xchg}-loops (as described above),
 		which would ordinarily be classified as infinite loop bugs,
 		and reports them with a suggestive message ({\tt undesirable\_loop\_html()} in {\tt landslide.c})
-		referring them to the appropriate lecture material
+		referring the student to the appropriate lecture material
 		\cite{synchronization-2}.
 	\item The {\tt landslide} wrapper script logs the time and command-line options of invocation
 		and captures a snapshot of the student code and results of the test and saves them to AFS after each run.
@@ -897,7 +897,7 @@ can each benefit from the experience in different ways.
 \subsection{Bias}
 
 % TODO: addressing bias
-% well, we did the best we could(?)
+% well, I did the best I could(?)
 % survey email: "please answer honestly rather than flatteringly" vs. studence trying to be polite
 % selection bias, students who liked landslide more more likely to answer the survey at all
 % TODO - u can verify the bug just by taking survey graph #1 and comparing to landslide snapshots (sep. by groups who answered survey)
@@ -931,10 +931,10 @@ Indeed, while helping Kevin get oriented with using Landslide,
 I implemented
 several
 fixes/improvements to the setup scripts
-as we found student kernels that failed to automatically annotate
+as I found student kernels that failed to automatically annotate
 (for example, those with {\tt ready\_list} changed to an array,
 as described in \sect{\ref{sec:education-pintos-instrumentation}}).
-Had we given Landslide directly to students that semester,
+Had I given Landslide directly to students that semester,
 the students themselves would have had to email me for tech support.
 
 I attribute the low participation rate of Pintos students to P2 students to two major factors:

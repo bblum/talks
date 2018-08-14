@@ -46,7 +46,7 @@ Separate user guides also exist, described in Chapter~\ref{chap:education}.
 \label{sec:landslide-setup}
 
 Three setup scripts are provided, one for each supported kernel architecture: {\tt p2-setup.sh}, {\tt psu-setup.sh}, and {\tt pintos-setup.sh}.
-The user should supply the directory containing their project implementation.
+The user should supply the directory containing her project implementation.
 The second of the three is largely the same as the first, with CMU-specific project details replaced by PSU-specific ones.
 The latter of the three also supports arguments specifying which of the Pintos projects to target.
 For example:
@@ -75,7 +75,7 @@ The preferred method of invoking Landslide is through Quicksand, the Iterative D
 % TODO: add quicksand symlink
 This is done via the {\tt ./landslide} script in the top-level directory, which:
 \begin{itemize}
-	\item Checks if the user needs to run {\tt *-setup.sh} again, in case their source code was more recently updated than the existing annotated build (a common mistake),
+	\item Checks if the user needs to run {\tt *-setup.sh} again, in case her source code was more recently updated than the existing annotated build (a common mistake),
 	\item Passes its arguments through to {\tt id/landslide-id}, the Quicksand binary,
 		and
 	\item (If during the student user study,) compresses the resulting log files,
@@ -142,7 +142,7 @@ Quicksand will automatically generate configuration files and invoke Landslide a
 
 Rather than letting Quicksand juggle multiple instances of Landslide,
 the user may run a single instance directly, optionally configuring the preemption points by hand.
-This is recommended only for enthusiastic users who are annotating their own kernel.
+This is recommended only for the enthusiastic user annotating her own kernel.
 
 The script {\tt pebsim/landslide} invokes Landslide thus.
 It should be run from within the {\tt pebsim/} directory.
@@ -360,7 +360,7 @@ by searching for the macro {\tt FOUND\_A\_BUG\_HTML\_INFO} in Landslide's code.}
 The educational experiments in this thesis focus on projects which students implement on top of provided kernel basecode which Landslide already ``understands''.
 Such understanding is conferred via the annotations described in this section.
 For P2 and Pintos students I supply these annotations behind the scenes,
-but a CMU 15-410 student who wishes to use Landslide on their kernel project shall need to brave forth hereupon.
+but a CMU 15-410 student who wishes to use Landslide on her kernel project shall need to brave forth hereupon.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -431,7 +431,8 @@ Following are the less self-explanatory options.
 		This is recommended for marking trusted-correct thread library code when testing multithreaded client code thereof,
 		in order to avoid unnecessarily checking, for example,
 		all the different ways {\tt thr\_exit()} and {\tt thr\_join()} could interleave.
-		Users of this option should be careful to enable the proper {\tt thr\_create()} misbehave mode in their test case (\sect{\ref{sec:landslide-friendly-misbehave}}).
+		The user should be careful with this option to also enable the proper {\tt thr\_create()} misbehave mode
+		in her test case (\sect{\ref{sec:landslide-friendly-misbehave}}).
 	\item {\tt TRUSTED\_THR\_JOIN=0} - if set to 1, forces Landslide to add a happens-before edge (\sect{\ref{sec:landslide-dpor-hb}}) between the exiting of some thread $N$ and the end of any subsequent {\tt thr\_join}$(N)$ call,
 		even if that {\tt join} would not ordinarily block.
 		This is useful for state space reduction when testing threaded client code;
@@ -458,7 +459,7 @@ Following are the less self-explanatory options.
 \label{sec:tell-landslide}
 
 The following annotations are provided as C functions
-which a kernel author shall include in their source code and call at appropriate times.
+which a kernel author shall include in her source code and call at appropriate times.
 The functions' actual implementations are empty;
 rather they serve as labels whose positions the annotation scripts extract
 along with the other various annotations from the previous section.
@@ -542,7 +543,7 @@ relative to the repository root.
 Both simulators invoke Landslide once per instruction and once per memory read or write.
 % just before..
 The entry point is the aptly-named {\tt landslide\_entrypoint()} in {\tt landslide.c},
-which then dispatches to various other modules their respective analyses, described as follows.
+which then dispatches to various other modules' respective analyses, described as follows.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -619,7 +620,7 @@ forces the kernel into its timer interrupt handler (\sect{\ref{sec:landslide-int
 
 Because the kernel is part of the system being tested, Landslide can't necessarily always switch directly to a specific thread,
 but rather must keep triggering context switches until the desired thread is reached;
-any mechanism to tell the kernel which thread we want would necessarily involve modifying the code being testsed
+any mechanism to tell the kernel which thread it wants would necessarily involve modifying the code being testsed
 and hence possibly obscuring bugs or introducing new ones.%
 \footnote{For userspace testing, where I supply a pre-annotated reference kernel,
 such an approach would be more straightforward,
@@ -1286,7 +1287,7 @@ and $T_j$ is the thread ID to be scheduled after $t_{i-1}$, $T_j \ne T(t_i)$.
 %to run {\em instead} of $T(t_i)$.
 \footnote{I describe $T_j$ as a thread ID here, rather than as a thread transition,
 because the nature of the transition (its memory accesses, the subsequent state, etc)
-is unknown until we actually execute it.}
+is unknown until actually executed.}
 Landslide's implementation represents $S$ as a list of {\tt struct hax}es, defined in {\tt tree.h},
 each one representing a preemption point, or intermediate state between two transitions.
 
