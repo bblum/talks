@@ -1972,15 +1972,16 @@ ICB further filters interleavings requiring more preemptions than the current bo
 out of the to-explore set.
 The macro {\tt ICB\_BLOCKED},
 defined in {\tt schedule.h},
-decides if a given thread would require a preemption beyond the current bound to switch to.
-The DPOR implementation then checks, for some $I_{ij}$ it wants to mark for exploration,
-whether {\tt ICB\_BLOCKED(}$T_j${\tt )} at the state after $t_i$,
-and skips it if so ({\tt tag\_good\_sibling()}/{\tt tag\_all\_siblings()}).
+decides if a given thread would require a preemption beyond the current bound to switch to%
 \footnote{Since ``voluntary'' context switches (e.g. arising from {\tt yield()})
 are often necessary for correct execution,
 {\tt ICB\_BLOCKED} does not count such switches towards the preemption count.
 Therefore, within a certain preemption bound $b$,
-interleavings with more than $b$ context switches may still be tested.}
+interleavings with more than $b$ context switches may still be tested.
+}.
+The DPOR implementation then checks, for some $I_{ij}$ it wants to mark for exploration,
+whether {\tt ICB\_BLOCKED(}$T_j${\tt )} at the state after $t_i$,
+and skips it if so ({\tt tag\_good\_sibling()}/{\tt tag\_all\_siblings()}).
 
 Then, the entire state space is repeated with increasing bound until no such are filtered.
 This core ICB loop appears in {\tt time\_travel()} in {\tt landslide.c}.
