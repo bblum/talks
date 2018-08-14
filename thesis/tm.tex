@@ -607,7 +607,7 @@ while the two transactional paths (disjoint memory accesses) and the two abort p
 \begin{figure}[h]
         \begin{center}
         \begin{tabular}{ll}
-		\multicolumn{2}{c}{Initially {\tt \ctype{int} foo, bar = \const{0}; \ctype{mutex\_t} m;}} \\
+		\multicolumn{2}{c}{Initially {\tt \ctype{int} foo, bar = \const{0};}} \\
                 \\
                 \begin{tabular}{l}
                 {\bf Thread 1} \\
@@ -1235,7 +1235,7 @@ I report their estimated state space size and runtime measured after that timeou
 			& 3,1 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
 			\hline
 			{\tt map\_basicer}
-			& 2,1 & \cpu{28.40} 	& \ints{150} 	& \cpu{94}	& \ints{26.55}	& \cpu{14.88}	& \ints{9} \\
+			& 2,1 & \cpu{28.40} 	& \ints{150} 	& \cpu{26.55}	& \ints{94}	& \cpu{14.88}	& \ints{9} \\
 			& 2,2 & \ETAdag{qqq}	& \ETAdag{qqq}	&\cpu{16455.24}	& \ints{283756}	& \cpu{1285.06}	& \ints{21684} \\
 			& 3,1 & \ETAdag{qqq}	& \ETAdag{qqq}	&\cpu{21153.64}	& \ints{366030}	& \cpu{705.04}	& \ints{12707} \\
 
@@ -1663,7 +1663,9 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 			& 2,1 & \cpu{3.55} & \ints{4} \\
 			({\tt spin\_fixed})
 			& 2,2 & \cpu{105.57} & \ints{998} \\
-			& 2,3 & \ETAdag{qqq} & \ETAdag{qqq} \\
+			& 2,3 & \ETAdag{33h 13m} & \ETAdag{321553} \\
+			% [JOB 4] progress: 138911/321553 brs (43.200015%), ETA 23h 12m 50s (elapsed 9h 59m 48s)
+			% total CPU time consumed: 10h 4s (36004577784 usecs) (core saturation: 12%)
 			& 3,1 & \cpu{28.27} & \ints{186} \\
 			& 3,2 & \ETAdag{13y 281d} & \ETAdag{1443676} \\
 			% [JOB 4] progress: 169893/1443676 brs (11.768080%), ETA 13y 280d 17h 30m 54s (elapsed 9h 59m 48s)
@@ -1676,10 +1678,13 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 			({\tt mutex})
 			& 2,2 & \cpu{16.83} & \ints{180}	\\
 			& 2,3 & \cpu{405.21} & \ints{9372}	\\
-			& 2,4 & \cpu{qqq} & \ints{qqq}	\\ % was: 15266 sec 384512 pre mkrun
+			& 2,4 & \cpu{24999.68} & \ints{489480}	\\ % was: 15266 sec 384512 pre mkrun
+			% total CPU time consumed: 6h 56m 39s (24999680839 usecs) (core saturation: 12%)
 			& 3,1 & \cpu{15.00} & \ints{132}	\\
 			%& 3,2 & \cpu{29432.87} & \ints{707086}	\\ % pre mkrun fix (let alone bottom1)
-			& 3,2 & \ETAdag{qqq} & \ETAdag{qqq} \\
+			& 3,2 & \ETAdag{26h 42m} & \ETAdag{1223955} \\
+			% [JOB 2] progress: 714882/1223955 brs (58.407517%), ETA 16h 41m 58s (elapsed 9h 59m 55s)
+			% total CPU time consumed: 10h 3s (36003621109 usecs) (core saturation: 12%)
 			& 4,1 & \cpu{665.89} & \ints{15064}	\\
 			\hline
 			{\tt lock\_fast}
