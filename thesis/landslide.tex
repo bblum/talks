@@ -26,6 +26,9 @@ and is also roughly 3x faster.
 This chapter will discuss Landslide's outer and inner workings in all their gory detail.
 It is intended for the aspiring developer or the ambitious user
 and hence unlike other chapters is written in the style of documentation rather than as a report of research results.
+The reader interested only in a theoretical introduction to model checking's foundational algorithms,
+with detailed and friendly examples to help establish intuitions the later chapters may require,
+may skip to \sect{\ref{sec:landslide-algs}}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1027,11 +1030,12 @@ for interpreting the current program state with respect to these values.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Algorithms of note}
+\section{Algorithms}
+\label{sec:landslide-algs}
 
-% not worth discussing?
-%\subsection{Kernel annotations}
-%\subsection{Bug identification}
+This section describes Landslide's model-checking algorithms from a theoretical perspective.
+The more complex ones are accompanied by concrete examples to hopefully help the reader build a solid intuition,
+which upcoming chapters will require in their soundness proofs.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1256,7 +1260,7 @@ These $M(t)$ sets are mappings from memory addresses to
 instruction pointer value, read-or-write boolean, lockset or vector clock, and various other metadata
 ({\tt struct mem\_lockset} in {\tt memory.h}).
 
-The set intersection is implemented in {\tt mem\_shm\_interseect()} in {\tt memory.c}.
+The set intersection is implemented in {\tt mem\_shm\_intersect()} in {\tt memory.c}.
 It checks for read/write and write/write pairs to the same address with an $O(\mathsf{max}(m,n))$ scan of both access sets (pre-sorted).
 If any address $a$ exists with $a \in M(t_i)$ and $a \in M(t_j)$ and $M(t_i)(a) = \mathsf{write} \vee M(t_j)(a) = \mathsf{write}$
 then $t_i$ and $t_j$ are said to conflict,
@@ -1715,7 +1719,7 @@ to retroactively re-weight previously explored subtrees' estimates.
 Unlike the WBE, this change does not need to be propagated to descendant subtrees' estimates.
 This estimate also takes $O(n)$ time and memory.
 
-\subsubsection{Accuracy example}
+\subsubsection{Example}
 
 To illustrate how the two estimators can under-estimate the total tree size and/or diverge from each other,
 consider the state space from Figure~\ref{fig:dpor-example-2}, of size 6.
@@ -1739,8 +1743,7 @@ Suppose for RE that each transition takes 1 second to execute.
 		and added to its estimate, yielding 3/4.
 		Note that it has ``forgotten'' that only branch A, alone, contributed to its original 1/2,
 		rather than two branches as in this subtree.
-		The root
-		the subtree estimate at \dporTA{{\tt tmp1++}} is updated (and propagated down) to 3/8.
+		The root and \dporTA{{\tt tmp1++}}'s subtree estimates are updated (and propagated down) to 3/8.
 		Dividing the current progress (2) by that yields 5.33 branches, an underestimate.
 
 		Under RE, the estimate at \dporTB{{\tt tmp2++}} is 5 seconds,
