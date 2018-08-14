@@ -287,7 +287,7 @@ avoiding which is important for tests to be student-accessible earlier in the pr
 \subsubsection{Misbehave}
 \label{sec:landslide-friendly-misbehave}
 
-Many of the supplied P2 test cases invoke the {\tt misbehave()} system call
+Many of the supplied P2 test cases invoke the {\tt misbehave} system call
 with a mysterious argument (usually {\tt BGND\_BRWN >> FGND\_CYAN})
 before the creation of any child threads.
 The use of terminal color code constants is of course a red herring of obfuscation,
@@ -300,11 +300,50 @@ whenever {\tt make\_runnable} is called,
 which are necessary to allow Landslide to recognize a {\tt yield()} preemption point
 and be able to run the newly-runnable thread as soon as possible.
 
-To illustrate, consider the following program.
+To illustrate, consider the following program in Figure~\ref{fig:misbehave-example},
+and suppose Landslide is configured to preempt only on mutex API calls
+(such as in the first step of Iterative Deepening (\sect{\ref{sec:quicksand-id}})).
+Because Landslide ignores all kernel-level synchronization short of context switches when testing user-level code,
+if the kernel created the child thread and returned from {\tt thread\_fork}
+(the system call underlying {\tt thr\_create()})
+without yielding first,
+the next preemption point will not occur until {\tt thr\_join()} waits for the child to exit.
+Hence, DPOR will erroneously think everything before that {\tt thr\_join()}
+happens-before (\sect{\ref{sec:landslide-dpor-hb}}) anything the child does,
+and will fail to identify the racing accesses on {\tt x}.
 
-% TODO
-% TODO - make a progr that data races immediately after thr create, no mutex es or whatever.
-% TODO - check if it rly happens under pure happens before? or if this is only a concern under limited HB.
+\begin{figure}[h]
+	\begin{center}
+	\begin{tabular}{l}
+		\texttt{\ctype{void} \call{child}(\ctype{int} *xp) \{} \\
+		\texttt{~~~~*xp++;} \\
+		\texttt{\}} \\
+		\\
+		\texttt{\ctype{void} \call{parent}() \{} \\
+		\texttt{~~~~\ctype{int} x = \const{0};} \\
+		\texttt{~~~~\ctype{int} tid = \call{thr\_create}(child, \&x);} \\
+		\texttt{~~~~x++;} \\
+		\texttt{~~~~\call{thr\_join}(tid, \const{NULL});} \\
+		\texttt{~~~~\flow{assert}{}(x == \const{2});} \\
+		\texttt{\}} \\
+	\end{tabular}
+	\end{center}
+	\caption{Example demonstrating the need for {\tt misbehave} to force the kernel
+	to yield during {\tt thread\_fork}.}
+	\label{fig:misbehave-example}
+\end{figure}
+
+Though Iterative Deepening's soundness (\sect{\ref{sec:quicksand-soundness}})
+guarantees all data races will eventually be detected starting from just synchronization preemption points,
+it assumes threads becoming runnable counts among those.
+In that sense, {\tt misbehave} serves to restore the last synchronization preemptions where they belong.
+If at this point the reader wonders why Landslide doesn't just identify
+the {\tt thread\_create} and {\tt make\_runnable} system calls in the arbiter itself (\sect{\ref{sec:landslide-arbiter}})
+and skip this mysterious user-visible complexity,
+they would be right to ask:
+I have left it this way for no better reason than to maintain consistency
+with the upcoming chapters' experimental environments,
+and intend on fixing it in a future update.
 
 Other {\tt misbehave} modes may be used, but are likely to have no effect,
 since Landslide's thread-scheduling algorithm will override
