@@ -103,6 +103,14 @@ and
 \url{https://github.com/bblum/talks/tree/master/irb}
 (both versions).
 
+During the last week of P2 at CMU, I held several ``Landslide clinic'' sessions
+(basically office hours, but given a different name to remind students
+to limit themselves to questions a normal TA couldn't answer),
+where students could receive in-person technical and/or moral support.
+Collecting study information during these sessions was not included in the IRB protocol.
+In the PSU study, I had returned to Pittsburgh shortly after giving the lecture,
+so technical support for PSU students was limited to email correspondence.
+
 \subsection{Automatic instrumentation}
 \label{sec:education-pebbles-instrumentation}
 
@@ -903,10 +911,40 @@ can each benefit from the experience in different ways.
 % TODO - u can verify the bug just by taking survey graph #1 and comparing to landslide snapshots (sep. by groups who answered survey)
 % anything else?
 
-%%%% pintos %%%% (?? this is psu not pintos)
-% survey questions i WISH i had asked
-% - did you have any technical difficulties w landslide that i had to intervene on
-% mb anything else from timmys 2nd latest email
+As long as an educational user study is run on a volunteer basis,
+one cannot completely avoid selection bias:
+those with enough free time to participate are more likely to be the most capable students already,
+who are least in need of the extra debugging help.
+This was especially evident in the annotation-required P3 study from \cite{landslide},
+in which only 5 groups volunteered (15\% of the 34 total who submitted P3 that semester),
+among which 2 had enough after just the annotation phase and did not continue to do any in-depth testing.
+In contrast, since switching to the automatically-annotatable P2,
+the participation rate rose to NN\% % TODO
+(XX out of YY P2-submitting groups across ZZ semesters (TODO actually count them but obviously it will be higher)). % TODO
+This alone could be seen as a major step in mitigating said selection bias.
+
+Beyond participation, I anticipated several forms of bias affecting the survey responses.
+First of all, I suspected that students might feel compelled to be overly polite in their answers
+(whether consciously or subconsciously).
+I attempted to counteract this by concluding my survey link emails with,
+{\em Please try to answer honestly rather than flatteringly--if any part
+of the experience was bad for you, I want to hear about it to make
+Landslide better in the future!}
+It's also possible that survey respondents % respondence
+were more likely to be those who enjoyed Landslide the most,
+meaning I might not hear as much negative feedback as I should.
+Table~\ref{tab:TODO} % TODO -- make a table or graph showing correlation between bugfinding and who responded on the survey
+is my attempt to dispel this possibility.
+% TODO
+% possible flaws in table: students who found bugs might have had either a good (bug!) or bad (false positive) experience
+% could studence who didn't find bugs also have had a good experience? (think of how...)
+
+% TODO: is this ok to report without IRB approval? ask dave
+I cannot think of any reason gender, racial, or other demographic-based bias might affect this study.
+In fact, according to my memory alone, the proportion of women among students
+attending the Landslide clinics (\sect{\ref{sec:education-pebbles-recruiting}})
+was considerably higher than the class's overall gender ratio,
+although I did not record any such statistics scientifically.
 
 \subsection{Retrospect}
 
@@ -921,7 +959,51 @@ granted the impossible wish of knowing then what I know now.
 
 \subsubsection{Pebbles}
 
-% TODO
+The survey was introduced into the study only in time for two semesters' worth of student responses,
+after several iterations of collecting only usage and bug report snapshots.
+Apart from the obvious improvement of having been surveying students from the beginning,
+the following questions could have improved the survey.
+\begin{enumerate}
+	\item {\em Did you have any technical difficulties with Landslide that I had to intervene on,
+		whether in person or over email?}
+		(Some students reported this in the ``false positives'' question,
+		although fewer than I helped overall, so others must have not mentioned it.)
+		Comparing answers to this question across subsequent semesters would give a sense
+		of how much Landslide's stability was improving over time
+		and whether it was mature enough for unsupervised use in the future.
+	\item {\em How well do you feel you understood the research challenges explained in the lecture?}
+		and,
+		{\em How well do you feel a user should need to understand same in order to benefit from Landslide's bug reports?}
+		(Answers on a scale from ``Not at all; Landslide is a magic black box to me''
+		to ``I'm ready to work on research in this field myself''.)
+		These questions would help fine-tune the lecture material and user guide to maximize student comfort,
+		and potentially also corroborate the claim that Landslide is accessible even to novice users.
+	\item {\em What additional debugging information would you want displayed on the preemption traces?}
+		Knowing now that interpreting preemption traces was a sticking point for many users,
+		I would hope to identify the most wished-for features to know what to prioritize improving.
+		This could also assess students' understanding of what kinds of information
+		would or would not be reasonable for Landslide to record and report.
+\end{enumerate}
+
+Some students (between 0 and 2 per semester)
+emailed me during P3
+to ask if they could test their kernels with Landslide just like their thread libraries.
+I answered each by explaining that it would take more effort on their part,
+and if they were still interested,
+guided them through the annotation process on a case-by-case basis.
+This process was not included in the IRB-approved study protocol,
+so I collected no results from them.
+If I had planned in advance, I could have supported this ``bonus stage'' officially,
+and further surveyed the brave volunteers about how P3 Landslide could be made more generally accessible.
+
+Finally, to evaluate whether the experience of using Landslide
+left the students with any lasting lessons learned,
+a follow-up survey could have been given one or two years later.
+Such a survey would ask, for example,
+{\em Have you encountered any debugging problems since finishing OS that made you wish for a tool like Landslide?}
+and
+{\em Do you feel the way you think about testing, debugging, and program correctness
+has been influenced in any way by using Landslide?}.
 
 \subsubsection{Pintos}
 
