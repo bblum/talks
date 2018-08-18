@@ -436,11 +436,46 @@ CMU's official project grades from same,
 CMU students' survey responses and submitted project code from Fall 2017 and Spring 2018
 PSU students' survey responses and submitted project code from Spring 2018,
 and U. Chicago students' survey responses from Fall 2017.
+Table~\ref{tab:photo-of-ze-studence} shows the student participation rate across semesters
+% TODO update for psu
+for the thread library study.
+% and PSU
+
+\begin{table}[h]
+	\begin{center}
+		% ugh this looks so stupid
+		% but better than latex's output looking stupid
+		\begin{tabular}{c|crcrc|r}
+			& \multicolumn{5}{c|}{\bf used Landslide?} & \\
+			\bf semester & & \bf yes & & \bf no & & \bf total \\
+			\hline
+			CMU S'15	& &   8	& &  18	& &  26 \\
+			CMU F'15	& &  22	& &   8	& &  30 \\
+			CMU S'16	& &  18	& &  16	& &  34 \\
+			CMU F'16	& &  12	& &   6	& &  18 \\
+			CMU S'17	& &  19	& &  13	& &  32 \\
+			CMU F'17	& &  14	& &   5	& &  19 \\
+			CMU S'18	& &  10	& &   8	& &  18 \\
+			% NB. CMU's participance are counted by how many ppl i got at least one usage tarball for,
+			% while PSU's are by how many sign-up forms i got.
+			% the latter may be overcounting, because a student may sign up and then never use it;
+			% but i don't have tarballs for PSU so this is the best you're getting.
+			% TODO
+			% PSU s18	& &  38
+			\hline
+			\bf total	& & 103	& &  74	& & 177 \\
+		\end{tabular}
+	\end{center}
+	\caption{Student participation rates across semesters,
+		among students who submitted thread library implementations.}
+	\label{tab:photo-of-ze-studence}
+\end{table}
 
 \subsection{Bug-finding}
 \label{sec:education-eval-bugfinding}
 
 \subsection{Student submission quality}
+\label{sec:education-eval-grades}
 
 I evaluated Landslide's impact on student submission quality in two ways.
 First, I analyzed the overall P2 grades of CMU 15-410 students between Landslide users and non-users,
@@ -471,20 +506,28 @@ To avoid bias of picking too obscure and/or trivial bugs
 that Landslide alone might find but even course staff would not expect students to solve,
 I chose only bugs which had substantial penalties in the grading rubric
 (guided, as well, by my own intuition as a former TA).
+I also counted students who used Landslide in general but whose usage snapshots showed they did not run the test case in question as non-users.
 Table~\ref{tab:eval-common-bugs} presents the results.
+% two-tailed btw, the better (more conservative) way,
+% tbh one tailed might even make sense here, but it doesn't change anything wrt the cutoffs anyway, so
+The $p$ values are calculated in R \cite{r-lang} using Fisher's exact test \cite{fishers-exact-test},
+treating each row as an independent 2x2 contingency table,
+and dividing the significance cutoff by the number of bugs to conservatively account for multiplicity \cite{xkcd-jellybeans}.
 
-\begin{table}[h]
+% TODO check figure placement
+\begin{table}[t]
 	\begin{center}
-		% TODO: calc p values for this
+		\small
 		% note, smth like fisher's method which "combines independent studies into a meta p value"
 		% cannot be applied for 2 reasons - 1, these are not independent since the same studence were
 		% running landslide on diff test cases; 2, the hypotheses tested are different for each test
-	\begin{tabular}{r||cc|cc|c}
-		& \multicolumn{2}{c|}{Landslide users} & \multicolumn{2}{c|}{Non-users} & \\
-		Bug name & \#correct & total & \#correct & total & $\Delta P(\mathsf{correct})$ \\
+	\begin{tabular}{r||cc|cc|c|cc}
+		& \multicolumn{2}{c|}{Landslide users} & \multicolumn{2}{c|}{Non-users} & & \multicolumn{2}{c}{Significance} \\
+		Bug name & \#correct & \#buggy & \#correct & \#buggy & $\Delta$\%correct & $p$ & cutoff \\
 		\hline
-		%Exit UAF  & 9	& 21	& 2	& 16	& $+30.4\%$ \\ % not filtering out did not run tej; also using "old" thing..?
-		Exit UAF  & 11	& 21	& 0	& 16	& $+52.4\%$ \\
+		% calculated in R with (rest done similarly)
+		% fisher.test(rbind(c(11,10),c(0,16)))$p.value --> 0.0006143355
+		Exit UAF  & 11	& 10	& 0	& 16	& $+52.4\%$	& 0.00061	& 0.0125 \\
 		% I spent more hours than I should have looking at this landslide-user-submitted-bug group.
 		% Can't name the group here, but if you're me and have the analysis file,
 		% it's the one from f17 with 3 mutex_test logs in their "u" snapshot.
@@ -494,30 +537,25 @@ Table~\ref{tab:eval-common-bugs} presents the results.
 		% data races and so on in the id-log don't line up to the "u" mutex.c source code).
 		% That version was correct, then they updated it (introducing the bug) and ran a bunch of other tests,
 		% but didn't rerun mutex_test to check their update.
-		Mutex     & 17	& 18	& 19	& 19	& $-05.6\%$ \\
-		% nb. this is not filter out the did not run paras -- smae for all of the above/below
-		% Paraguay  & 22	& 24	& 12	& 13	& $-0.64\%$ \\ % not filtering out did not run para
-		Paraguay  & 20	& 21	& 14	& 16	& $+07.7\%$ \\
+		Mutex     & 17	& 1	& 19	& 0	& $-05.6\%$	& 0.49 & 0.0125 \\
+		Paraguay  & 20	& 1	& 14	& 2	& $+07.7\%$	& 0.57	& 0.0125 \\
 		% nb this is any downgrade related ding not just dgr tested ones
 		% nb 1 is msising bc didn't impl rwlock at all
-		%Downgrade & 17	& 24	& 8	& 12	& $+4.17\%$ \\ % not filtering out either did not run, or unrel ding
-		Downgrade & 10	& 13	& 19	& 23	& $-05.7\%$ \\ % TODO verify these buggers by eye
+		% nice p value
+		Downgrade & 10	& 3	& 19	& 4	& $-05.7\%$	& 0.69	& 0.0125 \\ % TODO verify these buggers by eye
 		\hline
-		% TODO: figure out if calculating a p value (or w/e) for this the same way is valid,
-		% since they summands are arguably not independent? ..or maybe they are?
-		Total     & 58	& 73	& 52	& 74	& $+09.2\%$ \\
+		Total     & 58	& 15	& 52	& 22	& $+09.2\%$	& 0.26 & 0.05 \\
 	\end{tabular}
 	\end{center}
 	\caption{
 		Correlation of student Landslide use with solving certain bugs in their final submission during Fall 2017 and Spring 2018 semesters.
-		Students who used Landslide in general but whose usage snapshots showed they did not run the test case in question are counted as non-Landslide-users here.
-		$\Delta P$ stands for the increased probability that a student submits a correct P2
-		(with respect to each bug)
-		given that they use Landslide, versus not using Landslide; i.e.,
-		$P(\mathsf{correct}|\mathsf{landslide})-
-		P(\mathsf{correct}|\mathsf{non\text{-}user})$.
+		%$\Delta P$ stands for the increased probability that a student submits a correct P2
+		%(with respect to each bug)
+		%given that they use Landslide, versus not using Landslide; i.e.,
+		%$P(\mathsf{correct}|\mathsf{landslide})-
+		%P(\mathsf{correct}|\mathsf{non\text{-}user})$.
 		Note that the totals in the bottom row double-count students,
-		which only makes sense if you believe the incidences of each bug within a given submission are independent.
+		which makes sense only if you believe the incidences of each bug in a given submission are independent.
 		}
 	\label{tab:eval-common-bugs}
 \end{table}
@@ -620,6 +658,7 @@ was determined by checking their grade files for any downgrade-related penalties
 (which were assessed by the TAs as a result of their manual inspection, rather than mine).
 
 \subsection{Survey responses}
+\label{sec:education-eval-survey}
 
 Analyzing only the raw technical data of how users interacted with Landslide can paint only part of the picture.
 For one, offering students better testing and debugging tools
@@ -900,14 +939,34 @@ can each benefit from the experience in different ways.
 
 \section{Discussion}
 
-% TODO intro text
+Human subjects research is inherently messy.
+Each of the previous section's approaches to evaluating Landslide's educational value
+was accompanied by some drawback which prevented it from being perfectly objective science,
+but many of them presented tentatively positive results nonetheless.
+Landslide helped many students find and fix many bugs (\sect{\ref{sec:education-eval-bugfinding}}),
+but making a direct comparison to stress testing, the prior state of the art, is not straightforward.
+Little, if any,
+%and not statistically significant,
+immediate improvement in students' project grades was measured
+(\sect{\ref{sec:education-eval-grades}}),
+but impact on grades alone is a very narrow measure of pedagogical value.
+Landslide's debugging power was also found to be statistically significant
+for the {\tt thr\_exit\_join} bug in particular, even after adjusting for multiplicity.
+Students responded overwhelmingly positively in the survey (\sect{\ref{sec:education-eval-survey}}),
+although it is easy to imagine students being equally happy with a ``debugging tool'' that just tells them all the answers.
+
+Nevertheless, I believe each of these partial results taken together
+paint an overall picture of success:
+students fixed their own bugs {\em and} were happy about it;
+students were able to ask for help rather than be deterred by inevitable technical difficulties;
+students provided intelligent feedback suggesting they truly understood the debugging process;
+% well not the student who said "traces should point to where the bug is" but eh can't win em all c.c
+et cetera.
+%
+The rest of this section will discuss the study's limitations and provide some perspective for the future.
 
 \subsection{Bias}
 
-% TODO: addressing bias
-% well, I did the best I could(?)
-% survey email: "please answer honestly rather than flatteringly" vs. studence trying to be polite
-% selection bias, students who liked landslide more more likely to answer the survey at all
 % TODO - u can verify the bug just by taking survey graph #1 and comparing to landslide snapshots (sep. by groups who answered survey)
 % anything else?
 
@@ -919,9 +978,9 @@ This was especially evident in the annotation-required P3 study from \cite{lands
 in which only 5 groups volunteered (15\% of the 34 total who submitted P3 that semester),
 among which 2 had enough after just the annotation phase and did not continue to do any in-depth testing.
 In contrast, since switching to the automatically-annotatable P2,
-the participation rate rose to NN\% % TODO
-(XX out of YY P2-submitting groups across ZZ semesters (TODO actually count them but obviously it will be higher)). % TODO
-This alone could be seen as a major step in mitigating said selection bias.
+the participation rate rose to 58\% (Table~\ref{tab:photo-of-ze-studence})
+among all P2-submitting groups.
+Reaching over half the class could alone be seen as a major step in mitigating said selection bias.
 
 Beyond participation, I anticipated several forms of bias affecting the survey responses.
 First of all, I suspected that students might feel compelled to be overly polite in their answers
@@ -940,15 +999,19 @@ is my attempt to dispel this possibility.
 % could studence who didn't find bugs also have had a good experience? (think of how...)
 
 % TODO: is this ok to report without IRB approval? ask dave
-I cannot think of any reason gender, racial, or other demographic-based bias might affect this study.
-In fact, according to my memory alone, the proportion of women among students
-attending the Landslide clinics (\sect{\ref{sec:education-pebbles-recruiting}})
-was considerably higher than the class's overall gender ratio,
-although I did not record any such statistics scientifically.
+I took no special measures to compensate for bias in gender, race, or being non-natively English-speaking
+during recruitment or the survey.
+Surveying students to measure any differences in these demographics between study participants and the overall class population
+would have required mandatory survey participation,
+and in turn, a more rigorous IRB approval process.
+According only to my memory of students who attended the Landslide clinics
+(\sect{\ref{sec:education-pebbles-recruiting}}),
+the racial diversity was roughly representative of the class at large,
+and the proportion of women was in fact somewhat higher than the overall gender ratio.
+Any more scientific analysis of such statistics was deemed beyond the study's scope for now.
 
 \subsection{Retrospect}
 
-Human subjects research is inherently messy.
 More than just trying to draw firm conclusions from
 the opinions of students who are just learning concurrency to begin with,
 student feedback in turn guided the constant development
