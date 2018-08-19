@@ -847,7 +847,7 @@ but the previously-published verification results should be considered outdated.
 		\footnotesize
 	\begin{tabular}{cc||r|r|r||r|r|r|r}
 			&	&\multicolumn{3}{c||}{\bf Quicksand mode}&\multicolumn{4}{c}{{\bf Maximal state space mode} ({\tt -M})} \\
-		\bf buggy test	& \bf params&\cpu{\bf cpu (s)}&\wtm{\bf wall (s)}&\ints{\bf int's}&\cpu{\bf cpu (s)}&\wtm{\bf wall (s)}&\ints{\bf int's}& \ETA{\bf SS size (est.)} \\
+		\bf buggy test	& \bf K,N &\cpu{\bf cpu (s)}&\wtm{\bf wall (s)}&\ints{\bf int's}&\cpu{\bf cpu (s)}&\wtm{\bf wall (s)}&\ints{\bf int's}& \ETA{\bf SS size (est.)} \\
 		\hline
 		\hline
 		{\tt htm1}
@@ -1180,7 +1180,7 @@ I report their estimated state space size and runtime measured after that timeou
 			& & \cpu{\bf cpu (s)} & \ints{\bf SS size}
 			  & \cpu{\bf cpu (s)} & \ints{\bf SS size}
 			  & \cpu{\bf cpu (s)} & \ints{\bf SS size} \\
-			\bf test & \bf params
+			\bf test & \bf K,N
 			  & \em (or \ETAdag{\bf \em est.}) & \em (or \ETAdag{\bf \em est.})
 			  & \em (or \ETAdag{\bf \em est.}) & \em (or \ETAdag{\bf \em est.})
 			  & \em (or \ETAdag{\bf \em est.}) & \em (or \ETAdag{\bf \em est.}) \\
@@ -1659,7 +1659,8 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 		\begin{tabular}{cc||r|r}
 			& & \multicolumn{2}{c}{\bf STM ({\tt -A -S})} \\
 			& & \cpu{\bf cpu (s)} & \ints{\bf SS size} \\
-			\bf test & \bf params & \em (or \ETAdag{\bf \em est.}) & \em (or \ETAdag{\bf \em est.}) \\
+			\bf test & \bf K,N  & \em (or \ETAdag{\bf \em est.})
+			                      & \em (or \ETAdag{\bf \em est.}) \\
 			\hline
 			\hline
 			{\tt lock}
@@ -1711,7 +1712,7 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 			\begin{tabular}{cc||r|r}
 			& & \multicolumn{2}{c}{\bf Non-transactional} \\
 			& & \cpu{\bf cpu (s)} & \ints{\bf SS size} \\
-			\bf test & \bf params & \em (or \ETAdag{\bf \em ETA}) & \em (or \ETAdag{\bf \em est.}) \\
+			\bf test & \bf K,N & \em (or \ETAdag{\bf \em ETA}) & \em (or \ETAdag{\bf \em est.}) \\
 			\hline
 			\hline
 			{\tt avl\_mutex}
