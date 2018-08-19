@@ -117,7 +117,7 @@ so technical support for PSU students was limited to email correspondence.
 As described in \sect{\ref{sec:landslide-setup}},
 all setup from the user's point of view is handled through the {\tt p2-setup.sh} script%
 \footnote{PSU's version is called {\tt psu-setup.sh};
-in this section, unless otherwise noted, {\tt p2-setup.sh} will refer to both.
+in this section {\tt p2-setup.sh} refers to both unless otherwise noted.
 }.
 It, its helper scripts (\sect{\ref{sec:landslide-glue}}),
 and the {\tt landslide} script itself contain several checks to prevent
@@ -147,19 +147,19 @@ These include:
 \begin{itemize}
 	\item Quicksand emits different combinations of {\tt within\_function}/{\tt without\_function} directives
 		for Landslide depending on the name of the test.
-		For example, for {\tt paradise\_lost} Landslide will not preempt in a function named {\tt critical\_section()},
+		For example, for {\tt paradise\_\allowbreak{}lost} Landslide will not preempt in a function named {\tt critical\_section()},
 		which the test case uses to protect an internal counter used to detect the bug;
 		and it will not preempt in any of the {\tt thr\_*()} thread library API functions
 		for tests intended to target just the concurrency primitives.
 		In future work this could be improved as annotations to be placed inside the test case code itself.
-	\item Landslide finds ad-hoc synchronization patterns which students often open-code,
-		rather than using the prescribed synchronization API,
-		such as {\tt while (!flag) yield();} or {\tt while (xchg(...)) continue;},
+	\item Landslide finds ad-hoc synchronization patterns,
+		such as {\tt while (!flag) yield()} or {\tt while (xchg(...)) continue},
+		which students often open-code rather than using the prescribed synchronization API,
 		and treats them as synchronization points as described in \sect{\ref{sec:landslide-blocking}}.
 	\item Landslide finds ``too suspicious'' spinwait-loops in mutex implementations
 		which are neither yield- nor {\tt xchg}-loops (as described above),
 		which would ordinarily be classified as infinite loop bugs,
-		and reports them with a suggestive message ({\tt undesirable\_loop\_html()} in {\tt landslide.c})
+		and reports them with a suggestive message ({\tt undesirable\_\allowbreak{}loop\_html()} in {\tt landslide.c})
 		referring the student to the appropriate lecture material
 		\cite{synchronization-2}.
 	\item The {\tt landslide} wrapper script logs the time and command-line options of invocation
@@ -179,7 +179,7 @@ from personal experience as a TA, are common in many student submissions;
 others are crafted to exercise generally concurrency-heavy code paths and uncover any number of unforeseen problems.
 Many use some of the features/annotations described in \sect{\ref{sec:landslide-testcases}}.
 
-\subsubsection{Test case list}
+%\subsubsection{Test case list}
 
 The following tests were released to CMU students:
 \begin{itemize}
@@ -703,6 +703,23 @@ serve to probe these more qualitative aspects of the Landslide experience.
 
 \subsubsection{Response data}
 
+% probably just better to state this in one line of prose
+%\begin{table}[h]
+%	\begin{center}
+%		\begin{tabular}{r|crcrc|r}
+%			& \multicolumn{5}{c|}{\bf Did survey?} & \\
+%			\bf Semester & & \bf yes & & \bf no & & \bf Total \\
+%			\hline
+%			CMU F'17	& &  7 & &  7 & & 14 \\
+%			U. Chicago F'17	& &  1 & &  3 & &  4 \\
+%			CMU S'18	& &  5 & &  5 & & 10 \\
+%			PSU S'18	& & 11 & & 27 & & 38 \\
+%		\end{tabular}
+%	\end{center}
+%	\caption{Survey response rate among students who used Landslide. (The survey was first introduced in F'17.)}
+%	\label{tab:photo-of-ze-surveys}
+%\end{table}
+
 The response distributions for each of the surveys' multiple choice questions
 are shown in Figure~\ref{fig:survey}.
 In total, 28 students (or pairs thereof) answered the survey:
@@ -988,7 +1005,7 @@ among which 2 had enough after just the annotation phase and did not continue to
 In contrast, since switching to the automatically-annotatable P2,
 the participation rate rose to 58\% (Table~\ref{tab:photo-of-ze-studence})
 among all P2-submitting groups.
-Reaching over half the class could alone be seen as a major step in mitigating said selection bias.
+Reaching over half the class could already be seen as a major step in mitigating said selection bias.
 
 Beyond participation, I anticipated several forms of bias affecting the survey responses.
 First of all, I suspected that students might feel compelled to be overly polite in their answers
@@ -1015,8 +1032,8 @@ and in turn, a more rigorous IRB approval process.
 According only to my memory of students who attended the Landslide clinics
 (\sect{\ref{sec:education-pebbles-recruiting}}),
 the racial diversity was roughly representative of the class at large,
-and the proportion of women was in fact somewhat higher than the overall gender ratio.
-Any more scientific analysis of such statistics was deemed beyond the study's scope for now.
+and the proportion of women I perceived was in fact somewhat higher than the overall gender ratio.
+More scientific analysis of such statistics was deemed beyond the study's scope for now.
 
 \subsection{Retrospect}
 
