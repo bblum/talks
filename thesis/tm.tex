@@ -129,7 +129,7 @@ For discussion of relaxed memory models refer to Section~\ref{sec:tm-warpzone-re
 
 Consider again the program in Figure~\ref{fig:htm-example-reproduced}.
 Note that the C-style {\tt x++} operations, when compiled into assembly, %\cite{printy},
-results in multiple memory accesses which can be interleaved with other threads.
+become multiple memory accesses which can be interleaved with other threads.
 \[
 \begin{tabular}{ll}
 	$2a$ & \texttt{temp <- x;} \\
@@ -864,16 +864,21 @@ but the previously-published verification results should be considered outdated.
 		\cline{2-9}
 			& 4,1	&\cpu{ 45.13}&\wtm{8.56}&\ints{5}& \cpu{*7.77}& \wtm{*5.30}& \ints{5	}& \ETA{460} \\
 			& 4,2	&\cpu{64.99}&\wtm{11.33}&\ints{9}& \cpu{*8.32}& \wtm{*5.59}& \ints{9	}& \ETA{132710} \\
+			\multicolumn{9}{c}{everything above this line needs rerun for dpor-preferred tid + thr\_bottom1} \\
 		\hline
 		{\tt swapbug}
-			& 2,1	&\cpu{104.37}&\wtm{17.00}&\ints{*6}& \cpu{*43.76}& \wtm{*12.51}& \ints{33}	& \ETA{73} \\
-			% TODO: for maximal:
-			% 33 interleavings tested; 1 preemptions; job time 4s; pldi time 12326606; new-fixed pldi cputime 43294461
-			% 73 brs eta
+			& 2,1	&\cpu{*26.25}&\wtm{*6.42}&\ints{*6}& \cpu{47.80}& \wtm{13.43}& \ints{33}	& \ETA{73} \\
+			% using fewer interleavings one for quicksand out of 2 close in cputime bugs
+			% 6 interleavings tested; 1 preemptions; job time 4s; pldi time 6415943; new-fixed pldi cputime 26251146
+			% 13 interleavings tested; 1 preemptions; job time 3s; pldi time 4654607; new-fixed pldi cputime 16966236
+			% 33 interleavings tested; 1 preemptions; job time 4s; pldi time 13430843; new-fixed pldi cputime 47803093
 		(deadlock)
-			& 2,2	&\cpu{ 66.47}&\wtm{*12.42}&\ints{*38}& \cpu{*45.22}& \wtm{15.30}& \ints{85}	& \ETA{860} \\
-			& 2,3	&\cpu{ 99.41}&\wtm{*15.92}&\ints{*48}& \cpu{*53.57}& \wtm{21.34}& \ints{217}	& \ETA{9120} \\
-			\multicolumn{9}{c}{everything above this line needs rerun for dpor-preferred tid + thr\_bottom1} \\
+			& 2,2	&\cpu{*18.08}&\wtm{*4.98}&\ints{*10}& \cpu{51.37}& \wtm{16.78}& \ints{85}	& \ETA{860} \\
+			% 10 interleavings tested; 1 preemptions; job time 3s; pldi time 4980992; new-fixed pldi cputime 18078134
+			% 85 interleavings tested; 1 preemptions; job time 7s; pldi time 16777253; new-fixed pldi cputime 51372309
+			& 2,3	&\cpu{*20.93}&\wtm{*5.57}&\ints{*18}& \cpu{57.87}& \wtm{23.99}& \ints{217}	& \ETA{9120} \\
+			% 18 interleavings tested; 1 preemptions; job time 4s; pldi time 5573337; new-fixed pldi cputime 20932814
+			% 217 interleavings tested; 1 preemptions; job time 15s; pldi time 23987230; new-fixed pldi cputime 57868535
 			& 2,4	&\cpu{*38.92}&\wtm{*8.61}&\ints{*34}& \cpu{82.95}& \wtm{48.31}& \ints{537}	& \ETA{91239} \\
 			% 34 interleavings tested; 1 preemptions; job time 6s; pldi time 8614371; new-fixed pldi cputime 38917975
 			% 537 interleavings tested; 1 preemptions; job time 38s; pldi time 48314592; new-fixed pldi cputime 82952352
@@ -1227,7 +1232,8 @@ I report their estimated state space size and runtime measured after that timeou
 			& 2,1 & \cpu{739.60} 	& \ints{20459} 	& \cpu{332.32}	& \ints{9675}	& \cpu{122.40}	& \ints{2774} \\
 			& 2,2 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	&\ETAdag{36393y}&\ETAdag{35094477}\\
 			% progress: 302022/35094477 brs (0.860597%), ETA 36392y 304d 6h 53m 45s (elapsed 9h 58m 49s)
-			& 3,1 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
+			& 3,1 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	&\ETAdag{97y 100d}&\ETAdag{1698185036} \\
+			% [JOB 18] progress: 357586/1698185036 brs (0.021057%), ETA 97y 99d 8h 44m 33s (elapsed 9h 59m 41s)
 			\hline
 			{\tt map\_basic}
 			& 2,1 & \cpu{1950.48}	& \ints{30719}	& \cpu{867.68}	& \ints{13237}	& \cpu{367.91}	& \ints{5446} \\
@@ -1236,8 +1242,12 @@ I report their estimated state space size and runtime measured after that timeou
 			\hline
 			{\tt map\_basicer}
 			& 2,1 & \cpu{28.40} 	& \ints{150} 	& \cpu{26.55}	& \ints{94}	& \cpu{14.88}	& \ints{9} \\
-			& 2,2 & \ETAdag{qqq}	& \ETAdag{qqq}	&\cpu{16455.24}	& \ints{283756}	& \cpu{1285.06}	& \ints{21684} \\
-			& 3,1 & \ETAdag{qqq}	& \ETAdag{qqq}	&\cpu{21153.64}	& \ints{366030}	& \cpu{705.04}	& \ints{12707} \\
+			& 2,2 &\ETAdag{11h 17m}	&\ETAdag{727759}&\cpu{16455.24}	& \ints{283756}	& \cpu{1285.06}	& \ints{21684} \\
+			% [JOB 7] progress: 634229/727759 brs (87.148190%), ETA 1h 16m 33s (elapsed 9h 36m 22s)
+			% total CPU time consumed: 10h 11s (36011250596 usecs) (core saturation: 12%)
+			& 3,1 &\ETAdag{26h 15m}	&\ETAdag{1451708}&\cpu{21153.64}& \ints{366030}	& \cpu{705.04}	& \ints{12707} \\
+			% [JOB 5] progress: 655856/1451708 brs (45.178208%), ETA 16h 14m 59s (elapsed 9h 59m 50s)
+			% total CPU time consumed: 10h 10s (36010204482 usecs) (core saturation: 12%)
 
 			%%%% nb. below is a fake version of the results, basically measured with abort set reduction,
 			%%%% after implementing abort set coalescing/merging, but not with either "dpor preferred tid"
