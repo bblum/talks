@@ -580,8 +580,8 @@ for its better sensitivity both to repeated deviations and to tail differences \
 I deem the difference in grade distributions significant when $p < 0.05$%
 % FIXME: is this legit?
 % should you be using the combined/grouped AD test instead?
-\footnote{I choose not to correct for multiplicity among these 4 comparsons (see next section)
-because each one is testing a different hypothesis.
+\footnote{I choose not to correct for multiplicity among these 4 comparsons like I do in the next section
+because each tests a different hypothesis.
 },
 although as in all $p$-value calculations,
 this rejects only the null hypothesis,
@@ -592,6 +592,8 @@ However, the distribution difference being smaller in P3 than in P2
 % TODO: is there a good way to treat this more formally?
 further suggests, albeit informally,
 that the larger impact in P2 is not attributable {\em only} to selection bias.
+% idk about this
+%Though ``P3 grading criteria results in a tighter bell curve than P2'' is another potential hypothesis,
 % let me have this exclamation mark. please
 That aside, ``Landslide helps students submit better P2s'' is the next most likely hypothesis I can think of!
 
@@ -716,7 +718,6 @@ the students have no Valgrind-like heap debugging tool which would report a bug 
 This means that a subsequent {\tt thr\_create()} invocation would need to race to recycle the memory for a new thread stack
 and conflict with the old exiting thread
 before any problem could be detected.
-% TODO: mark which of the tej bugs were deterministic vs race
 The Landslide-friendly test {\tt thr\_exit\_join} is most likely to expose this bug.
 %, and
 %the official rubric penalties for it are
@@ -727,8 +728,6 @@ The Landslide-friendly test {\tt thr\_exit\_join} is most likely to expose this 
 Whether each student's submitted P2 solved or suffered from this bug
 was determined by me personally inspecting their code.
 %
-This bug is especially remarkable in that not a single student who did not use Landslide these semesters
-submitted a correct implementation.
 
 \item
 {\bf Mutex.}
@@ -812,8 +811,46 @@ are calculated in R \cite{r-lang} using Fisher's exact test \cite{fishers-exact-
 treating each row as an independent 2x2 contingency table.
 I divide 0.05, the standard significance cutoff,
 by the number of bugs to conservatively account for multiplicity \cite{xkcd-jellybeans}
-(not that it matters).
-% TODO write more
+(not that it matters with these $p$ values).
+
+The latter three bugs' occurences are thoroughly uncorrelated with Landslide use,
+the {\tt thr\_exit()} bug standing alone with extremely high significance:
+not a single student who did not use Landslide these semesters
+submitted a correct implementation.
+This difference is easily explainable:
+the class-provided unit tests already do a good enough job catching the other three bugs
+that students are able to find and fix them before submission regardless of what testing tool they used.
+(The high correct-to-buggy ratio corroborates this.)
+Nevertheless, that does not mean Landslide is pointless for these bugs;
+it may well have helped the students reproduce them more reliably and/or diagnose them faster.
+This is merely a null result for submission quality, not necessarily a negative one,
+and the next section will attempt to evaluate such quality-of-life improvements instead.
+
+On the other hand, because the {\tt thr\_exit()} bug typically manifests as a use-after-free,
+the official tests must stress the thread library until the memory in question gets re-allocated
+in just the right interleaving pattern to cause corruption that leads to a visible crash.
+Landslide, on the other hand, detects this error immediately upon access (\sect{\ref{sec:landslide-valgrind-mode}}),
+with no need for such complex corruption conditions.
+Among the 11 Landslide users who submitted correct {\tt thr\_exit()}s in this regard,
+it is difficult to say whether the heap checking alone, together with unit or stress tests,
+would have been sufficient,
+or whether heap checking and model checking were both necessary in concert to help them.
+To address this doubt,
+I simulated who among the buggy {\tt thr\_exit()} implementations
+would have found and fixed the bug
+given a heap-checking unit test
+by checking whether Landslide finds their bug ``deterministically''
+% TODO - more specific section reference - quicksand det/nondet drpps eval
+(i.e., on the first interleaving, similarly to \sect{\ref{sec:quicksand-eval}}).
+So doing,
+the 11-10-0-16 distribution becomes
+NN-MM-PP-QQ, % TODO
+with a new $p$ value of
+0.ppp, % TODO
+%% which one, will it be??? :-O
+% still a significant difference.
+% still positively correlated, but no longer significant.
+whose significance is a MYSTERYYYY.
 
 \subsection{Survey responses}
 \label{sec:education-eval-survey}
