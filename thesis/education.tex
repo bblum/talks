@@ -478,13 +478,8 @@ for the thread library study.
 \label{sec:education-eval-grades}
 
 I evaluated Landslide's impact on student submission quality in two ways.
-First, I analyzed the overall P2 grades of CMU 15-410 students between Landslide users and non-users,
-to see if Landslide helped them submit overall better implementations,
-as well as their later overall P3 (kernel project) grades,
-to see if Landslide helped them internalize any concurrency debugging skills
-that would help write better kernels even without Landslide's aid.
-% This experiment produced inconclusive or negative results. % say this?
-%
+First, I analyzed CMU 15-410 students' overall project grades between Landslide users and non-users
+to see if Landslide helped them submit overall better implementations.
 Second, I studied
 several % how many? 3
 individual concurrency bugs that I thought Landslide was likely to detect,
@@ -494,14 +489,155 @@ to see if using Landslide correlated with submitting projects absent those bugs.
 
 \subsubsection{Impact on grades}
 
-% TODO
+Figure~\ref{fig:photo-of-ze-studence} shows the distribution of project grades in CMU 15-410
+between Fall 2013 and Spring 2018,
+grouped by whether or not students used Landslide during P2.
+%Landslide users are, of course, the experimental group.
+The control group is further distinguished by whether Landslide was offered and the student delined,
+or whether the study had not yet begun that semester.
+Intuition suggests students in the former group would be more likely
+to be struggling too much to have free time to volunteer in the first place,
+so any comparison between them and Landslide users is vulnerable to selection bias.
+The latter control group, in which students did not have a choice, mitigates such bias,
+although itself may be vulnerable to other confounding factors such as grading criteria varying across semesters.
+%
+In addition to P2, I also show the subsequent P3 (kernel project) grades,
+likewise broken down by who used Landslide previously during P2%
+\footnote{The P3 distributions are slightly smaller than those from P2,
+as some students dropped the class in between.
+A few new project groups also tend to appear during P3 as partnerships break up or re-form,
+but as these cannot be meaningfully classified as Landslide users or non-users,
+I omit them here.
+}.
+Should Landslide use be correlated with higher grades on the later, more difficult concurrency project,
+one explanation could be that Landslide helped students
+internalize new concurrency programming and/or debugging skills
+that would help them write better kernels even without Landslide's aid.
+%
 
-Figure~\ref{Fig:photo-of-ze-studence} shows some resulce
+% TODO: contingency table for drop rate? but.... need to get studence names to make sure they didn't just solbo, or w/e
+
+
+% colors for these graphs in case i need them again later
+% #720000
+% #FF8080
+% #804700
+% #FFC680
+% #807700
+% #FFF780
+% #004111
+% #ABFFC0
+% #002680
+% #ABC3FF
+% #3B0144
+% #F4ABFF
+\begin{figure}[p]
+	\begin{center}
+	\begin{tabular}{c}
+		\includegraphics[width=0.96\textwidth]{photo-of-ze-studence.pdf}
+		\\
+		(a) Visualized as a box plot.
+		\\
+		\\
+		\includegraphics[width=0.96\textwidth]{photo-of-ze-studence-cdf.pdf}
+		\\
+		(b) Visualized as a CDF.
+	\end{tabular}
+	\end{center}
+	\caption{Distribution of project grades among Landslide users and non-users.
+	Study participants (S'15 to S'18) are the experimental group;
+	non-participants (S'15 to S'18)
+	and students from semesters predating the study (F'13-F14) are the control groups.
+	Compare Landslide users to non-users for within-semester differences,
+	or users to pre-study students to mitigate selection bias.}
+	\label{fig:photo-of-ze-studence}
+\end{figure}
+
+%We see in Figure~\ref{fig:photo-of-ze-studence} that, indeed,
+{\bf Results.}
+Overall,
+Landslide users did indeed receive
+slightly better grades overall on their P2 submissions than non-users from the same semesters,
+although comparing to the second control group lessens that difference somewhat.
+The difference is also less pronounced in both comparisons among P3 grades
+(unsurprisingly, as learning lasting lessons about concurrency should be harder than fixing bugs case-by-case),
+although the experimental group still maintains a tiny lead.
+
+{\bf Statistical significance.}
+Table~\ref{tab:table-of-ze-studence} presents more detailed statistics from these six distributions.
+To assess statistical significance,
+% discrete == I used "version 2" of the AD metric that R outputs.
+I use the $k$-sample discrete Anderson-Darling test \cite{anderson-darling}
+provided by the R statistical programming environment \cite{r-lang,r-ksamples},
+comparing each control group to its respective Landslide users group.
+Anderson-Darling uses a weighted sum-of-squares distance metric to compare two CDFs,
+testing if their samples are likely to arise from the same underlying, though unspecified, distribution%
+\footnote{
+I choose Anderson-Darling over the simpler Kolmogorov-Smirnov,
+which computes only the maximum instantaneous distance between CDFs,
+for its better sensitivity both to repeated deviations and to tail differences \cite{beware-kolmogorov-smirnov}.
+}.
+I deem the difference in grade distributions significant when $p < 0.05$%
+% FIXME: is this legit?
+% should you be using the combined/grouped AD test instead?
+\footnote{I choose not to correct for multiplicity among these 4 comparsons (see next section)
+because each one is testing a different hypothesis.
+},
+although as in all $p$-value calculations,
+this rejects only the null hypothesis,
+not alternative hypotheses (such as ``more skilled students were more likely to sign up to begin with'').
+
+Ultimately, only the same-semester comparisons were significant
+However, the distribution difference being smaller in P3 than in P2
+% TODO: is there a good way to treat this more formally?
+further suggests, albeit informally,
+that the larger impact in P2 is not attributable {\em only} to selection bias.
+% let me have this exclamation mark. please
+That aside, ``Landslide helps students submit better P2s'' is the next most likely hypothesis I can think of!
+
+% P2 vs opt out
+% ad.test(c(42,50,51,55,55,55,56,57,57,58,62,63,65,65,65,66,66,67,67,67,67,68,68,68,69,69,69,70,70,70,70,71,71,71,71,71,72,73,73,73,73,73,74,74,74,74,74,75,75,75,75,75,76,76,76,76,77,77,77,77,78,78,78,78,79,79,79,79,79,79,80,80,80,80,81,81,81,82,82,82,82,83,84,84,84,84,85,85,86,86,86,87,87,87,88,89,90,91,92,93,93,93,95),c(38,42,47,50,52,53,55,55,56,56,57,57,58,58,58,59,60,60,61,62,62,63,65,66,67,68,68,68,69,70,70,70,71,71,71,71,72,72,72,73,73,73,74,74,76,76,76,77,77,78,78,78,78,78,79,79,79,80,82,82,83,83,83,84,84,84,85,86,86,88,90,95,96,96))
+%               AD  T.AD  asympt. P-value
+% version 1: 2.611 2.139          0.04263
+% version 2: 2.760 2.334          0.03576
+
+% P2 vs pre study
+% ad.test(c(42,50,51,55,55,55,56,57,57,58,62,63,65,65,65,66,66,67,67,67,67,68,68,68,69,69,69,70,70,70,70,71,71,71,71,71,72,73,73,73,73,73,74,74,74,74,74,75,75,75,75,75,76,76,76,76,77,77,77,77,78,78,78,78,79,79,79,79,79,79,80,80,80,80,81,81,81,82,82,82,82,83,84,84,84,84,85,85,86,86,86,87,87,87,88,89,90,91,92,93,93,93,95),c(43,51,56,58,59,59,60,60,60,60,61,61,61,61,61,62,63,65,65,67,68,69,69,69,69,69,70,70,71,71,72,72,72,73,73,73,73,73,74,74,74,74,75,75,75,75,76,76,77,77,77,77,78,78,78,78,79,79,79,80,80,80,80,80,80,81,81,82,82,82,82,83,83,83,83,85,85,85,86,86,86,88,88,90,92,93))
+%                AD    T.AD  asympt. P-value
+% version 1: 0.6248 -0.4977           0.6275
+% version 2: 0.5790 -0.5581           0.6706
+
+% P3 vs opt out
+% ad.test(c(65,68,72,72,73,75,75,75,75,75,76,76,76,76,77,77,77,78,78,78,78,78,78,79,79,80,80,80,80,80,80,80,81,82,82,82,82,82,82,83,83,83,83,83,83,84,84,84,84,85,85,85,85,85,85,85,85,85,85,86,86,86,86,86,86,86,86,86,87,87,87,88,88,88,88,88,89,89,89,89,90,90,90,90,90,91,91,91,91,92,92,93,93,93,94,95,95,95),c(45,58,66,70,72,72,72,72,74,74,74,75,75,75,77,77,77,78,78,78,79,79,79,79,79,79,80,80,81,81,81,81,81,82,82,83,83,83,83,83,84,84,85,85,86,86,86,86,86,86,87,87,89,89,89,89,90,91,91,91,93,93,93))
+%               AD  T.AD  asympt. P-value
+% version 1: 2.645 2.186          0.04085
+% version 2: 2.800 2.398          0.03376
+
+% P3 vs pre-study
+% ad.test(c(65,68,72,72,73,75,75,75,75,75,76,76,76,76,77,77,77,78,78,78,78,78,78,79,79,80,80,80,80,80,80,80,81,82,82,82,82,82,82,83,83,83,83,83,83,84,84,84,84,85,85,85,85,85,85,85,85,85,85,86,86,86,86,86,86,86,86,86,87,87,87,88,88,88,88,88,89,89,89,89,90,90,90,90,90,91,91,91,91,92,92,93,93,93,94,95,95,95),c(60,62,63,64,65,68,69,72,72,74,75,75,75,75,76,76,77,77,77,77,78,78,78,78,79,80,80,80,81,81,81,81,81,81,81,81,81,82,82,82,82,82,83,83,83,84,84,84,84,84,84,84,85,86,86,87,87,88,88,88,88,88,88,88,89,89,89,89,89,90,90,90,91,92,92,92,93,94,95))
+%               AD   T.AD  asympt. P-value
+% version 1: 1.552 0.7322           0.1633
+% version 2: 1.640 0.8473           0.1454
 
 \begin{figure}[t]
-	\includegraphics[width=\textwidth]{photo-of-ze-studence.pdf}
-	\caption{sadfasdfa}
-	\label{fig:photo-of-ze-studence}
+	\begin{center}
+		\small
+	\begin{tabular}{cr|r||r|r|r|r||cc}
+					&	&	&	&	& \multicolumn{2}{c}{Significance}
+		\multicolumn{2}{c|}{Population}
+					& $N$	& min	& mean	& max	& stddev & $p$ vs users	& cutoff\\
+		\hline
+			& users		& 103	& 42	& 74.8	& 95	& 10.3	& --	& --	\\
+		P2	& non-users	& 74	& 38	& 70.9	& 96	& 12.5	& 0.036	& 0.05	\\
+			& pre-study	& 86	& 43	& 73.7	& 93	& 9.7	& 0.671	& 0.05	\\
+			\hline
+			& users		& 98	& 65	& 83.6	& 95	& 6.2	& --	& --	\\
+		P3	& non-users	& 63	& 45	& 80.7	& 93	& 8.2	& 0.034	& 0.05	\\
+			& pre-study	& 79	& 60	& 81.6	& 95	& 7.6	& 0.145	& 0.05	\\
+	\end{tabular}
+	\end{center}
+	\caption{Detailed statistics from student grade distributions.}
+	\label{tab:table-of-ze-studence}
 \end{figure}
 
 \subsubsection{Common bugs}
@@ -516,11 +652,6 @@ I chose only bugs which had substantial penalties in the grading rubric
 (guided, as well, by my own intuition as a former TA).
 I also counted students who used Landslide in general but whose usage snapshots showed they did not run the test case in question as non-users.
 Table~\ref{tab:eval-common-bugs} presents the results.
-% two-tailed btw, the better (more conservative) way,
-% tbh one tailed might even make sense here, but it doesn't change anything wrt the cutoffs anyway, so
-The $p$ values are calculated in R \cite{r-lang} using Fisher's exact test \cite{fishers-exact-test},
-treating each row as an independent 2x2 contingency table,
-and dividing the significance cutoff by the number of bugs to conservatively account for multiplicity \cite{xkcd-jellybeans}.
 
 % TODO check figure placement
 \begin{table}[t]
@@ -568,6 +699,10 @@ and dividing the significance cutoff by the number of bugs to conservatively acc
 	\label{tab:eval-common-bugs}
 \end{table}
 
+Each of the four bugs studied is described in detail as follows.
+
+\begin{enumerate}
+\item
 {\bf Thread exit/join.}
 %During {\tt thr\_exit()}, a thread must arrange for its own stack memory allocation to be freed.
 After a thread finishes exiting, the memory allocated for its stack must be reclaimed for other uses.
@@ -595,7 +730,7 @@ was determined by me personally inspecting their code.
 This bug is especially remarkable in that not a single student who did not use Landslide these semesters
 submitted a correct implementation.
 
-
+\item
 {\bf Mutex.}
 The Landslide-friendly {\tt mutex\_test} checks for the possibility of two contending threads
 accessing a mutex-protected critical section simultaneously.
@@ -619,6 +754,7 @@ then they updated % oops
 their code, introducing the bug, without testing it again thereafter.
 % TODO: some reference to future work about focused testing on small code diffs? talked with some industry ppl about this sometimes
 
+\item
 {\bf Paraguay.}
 Named after Ivan Jager, the Paraguayan 15-410 TA from 2004-2006 who originally discovered it,
 this refers to a condition-variable bug in which a thread which sequentially sleeps on two different condition variables
@@ -643,6 +779,7 @@ in helping students diagnose a bug that a ``stress'' test could already find.
 Whether each student's submitted P2 solved or suffered from this bug
 was determined by me personally inspecting their code.
 
+\item
 {\bf R/W-lock downgrade.}
 In addition to the standard R/W-lock interface,
 P2 requires students to implement {\tt rwlock\_downgrade()}:
@@ -664,6 +801,19 @@ Rather than one specific bug, this refers to any of several failures that can ar
 Whether each student's submitted P2 solved or suffered from these bugs
 was determined by checking their grade files for any downgrade-related penalties
 (which were assessed by the TAs as a result of their manual inspection, rather than mine).
+\end{enumerate}
+
+{\bf Statistical significance.}
+% two-tailed btw, the better (more conservative) way,
+% tbh one tailed might even make sense here, but it doesn't change anything wrt the cutoffs anyway, so
+The $p$ values
+in Table~\ref{tab:eval-common-bugs}
+are calculated in R \cite{r-lang} using Fisher's exact test \cite{fishers-exact-test},
+treating each row as an independent 2x2 contingency table.
+I divide 0.05, the standard significance cutoff,
+by the number of bugs to conservatively account for multiplicity \cite{xkcd-jellybeans}
+(not that it matters).
+% TODO write more
 
 \subsection{Survey responses}
 \label{sec:education-eval-survey}
