@@ -565,7 +565,7 @@ although the experimental group still maintains a tiny lead.
 
 {\bf Statistical significance.}
 Table~\ref{tab:table-of-ze-studence} presents more detailed statistics from these six distributions.
-To assess statistical significance,
+To assess whether the differences are significant,
 % discrete == I used "version 2" of the AD metric that R outputs.
 I use the $k$-sample discrete Anderson-Darling test \cite{anderson-darling}
 provided by the R statistical programming environment \cite{r-lang,r-ksamples},
@@ -586,8 +586,8 @@ because each one is testing a different hypothesis.
 although as in all $p$-value calculations,
 this rejects only the null hypothesis,
 not alternative hypotheses (such as ``more skilled students were more likely to sign up to begin with'').
-
-Ultimately, only the same-semester comparisons were significant
+%
+Ultimately, only the same-semester comparisons were significant.
 However, the distribution difference being smaller in P3 than in P2
 % TODO: is there a good way to treat this more formally?
 further suggests, albeit informally,
@@ -619,6 +619,7 @@ That aside, ``Landslide helps students submit better P2s'' is the next most like
 % version 1: 1.552 0.7322           0.1633
 % version 2: 1.640 0.8473           0.1454
 
+% TODO: should i report the T.AD test statistic? i don't even know what it means lol but it's what the p value like, applies to..
 \begin{figure}[t]
 	\begin{center}
 		\small
@@ -1119,11 +1120,11 @@ was accompanied by some drawback which prevented it from being perfectly objecti
 but many of them presented tentatively positive results nonetheless.
 Landslide helped many students find and fix many bugs (\sect{\ref{sec:education-eval-bugfinding}}),
 but making a direct comparison to stress testing, the prior state of the art, is not straightforward.
-Little, if any,
 %and not statistically significant,
-immediate improvement in students' project grades was measured
+Modest immediate improvement in students' project grades was observed,
 (\sect{\ref{sec:education-eval-grades}}),
-but impact on grades alone is a very narrow measure of pedagogical value.
+although statistical significance was lost when attempting to account for selection bias;
+and impact on grades alone is a very narrow measure of pedagogical value anyway.
 Landslide's debugging power was also found to be statistically significant
 for the {\tt thr\_exit\_join} bug in particular, even after adjusting for multiplicity.
 Students responded overwhelmingly positively in the survey (\sect{\ref{sec:education-eval-survey}}),
