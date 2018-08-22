@@ -20,19 +20,25 @@ And while my MS thesis~\cite{landslide} showed that students
 could annotate P3 Pebbles kernels and thence use Landslide to debug them,
 the annotations alone required 2 hours of effort on average per user,
 meaning the only students who could benefit were the ones already succeeding enough to have such free time.
-% TODO: sect ref
 Since then, I have extended Landslide with a fully-automatic instrumentation process
-for Pebbles thread libraries (P2s) and Pintos kernels
+for Pebbles thread libraries (P2s) (\sect{\ref{sec:education-pebbles-instrumentation}})
+and Pintos kernels (\sect{\ref{sec:education-pintos-instrumentation}})
 to improve its accessibility.
 
 I have run several user studies in the Operating Systems classes
 at Carnegie Mellon University (CMU), University of Chicago (U. Chicago), and Penn State University (PSU),
 wherein students get to use Landslide to find and diagnose their own bugs during the semester.
-% TODO: put section refs
-At CMU, I recorded logs and code snapshots as students used Landslide during P2.
-At CMU and PSU, I surveyed students on their experience after submitting their Landslide-debugged P2s.
+At CMU, I analyzed logs and code snapshots taken as students used Landslide during P2
+(\sect{\ref{sec:education-eval-bugfinding}}),
+as well as the grades ultimately assigned after students who either did or didn't use Landslide submitted their projects
+(\sect{\ref{sec:education-eval-grades}}).
+At CMU and PSU, I surveyed students on their experience after submitting their Landslide-debugged P2s
+(\sect{\ref{sec:education-eval-survey}}).
 At U. Chicago, I collaborated with a TA to check submitted Pintos kernels,
-then returned any resulting bug reports to students and likewise surveyed them on the quality of the diagnostic output.
+then returned any resulting bug reports to students
+(\sect{\ref{sec:education-eval-bugfinding}})
+and likewise surveyed them on the quality of the diagnostic output
+(\sect{\ref{sec:education-eval-survey}}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -513,10 +519,6 @@ Should Landslide use be correlated with higher grades on the later, more difficu
 one explanation could be that Landslide helped students
 internalize new concurrency programming and/or debugging skills
 that would help them write better kernels even without Landslide's aid.
-%
-
-% TODO: contingency table for drop rate? but.... need to get studence names to make sure they didn't just solbo, or w/e
-
 
 % colors for these graphs in case i need them again later
 % #720000
@@ -541,7 +543,7 @@ that would help them write better kernels even without Landslide's aid.
 		\\
 		\includegraphics[width=0.96\textwidth]{photo-of-ze-studence-cdf.pdf}
 		\\
-		(b) Visualized as a CDF.
+		(b) Visualized as an EDF.
 	\end{tabular}
 	\end{center}
 	\caption{Distribution of project grades among Landslide users and non-users.
@@ -570,11 +572,11 @@ To assess whether the differences are significant,
 I use the $k$-sample discrete Anderson-Darling test \cite{anderson-darling}
 provided by the R statistical programming environment \cite{r-lang,r-ksamples},
 comparing each control group to its respective Landslide users group.
-Anderson-Darling uses a weighted sum-of-squares distance metric to compare two CDFs,
+Anderson-Darling uses a weighted sum-of-squares distance metric to compare two empirical distribution functions (EDFs),
 testing if their samples are likely to arise from the same underlying, though unspecified, distribution%
 \footnote{
 I choose Anderson-Darling over the simpler Kolmogorov-Smirnov,
-which computes only the maximum instantaneous distance between CDFs,
+which computes only the maximum instantaneous distance between EDFs,
 for its better sensitivity both to repeated deviations and to tail differences \cite{beware-kolmogorov-smirnov}.
 }.
 I deem the difference in grade distributions significant when $p < 0.05$%
@@ -591,11 +593,10 @@ Ultimately, only the same-semester comparisons were significant.
 However, the distribution difference being smaller in P3 than in P2
 % TODO: is there a good way to treat this more formally?
 further suggests, albeit informally,
-that the larger impact in P2 is not attributable {\em only} to selection bias.
-% idk about this
-%Though ``P3 grading criteria results in a tighter bell curve than P2'' is another potential hypothesis,
-% let me have this exclamation mark. please
-That aside, ``Landslide helps students submit better P2s'' is the next most likely hypothesis I can think of!
+that the larger impact in P2 is not attributable {\em only} to selection bias,
+or else a similar difference should have been observed in the P3 distributions.
+Another possible explanation could simply be that the P3 grading critera result in less grade variance overall,
+but this pattern is at least consistent with the ``Landslide helps students submit better P2s'' hypothesis.
 
 % P2 vs opt out
 % ad.test(c(42,50,51,55,55,55,56,57,57,58,62,63,65,65,65,66,66,67,67,67,67,68,68,68,69,69,69,70,70,70,70,71,71,71,71,71,72,73,73,73,73,73,74,74,74,74,74,75,75,75,75,75,76,76,76,76,77,77,77,77,78,78,78,78,79,79,79,79,79,79,80,80,80,80,81,81,81,82,82,82,82,83,84,84,84,84,85,85,86,86,86,87,87,87,88,89,90,91,92,93,93,93,95),c(38,42,47,50,52,53,55,55,56,56,57,57,58,58,58,59,60,60,61,62,62,63,65,66,67,68,68,68,69,70,70,70,71,71,71,71,72,72,72,73,73,73,74,74,76,76,76,77,77,78,78,78,78,78,79,79,79,80,82,82,83,83,83,84,84,84,85,86,86,88,90,95,96,96))
@@ -652,7 +653,11 @@ To avoid bias of picking too obscure and/or trivial bugs
 that Landslide alone might find but even course staff would not expect students to solve,
 I chose only bugs which had substantial penalties in the grading rubric
 (guided, as well, by my own intuition as a former TA).
-I also counted students who used Landslide in general but whose usage snapshots showed they did not run the test case in question as non-users.
+While checking for a given bug's presence by manual inspection,
+I blinded myself to whether each group had been a Landslide user or not.
+After unblinding, I then also classified students who used Landslide in general,
+but whose usage snapshots showed they did not run the test case in question,
+as non-users.
 Table~\ref{tab:eval-common-bugs} presents the results.
 
 % TODO check figure placement
@@ -835,22 +840,18 @@ Among the 11 Landslide users who submitted correct {\tt thr\_exit()}s in this re
 it is difficult to say whether the heap checking alone, together with unit or stress tests,
 would have been sufficient,
 or whether heap checking and model checking were both necessary in concert to help them.
-To address this doubt,
-I simulated who among the buggy {\tt thr\_exit()} implementations
-would have found and fixed the bug
-given a heap-checking unit test
-by checking whether Landslide finds their bug ``deterministically''
+To isolate the impact of model checking,
+I simulated the students having access to a stand-alone heap checker
+by checking only the first thread interleaving with Landslide
 % TODO - more specific section reference - quicksand det/nondet drpps eval
-(i.e., on the first interleaving, similarly to \sect{\ref{sec:quicksand-eval}}).
-So doing,
+(similarly to \sect{\ref{sec:quicksand-eval}})
+and assuming the students would find and fix any such ``deterministic'' use-after-free bugs before the deadline.
+Re-classifying these into the ``correct'' group,
 the 11-10-0-16 distribution becomes
-NN-MM-PP-QQ, % TODO
-with a new $p$ value of
-0.ppp, % TODO
-%% which one, will it be??? :-O
-% still a significant difference.
-% still positively correlated, but no longer significant.
-whose significance is a MYSTERYYYY.
+% fisher.test(rbind(c(11,10),c(3,13)))$p.value -->  0.0475343
+11-10-3-13,
+with a new $p$ value of 0.048:
+still positively correlated, but no longer significant under the multiplicity-corrected cutoff.
 
 \subsection{Survey responses}
 \label{sec:education-eval-survey}
@@ -1158,12 +1159,12 @@ but many of them presented tentatively positive results nonetheless.
 Landslide helped many students find and fix many bugs (\sect{\ref{sec:education-eval-bugfinding}}),
 but making a direct comparison to stress testing, the prior state of the art, is not straightforward.
 %and not statistically significant,
-Modest immediate improvement in students' project grades was observed,
+Immediate improvement in students' project grades was observed,
 (\sect{\ref{sec:education-eval-grades}}),
 although statistical significance was lost when attempting to account for selection bias;
 and impact on grades alone is a very narrow measure of pedagogical value anyway.
 Landslide's debugging power was also found to be statistically significant
-for the {\tt thr\_exit\_join} bug in particular, even after adjusting for multiplicity.
+for the {\tt thr\_exit\_join} bug in particular.
 Students responded overwhelmingly positively in the survey (\sect{\ref{sec:education-eval-survey}}),
 although it is easy to imagine students being equally happy with a ``debugging tool'' that just tells them all the answers.
 
@@ -1204,11 +1205,10 @@ Landslide better in the future!}
 It's also possible that survey respondents % respondence
 were more likely to be those who enjoyed Landslide the most,
 meaning I might not hear as much negative feedback as I should.
-Table~\ref{tab:TODO} % TODO -- make a table or graph showing correlation between bugfinding and who responded on the survey
-is my attempt to dispel this possibility.
-% TODO
+% trying to isolate this bias would be pretty fraught...
 % possible flaws in table: students who found bugs might have had either a good (bug!) or bad (false positive) experience
-% could studence who didn't find bugs also have had a good experience? (think of how...)
+% could studence who didn't find bugs also have had a good experience, like enjoying the verification guarantee
+% think of how to say it presentably...
 
 % TODO: is this ok to report without IRB approval? ask dave
 I took no special measures to compensate for bias in gender, race, or being non-natively English-speaking
