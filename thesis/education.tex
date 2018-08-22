@@ -169,7 +169,9 @@ These include:
 		referring the student to the appropriate lecture material
 		\cite{synchronization-2}.
 	\item The {\tt landslide} wrapper script logs the time and command-line options of invocation
-		and captures a snapshot of the student code and results of the test and saves them to AFS after each run.
+		and captures a snapshot of the student code and results of the test and saves them to AFS
+		(CMU's network file system)
+		after each run.
 		% HURDLE_VIOLATION -- no, this is for p3 (context switcher) features only
 \end{itemize}
 
@@ -314,8 +316,9 @@ then applies the patch {\tt annotate-\allowbreak{}pintos.patch}
 (plus several more hacks in the script itself)
 to insert the {\tt tell\_landslide()} annotations (\sect{\ref{sec:tell-landslide}})
 into the student's kernel code.
-The following tricks serve to make sure the annotations apply consistently
-to (almost) all variations of code that students commonly submit:
+The following tricks were developed after trial-and-error on student submissions from the same semester,
+and serve to make sure the annotations apply consistently
+to (almost) all variations of commonly-submitted code.
 
 \begin{itemize}
 	\item Finds the declaration of {\tt ready\_list}, the scheduler runqueue declared by the basecode,
@@ -351,6 +354,8 @@ to (almost) all variations of code that students commonly submit:
 	\end{itemize}
 	\item Detects if the student has renamed the {\tt elem} field of the TCB struct,
 		and if so renames its use in {\tt is\_runqueue()} (described above) correspondingly.
+	\item Detects if the student has renamed the {\tt cur} (currently running thread) variable
+		in the context switcher, and if so renames it back.
 \end{itemize}
 
 \subsection{Test cases}
@@ -375,6 +380,10 @@ The following tests are approved to be Landslide-friendly:
 	\item {\tt wait-simple}:
 		Unmodified from the basecode's version, for {\em userprog}.
 		Userspace process {\tt exec()}s a child process, which immediately exits, and {\tt wait()}s on it.
+	\item {\tt wait-twice}:
+		Unmodified from the basecode's version, for {\em userprog}.
+		Slightly more complicated version of {\tt wait-simple},
+		intended to expose failure-path bugs if the former finds no common-case ones.
 	\item {\tt priority-donate-multiple}:
 		Written by Kevin Zhao, TA at U. Chicago, for {\em threads}.
 		Tests for a priority donation race during {\tt lock\_release()}
@@ -383,9 +392,9 @@ The following tests are approved to be Landslide-friendly:
 \end{itemize}
 \vspace{1em}
 
-The (unpatched versions of) the first three tests are available at
+The (unpatched versions of) the first four tests are available at
 \url{https://github.com/Berkeley-CS162/group0/tree/master/pintos/src/tests}.
-The fourth test is available at
+The fifth test is available at
 \url{https://github.com/bblum/landslide/blob/master/pebsim/pintos/priority-donate-multiple.c}.
 
 \subsection{Survey}
@@ -444,7 +453,11 @@ PSU students' survey responses and submitted project code from Spring 2018,
 and U. Chicago students' survey responses from Fall 2017.
 Table~\ref{tab:photo-of-ze-studence} shows the student participation rate across semesters
 % TODO update for psu
-for the thread library study.
+for the thread library study%
+\footnote{
+Participation at CMU was determined by receiving any automatic usage snapshots;
+participation at PSU was determined, for lack of snapshots, by sign-up form submissions, which might over-count slightly.
+}.
 % and PSU
 
 \begin{table}[h]
@@ -479,6 +492,114 @@ for the thread library study.
 
 \subsection{Bug-finding}
 \label{sec:education-eval-bugfinding}
+
+Firstly, I sought to prove Landslide does as advertised:
+finds concurrency bugs of severity, subtlety, and difficulty
+consistent with the lessons an advanced operating systems class should hope to teach its students,
+and provides diagnostic output that helps the student to understand and solve them.
+% without necessarily spoiling the answer to the puzzle ... not scientifically evaluatable,
+% but at least the trace format is de0u-approved.
+
+At CMU, I configured Landslide to save a usage snapshot every time a student ran Landslide,
+including command-line options issued, the current version of their project code,
+a log of Landslide's output,
+and the preemption traces for any bugs found.
+These I analyzed by hand to determine how many distinct bugs were reported
+(as multiple preemption traces may refer to the same bug; inspecting their code if necessary),
+how many were deterministic
+(i.e., Landslide reported them on the very first interleaving tested, with no need for artificial preemptions)
+and how many were concurrency bugs,
+whether any were false positives,
+and whether the student was able to fix them thereafter
+(determined if a subsequent snapshot showed them re-running the test and verifying the bug's absence;
+an approximate measure at best, but far easier to implement than checking all the bugs by hand).
+
+At U. Chicago,
+course staff ran Landslide on student submissions behind-the-scenes
+after each project deadline had passed,
+and returned its preemption traces to any study volunteers.
+I collaborated with the course staff
+to confirm whether each trace represented a real bug and not a false positive
+before distributing them to the students.
+We decided on this procedure to optimize for most benefit to the students rather than for scientific rigor,
+due to the small sample size (4 volunteering student groups among 21 submitted projects).
+
+As PSU's version of the study was planned on relatively short notice,
+and without immediate access to a shared, yet confidential, academic file system (such as CMU's AFS),
+I was unable to examine its students' objective usage data or bug reports for this section.
+Results from PSU are presented instead in \sect{\ref{sec:education-eval-survey}}.
+
+\subsubsection{CMU}
+\label{sec:education-eval-bugs-cmu}
+
+% cmu - fps marked in the reuslts files? is this gonna be an accurate count?
+\subsubsection{University of Chicago}
+\label{sec:education-eval-bugs-uc}
+
+Among the 4 groups volunteering to receive Landslide bug reports,
+Landslide found 7 distinct bugs across the two projects tested,
+which I confirmed by manual inspection of the students' code.
+3 among these were deterministic; 4 were concurrency bugs.
+
+\begin{enumerate}
+	\item {\tt priority-donate-multiple} found 2 deterministic bugs and 1 concurrency bug in {\tt threads} projects.
+		It found the targeted priority-leak bug
+		described in \sect{\ref{sec:education-pintos-tests}} in one group,
+		and exposed a {\tt NULL} pointer dereference in another
+		when attempting to donate priority to an already-exited thread.
+		The latter bug was observed deterministically.
+		A third group neglected to implement priority donation during {\tt lock\_release()} at all,
+		which was found deterministically.
+	\item {\tt wait-simple} found 1 deterministic bug and 3 concurrency bugs in {\tt userprog} projects.
+		It found a deadlock in two groups' implementations,
+		% for one of these groups 2 traces were emitted, same stack trace (i think) just w diff pps
+		wherein {\tt process\_wait()}'s synchronization assumed
+		it would always be called before {\tt process\_exit()}.
+		In both cases the former's {\tt cond\_wait()} call would block forever if reordered after the latter.
+		This test also found several use-after-frees for one of those two groups,
+		whose {\tt process\_exit()} didn't guard against a parent process exiting and deallocating its memory first;
+		this root cause manifested in heap errors in 3 separate locations.
+		Lastly, the heap checking alone found a deterministic use-after-free in a third group's {\tt exec()}.
+\end{enumerate}
+
+In cases where Landslide emitted multiple preemption traces for the same bug,
+whether manifested the same way through different combinations of preemption points
+or with different stack traces entirely arising from the same underlying cause,
+course staff sent them all to the student,
+including a disclaimer along the lines of ``some of these may indicate the same bug''.
+%
+The other 3 tests ({\tt priority-sema}, {\tt alarm-simultaneous}, and {\tt wait-twice}) found no bugs among the 4 groups.
+One of the 4 groups had no bugs found among any of the 5 tests.
+
+%%%% i think it'd be an irb violation even to publish this at all
+%%%% and the potential false positive issue makes it not scientific enough anyway
+% Course staff also ran Landslide with wait-simple on submissions from even non-volunteers;
+% in total finding bugs in 11 of 18 groups' implementations.
+% However, ... couldn't check for false positives because of non-volunteers ...
+
+% XXX: did I actually fix this in the annotation scripts, or did I just hackhackhack to suppress it?
+% my email to kevin just says, "I suppressed the false positive bug from wait-simple in GROUPNAME and got a real bug next".
+Finally, one false positive was found while testing {\tt wait-simple}.
+Landslide mistakenly reported that {\tt free()} had reentered {\tt malloc()},
+which would be a potential heap corruption bug,
+due to a technical discrepancy between when Pebbles and Pintos kernels take and release their heap allocation lock
+with regard to the rest of the {\tt malloc()} API.
+After discarding the bug report and suppressing this false positive,
+Landslide moved on to find the true deterministic use-after-free described above.
+
+Overall, I consider all of the 7 bugs to be ``severe'':
+they are all either correctness violations (priority mis-donation)
+or stability issues (crash, deadlock, or data corruption).
+In the upcoming survey section, although only one of these groups did the survey,
+they enthusiastically reported finding the bug reports very helpful (\sect{\ref{sec:education-survey-response-data}}).
+Despite the small sample size, I consider this
+a positive result that Landslide can be a useful concurrency programming aid
+even at universities with different class projects than CMU's 15-410.
+As for 1 false positive among 8 total reports,
+it is difficult to decide what rate of mistakes is acceptable \cite{racerx},
+but the upcoming survey results (\sect{\ref{sec:education-eval-survey-falsepositives}})
+suggest that students are generally at least patient enough
+to ask for help and make progress when technical support is available.
 
 \subsection{Student submission quality}
 \label{sec:education-eval-grades}
@@ -890,6 +1011,7 @@ serve to probe these more qualitative aspects of the Landslide experience.
 \end{figure}
 
 \subsubsection{Response data}
+\label{sec:education-survey-response-data}
 
 % probably just better to state this in one line of prose
 %\begin{table}[h]
@@ -925,6 +1047,11 @@ which were not asked on CMU's and PSU's surveys,
 having only one respondent,
 are not pictured;
 the answers thereto were ``15-20 minutes'', ``Agree'', and ``Agree'', respectively.
+Also, this respondent's answer of 6 on the ``How many bugs'' question
+appears to indicate the total number of preemption trace files course staff sent them;
+%despite the attached ``some of these may indicate the same bug'' disclaimer;
+upon further investigation,
+the 6 traces seem to represent 2 distinct bugs among them (\sect{\ref{sec:education-eval-bugs-uc}}).
 
 The survey responses were very positive:
 % TODO: corroborate this with snapshot data?
@@ -949,6 +1076,7 @@ and suggestions for improving the interface
 (PSU only\footnote{I thought to ask this question too late for CMU's surveys.}). % ososugichatte
 
 \subsubsection{False positives}
+\label{sec:education-eval-survey-falsepositives}
 
 Even though 71\% of students reported receiving no false positive bug reports,
 the nature of Landslide's bug-detection algorithms is such
@@ -967,7 +1095,7 @@ Reports from CMU students (Simics version):
 		though only one reported it on the survey;
 		in some cases, I recall said weird errors manifesting as false positive invalid heap access reports.)
 		Simultaneous Landslides can clobber certain auto-generated header and/or temporary files,
-		leading to undefined behaviour.
+		scrambling its instrumentation and leading to chaotic behaviour.
 		I introduced a guard against this in commit 977e8fb (Simics repository) and e49b5df (Bochs repository).
 	\item One student reported ``Data races which I believe they are not''.
 		Looking at their usage snapshots to corroborate this,
@@ -1258,6 +1386,14 @@ the following questions could have improved the survey.
 		I would hope to identify the most wished-for features to know what to prioritize improving.
 		This could also assess students' understanding of what kinds of information
 		would or would not be reasonable for Landslide to record and report.
+	\item {\em For each bug Landslide found in your code, how trivial or severe do you feel it was?}
+		This would help get a sense of how the students regarded Landslide
+		on a spectrum between annoying style check or as a life-saver,
+		and potentially suggest options to make Landslide suppress certain types of bug reports.
+		For example, it currently reports spin-wait loops in {\tt mutex\_lock()} as bugs
+		with a special message referring students to relevant lecture slides,
+		but it's possible refusing to test any code beyond until that bug was fixed
+		might have made Landslide less useful overall.
 \end{enumerate}
 
 Some students (between 0 and 2 per semester)
@@ -1311,6 +1447,13 @@ or by offering an autograder-like interface for students to receive bug reports 
 Regarding non-research use in Pintos classes,
 Landslide can now handle a considerably wider variety of student implementation quirks
 on account of the fixes from this time (\sect{\ref{sec:education-pintos-instrumentation}}).
+In its original shape
+(before the F'17 semester,
+having only enough instrumentation necessary for the Pintoses used in \sect{\ref{sec:quicksand-eval}}'s experiments),
+Landslide was already able to automatically instrument 18 out of the 21 {\tt threads} project submissions at U. Chicago.
+I was able to quickly deploy a fix to make the annotation scripts handle the other 3 cases,
+although such technical support is not something any TA would be able to do.
+
 In its current shape I would recommend it for TA use grading,
 but not necessarily directly to students without someone familiar with the codebase on immediate hand for tech support.
 However, I also believe Landslide's success in these user studies,
