@@ -496,7 +496,7 @@ participation at PSU was determined, for lack of snapshots, by sign-up form subm
 Firstly, I sought to prove Landslide does as advertised:
 finds concurrency bugs of severity, subtlety, and difficulty
 consistent with the lessons an advanced operating systems class should hope to teach its students,
-and provides diagnostic output that helps the student to understand and solve them.
+and provides diagnostic output that helps students understand and solve them.
 % without necessarily spoiling the answer to the puzzle ... not scientifically evaluatable,
 % but at least the trace format is de0u-approved.
 
@@ -517,12 +517,14 @@ an approximate measure at best, but far easier to implement than checking all th
 At U. Chicago,
 course staff ran Landslide on student submissions behind-the-scenes
 after each project deadline had passed,
-and returned its preemption traces to any study volunteers.
+and returned its preemption traces to the study volunteers.
 I collaborated with the course staff
 to confirm whether each trace represented a real bug and not a false positive
 before distributing them to the students.
-We decided on this procedure to optimize for most benefit to the students rather than for scientific rigor,
-due to the small sample size (4 volunteering student groups among 21 submitted projects).
+On account of the small sample size (4 volunteering groups),
+we decided on this approach,
+rather than to study how students would cope with false positives themselves,
+to optimize for student happiness over scientific rigor.
 
 As PSU's version of the study was planned on relatively short notice,
 and without immediate access to a shared, yet confidential, academic file system (such as CMU's AFS),
@@ -580,8 +582,8 @@ One of the 4 groups had no bugs found among any of the 5 tests.
 % XXX: did I actually fix this in the annotation scripts, or did I just hackhackhack to suppress it?
 % my email to kevin just says, "I suppressed the false positive bug from wait-simple in GROUPNAME and got a real bug next".
 Finally, one false positive was found while testing {\tt wait-simple}.
-Landslide mistakenly reported that {\tt free()} had reentered {\tt malloc()},
-which would be a potential heap corruption bug,
+Landslide mistakenly reported that {\tt free()} had reentered {\tt malloc()}
+(normally a heap corruption bug)
 due to a technical discrepancy between when Pebbles and Pintos kernels take and release their heap allocation lock
 with regard to the rest of the {\tt malloc()} API.
 After discarding the bug report and suppressing this false positive,
