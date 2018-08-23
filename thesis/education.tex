@@ -1444,8 +1444,29 @@ or by offering an autograder-like interface for students to receive bug reports 
 
 \subsection{Future educational use}
 
-% TODO: para for pebbles; discuss with dave
+%{\bf Pebbles.}
+Now that I'm done collecting student usage data to publish as research results,
+and no longer bound by the IRB's requirement that Landslide not be used to assign grades
+lest it be seen as coercion to participate,
+Professor Eckhardt and I have been discussing options to deploy it as an official part of 15-410's curriculum.
+This section has already clearly shown students are capable of debugging with it on their own time,
+and I believe it well-automated enough to supplement Fritz (the existing stress testing infrastructure)
+in the class's grading process as well.
+TAs could also, at their option, use Landslide by hand to confirm any bugs encountered during manual inspection
+and/or write new Landslide-friendly tests to expose bugs not yet targeted by the 6 tests offered here.
+Over the study's seven semesters,
+I believe the stability of Landslide's instrumentation process has improved enough
+to require little to no ongoing technical support anymore,
+although Landslide-specific office hours may still prove helpful.
+I am also willing to continue giving the guest lecture as long as proximity and the curriculum allow.
+Future problems to address include grading bias
+(i.e., students submitting blindly-hacked code that just barely passes Landslide,
+even if not necessarily correct,
+thereby gaming the autograder),
+and improving usability to reach even the most struggling students
+(i.e., those past 42\% who submitted P2s without participating in the study).
 
+%{\bf Pintos.}
 Regarding non-research use in Pintos classes,
 Landslide can now handle a considerably wider variety of student implementation quirks
 on account of the fixes from this time (\sect{\ref{sec:education-pintos-instrumentation}}).
@@ -1455,7 +1476,7 @@ having only enough instrumentation necessary for the Pintoses used in \sect{\ref
 Landslide was already able to automatically instrument 18 out of the 21 {\tt threads} project submissions at U. Chicago.
 I was able to quickly deploy a fix to make the annotation scripts handle the other 3 cases,
 although such technical support is not something any TA would be able to do.
-
+%
 In its current shape I would recommend it for TA use grading,
 but not necessarily directly to students without someone familiar with the codebase on immediate hand for tech support.
 However, I also believe Landslide's success in these user studies,
