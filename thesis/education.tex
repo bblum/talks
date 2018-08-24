@@ -383,7 +383,7 @@ The following tests are approved to be Landslide-friendly:
 	\item {\tt wait-twice}:
 		Unmodified from the basecode's version, for {\em userprog}.
 		Slightly more complicated version of {\tt wait-simple},
-		intended to expose failure-path bugs if the former finds no common-case ones.
+		intended to expose failure-path bugs if the former finds no easier ones.
 	\item {\tt priority-donate-multiple}:
 		Written by Kevin Zhao, TA at U. Chicago, for {\em threads}.
 		Tests for a priority donation race during {\tt lock\_release()}
@@ -464,9 +464,9 @@ participation at PSU was determined, for lack of snapshots, by sign-up form subm
 	\begin{center}
 		% ugh this looks so stupid
 		% but better than latex's output looking stupid
-		\begin{tabular}{c|crcrc|r}
-			& \multicolumn{5}{c|}{\bf used Landslide?} & \\
-			\bf semester & & \bf yes & & \bf no & & \bf total \\
+		\begin{tabular}{r|crcrc|r}
+			& \multicolumn{5}{c|}{\bf Used Landslide?} & \\
+			\bf Semester & & \bf yes & & \bf no & & \bf Total \\
 			\hline
 			CMU S'15	& &   8	& &  18	& &  26 \\
 			CMU F'15	& &  22	& &   8	& &  30 \\
@@ -475,18 +475,19 @@ participation at PSU was determined, for lack of snapshots, by sign-up form subm
 			CMU S'17	& &  19	& &  13	& &  32 \\
 			CMU F'17	& &  14	& &   5	& &  19 \\
 			CMU S'18	& &  10	& &   8	& &  18 \\
-			% NB. CMU's participance are counted by how many ppl i got at least one usage tarball for,
-			% while PSU's are by how many sign-up forms i got.
-			% the latter may be overcounting, because a student may sign up and then never use it;
-			% but i don't have tarballs for PSU so this is the best you're getting.
-			% TODO
-			% PSU s18	& &  38
 			\hline
-			\bf total	& & 103	& &  74	& & 177 \\
+			U. Chicago F'17	& &   4	& &  17	& &  21	\\ % 21 taken from number of submitted 'threads', idk abt userprog
+			% TODO when you adjust this, adjust the % of participance down in the discussion para
+			PSU S'18	& &  38	& &   ?	& &   ?	\\
+			\hline
+			\bf CMU total	& & 103	& &  74	& & 177 \\
+			\bf Non-CMU total
+					& &  42	& & 17+?& &  21+? \\
+			\bf Total	& & 145 & & 91+?& & 191+? \\
 		\end{tabular}
 	\end{center}
-	\caption{Student participation rates across semesters,
-		among students who submitted thread library implementations.}
+	\caption{Participation rates across semesters,
+	among students who submitted thread libraries (CMU, PSU) or kernels (U. Chicago).}
 	\label{tab:photo-of-ze-studence}
 \end{table}
 
@@ -508,7 +509,7 @@ These I analyzed by hand to determine how many distinct bugs were reported
 (as multiple preemption traces may refer to the same bug; inspecting their code if necessary),
 how many were deterministic
 (i.e., Landslide reported them on the very first interleaving tested, with no need for artificial preemptions)
-and how many were concurrency bugs,
+how many were concurrency bugs,
 whether any were false positives,
 and whether the student was able to fix them thereafter
 (determined if a subsequent snapshot showed them re-running the test and verifying the bug's absence;
@@ -862,8 +863,8 @@ but this pattern is at least consistent with the ``Landslide helps students subm
 	\begin{center}
 		\small
 	\begin{tabular}{cr|r||r|r|r|r||cc}
-		\multicolumn{3}{c||}{Population} & \multicolumn{4}{c||}{Distribution} & \multicolumn{2}{c}{Significance} \\
-		project	& group		& $N$	& min	& mean	& max	& stddev & $p$ vs users	& cutoff\\
+		\multicolumn{3}{c||}{\bf Population} & \multicolumn{4}{c||}{\bf Distribution} & \multicolumn{2}{c}{\bf Significance} \\
+		\bf project & \bf group & $N$ & \bf min & \bf mean & \bf max & \bf stddev & \bf $p$ vs users & \bf cutoff\\
 		\hline
 			& users		& 103	& 42	& 74.8	& 95	& 10.3	& --	& --	\\
 		P2	& non-users	& 74	& 38	& 70.9	& 96	& 12.5	& 0.036	& 0.05	\\
@@ -903,8 +904,8 @@ Table~\ref{tab:eval-common-bugs} presents the results.
 		% cannot be applied for 2 reasons - 1, these are not independent since the same studence were
 		% running landslide on diff test cases; 2, the hypotheses tested are different for each test
 	\begin{tabular}{r||cc|cc|c|cc}
-		& \multicolumn{2}{c|}{Landslide users} & \multicolumn{2}{c|}{Non-users} & & \multicolumn{2}{c}{Significance} \\
-		Bug name & \#correct & \#buggy & \#correct & \#buggy & $\Delta$\%correct & $p$ & cutoff \\
+		& \multicolumn{2}{c|}{\bf Landslide users} & \multicolumn{2}{c|}{\bf Non-users} & & \multicolumn{2}{c}{\bf Significance} \\
+		\bf Bug name & \bf \#correct & \bf \#buggy & \bf \#correct & \bf \#buggy & \bf $\Delta$\%correct & $p$ & \bf cutoff \\
 		\hline
 		% calculated in R with (rest done similarly)
 		% fisher.test(rbind(c(11,10),c(0,16)))$p.value --> 0.0006143355
@@ -925,7 +926,7 @@ Table~\ref{tab:eval-common-bugs} presents the results.
 		% nice p value
 		Downgrade & 10	& 3	& 19	& 4	& $-05.7\%$	& 0.69	& 0.0125 \\ % TODO verify these buggers by eye
 		\hline
-		Total     & 58	& 15	& 52	& 22	& $+09.2\%$	& 0.26 & 0.05 \\
+		\bf Total & 58	& 15	& 52	& 22	& $+09.2\%$	& 0.26 & 0.05 \\
 	\end{tabular}
 	\end{center}
 	\caption{
@@ -1413,7 +1414,7 @@ although it is easy to imagine students being equally happy with a ``debugging t
 Nevertheless, I believe each of these partial results taken together
 paint an overall picture of success:
 students fixed their own bugs {\em and} were happy about it;
-students were able to ask for help rather than be deterred by inevitable technical difficulties;
+students were able to ask for help rather than be deterred by inevitable technical difficulties as far as I know;
 students provided intelligent feedback suggesting they truly understood the debugging process;
 % well not the student who said "traces should point to where the bug is" but eh can't win em all c.c
 et cetera.
@@ -1510,12 +1511,12 @@ the following questions could have improved the survey.
 		might have made Landslide less useful overall.
 \end{enumerate}
 
-Some students (between 0 and 2 per semester)
+Some students (around 0 to 2 per semester if memory serves)
 emailed me during P3
 to ask if they could test their kernels with Landslide just like their thread libraries.
 I answered each by explaining that it would take more effort on their part,
 and if they were still interested,
-guided them through the annotation process on a case-by-case basis.
+guided them through the annotations on a case-by-case basis.
 This process was not included in the IRB-approved study protocol,
 so I collected no results from them.
 If I had planned in advance, I could have supported this ``bonus stage'' officially,
@@ -1570,7 +1571,7 @@ Over the study's seven semesters,
 I believe the stability of Landslide's instrumentation process has improved enough
 to require little to no ongoing technical support anymore,
 although Landslide-specific office hours may still prove helpful.
-I am also willing to continue giving the guest lecture as long as proximity and the curriculum allow.
+I am also willing to continue giving the guest lecture as long as proximity and curriculum allow.
 Future problems to address include grading bias
 (i.e., students submitting blindly-hacked code that just barely passes Landslide,
 even if not necessarily correct,
