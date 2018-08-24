@@ -534,7 +534,119 @@ Results from PSU are presented instead in \sect{\ref{sec:education-eval-survey}}
 \subsubsection{CMU}
 \label{sec:education-eval-bugs-cmu}
 
-% cmu - fps marked in the reuslts files? is this gonna be an accurate count?
+In the recruiting lectures for every semester after the first,
+I included tallies of Landslide's bug-finding achievements to date
+as an extra advertisement to tempt students.
+These included each of the measures I counted by hand as described above,
+as well as aggregate totals of how many groups participated,
+how many groups found bugs,
+how many found at least one concurrency bug,
+and how many were able to fix and subsequently verify any or all thereof.
+Among the concurrency bugs, a wide variety of types were found:
+deadlocks, use-after-frees, segfaults, infinite loops, assertion failure, and unit test failure.
+Table~\ref{tab:cmubugs} shows these statistics for each semester.
+% may also be an overestimate if they only hacked around the bug, but that's less likely
+Considering the method for deciding whether students fixed each bug, described above,
+note that the tallies thereof may be undercounting
+on account of the possibility some students may have skipped the verification step despite truly fixing them.
+
+\begin{table}[t]
+	% TODO
+	\begin{center}
+		\small
+	\begin{tabular}{r||r|r|r|r|r|r|r||r}
+			& \bf S'15 & \bf F'15 & \bf S'16 & \bf F'16 & \bf S'17 & \bf F'17 & \bf S'18 & \bf Total \\
+			\hline
+			%			S15	F15	S16	F16	S17	F17	S18
+			\bf Participating groups& 8	& 22	& 18	& 12	& 19	& 14	& 10	& 103	\\
+			% nb not counting FPs
+			Groups w/any bugs found	& 5	& 21	& 12	& 7	& 14	& 10	& 6	& 75	\\
+			Groups w/any bugs fixed	& 4	& 18	& 9	& 6	& 9	& 7	& 5	& 58	\\
+			Groups w/all (>0) bugs fixed
+						& 2	& 11	& 3	& 3	& 7	& 5	& 4	& 35	\\
+			\hline
+			% the 2 for f15 were pretty messy; i had to go back and get em by hand by grepping for NOTE
+			% but this semester also had a LOT of seemingly true race NOTE mx lock inf loop,
+			% so i counted only the det ones, of which there were 2 (both also in "fixed" category)
+			% otherwise 1 race recursive mx and 6 race mutex loops and 1 race cvar loop were left as races.
+
+			% this 1 for f17 was salvaged from results-raw; the grupo who had it it was their only bug
+			% and it was an invl heap that i think came from multiple landslides
+			% (and i hadn't listed them as "fixing" it; they were listed as det 1 race 0 fixed 0)
+			% so i'm -1ing for "det bugs found" and "groups w any bugs found" to compensate
+			Known false positives	& 1	& 2	& 6	& 5	& 3	& 1	& 0	& 18 	\\
+			\hline
+			Deteterministic bugs found ($\le$)
+						& 5	& 20	& 18	& 18	& 30	& 15	& 9	& 115	\\
+			Concurrency bugs found	& 5	& 56	& 19	& 15	& 13	& 9	& 5	& 122	\\
+			\bf Total bugs found	& 10	& 76	& 37	& 33	& 43	& 24	& 14	& 237	\\
+			\hline
+			Deteterministic bugs fixed ($\ge$/$\le$)
+						& 3	& 19	& 9	& 15	& 22	& 12	& 7	& 87	\\
+			Concurrency bugs fixed ($\ge$)
+						& 1	& 38	& 11	& 10	& 12	& 4	& 4	& 80	\\
+			\bf Total bugs fixed	& 4	& 57	& 20	& 25	& 34	& 16	& 11	& 167	\\
+	\end{tabular}
+	\end{center}
+	\caption{Landslide's bug-finding performance across all semesters of the CMU 15-410 study.
+	$\le$ marks possible overcounts on account of unidentified false positives;
+	$\ge$ marks possible undercounts on account of students not necessarily re-running to verify bugfixes.}
+	\label{tab:cmubugs}
+\end{table}
+
+This table also shows the number of false positives, as self-reported by Landslide
+as described in \sect{\ref{sec:education-pebbles-instrumentation}}.
+% nah where actually doing this, where making it hapen.
+%which I started counting since S'16.
+Please note that this approach %to counting false positives
+is limited by Landslide's ability to classify them as ``suspicious'', even if not definitely bugs.
+These represent technical obstacles that either
+prevented Landslide from being able to analyze the synchronization in play
+(e.g., recursive {\tt mutex\_lock()} invocations)
+or were deemed too pedagogically important to allow the student to proceed without fixing
+(e.g., busy spin-wait synchronization loops)%
+\footnote{
+Landslide was also configured to issue a ``bug report''
+if {\tt MAGIC\_BREAK}, a Simics debugging trap, was ever invoked,
+with specific instructions to remove it;
+I consider these closer to compilation errors than bug reports and so did not count them
+even among false positives.
+}.
+Other false positives arising from bugs in Landslide itself
+required more individual effort to confirm;
+to classify these I relied on students to help report them
+during the Landslide clinics and survey,
+and I report on them in \sect{\ref{sec:education-eval-survey-falsepositives}}.
+Nevertheless,
+I am aware of no case in which Landslide would output a false positive {\em nondeterministic} bug%
+% this is really shaky
+% not too shaky for me to feel uncomfortable publishing it
+% but too shaky for me to feel comfortable leaving it unsaid too...
+\footnote{I did observe Landslide's ``suspicious loop'' message
+for mutex or condition variable internal synchronization
+on subsequent interleavings,
+but at this point the line between style warning and true bug blurs,
+so I count these as true concurrency bugs for simplicity's sake.}
+% i *think*.......
+all unexpected false positives encountered to date were output on the first interleaving tested.
+Though unscientific,
+this provides some reassurance that Table~\ref{tab:cmubugs}'s count of concurrency bugs is accurate,
+even if the deterministic tally may overcount slightly.
+
+Overall, Landslide helped students find and fix a lot of bugs.
+Among the 103 participating groups across all semesters,
+roughly three-quarters received bug reports,
+slightly more than half were able to verify their fix for at least one,
+and one-third overall were able to fix and verify {\em all} such bugs.
+Even avoiding the deterministic bug series for their possible overcounting,
+it's fair to conclude that Landslide caused at least two-thirds
+of all concurrency bugs it found to get fixed before project handin.
+Although lacking a control experiment to make a more scientific comparison of these tallies,
+I tentatively conclude the students were well rewarded for their time.
+The questions of whether it was a {\em better} use of time than conventional stress testing,
+or whether the bug-finding resulted in submissions that course staff also, independently, judged better than before,
+are beyond the scope of just tallying bug reports and will instead be addressed in the upcoming sections.
+
 \subsubsection{University of Chicago}
 \label{sec:education-eval-bugs-uc}
 
