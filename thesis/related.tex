@@ -15,19 +15,102 @@ If you take it from only one place, it becomes rigid and stale.
 }
 {Iroh, Avatar: The Last Airbender}
 
-% things to cite what you haven't alerady got cited somewhere
+Had I a dollar for every programmer before me who thought to ``solve'' concurrency with a perfect debugging tool,
+well,
+it probably would not be quite enough to retire on.
+Even so,
+this field is built of the contributions of many a brilliant mind
+trying to carve out a presentable space in an overall impossible problem,
+each making their own tradeoffs along the way.
+While the previous chapters cited prior work as necessary in background discussions, algorithm descriptions, and so on,
+this chapter aims to comprehensively tour the field,
+orienting the reader's understanding of Landslide in the space of said tradeoffs.
 
-% dejafu - haskell mcing
-% relacy - smth for go?
+\section{Systematic Concurrency Testing}
+
+Equal partners in concurrency testing are the practical and the theoretical:
+the former meaning tool implementations that target specific problem domains and help users as best one can,
+and the latter meaning algorithmic advances to bring ever-larger state spaces within the realm of computational feasibility.
+I discuss my most closely related works split in two sections accordingly.
+
+\subsubsection{Tools}
+
+Systematic concurrency testing dates back to Verisoft \cite{verisoft},
+the 1997 tool which first attempted to exhaustively explore the possibile ways to interleave threads.
+Since then, researchers have built many tools along the same lines to test many kinds of programs.
+One of the best-known SCTs is Microsoft Research's CHESS \cite{chess},
+a checker for userspace C++ programs which preempts on synchronization APIs by default,
+supporting compiler instrumentation to preempt on memory accesses as well,
+and which pioneered the ICB search strategy discussed below.
+
+Many checkers exist which target programs written for various different types of concurrent environments.
+MaceMC \cite{macemc}, MoDist \cite{modist}, SAMC \cite{samc}, ETA \cite{dbug-retreat}, and Concuerror \cite{concuerror},
+focus on distributed systems, where concurrent events are limited to message-passing and may span across multiple machines.
+R4 \cite{r4} and EventRacer \cite{eventracer} check event-driven concurrent programs typical in mobile applications.
+dBug \cite{dbug-ssv}, another CMU original similar to CHESS,
+integrates with Parrot \cite{parrot}, a determinizing runtime scheduler,
+to approach state space reduction from a different angle by limiting which thread interleavings are possible to begin with.
+
+Other checkers target specific programming languages' concurrency models and/or thread communication APIs.
+Relacy \cite{relacy} is a header-only C++ SCT library for verifying synchronization primitives.
+It instruments the existing C++ atomics API,
+although requires custom annotations for other types of memory accesses,
+and notably includes relaxed memory nondeterminism in its concurrency model.
+Inspect \cite{inspect} uses a static alias analysis to instrument and preempt all memory accesses to potentially-shared data.
+SPIN \cite{spin} defines the PROMELA domain-specific language
+to specialize in verifying synchronization primitives such as RCU \cite{rcu}.
+%
+D\'{e}j\`{a} Fu \cite{dejafu} is a SCT
+for the Haskell language,
+whose strong type system guarantees that thread communication be confined to trusted, type-safe APIs.
+%to a trusted API that implements internal synchronization to preserve type safety.
+%Supporting both abstraction reduction and STM,
+D\'{e}j\`{a} Fu instruments these interfaces (STM among them)
+to check for deadlocks or nondeterministic behaviour in general,
+which may arise despite the static guarantee of no data races.
+The Rust language \cite{rust-language}
+provides a more C++-like type system that also
+%, which I contributed to personally,
+achieves the same guarantee, although I know of no existing SCT for it yet.
+
+If I might indulge by listing Landslide in its own related work section \cite{this-thesis},
+I would distinguish it by its ability to find data-race preemption points via dynamic memory tracing,
+rather than relying on user annotations or imprecise compiler instrumentation
+as other tools do.
+Compared to all other tools I know of,
+it implements a wider range of state space explosion coping techniques,
+some theoretical and some heuristic,
+to help the user receive meaningful results as promptly as possible.
+Its choice of a familiar pthread-like C threading API makes it suitable for inexpert users,
+and its recent extension to HTM shows that it can support more modern concurrency patterns as well.
+
+\subsubsection{Algorithms}
+
+% transdpor - older than optimal dpor but still part of history?
+% http://mir.cs.illinois.edu/marinov/publications/TasharofiETAL12TransDPOR.pdf
+
+
+% effective stateless model checking for c/c++ concurrency - popl 18
+
+% Surveying concurrency bug detectors based on types of detected bugs - idk what this is, from an email
+
+
+%%%% non-smc testing tools -- even worth talking abt?
+
 % jepsen-io/jepsen
+
+\section{Data race analysis}
+
+\section{Educational debugging}
+
+Willgrind \cite{willgrind}
+
+\section{Transactional memory}
 
 % cchtm - the intel ismm17 paper on nvram htm
 % stamp (mb just cite from txn section)
 
-\section{Stateless Model Checking}
+% transactions in relaxed mem architecutres - popl 18
 
-D\'{e}j\`{a} Fu \cite{dejafu}
-
-\section{Education}
-
-Willgrind \cite{willgrind}
+% pldi 2018
+% The Semantics of Transactions and Weak Memory in x86, Power, ARM, and C++
