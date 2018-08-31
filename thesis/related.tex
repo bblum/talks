@@ -18,7 +18,7 @@ If you take it from only one place, it becomes rigid and stale.
 Had I a dollar for every programmer before me who thought to ``solve'' concurrency with a perfect debugging tool,
 well,
 it probably would not be quite enough to retire on.
-Even so,
+At any rate,
 this field is built of the contributions of many a brilliant mind
 trying to carve out a presentable space in an overall impossible problem,
 each making their own tradeoffs along the way.
@@ -57,43 +57,107 @@ It instruments the existing C++ atomics API,
 although requires custom annotations for other types of memory accesses,
 and notably includes relaxed memory nondeterminism in its concurrency model.
 Inspect \cite{inspect} uses a static alias analysis to instrument and preempt all memory accesses to potentially-shared data.
-SPIN \cite{spin} defines the PROMELA domain-specific language
-to specialize in verifying synchronization primitives such as RCU \cite{rcu}.
+SPIN \cite{spin} tests algorithms defined in the PROMELA domain-specific language,
+instruments every memory access, and
+specializes in verifying synchronization primitives such as RCU \cite{rcu}.
 %
 D\'{e}j\`{a} Fu \cite{dejafu} is a SCT
 for the Haskell language,
 whose strong type system guarantees that thread communication be confined to trusted, type-safe APIs.
 %to a trusted API that implements internal synchronization to preserve type safety.
 %Supporting both abstraction reduction and STM,
-D\'{e}j\`{a} Fu instruments these interfaces (STM among them)
+It instruments these interfaces (STM among them)
 to check for deadlocks or nondeterministic behaviour in general,
-which may arise despite the static guarantee of no data races.
+which either may arise despite the static no-data-race guarantee.
 The Rust language \cite{rust-language}
 provides a more C++-like type system that also
 %, which I contributed to personally,
 achieves the same guarantee, although I know of no existing SCT for it yet.
 
 If I might indulge by listing Landslide in its own related work section \cite{this-thesis},
-I would distinguish it by its ability to find data-race preemption points via dynamic memory tracing,
+I would distinguish it by its ability to find shared memory preemption points via dynamic tracing,
 rather than relying on user annotations or imprecise compiler instrumentation
 as other tools do.
 Compared to all other tools I know of,
-it implements a wider range of state space explosion coping techniques,
+it implements a wider range of exponential explosion coping techniques,
 some theoretical and some heuristic,
+some inherited and some novel,
 to help the user receive meaningful results as promptly as possible.
-Its choice of a familiar pthread-like C threading API makes it suitable for inexpert users,
-and its recent extension to HTM shows that it can support more modern concurrency patterns as well.
+Its choice of a familiar pthread-like synchronization API makes it suitable for inexpert users,
+and its recent extension to HTM adds support for more modern concurrency patterns as well.
+
+% TODO
+% Surveying concurrency bug detectors based on types of detected bugs - idk what this is, from an email
 
 \subsubsection{Algorithms}
 
-% transdpor - older than optimal dpor but still part of history?
-% http://mir.cs.illinois.edu/marinov/publications/TasharofiETAL12TransDPOR.pdf
+To date a number of techniques have been proposed to mitigate exponential explosion,
+the Sisyphean rock of SCT.
+The notion that some interleavings of concurrent threads could lead to indistinguishable program states and be therefore redundant,
+known as {\em partial order reduction} (POR),
+was first proposed in \cite{partial-model-checking}
+and explored in detail in \cite{partial-order-methods}.
+{\em Dynamic POR} (DPOR) was later developed in \cite{dpor},
+proposing to track communication events between threads on-the-fly (i.e., dynamically)
+rather than to rely on imprecise static alias analyses,
+and is now considered the baseline for all subsequent state space reduction approaches in SCT.
+That paper includes the {\em sleep sets} extension,
+which Landslide includes in its implementation.
+It is a {\em sound} reduction algorithm, meaning it will never fail to test a possible program behavior, despite skipping many execution sequences.
+\sect{\ref{sec:landslide-dpor}} provides a detailed walk-through of how DPOR works,
+as many of this thesis's contributions build directly upon it.
 
+DPOR has since been extended in several ways to achieve further reduction
+and to incorporate new concurrency models.
+Optimal DPOR \cite{optimal-dpor} extends sleep sets into the more expressive {\em wakeup trees},
+which provably tests exactly one interleaving from each equivalence class,
+i.e., the optimal possible reduction,
+at least under the memory independence definition of equivalence.
+Extending the equivalence relation itself to capture not just memory {\em address} conflicts
+but also the {\em values} read and written,
+SATCheck \cite{satcheck} and Maximal Causality Reduction (MCR) \cite{mcr}
+use an SMT solver \cite{z3} to identify additional pruning opportunities.
+Implementing wakeup trees or SMT-driven exploration in Landslide is left to future work.
 
+Several other recent advances extend DPOR to new concurrency models,
+beyond the shared-memory-threading model outlined in \sect{\ref{sec:landslide-dpor}}.
+TransDPOR \cite{transdpor} provides extra domain-specific reduction for message-passing actor programs
+by exploiting the fact that the dependency relation is transitive in the absence of shared state.
+The $R^4$ algorithm \cite{r4} (corresponding to the R4 checker mentioned above)
+extends DPOR to event-driven programs by separating the notion of enabled events from that of multiple threads.
+DPOR for TSO and PSO \cite{tsopso}
+extends the concurrency model to include store buffer reordering,
+which can expose bugs not even possible in the strong consistency model
+such as discussed in \sect{\ref{sec:tm-warpzone-relaxed}}.
+It also introduced a heuristic {\em buffer bounding} technique, analogous to ICB,
+to mitigate the corresponding increase in state space size.
+MCR was recently extended to support relaxed memory models likewise \cite{mcr-tsopso}.
+Along the same lines, this work's Chapter~\ref{chap:tm}
+extended DPOR's concurrency model for HTM,
+and proposed two new reduction strategies, one sound and one heuristic,
+to find new types of equivalences.
+% TODO
 % effective stateless model checking for c/c++ concurrency - popl 18
 
-% Surveying concurrency bug detectors based on types of detected bugs - idk what this is, from an email
-
+Of course, no matter how optimal a sound reduction, there will always be programs too large to test.
+To provide even partial results for state spaces that exceed the testing budget
+(whether as predicted by automatic estimation \cite{estimation} or by a human's wild guess),
+various heuristic exploration strategies have been proposed.
+Preemption Sealing \cite{sealing} allows programmers to manually exclude preemption points
+arising from trusted source code modules;
+Landslide implements this as the {\tt without\_function} command (\sect{\ref{sec:landslide-pps}}).
+Iterative Context Bounding (ICB) \cite{chess-icb} (\sect{\ref{sec:landslide-icb}})
+orders the search space by increasing number of preemptions in each branch,
+which is more likely to expose bugs sooner should they exist;
+BPOR \cite{bpor} extends DPOR to preserve soundness
+thereunder. % what a word
+Landslide implements ICB and BPOR for Chapter~\ref{chap:quicksand}'s control experiments,
+although does not yet incorporate it into this thesis's own contributions.
+Chapter~\ref{chap:quicksand}'s Quicksand algorithm is, effectively, another such heuristic search strategy,
+focusing on preemption point subsets rather than context switch bounding.
+Each of these approaches is compatible (and indeed, throughout this thesis used often in concert)
+with the sound reduction analyses listed above.
+% mentioning PCT would disrupt the flow here and it's a dumb technique anyway so i won't bother
 
 %%%% non-smc testing tools -- even worth talking abt?
 
