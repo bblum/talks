@@ -393,7 +393,8 @@ The following tests are approved to be Landslide-friendly:
 \vspace{1em}
 
 The (unpatched versions of) the first four tests are available at
-\url{https://github.com/Berkeley-CS162/group0/tree/master/pintos/src/tests}.
+\url{https://github.com/bblum/pintos} (a fork of the main Pintos basecode repository).
+%\url{https://github.com/Berkeley-CS162/group0/tree/master/pintos/src/tests}.
 The fifth test is available at
 \url{https://github.com/bblum/landslide/blob/master/pebsim/pintos/priority-donate-multiple.c}.
 
@@ -476,14 +477,14 @@ participation at PSU was determined, for lack of snapshots, by sign-up form subm
 			CMU F'17	& &  14	& &   5	& &  19 \\
 			CMU S'18	& &  10	& &   8	& &  18 \\
 			\hline
-			U. Chicago F'17	& &   4	& &  17	& &  21	\\ % 21 taken from number of submitted 'threads', idk abt userprog
+			U. Chicago F'17	& &   4	& &  17	& &  21 \\ % 21 taken from number of submitted 'threads', idk abt userprog
 			% TODO when you adjust this, adjust the % of participance down in the discussion para
-			PSU S'18	& &  38	& &   ?	& &   ?	\\
+			PSU S'18	& &  38	& &  98	& & 136 \\
 			\hline
 			\bf CMU total	& & 103	& &  74	& & 177 \\
 			\bf Non-CMU total
-					& &  42	& & 17+?& &  21+? \\
-			\bf Total	& & 145 & & 91+?& & 191+? \\
+					& &  42	& & 115	& & 157 \\
+			\bf Total	& & 145	& & 189	& & 327 \\
 		\end{tabular}
 	\end{center}
 	\caption{Participation rates across semesters,
@@ -537,7 +538,7 @@ Results from PSU are presented instead in \sect{\ref{sec:education-eval-survey}}
 
 In the recruiting lectures for every semester after the first,
 I included tallies of Landslide's bug-finding achievements to date
-as an extra advertisement to tempt students.
+as an extra advertisement to entice students to participate.
 These included each of the measures I counted by hand as described above,
 as well as aggregate totals of how many groups participated,
 how many groups found bugs,
@@ -547,9 +548,8 @@ Among the concurrency bugs, a wide variety of types were found:
 deadlocks, use-after-frees, segfaults, infinite loops, assertion failure, and unit test failure.
 Table~\ref{tab:cmubugs} shows these statistics for each semester.
 % may also be an overestimate if they only hacked around the bug, but that's less likely
-Considering the method for deciding whether students fixed each bug, described above,
-note that the tallies thereof may be undercounting
-on account of the possibility some students may have skipped the verification step despite truly fixing them.
+Note that the tallies of bugs fixed may be undercounting
+on account of the possibility some students may have truly fixed them but skipped the verification step thereafter.
 
 \begin{table}[t]
 	% TODO
@@ -563,7 +563,7 @@ on account of the possibility some students may have skipped the verification st
 			% nb not counting FPs
 			Groups w/any bugs found	& 5	& 21	& 12	& 7	& 14	& 10	& 6	& 75	\\
 			Groups w/any bugs fixed	& 4	& 18	& 9	& 6	& 9	& 7	& 5	& 58	\\
-			Groups w/all (>0) bugs fixed
+			Groups w/all ($\ne$0) bugs fixed
 						& 2	& 11	& 3	& 3	& 7	& 5	& 4	& 35	\\
 			\hline
 			% the 2 for f15 were pretty messy; i had to go back and get em by hand by grepping for NOTE
@@ -610,7 +610,7 @@ or were deemed too pedagogically important to allow the student to proceed witho
 Landslide was also configured to issue a ``bug report''
 if {\tt MAGIC\_BREAK}, a Simics debugging trap, was ever invoked,
 with specific instructions to remove it;
-I consider these closer to compilation errors than bug reports and so did not count them
+I consider these closer in spirit to compilation errors than bug reports and so did not count them
 even among false positives.
 }.
 Other false positives arising from bugs in Landslide itself
@@ -619,20 +619,13 @@ to classify these I relied on students to help report them
 during the Landslide clinics and survey,
 and I report on them in \sect{\ref{sec:education-eval-survey-falsepositives}}.
 Nevertheless,
-I am aware of no case in which Landslide would output a false positive {\em nondeterministic} bug%
-% this is really shaky
-% not too shaky for me to feel uncomfortable publishing it
-% but too shaky for me to feel comfortable leaving it unsaid too...
-\footnote{I did observe Landslide's ``suspicious loop'' message
-for mutex or condition variable internal synchronization
-on subsequent interleavings,
-but at this point the line between style warning and true bug blurs,
-so I count these as true concurrency bugs for simplicity's sake.}
-% i *think*.......
+apart from the spin-wait synchronization loops
+(which can arise nondeterministically due to lock contention, but which Landslide already self-identifies),
+I am aware of no cases of false positive {\em nondeterministic} bugs;
 all unexpected false positives encountered to date were output on the first interleaving tested.
 Though unscientific,
-this provides some reassurance that Table~\ref{tab:cmubugs}'s count of concurrency bugs is accurate,
-even if the deterministic tally may overcount slightly.
+this provides some assurance that Table~\ref{tab:cmubugs}'s count of concurrency bugs is accurate,
+even if the deterministic tally may overcount.
 
 Overall, Landslide helped students find and fix a lot of bugs.
 Among the 103 participating groups across all semesters,
@@ -683,7 +676,9 @@ or with different stack traces entirely arising from the same underlying cause,
 course staff sent them all to the student,
 including a disclaimer along the lines of ``some of these may indicate the same bug''.
 %
-The other 3 tests ({\tt priority-sema}, {\tt alarm-simultaneous}, and {\tt wait-twice}) found no bugs among the 4 groups.
+The other 3 tests, {\tt priority-sema}, {\tt alarm-simultaneous}, and {\tt wait-twice},
+found no bugs among the 4 groups
+({\tt wait-twice} being run only on the group that passed {\tt wait-simple}).
 One of the 4 groups had no bugs found among any of the 5 tests.
 
 %%%% i think it'd be an irb violation even to publish this at all
@@ -696,9 +691,10 @@ One of the 4 groups had no bugs found among any of the 5 tests.
 % my email to kevin just says, "I suppressed the false positive bug from wait-simple in GROUPNAME and got a real bug next".
 Finally, one false positive was found while testing {\tt wait-simple}.
 Landslide mistakenly reported that {\tt free()} had reentered {\tt malloc()}
-(normally a heap corruption bug)
 due to a technical discrepancy between when Pebbles and Pintos kernels take and release their heap allocation lock
 with regard to the rest of the {\tt malloc()} API.
+This typically indicates a heap corruption bug, but in this case,
+{\tt malloc()} was preempted after it released the heap lock, which was perfectly safe.
 After discarding the bug report and suppressing this false positive,
 Landslide moved on to find the true deterministic use-after-free described above.
 
@@ -711,9 +707,9 @@ Despite the small sample size, I consider this
 a positive result that Landslide can be a useful concurrency programming aid
 even at universities with different class projects than CMU's 15-410.
 As for 1 false positive among 8 total reports,
-it is difficult to decide what rate of mistakes is acceptable \cite{racerx},
+it is difficult to decide what rate of mistakes is acceptable when the user's patience is at stake \cite{racerx},
 but the upcoming survey results (\sect{\ref{sec:education-eval-survey-falsepositives}})
-suggest that students are generally at least patient enough
+suggest that students are generally at least willing
 to ask for help and make progress when technical support is available.
 
 \subsection{Student submission quality}
@@ -735,7 +731,7 @@ Figure~\ref{fig:photo-of-ze-studence} shows the distribution of project grades i
 between Fall 2013 and Spring 2018,
 grouped by whether or not students used Landslide during P2.
 %Landslide users are, of course, the experimental group.
-The control group is further distinguished by whether Landslide was offered and the student delined,
+The control group is further distinguished by whether Landslide was offered and the student declined,
 or whether the study had not yet begun that semester.
 Intuition suggests students in the former group would be more likely
 to be struggling too much to have free time to volunteer in the first place,
@@ -747,7 +743,7 @@ In addition to P2, I also show the subsequent P3 (kernel project) grades,
 likewise broken down by who used Landslide previously during P2%
 \footnote{The P3 distributions are slightly smaller than those from P2,
 as some students dropped the class in between.
-A few new project groups also tend to appear during P3 as partnerships break up or re-form,
+Some new project groups also tend to appear during P3 as students either solo or find new partners,
 but as these cannot be meaningfully classified as Landslide users or non-users,
 I omit them here.
 }.
@@ -823,11 +819,13 @@ because each tests a different hypothesis.
 },
 although as in all $p$-value calculations,
 this rejects only the null hypothesis,
-not alternative hypotheses (such as ``more skilled students were more likely to sign up to begin with'').
+not alternative hypotheses,
+such as ``more skilled students were more likely to sign up to begin with''.
 %
 Ultimately, only the same-semester comparisons were significant.
 However, the distribution difference being smaller in P3 than in P2
 % TODO: is there a good way to treat this more formally?
+% TODO: run a combined A-D test for each of the two control pairs
 further suggests, albeit informally,
 that the larger impact in P2 is not attributable {\em only} to selection bias,
 or else a similar difference should have been observed in the P3 distributions.
@@ -879,19 +877,31 @@ but this pattern is at least consistent with the ``Landslide helps students subm
 	\label{tab:table-of-ze-studence}
 \end{figure}
 
+% combined test
+% > ad.test.combined(list(c(42,50,51,55,55,55,56,57,57,58,62,63,65,65,65,66,66,67,67,67,67,68,68,68,69,69,69,70,70,70,70,71,71,71,71,71,72,73,73,73,73,73,74,74,74,74,74,75,75,75,75,75,76,76,76,76,77,77,77,77,78,78,78,78,79,79,79,79,79,79,80,80,80,80,81,81,81,82,82,82,82,83,84,84,84,84,85,85,86,86,86,87,87,87,88,89,90,91,92,93,93,93,95),c(43,51,56,58,59,59,60,60,60,60,61,61,61,61,61,62,63,65,65,67,68,69,69,69,69,69,70,70,71,71,72,72,72,73,73,73,73,73,74,74,74,74,75,75,75,75,76,76,77,77,77,77,78,78,78,78,79,79,79,80,80,80,80,80,80,81,81,82,82,82,82,83,83,83,83,85,85,85,86,86,86,88,88,90,92,93)), list(c(65,68,72,72,73,75,75,75,75,75,76,76,76,76,77,77,77,78,78,78,78,78,78,79,79,80,80,80,80,80,80,80,81,82,82,82,82,82,82,83,83,83,83,83,83,84,84,84,84,85,85,85,85,85,85,85,85,85,85,86,86,86,86,86,86,86,86,86,87,87,87,88,88,88,88,88,89,89,89,89,90,90,90,90,90,91,91,91,91,92,92,93,93,93,94,95,95,95),c(60,62,63,64,65,68,69,72,72,74,75,75,75,75,76,76,77,77,77,77,78,78,78,78,79,80,80,80,81,81,81,81,81,81,81,81,81,82,82,82,82,82,83,83,83,84,84,84,84,84,84,84,85,86,86,87,87,88,88,88,88,88,88,88,89,89,89,89,89,90,90,90,91,92,92,92,93,94,95)))
+%            AD.comb T.comb  asympt. P-value
+% version 1:   2.176 0.1655           0.3324
+% version 2:   2.219 0.2055           0.3191
+%
+% > ad.test.combined(list(c(42,50,51,55,55,55,56,57,57,58,62,63,65,65,65,66,66,67,67,67,67,68,68,68,69,69,69,70,70,70,70,71,71,71,71,71,72,73,73,73,73,73,74,74,74,74,74,75,75,75,75,75,76,76,76,76,77,77,77,77,78,78,78,78,79,79,79,79,79,79,80,80,80,80,81,81,81,82,82,82,82,83,84,84,84,84,85,85,86,86,86,87,87,87,88,89,90,91,92,93,93,93,95),c(38,42,47,50,52,53,55,55,56,56,57,57,58,58,58,59,60,60,61,62,62,63,65,66,67,68,68,68,69,70,70,70,71,71,71,71,72,72,72,73,73,73,74,74,76,76,76,77,77,78,78,78,78,78,79,79,79,80,82,82,83,83,83,84,84,84,85,86,86,88,90,95,96,96)),list(c(65,68,72,72,73,75,75,75,75,75,76,76,76,76,77,77,77,78,78,78,78,78,78,79,79,80,80,80,80,80,80,80,81,82,82,82,82,82,82,83,83,83,83,83,83,84,84,84,84,85,85,85,85,85,85,85,85,85,85,86,86,86,86,86,86,86,86,86,87,87,87,88,88,88,88,88,89,89,89,89,90,90,90,90,90,91,91,91,91,92,92,93,93,93,94,95,95,95),c(45,58,66,70,72,72,72,72,74,74,74,75,75,75,77,77,77,78,78,78,79,79,79,79,79,79,80,80,81,81,81,81,81,82,82,83,83,83,83,83,84,84,85,85,86,86,86,86,86,86,87,87,89,89,89,89,90,91,91,91,93,93,93)))
+%            AD.comb T.comb  asympt. P-value
+% version 1:   5.256  3.058          0.01503
+% version 2:   5.560  3.343          0.01109
+
+
 \subsubsection{Common bugs}
 
 Based on the results from \sect{\ref{sec:education-eval-bugfinding}},
-I selected 3 bugs to study in depth to ascertain
+I selected 4 bugs to study in depth to ascertain
 whether Landslide played an instrumental difference
-in helping the students ultimately submit respecitvely correct implementations.
+in helping the students ultimately submit respectively correct implementations.
 To avoid bias of picking too obscure and/or trivial bugs
 that Landslide alone might find but even course staff would not expect students to solve,
 I chose only bugs which had substantial penalties in the grading rubric
 (guided, as well, by my own intuition as a former TA).
 While checking for a given bug's presence by manual inspection,
 I blinded myself to whether each group had been a Landslide user or not.
-After unblinding, I then also classified students who used Landslide in general,
+After unblinding, I then re-classified students who used Landslide in general,
 but whose usage snapshots showed they did not run the test case in question,
 as non-users.
 Table~\ref{tab:eval-common-bugs} presents the results.
@@ -1009,8 +1019,8 @@ which biases thread scheduling towards the interleaving required to exhibit the 
 Hence, despite being a subtle concurrency bug,
 the official course test suite is likely to expose it,
 so comparing how many Landslide users and non-users submitted this bug in particular
-speaks more to the impact of Landslide's preemption traces
-in helping students diagnose a bug that a ``stress'' test could already find.
+would speak more to the impact of Landslide's preemption traces
+in helping to diagnose a bug that a ``stress'' test could already find.
 %
 {\tt paraguay} is itself the Landslide-friendly test for its eponymous bug.
 %, and
@@ -1070,8 +1080,8 @@ and the next section will attempt to evaluate such quality-of-life improvements 
 On the other hand, because the {\tt thr\_exit()} bug typically manifests as a use-after-free,
 the official tests must stress the thread library until the memory in question gets re-allocated
 in just the right interleaving pattern to cause corruption that leads to a visible crash.
-Landslide, on the other hand, detects this error immediately upon access (\sect{\ref{sec:landslide-valgrind-mode}}),
-with no need for such complex corruption conditions.
+Landslide, meanwhile, detects this error immediately upon access (\sect{\ref{sec:landslide-valgrind-mode}}),
+with no need for complex corruption conditions.
 Among the 11 Landslide users who submitted correct {\tt thr\_exit()}s in this regard,
 it is difficult to say whether the heap checking alone, together with unit or stress tests,
 would have been sufficient,
@@ -1262,7 +1272,7 @@ Firstly, in all cases the students were able to recognize the false positive qui
 and I was able to deploy a fix and let them proceed before the project came due.
 Secondly, each such problem, now having been fixed, will befall no future student again --
 not to assert Landslide is completely bug-free now,
-but it at least grows more and more stable with each passing semester.
+but at least that it grows more and more stable with each passing semester.
 
 \subsubsection{Reasons worthwhile}
 
@@ -1271,11 +1281,10 @@ I asked the students for open-form reasons why or why not.
 As the former question's answers were exclusively positive (only 1 student even answering ``no opinion''),
 this question's answers turned out to be mostly praise.
 3 students declined to answer this question;
-I reproduce the rest, paraphrasing for clarity and brevity,%
+I reproduce the rest here, paraphrasing for clarity and brevity%
 \footnote{Note that most students used the term ``race condition'' rather than ``concurrency bug'',
 as taught in CMU and PSU lecture material;
-I replaced these while paraphrasing in accordance with \sect{\ref{sec:glossary}}.}
-here.
+I replaced these while paraphrasing in accordance with \sect{\ref{sec:glossary}}.}.
 Answers from CMU:
 
 \begin{enumerate}
@@ -1369,7 +1378,7 @@ for example, showing the sets of memory conflicts between each thread,
 annotating the type of each preemption point (yield, mutex, or data race),
 and/or indicating the adversarial memory access for each data race preemption point.
 
-\subsection{Other universities}
+\subsubsection{Other universities}
 
 Comparing the survey response distributions between CMU versus PSU and U. Chicago (Figure~\ref{fig:survey}),
 CMU students tended to verify their bugfixes more often by re-running Landslide
@@ -1402,7 +1411,7 @@ but many of them presented tentatively positive results nonetheless.
 Landslide helped many students find and fix many bugs (\sect{\ref{sec:education-eval-bugfinding}}),
 but making a direct comparison to stress testing, the prior state of the art, is not straightforward.
 %and not statistically significant,
-Immediate improvement in students' project grades was observed,
+Immediate improvement in students' project grades was observed
 (\sect{\ref{sec:education-eval-grades}}),
 although statistical significance was lost when attempting to account for selection bias;
 and impact on grades alone is a very narrow measure of pedagogical value anyway.
@@ -1438,8 +1447,8 @@ the participation rate rose to 58\% (Table~\ref{tab:photo-of-ze-studence})
 among all P2-submitting groups.
 Reaching over half the class could already be seen as a major step in mitigating said selection bias.
 
-Beyond participation, I anticipated several forms of bias affecting the survey responses.
-First of all, I suspected that students might feel compelled to be overly polite in their answers
+The survey may also be susceptible to several sources of bias beyond participation itself.
+I suspected students might feel inclined to be overly polite in their answers
 (whether consciously or subconsciously).
 I attempted to counteract this by concluding my survey link emails with,
 {\em Please try to answer honestly rather than flatteringly--if any part
@@ -1503,7 +1512,7 @@ the following questions could have improved the survey.
 		would or would not be reasonable for Landslide to record and report.
 	\item {\em For each bug Landslide found in your code, how trivial or severe do you feel it was?}
 		This would help get a sense of how the students regarded Landslide
-		on a spectrum between annoying style check or as a life-saver,
+		on a spectrum between annoying style checker or a life-saver,
 		and potentially suggest options to make Landslide suppress certain types of bug reports.
 		For example, it currently reports spin-wait loops in {\tt mutex\_lock()} as bugs
 		with a special message referring students to relevant lecture slides,
@@ -1515,7 +1524,7 @@ Some students (around 0 to 2 per semester if memory serves)
 emailed me during P3
 to ask if they could test their kernels with Landslide just like their thread libraries.
 I answered each by explaining that it would take more effort on their part,
-and if they were still interested,
+and then if they were still interested,
 guided them through the annotations on a case-by-case basis.
 This process was not included in the IRB-approved study protocol,
 so I collected no results from them.
@@ -1529,7 +1538,8 @@ Such a survey would ask, for example,
 {\em Have you encountered any debugging problems since finishing OS that made you wish for a tool like Landslide?}
 and
 {\em Do you feel the way you think about testing, debugging, and program correctness
-has been influenced in any way by using Landslide?}.
+has been influenced in any way by using Landslide?}
+to evaluate its lasting impact on their understanding of concurrency.
 
 \subsubsection{Pintos}
 
@@ -1545,7 +1555,7 @@ as described in \sect{\ref{sec:education-pintos-instrumentation}}).
 Had I given Landslide directly to students that semester,
 the students themselves would have had to email me for tech support.
 
-I attribute the low participation rate of Pintos students to P2 students to two major factors:
+I attribute the comparatively low participation rate of Pintos students to two major factors:
 one, not incentivizing the students to directly improve their grades
 (instead offering only the vague promise of a ``learning experience'' debugging their code only after handin),
 and two, not traveling to the university to introduce the research topic in an in-person lecture
@@ -1558,26 +1568,28 @@ or by offering an autograder-like interface for students to receive bug reports 
 \subsection{Future educational use}
 
 %{\bf Pebbles.}
-Now that I'm done collecting student usage data to publish as research results,
-and no longer bound by the IRB's requirement that Landslide not be used to assign grades
+Now being done collecting student usage data to publish as research results,
+and no longer bound by the IRB's requirement that Landslide be isolated from the grading process
 lest it be seen as coercion to participate,
-Professor Eckhardt and I have been discussing options to deploy it as an official part of 15-410's curriculum.
+Professor Eckhardt and I have discussed options to deploy it as an official part of 15-410's curriculum.
 This section has already clearly shown students are capable of debugging with it on their own time,
 and I believe it well-automated enough to supplement Fritz (the existing stress testing infrastructure)
 in the class's grading process as well.
 TAs could also, at their option, use Landslide by hand to confirm any bugs encountered during manual inspection
 and/or write new Landslide-friendly tests to expose bugs not yet targeted by the 6 tests offered here.
+
 Over the study's seven semesters,
 I believe the stability of Landslide's instrumentation process has improved enough
 to require little to no ongoing technical support anymore,
 although Landslide-specific office hours may still prove helpful.
-I am also willing to continue giving the guest lecture as long as proximity and curriculum allow.
+I am willing to continue giving the guest lecture as long as proximity and curriculum allow,
+although I also hope the documentation herein be enough to pass the mantle like any other piece of the course infrastructure.
 Future problems to address include grading bias
 (i.e., students submitting blindly-hacked code that just barely passes Landslide,
 even if not necessarily correct,
 thereby gaming the autograder),
 and improving usability to reach even the most struggling students
-(i.e., those past 42\% who submitted P2s without participating in the study).
+(i.e., that last 42\% who submitted P2s without participating in the study).
 
 %{\bf Pintos.}
 Regarding non-research use in Pintos classes,
@@ -1597,6 +1609,6 @@ provided me present to handle technical issues,
 serves as testament for stateless model checking in general in the educational theatre.
 While Pintos's kernel-level environment presents a unique challenge for concurrency testing,
 other, more readily automatic model checkers for user-space programs,
-such as dBug \cite{dbug-ssv},
+such as dBug \cite{dbug-ssv} or CHESS \cite{chess},
 could easily be used on other thread-library-like programming projects at any university.
 

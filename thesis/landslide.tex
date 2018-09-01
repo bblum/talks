@@ -692,6 +692,7 @@ which lets it avoid false positive heap errors from other programs which have di
 ({\tt check\_user\_address\_space()} and {\tt ignore\_user\_access()}.
 
 \subsubsection{Heap checking}
+\label{sec:landslide-valgrind-mode}
 
 {\tt mem\_update()} serves as the main entrypoint for tracking heap allocations.
 It's called every instruction to check for the boundaries of the {\tt malloc} library,
