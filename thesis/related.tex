@@ -52,10 +52,6 @@ integrates with Parrot \cite{parrot}, a determinizing runtime scheduler,
 to approach state space reduction from a different angle by limiting which thread interleavings are possible to begin with.
 
 Other checkers target specific programming languages' concurrency models and/or thread communication APIs.
-Relacy \cite{relacy} is a header-only C++ SCT library for verifying synchronization primitives.
-It instruments the existing C++ atomics API,
-although requires custom annotations for other types of memory accesses,
-and notably includes relaxed memory nondeterminism in its concurrency model.
 Inspect \cite{inspect} uses a static alias analysis to instrument and preempt all memory accesses to potentially-shared data.
 SPIN \cite{spin} tests algorithms defined in the PROMELA domain-specific language,
 instruments every memory access, and
@@ -73,6 +69,42 @@ The Rust language \cite{rust-language}
 provides a more C++-like type system that also
 %, which I contributed to personally,
 achieves the same guarantee, although I know of no existing SCT for it yet.
+
+The problem of relaxed memory nondeterminism alone has inspired the creation of several new SCTs in the past few years.
+Relacy \cite{relacy}, a header-only C++ SCT library for checking synchronization primitives,
+was the first to broach this field,
+although requires custom annotations for non-atomic memory accesses
+and
+%(according to later citing papers) % cdschecker
+does not fully model all possible relaxed memory behaviours.
+%designed for verifying synchronization primitives,
+CDSChecker \cite{cdschecker} extends DPOR with a {\em reads-from} relation
+to capture most of the C++11 memory model's new behaviours.
+Nidhugg \cite{nidhugg} is a SCT for TSO and PSO which instruments LLVM abstract assembly,
+% i don't actually know what the difference is #overlyhonestmethods
+although does not yet support the C++11 memory model.
+%% actually it doesn't -- they say they take the Source DPOR worse version. im confus?
+% and extends the Optimal DPOR algorithm (discussed below) to include store buffer nondeterminism.
+rInspect \cite{tsopso}
+%models TSO and PSO differently, using shadow threads, and
+offers further heuristic state space reduction using buffer bounding (described below).
+RCMC \cite{rcmc} models a ``repaired'' version of the C++11 memory model known as RC11 \cite{rc11},
+and professes to achieve the best state space reduction to date.
+These tools each use various heuristics to account for spin-wait loops,
+ranging from delay bounding \cite{bpor} to a rigid rewrite rule,
+and provide only limited support so far for read-modify-write atomics
+(at best, supporting them by introducing % oops
+some redundant exploration).
+%
+No relaxed-memory SCT has yet proposed a satisfactory model for the ``thin-air'' problem \cite{sully-thesis},
+which can cause state space cycles in a way not yet well-understood and remains future work.
+%and notably includes relaxed memory nondeterminism in its concurrency model.
+They also identify all data races
+% TODO check if ther'es not a better section reference
+(by the C++ definition rather than \sect{\ref{sec:quicksand-soundness}}'s)
+as bugs immediately, rather than checking them for benign or buggy outcomes.
+All of these tools are notably open-source -- an encouraging recent trend in the field.
+
 
 If I might indulge by listing Landslide in its own related work section \cite{this-thesis},
 I would distinguish it by its ability to find shared memory preemption points via dynamic tracing,
@@ -126,18 +158,23 @@ by exploiting the fact that the dependency relation is transitive in the absence
 The $R^4$ algorithm \cite{r4} (corresponding to the R4 checker mentioned above)
 extends DPOR to event-driven programs by separating the notion of enabled events from that of multiple threads.
 DPOR for TSO and PSO \cite{tsopso}
-extends the concurrency model to include store buffer reordering,
+extends the concurrency model
+using {\em shadow threads}, which interleave with traditional threads to represent store buffer nondeterminism,
 which can expose bugs not even possible in the strong consistency model
 such as discussed in \sect{\ref{sec:tm-warpzone-relaxed}}.
 It also introduced a heuristic {\em buffer bounding} technique, analogous to ICB,
 to mitigate the corresponding increase in state space size.
+The same year, Nidhugg \cite{nidhugg} proposed a DPOR extension to account for TSO and PSO
+using {\em chronological traces}.
 MCR was recently extended to support relaxed memory models likewise \cite{mcr-tsopso}.
-Along the same lines, this work's Chapter~\ref{chap:tm}
-extended DPOR's concurrency model for HTM,
-and proposed two new reduction strategies, one sound and one heuristic,
-to find new types of equivalences.
-% TODO
-% effective stateless model checking for c/c++ concurrency - popl 18
+Just this year, RCMC \cite{rcmc} proposed to replace the interleaving model entirely with {\em execution graphs},
+offering further reduction still.
+Somewhat analogously for HTM, this work's Chapter~\ref{chap:tm}
+extended DPOR's concurrency model to include failure injection,
+% not "new" -- abstraction reduction is the same as always
+and proposed three reduction strategies, one sound and two heuristic,
+%to make some progress up the exponential mountain.
+to keep state spaces manageable.
 
 Of course, no matter how optimal a sound reduction, there will always be programs too large to test.
 To provide even partial results for state spaces that exceed the testing budget
