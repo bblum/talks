@@ -227,7 +227,7 @@ Recent work has used proof assistants to formalize some of the execution semanti
 of x86 in general \cite{x86-semantics}
 and of transactions in particular (at both hardware- and language-level) \cite{relaxed-transactions-pldi}.
 However, state-of-the-art advances in model checking algorithms
-still state their theorems and proofs in prose \cite{bpor,optimal-dpor,tsopso,satcheck,mcr,quicksand,cpp-model-checking},
+still state their theorems and proofs in prose \cite{bpor,optimal-dpor,tsopso,satcheck,mcr,quicksand,rcmc},
 so this section's proofs will regrettably do likewise,
 leaving the rigor of mechanization to future work.
 The reader may at least rest assured that the proofs herein
@@ -684,6 +684,19 @@ Landslide remembers those threads' expected {\tt xbegin} results
 and refuses to test any others
 (unless DPOR separately found them, too, to conflict),
 thereby skipping over (i.e., pruning) reorderings of any other {\tt xbegin} results that would be independent.
+Like sleep sets, it also considers the preempted thread ``retry-set blocked''
+(like sleep-set blocking \cite{optimal-dpor}),
+and refuses to run it until the conflicting thread runs its transaction first,
+unless such would result in deadlock%
+\footnote{
+	Before the search ordering update to Landslide's normal sleep sets implementation
+	(\sect{\ref{sec:landslide-sleepsets}}),
+	I observed false-positive retry-set-blocked deadlocks fairly often;
+	after the update,
+	it took until 981773 interleavings (>9 hours) into {\tt htm2}(3,2) to find one
+	and confirm the need to still explicitly avoid them by abandoning the retry set in such cases.
+	% TODO put a commit # here
+}.
 %The {\tt landslide} repository's {\tt retry-sets} branch implements this feature,
 Upcoming in the evaluation, Figure~\ref{fig:retry-reduction} will visualize the reduction achieved in two test cases.
 
@@ -1190,9 +1203,13 @@ I report their estimated state space size and runtime measured after that timeou
 			& 2,1 & \cpu{18.26}	& \ints{22}	& \cpu{17.99}	& \ints{15}	& \cpu{3.25}	& \ints{4} \\
 			& 2,2 & \cpu{63.61}	& \ints{1446}	& \cpu{26.40}	& \ints{334}	& \cpu{28.04}	& \ints{286} \\
 			& 2,3 & \cpu{3429.04}	& \ints{86536}	& \cpu{196.18}	& \ints{6366}	& \cpu{997.91}	& \ints{24740} \\
-			& 2,4 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
+			& 2,4 & \ETAdag{29d 8h}	&\ETAdag{2710056}&\cpu{4771.17}	& \ints{123140}	&\ETAdag{5d 1h}	&\ETAdag{1792330} \\
+			% [JOB 4] progress: 683895/2710056 brs (25.235453%), ETA 28d 21h 54m 32s (elapsed 9h 59m 54s)
+			% [JOB 4] progress: 714585/1792330 brs (39.869037%), ETA 4d 14h 46m 38s (elapsed 9h 59m 54s)
 			& 3,1 & \cpu{43.24}	& \ints{774}	& \cpu{24.02}	& \ints{224}	& \cpu{22.79}	& \ints{140} \\
-			& 3,2 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
+			& 3,2 &\ETAdag{1y 299d}	&\ETAdag{4510472}& \ETAdag{qqq}	& \ETAdag{qqq}	&\ETAdag{10d 16h}&\ETAdag{2322150}\\
+			% [JOB 4] progress: 759740/4510472 brs (16.843911%), ETA 1y 298d 22h 14m 13s (elapsed 9h 59m 55s)
+			% [JOB 4] progress: 646606/2322150 brs (27.845142%), ETA 10d 5h 50m 15s (elapsed 9h 59m 55s)
 			& 4,1 & \cpu{9225.52}	& \ints{212146}	& \cpu{376.70}	& \ints{11973}	& \cpu{2158.93}	& \ints{44995} \\
 			%% i don't even remember which test case this commented stuff was for anymore
 			% measured with !CONSIDER_ONLY_MOST_RECENT_DPOR_PREFERRED_TID
@@ -1232,13 +1249,18 @@ I report their estimated state space size and runtime measured after that timeou
 			& 2,1 & \cpu{739.60} 	& \ints{20459} 	& \cpu{332.32}	& \ints{9675}	& \cpu{122.40}	& \ints{2774} \\
 			& 2,2 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	&\ETAdag{36393y}&\ETAdag{35094477}\\
 			% progress: 302022/35094477 brs (0.860597%), ETA 36392y 304d 6h 53m 45s (elapsed 9h 58m 49s)
-			& 3,1 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	&\ETAdag{97y 100d}&\ETAdag{1698185036} \\
+			& 3,1 & \ETAdag{5y 292d}&\ETAdag{2873664642}&\ETAdag{qqq}& \ETAdag{qqq}	&\ETAdag{97y 100d}&\ETAdag{1698185036} \\
+			% [JOB 18] progress: 447687/2873664642 brs (0.015579%), ETA 5y 291d 11h 13m 30s (elapsed 9h 59m 41s)
 			% [JOB 18] progress: 357586/1698185036 brs (0.021057%), ETA 97y 99d 8h 44m 33s (elapsed 9h 59m 41s)
 			\hline
 			{\tt map\_basic}
 			& 2,1 & \cpu{1950.48}	& \ints{30719}	& \cpu{867.68}	& \ints{13237}	& \cpu{367.91}	& \ints{5446} \\
-			& 2,2 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
-			& 3,1 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq} \\
+			& 2,2 & \ETAdag{1y 176d}&\ETAdag{75516602}&\ETAdag{qqq}	& \ETAdag{qqq}	&\ETAdag{13d 11h}&\ETAdag{565334} \\
+			% [JOB 22] progress: 87777/75516602 brs (0.116235%), ETA 1y 176d 16h 38m 50s (elapsed 3h 1m 48s)
+			% [JOB 22] progress: 18380/565334 brs (3.251171%), ETA 13d 1h 5m 3s (elapsed 38m 33s)
+			& 3,1 &\ETAdag{6y 133d}&\ETAdag{1847957714}&\ETAdag{qqq}& \ETAdag{qqq}	&\ETAdag{4y 156d}&\ETAdag{888242178} \\
+			% [JOB 22] progress: 284530/1847957714 brs (0.015397%), ETA 6y 132d 6h 20m 26s (elapsed 9h 49m 5s)
+			% [JOB 22] progress: 274532/888242178 brs (0.030907%), ETA 4y 155d 23h 50m 51s (elapsed 9h 47m 5s)
 			\hline
 			{\tt map\_basicer}
 			& 2,1 & \cpu{28.40} 	& \ints{150} 	& \cpu{26.55}	& \ints{94}	& \cpu{14.88}	& \ints{9} \\
