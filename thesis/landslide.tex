@@ -1498,7 +1498,9 @@ shown in Figure~\ref{fig:dpor-example-2}.
 \end{figure}
 
 Ultimately, the second half of the state space is pruned symmetrically.
-In general, the number of ways to interleave two threads executing $N$ and $M$ events each is given by ${N+M \choose N}$;
+In general, the number of ways to interleave two threads executing $N$ and $M$ events each is given by ${N+M \choose N}$%
+\footnote{Generalizing to $K$ threads, and simplifying to the same number $N$ of events each,
+this formula becomes $\frac{n!k!}{n!^k}$.};
 in this case, the original state space's size was ${3+3 \choose 3} = 20$.
 DPOR's reduction is characterized by replacing $N$ and $M$ with the number of {\em conflicting} events only;
 in this case, ignoring all {\tt tmpN++} reorderings and testing only ${2+2 \choose 2} = 6$ branches.
@@ -1928,8 +1930,8 @@ Then, to summarize in pseudocode a na\"ive exploration of some state space $U$ a
 ICB's approach could likewise be summarized as follows:
 
 \begin{algorithm}[h]
-	\For{$n \in [0..\mathsf{max}_P(U)]$}{
-		\ForEach{$S \in U, P(S) \le n$}{
+	\For{$B \in [0..\mathsf{max}_P(U)]$}{
+		\ForEach{$S \in U, P(S) \le B$}{
 			Execute($S$)
 		}
 	}
@@ -1939,10 +1941,10 @@ ICB's approach could likewise be summarized as follows:
 
 %% stupid imperative way to write it
 %\begin{algorithm}[h]
-%	\For{$n \in [0..\infty]$}{
+%	\For{$B \in [0..\infty]$}{
 %		$\mathsf{skipped\_any} := \mathsf{false}$ \\
 %		\ForEach{$S \in U$}{
-%			\uIf{$P(S) \le n$}{
+%			\uIf{$P(S) \le B$}{
 %				Execute($S$)
 %			} \Else {
 %				$\mathsf{skipped\_any} := \mathsf{true}$
@@ -1977,8 +1979,8 @@ decides if a given thread would require a preemption beyond the current bound to
 \footnote{Since ``voluntary'' context switches (e.g. arising from {\tt yield()})
 are often necessary for correct execution,
 {\tt ICB\_BLOCKED} does not count such switches towards the preemption count.
-Therefore, within a certain preemption bound $b$,
-interleavings with more than $b$ context switches may still be tested.
+Therefore, within a certain preemption bound $B$,
+interleavings with more than $B$ context switches may still be tested.
 }.
 The DPOR implementation then checks, for some $I_{ij}$ it wants to mark for exploration,
 whether {\tt ICB\_BLOCKED(}$T_j${\tt )} at the state after $t_i$,
@@ -1989,6 +1991,36 @@ This core ICB loop appears in {\tt time\_travel()} in {\tt landslide.c}.
 Although not explicitly structured as a C-style loop in the code,
 it resets Landslide's progress through the state space,
 allowing exploration to continue until it finally observes all interleavings to have fewer preemptions than the bound.
+
+\subsubsection{Complexity}
+
+If the search is terminated early after reaching a predetermined fixed bound for $B$,
+ICB in principle reduces the state space from exponentially-sized%
+\footnote{Combinatorial, to be precise; see \sect{\ref{sec:landslide-dpor-example}}.}
+in both $K$, the number of threads,
+and $N$, the number of events,
+to still exponential in $K$ (typically small) but only polynomial in $N$ (typically large).
+Under a preemption bound of $B$, there are only $B+K$ opportunities for context switching%
+\footnote{This $K$ appears from the ``mandatory'' context switches at thread exit;
+more of which could also be introduced from blocking synchronization.},
+% "roughly" - i.e., this formulation allows choosing all B preemptions from the same thread,
+% which is only possible when K >= B i guess
+% it's an overapproximation but getting it more precise seems like it'd be way more complex,
+% and the overapproximation is good enough to make this point anyway
+% also an underapprox because this doesn't count interleavings with b<B preemptions but that's a constant factor
+so the corresponding state space size is at most ${KN \choose B}(B+K)!$.
+All $N$-related factors therein are bounded above by $N^B$.
+
+Prior work often recommends 2 for such a cutoff \cite{chess-icb,smc-empirical-study,dejafu},
+although \sect{\ref{sec:quicksand-eval}}'s larger dataset suggests 3 would be considerably more thorough.
+On the other hand, any finite such bound can provide only a heuristic verification guarantee anymore.
+Preserving the full formal verification, i.e., continuing iteration until $B = \mathsf{max}_P(U)$
+not only remains exponential in $N$,
+% again overapproximating because each previous iteration is combinatorially smaller than the next
+but also introduces a factor of $\mathsf{max}_P(U)$ repeated work.
+Future work could memoize already-tested interleavings so that each iteration of $B$ could test only
+those schedules with exactly $B$ preemptions,
+restoring the original $B$-independent (but still exponential) complexity.
 
 \subsubsection{Bounded Partial-Order Reduction}
 
