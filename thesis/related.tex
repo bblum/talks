@@ -15,14 +15,14 @@ If you take it from only one place, it becomes rigid and stale.
 }
 {Iroh, Avatar: The Last Airbender}
 
-Had I a dollar for every programmer before me who thought to ``solve'' concurrency with a perfect debugging tool,
-well,
-it probably would not be quite enough to retire on.
-At any rate,
-this field is built of the contributions of many a brilliant mind
+%Had I a dollar for every programmer before me who thought to ``solve'' concurrency with a perfect debugging tool,
+%well,
+%it probably would not be quite enough to retire on.
+%At any rate,
+This field is built of the contributions of many a brilliant mind
 trying to carve out a presentable space in an overall impossible problem,
 each making their own tradeoffs along the way.
-While the previous chapters cited prior work as necessary in background discussions, algorithm descriptions, and so on,
+While previous chapters cited prior work as necessary in background discussions, algorithm descriptions, and so on,
 this chapter aims to comprehensively tour the field,
 orienting the reader's understanding of Landslide in the space of said tradeoffs.
 
@@ -103,7 +103,7 @@ They also identify all data races
 % TODO check if ther'es not a better section reference
 (by the C++ definition rather than \sect{\ref{sec:quicksand-soundness}}'s)
 as bugs immediately, rather than checking them for benign or buggy outcomes.
-All of these tools are notably open-source -- an encouraging recent trend in the field.
+All the tools in this paragraph are notably open-source -- an encouraging recent trend in the field.
 
 
 If I might indulge by listing Landslide in its own related work section \cite{this-thesis},
@@ -168,6 +168,7 @@ The same year, Nidhugg \cite{nidhugg} proposed a DPOR extension to account for T
 using {\em chronological traces}.
 MCR was recently extended to support relaxed memory models likewise \cite{mcr-tsopso}.
 Just this year, RCMC \cite{rcmc} proposed to replace the interleaving model entirely with {\em execution graphs},
+which precisely model the executions legal under the RC11 memory model,
 offering further reduction still.
 Somewhat analogously for HTM, this work's Chapter~\ref{chap:tm}
 extended DPOR's concurrency model to include failure injection,
@@ -202,11 +203,126 @@ with the sound reduction analyses listed above.
 
 \section{Data race analysis}
 
+Data race analysis, originating with the lockset-only analysis of Eraser \cite{eraser},
+has since grown into a mature field in its own right,
+which Landslide more borrows as building blocks for its own methods rather than contributing new techniques to.
+% TODO fix terminology not to conflict with dpor
+Race detectors are largely distinguished by their particular flavour of the Happens-Before (HB) relation,
+as discussed in \sect{\ref{sec:background-hb}}.
+Djit+ \cite{djit} and FastTrack \cite{fasttrack} are among those
+which soundly avoid false positives using ``Pure'' HB,
+tracking Lamport-style vector clocks \cite{lamport-clocks}
+for each lock and each thread to compute a global partial order on shared state accesses,
+and flag any access pair not related thereby.
+FastTrack optimizes Djit+'s analysis rules to remove $O(K)$ runtime factors (i.e., linear in the number of threads)
+from several common read and write tracing events;
+however, because $K$ is relatively small in model checking's use cases,
+Landslide uses the Djit+ rules for the sake of implementation simplicity.
+Meanwhile, the ``hybrid'' approach which combines DPOR-style happens-before with locksets \cite{hybriddatarace},
+used in tools such as ThreadSanitizer \cite{tsan},
+compute a more relaxed partial order to find more potential races in a single pass at the cost of false positives.
+I called this ``Limited'' HB on account of how it excludes only those access pairs separated by blocking synchronization,
+not those separated by just locks or barriers,
+as compared to Pure HB.
+Landslide's Limited HB implementation piggy-backs on DPOR's computed happens-before relation,
+supplemented with straightforward lock-sets and heuristic treatment of lock hand-off
+(often common in kernels).
+
+Since these foundational algorithms,
+many more recent works have contributed to make data-race analysis more precise, more performant,
+and/or more domain-specific.
+The Causally-Precedes relation \cite{predictive-dr} is a refinement of Limited HB which avoids the most common cases of false positives,
+% TODO section refrance
+including \sect{\ref{sec:quicksand-soundness}}'s reallocation false positives.
+It could strike a middle ground in the bug-finding/verification tradeoff
+between Pure and Limited HB (\sect{\ref{sec:quicksand-eval}})
+that would be a welcome enhancement in Quicksand.
+IFRit \cite{ifrit}
+improves the performance of Pure HB using an interference analysis,
+which could allow future work to avoid tracing every memory access in a simulator such as Bochs \cite{bochs} or Simics \cite{simics}.
+%
+DroidRacer \cite{droidracer} and CAFA \cite{cafa} find data races in Android applications,
+using domain-specific heuristics (orthogonal to Quicksand's method) to reduce false positives.
+DataCollider \cite{datacollider} finds data races in kernel code
+by using hardware breakpoints and random sampling to achieve high performance.
+% TODO: read some more recent confs for data race shit since thesprop
+% probably like weak memory c.c
+
+Although many SCTs listed in the previous section are content to report any data races as outright bugs,
+RacerX \cite{racerx} showed that tools must be careful not to overwhelm the user with benign warnings
+that she doesn't care about fixing.
+This has motivated replay analysis
+to classify data-race candidates by their impact on program behaviour
+by extending single-pass data-race analysis to many thread interleavings.
+It was first introduced in \cite{recordreplaydrs},
+which compares the program states immediately after the access pair for differences,
+preferring still to err on the side of false positives (as different program states might not necessarily lead to a failure).
+RaceFuzzer \cite{racefuzzer} avoids false positives by requiring an actual failure be exhibited, as Quicksand does,
+although it uses random schedule fuzzing rather than systematic testing for its concurrency coverage.
+%
+Portend \cite{portend} is closest in spirit to Quicksand:
+it tests alternate executions based on single-pass data-race candidates to classify them in a taxonomy of likely severity,
+including non-failing races which nevertheless cause nondeterministic output
+in addition to obvious failures.
+However, it does not
+test alternate interleavings in advance of knowing any specific data races,
+% TODO more speicifc section refrance
+which \sect{\ref{sec:quicksand-eval}} showed is necessary to find certain bugs.
+Quicksand builds on Portend's approach by introducing a feedback loop between the data-race analysis and SCT,
+which results in a stronger verification property
+when the test can be fully completed (\sect{\ref{sec:quicksand-soundness}}).
+Portend also uses symbolic execution to test input nondeterminism as well as schedule nondeterminism,
+while Quicksand remains at the mercy of manual test case design.
+Future work could incorporate Portend's taxonomy to better help the user understand any non-failing data races
+when the test is too large to complete,
+as well as its symbolic execution to help user-provided tests achieve better coverage automatically.
+
 \section{Educational debugging}
 
 Willgrind \cite{willgrind}
 
 \section{Transactional memory}
+
+Transactional memory (TM), first introduced in 1993 \cite{transactional-memory},
+% TODO expand this to talk about some stm implementations?
+has received renewed attention in recent years with the announcement of Intel's Haswell architecture \cite{htm-haswell},
+which supports hardware transactions (HTM) using new x86 instructions.
+Since then, many studies have evaluated the increased performance it offers over traditional locking and/or STM
+\cite{tm-benchmark-cmu}. % TODO more
+%
+HTM's performance comes at an increased cost in complexity to the programmer,
+who must avoid system calls or transaction nesting, respect the CPU cache capacity,
+and consider retry loops for spurious failure.
+SI-TM \cite{si-tm} introduces techniques for reducing HTM's abort rates for performance's sake,
+but without eliminating them altogether, any full verification must still consider them possible anywhere.
+For programmers who wish to avoid such concerns,
+the simpler STM programming model remains relevant.
+One recent work \cite{hybrid-htm-stm} enhances STM transactions to nest with HTM ones,
+while another \cite{stm-relaxed-memory} adds support for relaxed memory models.
+Such extensions come with the challenge of even more complicated behavioural semantics
+for SCT to accurately model and verify in future work.
+
+Testing approaches for transactional programs are sparsely represented in the literature so far.
+Although several related works \cite{tm-correctness,tm-completeness,specifying-verifying-tm}
+are building up to formal proofs of the correctness of underlying TM {\em implementations},
+Landslide is the first I know of to verify client programs thereof.
+McRT STM \cite{mc-tm-with-spin} uses SPIN \cite{spin} to model check an STM implementation
+up to 2 threads running 1 transaction each with up to 3 memory accesses.
+This kind of verification,
+analogous to \sect{\ref{sec:education-pebbles-tests}}'s {\tt mutex\_test},
+is an important stepping stone for trusting the results Landslide will provide.
+% TODO more tm impl verifs
+
+% TODO: find a home for this sentence
+{\em Learning from Mistakes} \cite{learning-from-mistakes},
+a survey of the characteristics of many types of concurrency bugs,
+found that TM could potentially fix some, but not all, of the studied bugs,
+while in other cases it must be combined with other concurrency primitives to be fully correct,
+motivating the use of SCT to verify such transactional code.
+
+
+
+
 
 % cchtm - the intel ismm17 paper on nvram htm
 % stamp (mb just cite from txn section)
