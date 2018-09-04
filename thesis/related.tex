@@ -249,8 +249,8 @@ by using hardware breakpoints and random sampling to achieve high performance.
 % probably like weak memory c.c
 
 Although many SCTs listed in the previous section are content to report any data races as outright bugs,
-RacerX \cite{racerx} showed that tools must be careful not to overwhelm the user with benign warnings
-that she doesn't care about fixing.
+RacerX \cite{racerx} showed that tools must be careful not to overwhelm users with benign warnings
+they don't care about fixing.
 This has motivated replay analysis
 to classify data-race candidates by their impact on program behaviour
 by extending single-pass data-race analysis to many thread interleavings.
@@ -277,9 +277,73 @@ Future work could incorporate Portend's taxonomy to better help the user underst
 when the test is too large to complete,
 as well as its symbolic execution to help user-provided tests achieve better coverage automatically.
 
-\section{Educational debugging}
+\section{Concurrency in Education}
 
-Willgrind \cite{willgrind}
+The operating systems curriculum at CMU has used the Pebbles project infrastructure
+and assigned the thread library \cite{thrlib} and kernel \cite{kspec} projects
+in something recognizably close to their modern forms since the Fall 2003 semester.
+% the author's first semester of high school
+I chose Pebbles to target with Landslide because it is closest to home, naturally.
+To indulge my bias as a former member of 15-410 course staff,
+I also believe that Pebbles's open-ended, design-oriented project structure is best suited
+to train students to design robust concurrent code and debug it efficiently,
+as it forces them to consider interactions between many different parts of their design simultaneously.
+However, the difficulty of its concurrency problems (mostly having to do with thread lifecycle)
+leaves little time left in the semester to cover more modern topics
+such as multicore scheduling let alone transactions or relaxed memory
+(all relegated to lecture material not reinforced by the assignments).
+
+Pintos \cite{pintos} has recently emerged as the most popular educational kernel
+(by count of top CS schools in the USA who teach by it);
+it trades off the prevalence of its concurrency challenges to cover various OS topics more broadly,
+especially advanced scheduling algorithms and filesystems.
+Pintos is the stand-alone evolution of its predecessor, Nachos \cite{nachos},
+which originally ran as a UNIX process with simulated device drivers.
+Its popularity motivated me to extend Landslide to support it as an additional kernel architecture
+(an unfortunately arduous task)
+to prove Landslide's mettle beyond CMU's walls.
+Xv6 \cite{xv6}, from MIT, is another major educational kernel, which is also UNIX-like and runs in QEMU,
+and a natural target for model checking in future work.
+Recently, Columbia introduced a new Android-focused OS course \cite{teaching-android},
+which perhaps highlights the importance of related work on model-checking event-driven applications \cite{r4}.
+
+To my knowledge, this is the first study of model checking in an educational setting,
+although teaching concurrency is not itself an unstudied problem.
+%% tf??
+% Eytani et al.~\cite{towards-a-framework} present a promising framework for testing concurrent programs,
+% which can incorporate model checking as well as static analysis, resource exhaustion, data-race analysis, and coverage analysis.
+% However, it lacks an evaluation, and makes mention of its educational value only in its future work remarks.
+%
+%One recent study~
+\cite{how-studence} surveyed how students think about
+testing and debugging during a concurrent programming project,
+finding that unguided, students often approach testing haphazardly,
+not understanding the goal of good concurrency coverage,
+and also had difficulty understanding single failing executions.
+In fact, the study explicitly recommended tool support for testing many thread interleavings automatically (SCT)
+and for execution traces to communicate sequences of important events (preemption traces),
+which I dare say I have achieved in this thesis.
+For future work, I would also recommend studying in more detail the students' thought process
+between receiving a buggy preemption trace and fixing their bug,
+which could perhaps inspire a ``warm up'' Landslide assignment to teach debugging skills explicitly
+and ultimately lead to a higher solve rate on Landslide's bug reports during P2 (\sect{\ref{sec:education-eval-bugs-cmu}}).
+%% this 2nd paper... not freely available.......
+%while Kolikant \cite{learning-concurrency} investigates how students form cognitive patterns about concurrent programming that could either aid or stunt their reasoning.
+%Both of these studies could help optimize Landslide's bug reports for clarity and student enlightenment.
+Willgrind \cite{willgrind} is a tool recently developed at Virginia Tech
+that targets a fork-join parallelism project
+and checks for memory errors (using the Valgrind \cite{valgrind} framework)
+as well as deadlocks, assertion failures, and data races, similarly to Landslide,
+although unlike Landslide, its thread interleaving coverage is as yet limited to stress testing.
+Its GUI-based debugging output is perhaps more friendly than Landslide's HTML preemption traces,
+and its user survey found that students appreciated detailed debugging info especially for deadlocks
+(future work for Landslide),
+but also that students had little patience for even a 5-minute stress test
+when no assurance against false negatives could be provided.
+This suggests motivating students with Landslide's verification guarantee,
+although it is tricky to avoid accientally encouraging % oops
+students to limit possible interleavings by just using one global lock for everything,
+which is counter to 15-410's educational goals.
 
 \section{Transactional memory}
 
