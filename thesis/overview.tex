@@ -200,7 +200,9 @@ This method optimizes for a common no-contention case of little-to-no overhead, 
 Transactional memory (TM) may be implemented either in hardware, using special instructions and existing cache coherence algorithms,
 or in software, via library calls and a log-based commit approach.
 Software transactions (STM) \cite{stm-pldi06} can be used on any commodity processor, but must impose runtime overhead associated with logging.
-Hardware transactions (HTM) \cite{htm-experience, htm-performance} achieve better performance by reusing existing cache coherence logic to detect conflicts, but require explicit support from the CPU, which is not yet widespread.
+Hardware transactions (HTM) \cite{intel-tsx-overview}
+%\cite{htm-experience, htm-performance}
+achieve better performance by reusing existing cache coherence logic to detect conflicts, but require explicit support from the CPU, which is not yet widespread.
 Haswell \cite{htm-haswell} is the first x86 architecture to support HTM,
 offering three new instructions: \texttt{xbegin}, \texttt{xend}, and \texttt{xabort}, to begin, commit, and fail a transaction, respectively.
 The example program in Figure~\ref{fig:htm-example} demonstrates how these primitives can be used to synchronize a simple shared access without locking overhead in the common case\footnote{
@@ -248,6 +250,7 @@ to highlight the importance of researching advanced testing techniques in antici
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Stateless Model Checking}
+\label{sec:overview-stateless} % ugh this label name
 
 Model checking \cite{verisoft} is a testing technique for systematically exploring the possible thread interleavings of a concurrent program.
 A model checker executes the program repeatedly, each time according to a new thread interleaving, until all interleavings have been tested or the CPU budget is exhausted.

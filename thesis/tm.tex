@@ -48,7 +48,8 @@ tracking staged memory accesses in local memory,
 and aborting whenever a conflict is detected between two transactions' tracked accesses \cite{stm-pldi06}.
 Hardware TM implementations (HTM) use processor-level hardware support,
 which stages changes in per-CPU cache lines,
-and may abort for STM's reason above \cite{htm-experience},
+and may abort for STM's reason above \cite{intel-tsx-overview},
+%\cite{htm-experience},
 or additionally whenever a conflict is detected between one transaction's traced access and {\em any} other memory access,
 or whenever a conflict occurs on the same cache line, not necessarily the same address,
 or in case of any system interrupt or cache overflow.
@@ -212,6 +213,7 @@ which shows that correctly synchronizing even the simplest transactions may be s
 \end{figure}
 
 \subsection{Modeling Transaction Failure}
+\label{sec:tm-design-failure}
 
 In the previous section's examples,
 the way I stated interleavings such as $\tiat{1-2c}, \tjat{1-3}, \tiat{4-7}$%
@@ -330,6 +332,7 @@ The claim's second part follows naturally.
 \end{proof}
 
 \subsection{Memory Access Analysis}
+\label{sec:tm-design-locks}
 
 Next comes the issue of memory accesses within transactions with regard to data-race analysis (\sect{\ref{sec:background-datarace}}).
 Theorem~\ref{thm:atom} provides that the body of all transactions may be executed atomically within the MC environment.

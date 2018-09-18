@@ -43,19 +43,33 @@ a checker for userspace C++ programs which preempts on synchronization APIs by d
 supporting compiler instrumentation to preempt on memory accesses as well,
 and which pioneered the ICB search strategy discussed below.
 
-Many checkers exist which target programs written for various different types of concurrent environments.
+Many checkers exist which target programs written for various different types of
+concurrent execution and/or programming environments.
 MaceMC \cite{macemc}, MoDist \cite{modist}, SAMC \cite{samc}, ETA \cite{dbug-retreat}, and Concuerror \cite{concuerror},
 focus on distributed systems, where concurrent events are limited to message-passing and may span across multiple machines.
 R4 \cite{r4} and EventRacer \cite{eventracer} check event-driven concurrent programs typical in mobile applications.
+Like Landslide, SimTester \cite{simtester} is a Simics~\cite{simics}-based tool for kernel-level code,
+although it focuses on interrupt nondeterminism for testing device drivers,
+and is limited to injecting at most one interrupt per test run (as if under ICB with a bound of 1).
+%
+%Other checkers target specific programming languages' concurrency models and/or thread communication APIs.
 dBug \cite{dbug-ssv}, another CMU original similar to CHESS,
-integrates with Parrot \cite{parrot}, a determinizing runtime scheduler,
-to approach state space reduction from a different angle by limiting which thread interleavings are possible to begin with.
-
-Other checkers target specific programming languages' concurrency models and/or thread communication APIs.
-Inspect \cite{inspect} uses a static alias analysis to instrument and preempt all memory accesses to potentially-shared data.
+tests natively-executing programs
+using a dynamic library preload to insert preemption points at pthread and MPI interface boundaries.
+Inspect \cite{inspect} uses a static alias analysis to instrument and preempt all memory accesses to potentially-shared data
+at compile time, in addition to common synchronization APIs.
+RacePRO~\cite{racepro} targets multi-process programs using system calls such as the filesystem API as preemption points
+to find bugs which can corrupt persistent system resources.
 SPIN \cite{spin} tests algorithms defined in the PROMELA domain-specific language,
-instruments every memory access, and
-specializes in verifying synchronization primitives such as RCU \cite{rcu}.
+instruments every memory access,
+uses explicit state tracking rather than the stateless approach (\sect{\ref{sec:overview-stateless}}),
+and specializes in verifying synchronization primitives such as RCU \cite{rcu}.
+TLC \cite{tlc} checks formal models of concurrent program behaviour
+written in the specification language TLA+ \cite{tlaplus},
+and is arguably one of the only true concurrency {\em model checkers}
+as it checks specifications separate from the programs themselves
+%using explicit state tracking,
+rather than attempting to exhaustively exercise every thread interleaving directly.
 %
 D\'{e}j\`{a} Fu \cite{dejafu} is a SCT
 for the Haskell language,
@@ -65,10 +79,6 @@ whose strong type system guarantees that thread communication be confined to tru
 It instruments these interfaces (STM among them)
 to check for deadlocks or nondeterministic behaviour in general,
 which either may arise despite the static no-data-race guarantee.
-The Rust language \cite{rust-language}
-provides a more C++-like type system that also
-%, which I contributed to personally,
-achieves the same guarantee, although I know of no existing SCT for it yet.
 
 The problem of relaxed memory nondeterminism alone has inspired the creation of several new SCTs in the past few years.
 Relacy \cite{relacy}, a header-only C++ SCT library for checking synchronization primitives,
@@ -101,10 +111,9 @@ which can cause state space cycles in a way not yet well-understood and remains 
 %and notably includes relaxed memory nondeterminism in its concurrency model.
 They also identify all data races
 % TODO check if ther'es not a better section reference
-(by the C++ definition rather than \sect{\ref{sec:quicksand-soundness}}'s)
+(under the C++ definition rather than \sect{\ref{sec:quicksand-soundness}}'s)
 as bugs immediately, rather than checking them for benign or buggy outcomes.
 All the tools in this paragraph are notably open-source -- an encouraging recent trend in the field.
-
 
 If I might indulge by listing Landslide in its own related work section \cite{this-thesis},
 I would distinguish it by its ability to find shared memory preemption points via dynamic tracing,
@@ -117,9 +126,6 @@ some inherited and some novel,
 to help the user receive meaningful results as promptly as possible.
 Its choice of a familiar pthread-like synchronization API makes it suitable for inexpert users,
 and its recent extension to HTM adds support for more modern concurrency patterns as well.
-
-% TODO
-% Surveying concurrency bug detectors based on types of detected bugs - idk what this is, from an email
 
 \subsubsection{Algorithms}
 
@@ -186,13 +192,17 @@ arising from trusted source code modules;
 Landslide implements this as the {\tt without\_function} command (\sect{\ref{sec:landslide-pps}}).
 Iterative Context Bounding (ICB) \cite{chess-icb} (\sect{\ref{sec:landslide-icb}})
 orders the search space by increasing number of preemptions in each branch,
-which is more likely to expose bugs sooner should they exist;
+which is empirically more likely to expose bugs sooner should they exist;
 BPOR \cite{bpor} extends DPOR to preserve soundness
 thereunder. % what a word
 Landslide implements ICB and BPOR for Chapter~\ref{chap:quicksand}'s control experiments,
-although does not yet incorporate it into this thesis's own contributions.
+although does not yet incorporate it into this thesis's own contributions
+(as discussed in Chapter~\ref{chap:warpzone}).
 Chapter~\ref{chap:quicksand}'s Quicksand algorithm is, effectively, another such heuristic search strategy,
 focusing on preemption point subsets rather than context switch bounding.
+DeMeter \cite{demeter} adapted abstraction reduction to distributed systems verification under the name Dynamic Interface Reduction,
+while dBug \cite{dbug-phdthesis} applied abstraction reduction to synchronization primitives,
+and I showed how it could be applied similarly to transactional memory in \sect{\ref{sec:tm-abstraction}}.
 Each of these approaches is compatible (and indeed, throughout this thesis used often in concert)
 with the sound reduction analyses listed above.
 % mentioning PCT would disrupt the flow here and it's a dumb technique anyway so i won't bother
@@ -201,7 +211,10 @@ with the sound reduction analyses listed above.
 
 % jepsen-io/jepsen
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \section{Data race analysis}
+\label{sec:related-data-race}
 
 Data race analysis, originating with the lockset-only analysis of Eraser \cite{eraser},
 has since grown into a mature field in its own right,
@@ -277,7 +290,9 @@ Future work could incorporate Portend's taxonomy to better help the user underst
 when the test is too large to complete,
 as well as its symbolic execution to help user-provided tests achieve better coverage automatically.
 
-\section{Concurrency in Education}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Concurrency in education}
 
 The operating systems curriculum at CMU has used the Pebbles project infrastructure
 and assigned the thread library \cite{thrlib} and kernel \cite{kspec} projects
@@ -294,7 +309,7 @@ such as multicore scheduling let alone transactions or relaxed memory
 (all relegated to lecture material not reinforced by the assignments).
 
 Pintos \cite{pintos} has recently emerged as the most popular educational kernel
-(by count of top CS schools in the USA who teach by it);
+(by count of top CS schools in the United States who teach by it);
 it trades off the prevalence of its concurrency challenges to cover various OS topics more broadly,
 especially advanced scheduling algorithms and filesystems.
 Pintos is the stand-alone evolution of its predecessor, Nachos \cite{nachos},
@@ -323,10 +338,18 @@ and also had difficulty understanding single failing executions.
 In fact, the study explicitly recommended tool support for testing many thread interleavings automatically (SCT)
 and for execution traces to communicate sequences of important events (preemption traces),
 which I dare say I have achieved in this thesis.
-For future work, I would also recommend studying in more detail the students' thought process
-between receiving a buggy preemption trace and fixing their bug,
-which could perhaps inspire a ``warm up'' Landslide assignment to teach debugging skills explicitly
-and ultimately lead to a higher solve rate on Landslide's bug reports during P2 (\sect{\ref{sec:education-eval-bugs-cmu}}).
+A more recent study \cite{novices-programmers}
+examined in detail the students' thought process
+during the diagnosis and fixing phases,
+although its participants were drawn from novice-level programming classes,
+and the experiment was set up with more elementary bugs like syntax and logic errors correspondingly.
+Nevertheless, the authors recommended teaching debugging skills explicitly
+via systematic exposure to different kinds of bugs,
+which suggests future work for even advanced operating systems curricula
+to offer a ``warm up'' Landslide assignment
+(for example, the {\tt atomic\_*} tests from \sect{\ref{sec:education-pebbles-tests}})
+that could ultimately lead to a higher solve rate on Landslide's bug reports during P2 (\sect{\ref{sec:education-eval-bugs-cmu}}).
+
 %% this 2nd paper... not freely available.......
 %while Kolikant \cite{learning-concurrency} investigates how students form cognitive patterns about concurrent programming that could either aid or stunt their reasoning.
 %Both of these studies could help optimize Landslide's bug reports for clarity and student enlightenment.
@@ -341,8 +364,9 @@ and its user survey found that students appreciated detailed debugging info espe
 but also that students had little patience for even a 5-minute stress test
 when no assurance against false negatives could be provided.
 This suggests motivating students with Landslide's verification guarantee,
+% TODO fix this explanation its too roundabout
 although it is tricky to avoid accientally encouraging % oops
-students to limit possible interleavings by just using one global lock for everything,
+them to limit possible interleavings by just using one global lock for everything,
 which is counter to 15-410's educational goals.
 
 \section{Transactional memory}
@@ -352,7 +376,7 @@ Transactional memory (TM), first introduced in 1993 \cite{transactional-memory},
 has received renewed attention in recent years with the announcement of Intel's Haswell architecture \cite{htm-haswell},
 which supports hardware transactions (HTM) using new x86 instructions.
 Since then, many studies have evaluated the increased performance it offers over traditional locking and/or STM
-\cite{tm-benchmark-cmu}. % TODO more
+\cite{htm-experience,htm-performance,tm-benchmark-cmu}.
 %
 HTM's performance comes at an increased cost in complexity to the programmer,
 who must avoid system calls or transaction nesting, respect the CPU cache capacity,
@@ -363,6 +387,8 @@ For programmers who wish to avoid such concerns,
 the simpler STM programming model remains relevant.
 One recent work \cite{hybrid-htm-stm} enhances STM transactions to nest with HTM ones,
 while another \cite{stm-relaxed-memory} adds support for relaxed memory models.
+Meanwhile, two recent papers \cite{relaxed-transactions-pldi,relaxed-transactions-popl}
+have proposed formal models of HTM's execution semantics under relaxed memory likewise.
 Such extensions come with the challenge of even more complicated behavioural semantics
 for SCT to accurately model and verify in future work.
 
@@ -375,23 +401,133 @@ up to 2 threads running 1 transaction each with up to 3 memory accesses.
 This kind of verification,
 analogous to \sect{\ref{sec:education-pebbles-tests}}'s {\tt mutex\_test},
 is an important stepping stone for trusting the results Landslide will provide.
-% TODO more tm impl verifs
+STAMP \cite{stamp} is a benchmark suite transactional programs,
+implemented using the OpenTM interface \cite{opentm},
+used by many papers in the field to evaluate the performance of both STM and HTM implementations alike.
+Even so, the more recent Stampede suite \cite{scalable-tm} argues that STAMP's benchmarks
+were constructed under a programming model poorly-suited to fully take advantage of HTM's performance,
+and that scalable HTM programs should
+seek to minimize incidental conflicts and to handle aborts more flexibly than with blind retry loops.
+The programming complexity needed to achieve these goals calls,
+of course,
+for correspondingly advanced verification approaches such as Landslide.
+Finally, TxRace \cite{txrace}
+tests non-transactional programs for data races
+by inserting HTM calls via compiler instrumentation,
+% they don't actually seem to check the failure reason lmao
+% i'll phrase this in a slightly weasel way to point out that's what they *should* be doing
+% and that in turn motivates the stuff i did
+% even tho they use a diff way to filter them post hoc (well, they'd still need to, bc of false sharing)
+relying on conflict aborts to point out access pairs that would be unsafe in the original program.
+This citation perhaps half belongs in \sect{\ref{sec:related-data-race}} as well;
+I include it here to highlight the importance of Landslide's
+ability to distinguish different abort reasons (\sect{\ref{sec:txn-abort-codes}}).
 
-% TODO: find a home for this sentence
+An article from relatively early in the timeline of TSX \cite{htm-subtleties}
+warns of several false equivalence pitfalls when converting conventionally-locking code to use transactions,
+although these pitfalls depend on multiple existing locks used locally and disjointly,
+so this does not invalidate the equivalence proved in \sect{\ref{sec:tm-design-locks}}.
+Rather, Landslide could be used to ensure that freshly-converted transactional code avoids the warned-of pitfalls.
 {\em Learning from Mistakes} \cite{learning-from-mistakes},
 a survey of the characteristics of many types of concurrency bugs,
 found that TM could potentially fix some, but not all, of the studied bugs,
-while in other cases it must be combined with other concurrency primitives to be fully correct,
-motivating the use of SCT to verify such transactional code.
+while in other cases it must be combined with other concurrency primitives to be fully correct.
+A subsequent paper \cite{applying-tm-bugs}
+found a majority of bugs in their study to be easily fixable with hand-written transactions,
+while others remained out of scope due to blocking {\tt cond\_wait()} operations and the like;
+more recently, the tool BugTM \cite{bugtm} aims to deploy such repairs in production code fully automatically.
+However, these studies all optimize for empirical correctness at best,
+as well as maintaining good performance,
+which motivates the use of tools like Landslide to ensure these rewrites
+are actually correct,
+% oops
+rather than merely shrinking the necessary preemption window required to expose them.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\section{Other concurrency verification approaches}
 
+% .. rather than just executing it a bunch of times and seeing what behaviours fall out ..
 
+\subsubsection{Programming language design}
 
-% cchtm - the intel ismm17 paper on nvram htm
-% stamp (mb just cite from txn section)
+% erlang
+% lvish
+% sully rmc
 
-% transactions in relaxed mem architecutres - popl 18
+The Rust language \cite{rust-language}
+provides a more C++-like type system that also
+%, which I contributed to personally,
+achieves the same guarantee, although I know of no existing SCT for it yet.
 
-% pldi 2018
-% The Semantics of Transactions and Weak Memory in x86, Power, ARM, and C++
+% TODO: will there be enough content for this?
+% \subsubsection{Other dynamic analyses}
+% symbolic exec, incl concolic (w e that is)
+
+\subsubsection{Deterministic multithreading}
+
+Coming at nondeterminsm from the opposite angle as SCT,
+which aims to push the frontier of testing coverage to expand as many interleavings as possible,
+is deterministic multithreading,
+which reduces the number of interleavings possible to begin with enough that said frontier can reach it more easily.
+Kendo~\cite{kendo} and CoreDet \cite{coredet} were among the first systems to implement this,
+but were limited in which sources of nondeterminism they could control
+and suffered high performance overhead.
+DThreads \cite{dthreads} then extended the scope of determinization to include data races,
+while Peregrine \cite{peregrine}
+improved performance by using record-and-replay to compute a set of possible safe schedules.
+%
+Parrot \cite{parrot} later integrated with the aforementioned dBug \cite{dbug-ssv}
+to offer a partially-determinizing runtime scheduler
+that offered near-baseline performance by allowing the programmer to
+manually annotate speed-critical nondeterministic sections
+and then check the resulting state spaces using dBug's SCT as normal.
+%
+Most recently, Sofritas \cite{sofritas}
+proposed the Ordering-Free Region execution model
+which restricts nondeterminism to only order-enforcing operations such as blocking,
+and automatically suggests refinement annotations to the programmer
+when that would be too aggressive for the intended behaviour.
+These determinizing runtimes serve a different purpose than SCT:
+they seek to preserve the stability of existing code already running in production,
+whether or not concurrency bugs may exist,
+while this thesis aims to eradicate as many such bugs as possible beforehand.
+As Parrot demonstrated, the two approaches are compatible in cases where either extreme be infeasible.
+
+\subsubsection{Kernel verification}
+
+seL4 \cite{sel4} is a microkernel fully designed and specified in Haskell and translated into C.
+Its proofs guarantee not only standard security properties such as process isolation and bounded interrupt latency,
+but also that the C code faithfully implements the specification.
+It addresses concurrency by enabling system interrupts only at carefully-chosen code points,
+and proving bounded runtime besides to ensure good preemptibility.
+%and that the executable binary is correctly compiled from the C.
+This degree of verification must however come at a cost:
+seL4's authors reported over 2 person-years of development effort, with the majority spent on the Haskell specification.
+%
+CertiKOS \cite{certikos} extends this approach to include full concurrency and fine-grained locking
+in the scope of verification,
+using a proof in Coq that also took 2 person-years to complete.
+Its safety properties hold under all possible interleavings,
+and include data-race freedom as well as standard sequential properties
+such as no null dereference and no buffer or integer overflow,
+although it stops short of reasoning about relaxed memory orderings or the TLB cache.
+Many programmers would find a verification cost measured in person-years far too prohibitive,
+while others might argue that for safety-critical kernel code you can't afford {\em not} to verify so thoroughly.
+%
+More recently, Hyperkernel \cite{hyperkernel} extended the xv6 educational kernel \cite{xv6}
+to allow for partial, case-by-case verification of system call behaviour using state-machine specification in Python
+checked by an SMT solver.
+To limit verification complexity, it assumes not only uniprocessor execution
+but also that interrupts be perpetually disabled,
+taking concurrency entirely out of the equation to allow for greater extensibility
+and lessen the programmer's verification burden.
+%
+Heroic as such end-to-end formal verification projects are,
+this thesis finds that trading off thoroughness for accessibility is also acceptable
+if it means helping more users overall.
+Future work could check preemptive and/or multiprocessor kernels
+%by combining Hyperkernel's approach,
+by first checking safety properties in the absence of concurrency,
+then checking with Landslide that concurrency introduces no new program behaviour not already verified,
+to provide a less formal, but still hopefully useful, verification guarantee.
