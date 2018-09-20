@@ -461,18 +461,55 @@ to checking, proving, and/or enforcing execution properties post-hoc.
 
 \subsubsection{Programming language design}
 
-% erlang
-% lvish
-% sully rmc
-
-The Rust language \cite{rust-language}
-provides a more C++-like type system that also
-%, which I contributed to personally,
-achieves the same guarantee, although I know of no existing SCT for it yet.
-
-% TODO: will there be enough content for this?
-% \subsubsection{Other dynamic analyses}
-% symbolic exec, incl concolic (w e that is)
+While C's extremely rudimentary type system allows the compiler to statically check programs
+for properties such as not accidentally dereferencing raw integer values as if they were pointers,
+more advanced programming languages may make guarantees about concurrent execution.
+%
+Erlang \cite{erlang}, an early concurrent functional language,
+introduced the actor model for concurrency,
+in which threads share no state and must communicate only by message-passing.
+%One might say this statically guarantees freedom from data races;
+%from another point of view, data races do not even exist as a concept in this programming model.
+While this statically guarantees the absence of data races,
+programs may still execute nondeterministically,
+so concurrency bugs, especially deadlocks, are not ruled out.
+Concuerror \cite{concuerror}, discussed above, is a SCT tool for Erlang programs.
+%
+Haskell \cite{haskell} offers a more sophisticated interface to concurrency:
+threads may reference the same objects and even update shared references
+using monads that encapsulate mutation,
+but at the (garbage-collected) execution level all data is immutable once created,
+which preserves type soundness and data-race freedom.
+The aforementioned D\'{e}j\`{a} Fu \cite{dejafu} checks concurrent Haskell programs.
+%
+Rust \cite{rust-language}
+presents a type system with more explicit memory management,
+in-place mutation,
+and mutable references
+to appear familiar and approachable to those already versed in C++.
+It proposes a borrow-check analysis to ensure memory and type safety
+despite mutable references,
+and a trait system to ensure no shared state between threads by default.
+Its concurrency libraries then offer interfaces which relax this restriction,
+allowing threads even to simultaneously reference shared mutable state,
+using the type system to enforce sound locking discipline across such accesses,
+again preserving type soundness and data-race freedom%
+\footnote{The author contributed the original design for this latter feature.}.
+I know of no existing SCT for Rust as of yet.
+%
+The Relaxed Memory Calculus \cite{sully-thesis}
+proposes to extend C++ with annotations for weak memory atomics,
+which allows for static formal analysis of memory access reorderings.
+Although not ruling out data races,
+this approach is an important step towards compilers
+which can statically reason about program execution under more advanced concurrency models.
+%
+Finally, LVish \cite{lvish}
+features a type system that enforces deterministic behaviour by construction,
+using shared state called LVars which allow writes only in ways that update order is not observable.
+This renders thread interleavings entirely irrelevant,
+obviating any need for runtime verification,
+but at the cost of a more restrictive programming model.
 
 \subsubsection{Deterministic multithreading}
 
@@ -480,6 +517,8 @@ Coming at nondeterminsm from the opposite angle as SCT,
 which aims to push the frontier of testing coverage to expand as many interleavings as possible,
 is deterministic multithreading,
 which reduces the number of interleavings possible to begin with enough that said frontier can reach it more easily.
+Unlike LVish, described above, these systems provide deterministic execution
+even for the familiar, C-like, shared-state multithreading programming model.
 Kendo~\cite{kendo} and CoreDet \cite{coredet} were among the first systems to implement this,
 but were limited in which sources of nondeterminism they could control
 and suffered high performance overhead.
