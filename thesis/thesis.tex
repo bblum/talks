@@ -378,6 +378,7 @@ These flaws are especially visible in the {\tt avl\_fixed} transactional verific
 % because T1->T1->... means T1 has 2 fewer events left to schedule and (M+N-2 choose M-2) tends to be smaller than (M+N-1 choose M-1)
 % for roughly similar M/N;
 % estimator could account for this somehow... not sure how but
+% likewise, estimator could account for retry sets by checking the size of the retry set and multiplying by 1/4 or 1/2 or w/e
 % TODO: cite smth about machine learning
 % TODO: publish the htm evaluation logs
 % state space estimation could probably be drastically improved with machine learning
@@ -387,6 +388,17 @@ These flaws are especially visible in the {\tt avl\_fixed} transactional verific
 % even if you're already in not-enough-cpu-time heuristics land, you're biasing it to find only the types of bugs you've already seen
 % and destroying its ability to find novelties
 % if your ML provides a partial verification, it is impossible for a human to understand what that verification means
+
+% ICB incorporations
+% into quicksand - when SS estimates are too high, fall back on a preemption bounded version to find bugs - improve the partial verif
+% into education - provide more partial verifs to students (but is it clear they'll understand the subtleties of it?)
+% into txn - incorporate failure injection into the model
+
+% soundness concerns - the xbegin/delay-xbegin pp soundness bug popped up in the implementation, despite the soundness thm
+% current SoA for this is to manually inspect the state spaces that arize for small K,N and just hope...
+% as concurrency model becomes more complex, more opportunities for the implementation to deviate from what
+% the soundness theorem actually proves
+% how to prove landslide is actually doing what you think? analogous to sel4 spec/impl verif...
 
 \chapter{Conclusion}
 \label{chap:conclusion}
