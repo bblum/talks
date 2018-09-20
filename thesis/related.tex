@@ -403,7 +403,11 @@ analogous to \sect{\ref{sec:education-pebbles-tests}}'s {\tt mutex\_test},
 is an important stepping stone for trusting the results Landslide will provide.
 STAMP \cite{stamp} is a benchmark suite transactional programs,
 implemented using the OpenTM interface \cite{opentm},
-used by many papers in the field to evaluate the performance of both STM and HTM implementations alike.
+used by many papers in the field to evaluate the performance of both STM and HTM implementations alike,
+although as discussed in \sect{\ref{sec:tm-eval-exp-setup}},
+focuses more on performance than on interesting concurrency properties.
+% stamp bugfixes - https://github.com/mfs409/transmem/blob/master/benchmarks/stamp_c/VERSIONS.
+% stamp need not be considered harmful put here
 Even so, the more recent Stampede suite \cite{scalable-tm} argues that STAMP's benchmarks
 were constructed under a programming model poorly-suited to fully take advantage of HTM's performance,
 and that scalable HTM programs should
@@ -447,7 +451,13 @@ rather than merely shrinking the necessary preemption window required to expose 
 
 \section{Other concurrency verification approaches}
 
-% .. rather than just executing it a bunch of times and seeing what behaviours fall out ..
+It should come as no surprise that many avenues of research towards writing correct programs
+have been explored
+apart from just executing them a bunch of times to check all the thread interleavings.
+Though not as directly related to Landslide as the works referenced above,
+this section explores such other approaches,
+ranging from building safety guarantees into a language's type system
+to checking, proving, and/or enforcing execution properties post-hoc.
 
 \subsubsection{Programming language design}
 
@@ -493,6 +503,30 @@ they seek to preserve the stability of existing code already running in producti
 whether or not concurrency bugs may exist,
 while this thesis aims to eradicate as many such bugs as possible beforehand.
 As Parrot demonstrated, the two approaches are compatible in cases where either extreme be infeasible.
+
+\subsubsection{Symbolic execution}
+
+Analogous to SCT,
+which seeks good coverage of possible thread execution paths under schedule nondeterminism,
+another popular testing approach is symbolic execution \cite{symbolic-execution},
+which seeks good coverage of possible flow control paths under input nondeterminism.
+Symbolic executors
+abstract a program's variables and use constraint solving engines such as Z3 \cite{z3}
+to work backwards and, effectively,
+synthesize combinations of test inputs which can lead to a failure.
+KLEE \cite{klee}, one well-known and open-source implementation of this technique,
+offers over 90\% code coverage on average across many tests,
+often outdoing that achieved by programmers' own hand-written tests.
+Later, Contessa \cite{contessa} extended symbolic execution to include concurrency nondeterminism as well,
+by using a DPOR-like analysis on individual execution traces
+then incorporating reordering possibilities into its SMT constraints.
+%rather than using explicit scheduling as SCT does.
+This simultaneously exercises both input and schedule nondeterminism,
+and achieves good bug-finding performance in practice,
+but does not provide the same verification guarantees as repeated DPOR iterations with explicit scheduling.
+Exploring both kinds of state space at once thoroughly enough to provide strong verification
+is undoubtedly subject to further state space explosion,
+and remains future work.
 
 \subsubsection{Kernel verification}
 
