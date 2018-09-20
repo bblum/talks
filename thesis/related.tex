@@ -163,6 +163,9 @@ TransDPOR \cite{transdpor} provides extra domain-specific reduction for message-
 by exploiting the fact that the dependency relation is transitive in the absence of shared state.
 The $R^4$ algorithm \cite{r4} (corresponding to the R4 checker mentioned above)
 extends DPOR to event-driven programs by separating the notion of enabled events from that of multiple threads.
+TaxDC \cite{taxdc}, a taxonomy study of distributed systems concurrency bugs,
+showed that for completeness distributed model checkers must incorporate many forms of nondeterminism,
+including message reordering, timeouts, network disconnections, and crashes and reboots, in addition to local threads.
 DPOR for TSO and PSO \cite{tsopso}
 extends the concurrency model
 using {\em shadow threads}, which interleave with traditional threads to represent store buffer nondeterminism,
@@ -451,12 +454,13 @@ rather than merely shrinking the necessary preemption window required to expose 
 
 \section{Other concurrency verification approaches}
 
-It should come as no surprise that many avenues of research towards writing correct programs
+%It should come as no surprise that
+Naturally, many avenues of research towards writing correct programs
 have been explored
-apart from just executing them a bunch of times to check all the thread interleavings.
-Though not as directly related to Landslide as the works referenced above,
-this section explores such other approaches,
-ranging from building safety guarantees into a language's type system
+apart from just executing them a bunch of times to check all the interleavings.
+Though not as directly related as the works referenced above,
+this section explores such approaches,
+ranging from expressing safety guarantees in a language's type system
 to checking, proving, and/or enforcing execution properties post-hoc.
 
 \subsubsection{Programming language design}
@@ -494,7 +498,7 @@ Its concurrency libraries then offer interfaces which relax this restriction,
 allowing threads even to simultaneously reference shared mutable state,
 using the type system to enforce sound locking discipline across such accesses,
 again preserving type soundness and data-race freedom%
-\footnote{The author contributed the original design for this latter feature.}.
+\footnote{The author themself contributed the original design for this latter feature.}.
 I know of no existing SCT for Rust as of yet.
 %
 The Relaxed Memory Calculus \cite{sully-thesis}
@@ -550,22 +554,31 @@ which seeks good coverage of possible thread execution paths under schedule nond
 another popular testing approach is symbolic execution \cite{symbolic-execution},
 which seeks good coverage of possible flow control paths under input nondeterminism.
 Symbolic executors
-abstract a program's variables and use constraint solving engines such as Z3 \cite{z3}
-to work backwards and, effectively,
-synthesize combinations of test inputs which can lead to a failure.
-KLEE \cite{klee}, one well-known and open-source implementation of this technique,
+abstract a program's variables and use constraint solvers such as Z3 \cite{z3}
+to work backwards and synthesize combinations of test inputs which can lead to a failure.
+%
+KLEE \cite{klee}, one well-known and open-source implementation,
 offers over 90\% code coverage on average across many tests,
 often outdoing that achieved by programmers' own hand-written tests.
+%
 Later, Contessa \cite{contessa} extended symbolic execution to include concurrency nondeterminism as well,
 by using a DPOR-like analysis on individual execution traces
-then incorporating reordering possibilities into its SMT constraints.
+then including reordering possibilities in its SMT constraints.
 %rather than using explicit scheduling as SCT does.
 This simultaneously exercises both input and schedule nondeterminism,
-and achieves good bug-finding performance in practice,
+%and achieves good bug-finding performance in practice,
 but does not provide the same verification guarantees as repeated DPOR iterations with explicit scheduling.
 Exploring both kinds of state space at once thoroughly enough to provide strong verification
 is undoubtedly subject to further state space explosion,
 and remains future work.
+%
+Symbiosis \cite{symbiosis} starts from the known root cause of an existing failure
+and uses symbolic execution to synthesize a schedule to reproduce it,
+then further searches for a non-failing schedule and compares them to produce
+a minimum sequence of events necessary for the failure.
+This approach skips the initial verification step entirely,
+but greatly reduces the diagnosis effort required of the user,
+which was a common complaint about Landslide's preemption traces.
 
 \subsubsection{Kernel verification}
 
