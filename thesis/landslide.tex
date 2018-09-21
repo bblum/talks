@@ -166,8 +166,8 @@ First, the following options may be changed without triggering a recompile of La
 They are implemented as bash functions defined in {\tt pebsim/build.sh}.
 
 \begin{itemize}
-	\item {\tt within\_function FUNC} - adds {\tt FUNC} to a whitelist of functions required to appear in the current stack trace before identifying a preemption point (see \sect{\ref{sec:landslide-pps}})
-	\item {\tt without\_function FUNC} - as above, but a blacklist instead of a whitelist
+	\item {\tt within\_function FUNC} - adds {\tt FUNC} to an allowlist of functions required to appear in the current stack trace before identifying a preemption point (see \sect{\ref{sec:landslide-pps}})
+	\item {\tt without\_function FUNC} - as above, but a denylist instead of an allowlist
 	\item {\tt within\_user\_function FUNC} - as two above but finds the function in the userspace test program rather than the kernel code.
 	\item {\tt without\_user\_function FUNC} - difference to two above same as stated one above.
 	\item {\tt data\_race ADDR TID LAST\_CALL CURRENT\_SYSCALL} - specifies a data-race preemption point.
@@ -1105,7 +1105,7 @@ Each of these configurations may contain any number of
 
 \subsubsection{Stack trace inclusion/exclusion}
 
-{\tt check\_withins()} implements the whitelist/blacklist behaviour for the former two of those commands
+{\tt check\_withins()} implements the allow/denylist behaviour for the former two of those commands
 (in a similar manner to the Preemption Sealing technique described in prior work \cite{sealing}).
 It invokes the stack tracer (\sect{\ref{sec:landslide-stacktrace}})
 for a list of which functions are on the call stack
@@ -1116,9 +1116,9 @@ or whether it should be rejected,
 it compares each {\tt within} or {\tt without\_function} directive in the following sequence-dependent manner:
 
 \begin{itemize}
-	\item If no {\tt within\_function} commands are given, operate in ``blacklist mode'':
+	\item If no {\tt within\_function} commands are given, operate in ``denylist mode'':
 		the preemption point is by default valid as long as no {\tt without\_function} calls reject it.
-		Otherwise, operate in ``whitelist mode'':
+		Otherwise, operate in ``allowlist mode'':
 		the preemption point is by default rejected unless at least one {\tt within\_function} directive matches.
 	\item Subject to the above, find the sequentially-last {\tt *\_function} directive
 		(static preemption point commands considered before dynamic ones)
@@ -1195,13 +1195,13 @@ and the following {\tt within}/{\tt without\_user\_function} combinations:
 	\item
 		{\tt within\_user\_function thr\_join}
 
-		No {\tt without}s present, so behaves as a whitelist,
+		No {\tt without}s present, so behaves as an allowlist,
 		rejecting stack trace 1 (not in {\tt thr\_join()}),
 		accepting stack trace 2 (in {\tt thr\_join()}).
 	\item
 		{\tt without\_user\_function cond\_wait}
 
-		No {\tt within}s present, so behaves as a blacklist,
+		No {\tt within}s present, so behaves as a denylist,
 		accepting stack trace 1 (not in {\tt cond\_\allowbreak{}wait()}),
 		rejecting stack trace 2 (in {\tt cond\_wait()}).
 	\item
