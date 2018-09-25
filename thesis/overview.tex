@@ -715,31 +715,192 @@ and designing correct interactions between the {\tt wait} and {\tt exit} system 
 \label{sec:glossary}
 
 This section provides a convenient reference of terminology used throughout the thesis.
+Use of {\em italics} within definitions will indicate terms also defined in this list.
 
 \begin{enumerate}
-	\item
+	\item {\bf API.}
+		Short for {\em application programming interface} (which nobody ever says).
+		% TODO
+	\item {\bf Atomic.}
+		Said of a sequence of operations within a single thread,
+		whose intermediate state cannot be observed by or interfered with
+		by certain conflicting operations from another thread.
+		Must always be qualified as ``atomic {\em with respect to} X'',
+		where X is the set of possibly-conflicting operations to be protected against.
+		Apart from hardware-provided atomic assembly instructions (e.g., {\tt xchg}),
+		i.e., for any multi-instruction sequence,
+		setting X as ``everything'' can be surprisingly difficult to achieve safely in practice;
+		for example, disabling interrupts in kernel code does not prevent other CPUs' simultaneous execution.
+	\item {\bf Atomicity violation.}
+		A term introduced by AVIO \cite{avio} to refer to a particular class of {\em concurrency bug}
+		in which the programmer's expectation of {\em atomicity} around a certain sequence of operations
+		is violated by another thread interleaving in between.
+		This is distinct from language-level {\em data races},
+		which may result in bugs by being reordered by the compiler or hardware;
+		% TODO: put a section reference for weak memory
+		% mb have to write a section on it here
+		however, this thesis checks programs at the executable level and assumes sequential consistency,
+		so all data races that still result in bugs (e.g., unprotected {\tt x++})
+		must technically also be atomicity violations.
+		Also, this thesis is focused on identifying failures, not root causes,
+		so will simply avoid the term entirely.
+	\item {\bf Branch.}
+		Another term for {\em interleaving}, with an emphasis on the {\em execution tree}
+		interpretation of {\em state spaces}.
+		May also refer to an entire subtree outside of the current interleaving,
+		characterized by the choice to run a certain {\em thread} at a certain past {\em preemption point},
+		comprising all possible interleavings which may arise with that as a prefix.
+	\item {\bf Concurrency bug.}
+		A program behaviour which manifests nondeterministically depending on the thread scheduling pattern,
+		which is not desired or intended by the programmer.
+		This thesis further assumes these to be identifiable by computable predicates on the execution state,
+		excluding some real bugs which may result in data corruption that never actually leads to crashes or assertion
+		failures under the test case in question.
+	\item {\bf Conflict.}
+		% TODO
+	\item {\bf Data race.}
+		An unsynchronized pair of memory accesses between two threads that can, may, or did execute concurrently.
+		{\em Race} for short.
+		Distinguished further in this thesis as {\em limited happens-before} races and {\em pure happens-before} races;
+		see \sect{\ref{sec:background-datarace}}.
+		Distinct from the more nebulously-defined {\em concurrency bug},
+		in that they are identified precisely by analysis on execution traces of one (or all) thread interleavings.
+		This thesis considers any memory accesses not protected by a known trusted {\em mutex API}
+		to be potential races;
+		this may include atomic instructions such as {\tt xchg},
+		which most all-data-races-are-bugs research does not include,
+		but are necessary for {\em Iterative Deepening}'s {\em verification} guarantee
+		(\sect{\ref{sec:quicksand-soundness}}).
+	\item {\bf Deterministic bug.}
+		As {\em concurrency bug}, but manifesting in all (or at least most) thread interleavings,
+		making it easy for programmers to find and debug without advanced tooling.
+		This thesis will occasionally use ``manifests on the 1st interleaving Landslide tested''
+		as an approximation, without necessarily checking for its presence or absence in other branches.
+	\item {\bf DPOR.} See {\em dynamic partial order reduction}.
+	\item {\bf Dynamic partial order reduction}.
+		Exploration algorithm for {\em stateless model checkers} which
+		identifies alternate interleavings to explore likely to result
+		in reorderings of {\em memory conflicts} observed in the current branch.
+		Runs iteratively upon completion of each branch, tagging one or more sibling branches
+		for future exploration, skipping over ones guaranteed to be {\em independent}.
+		See \sect{\ref{sec:landslide-dpor}}.
+	\item {\bf Equivalent.}
+		Said of two {\em interleavings} where one can be transformed into the other using
+		permutations of only {\em independent interleavings}.
+		Note the difference in ``type signature'' with {\em independent}, which applies to {\em transitions} instead.
+	\item {\bf Estimation.}
+		An algorithm whose input is the known structure of a partially-explored {\em state space}
+		and whose output is a guess at the ultimate size of the state space when exploration finish. % subjunctive woo
+		Output may be in units of either time or branches.
+		See \sect{\ref{sec:landslide-estimate}}.
+	\item {\bf ETA.}
+		Short for {\em estimation} (or ``state space estimate''),
+		typically with nuance for units of time rather than branches.
+	\item {\bf Execution tree.}
+		% TODO
+	\item {\bf False negative.}
+		Said of a tool's failure to produce a bug report when a bug does exist after all.
+		In theory this may mean that the {\em test case} might have been insufficient to expose the bug
+		(i.e., the code under test is wrong in any way whatsoever);
+		however, for pragmatic, tool-oriented discussion,
+		this thesis will use the term to mean bugs observable under the given test case which the tool itself fails to find.
+	\item {\bf False positive.}
+		Said of a bug report which,
+		upon subjective manual inspection by the programmer,
+		does not indicate a bug after all.
+		In principle, Landslide's bug-detection predicates always indicate something truly wrong,
+		so it cannot produce false positive bug reports;
+		in practice, however, infinite loop detection and deadlock detection in the presence of ad-hoc synchronization
+		are both heuristic (\sect{\ref{sec:landslide-blocking}}),
+		so may produce false positives after all, although I have never witnessed one to date.
+	\item {\bf Happens-before.}
+		% TODO
+	\item {\bf Heuristic.}
+		% TODO
+	\item {\bf Independent.}
+		% TODO
+		Note the difference in ``type signature'' with {\em equivalent}, which applies to {\em interleavings} instead.
+	\item {\bf Interleaving.}
+		% TODO
+	\item {\bf Iterative Deepening.}
+		The heuristic search ordering strategy used by {\em Quicksand}.
+		One of this thesis's major contributions.
+		See \sect{\ref{sec:quicksand-id}}.
+	\item {\bf Kernelspace.}
+		Opposite of {\em userspace}.
+		Execution mode in which code has the ability to modify critical system state.
+		In addition to having access to privileged CPU instructions,
+		kernelspace code is also responsible for implementing safe
+		concurrent scheduling, safe virtual memory protection and isolation guarantees, et cetera.
+	\item {\bf Landslide.}
+		Your friendly local {\em stateless model checking} implementation, written by yours truly.
+		The framework upon which all this thesis's contributions are built.
+		Documented in Chapter \ref{chap:landslide}.
+	\item {\bf Landslide-friendly.}
+		Said of a {\em test case} that is well-suited for {\em model checking},
+		i.e.,
+		contains few or no loops which,
+		under normal circumstances, would increase the probability of a bug manifesting,
+		but in principle do not make any new behaviours possible that would be impossible without the loop.
+	\item {\bf Limited happens-before.}
+		% TODO
+	\item {\bf Lock.}
+		% TODO
+	\item {\bf Memory conflict.} See {\em conflict}.
+	\item {\bf mutex.}
+		Short for {\em mutual exclusion lock}. The name {\em P2} and {\em pthreads} use for their {\em lock API}.
+	\item {\bf Model checking.}
+		In general, refers to the whole research field of checking program implementations against
+		formal specifications in a theoretically rigorous way.
+		In this thesis, used as shorthand for {\em stateless model checking}.
+	\item {\bf P2.}
+		% TODO
+		{\em API} is very similar to that of {\em pthreads}.
+		Often used here to refer to the same thread library project at both CMU and PSU,
+		even though the latter did not call it by that name.
+	\item {\bf pthreads.}
+		Thread library for Linux programs provided by POSIX.
+	\item {\bf Pure happens-before.}
+		% TODO
+	\item {\bf Quicksand.}
+		% TODO
+	\item {\bf Race condition.}
+		A confusing term which, while CMU 15-410 teaches it to mean {\em concurrency bug},
+		in research circles is generally taken to mean {\em data race}.
+		This thesis will avoid it entirely, using those two more precise terms instead.
+	\item {\bf Schedule.}
+		Another term for {\em interleaving} with a more theoretical nuance.
+	\item {\bf Stateless model checking.}
+		% TODO
+	\item {\bf State space.}
+		% TODO
+	\item {\bf Systematic testing.}
+		Another name for {\em stateless model checking}.
+	\item {\bf TA.} See {\em teaching assistant}.
+	\item {\bf Teaching assistant.}
+		% TODO
+	\item {\bf Test case.}
+		% TODO
+	\item {\bf Thread.}
+		% TODO
+	\item {\bf Transition.}
+		% not the kind of transition that's for people
+		A sequence of execution steps by a single thread,
+		characterized by the two different program states at beginning and end.
+		In this thesis, will be used exclusively when the terminal program states are {\em preemption points},
+		and no intermediate state is a preemption point as well.
+	\item {\bf Userspace.}
+		Opposite of {\em kernelspace}.
+		Execution mode in which programs, such as {\em P2} or client code thereof,
+		run with limited privileges,
+		such as no access to the CPU's control registers, interrupt descriptor table, ability to perform device I/O,
+		et cetera.
+		Assumed to run with the virtual memory protections standard in any modern kernel
+		(such as crashing when dereferencing a null pointer).
+	\item {\bf Vector clock.}
+		% TODO
+	\item {\bf Verification.}
+		Formally certifying the correctness of a program under certain properties.
+		In this thesis, will always be constrained by the set of behaviours
+		the {\em test case} is capable of exposing in the first place.
 \end{enumerate}
-
-% concurrency bug
-% race condition: "a confusing term which in some circles means concurrency bug and others data race, which we will avoid"
-% data race
-% atomicity violation (what even is this.)
-% false positive false negative
-% thread
-% transition
-% conflict
-% independent: "see conflict"; and note diff b/w this (applies to transitions) equivalent (applies to interleavings)
-% state space
-% interleaving
-% DPOR
-% estimation (WBE, RE)
-% ETA
-% landslide
-% quicksand
-% iterative deepening
-% MC, stateless MC, systematic concurrency testing (TODO: stop calling it SMC start saying SCT)
-% TA: teaching assistant
-% P2 (note abotu psu - dosent call it p2, but we call it that for both schools here
-% happens before, all 3 versions - DPOR, LHB, and PHB (TODO: replace PHB uses of 'happens before' with vector clock
-% userspace, kernelspace
-% "landslide friendly"
