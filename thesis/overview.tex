@@ -118,7 +118,8 @@ and infinite loops (which must be identified heuristically \cite{entscheidungspr
 	\label{fig:concurrency-bug}
 \end{figure}
 
-\subsection{Concurrency Primitives}
+\subsection{Concurrency primitives}
+\label{sec:overview-mutex}
 
 To prevent unexpected interleavings such as the example in Figure~\ref{fig:concurrency-bug}(b),
 most concurrent programs use {\em concurrency primitives} to control which interleavings are possible.
@@ -260,6 +261,7 @@ It then controls the scheduling decisions
 to guarantee a unique interleaving is tested each iteration.
 
 \subsection{The state space}
+\label{sec:overview-statespace}
 
 To understand what it means to exhaustively test all possible thread interleavings,
 one must define the possible execution sequences as a finite {\em state space}.
@@ -771,7 +773,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		To avoid confusion, this thesis avoids this term altogether,
 		using {\em optimality} to refer to the reduction perspective definition instead.
 	\item {\bf Concurrency bug.}
-		A program behaviour which manifests nondeterministically depending on the thread scheduling pattern,
+		A program behaviour which manifests {\em nondeterministically} depending on the thread scheduling pattern,
 		which is not desired or intended by the programmer.
 		This thesis further assumes these to be identifiable by computable predicates on the execution state,
 		excluding some real bugs which may result in data corruption that never actually leads to crashes or assertion
@@ -803,7 +805,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 	\item {\bf Disjoint.}
 		Said of a pair or of two sets of memory accesses
 		when there are no two elements that share an address and also are not both reads.
-	\item {\bf DPOR.} See {\em dynamic partial order reduction}.
+	\item {\bf DPOR.} {\em Dynamic partial order reduction}.
 	\item {\bf Dynamic analysis.}
 		Program analysis technique which involves analyzing concrete execution(s) of a program,
 		either through tracing (via compiler-inserted instrumentation, simulation, or other means)
@@ -832,7 +834,9 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		typically with nuance for units of time rather than branches.
 		From ``estimated time of arrival''.
 	\item {\bf Execution tree.}
-		% TODO
+		Representation of the {\em state space} by joining interleavings with common prefixes
+		into a subtree with a branch at each point they diverge, forming a tree overall.
+		See \sect{\ref{sec:overview-statespace}}; Figure~\ref{fig:tree}.
 	\item {\bf False negative.}
 		Said of a tool's failure to produce a bug report when a bug does exist after all.
 		In theory this may mean that the {\em test case} might have been insufficient to expose the bug
@@ -899,7 +903,9 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		to happen non-concurrently in the execution in question,
 		but also that they could not be reordered even in alternate interleavings.
 	\item {\bf Lock.}
-		% TODO
+		A data structure used to ensure {\em atomic} access to shared state
+		with respect to other {\em threads} using the same lock.
+		See \sect{\ref{sec:overview-mutex}}.
 	\item {\bf Memory conflict.}
 		A pair of memory accesses between two {\em threads}, where at least one is a write,
 		meaning that executing them in a different order from the one observed may produce different program behaviour.
@@ -913,6 +919,9 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		In general, refers to the whole research field of checking program implementations against
 		formal specifications in a theoretically rigorous way.
 		In this thesis, used as shorthand for {\em stateless model checking}.
+	\item {\bf Nondeterminism.}
+		Property of a program which can exhibit different behaviours across multiple runs,
+		despite no change in the input data.
 	\item {\bf Optimality.} See {\em completeness}.
 	\item {\bf P2.}
 		Operating systems class project in which students must implement synchronization primitives
@@ -932,7 +941,13 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		This thesis will also use this as shorthand for preemption point predicates,
 		using the longer term only when the precise difference is important.
 	\item {\bf Preemption point predicate.}
-		% TODO
+		A test of an intermediate execution state returning whether the {\em model checker}
+		should inject {\em preemptions} to force another thread to interleave.
+		Often simply ``is it the beginning of {\tt mutex\_lock()} or {\tt mutex\_unlock()}?'',
+		but may be extended to include the program counter values of known {\em data races},
+		or to further restrict by predicates on the current stack trace.
+		See \sect{\ref{sec:landslide-pps}}.
+		Often called {\em preemption point} for short, with context hopefully making the distinction clear.
 	\item {\bf Pure happens-before.}
 		Variant of {\em happens-before} that relates two events when any synchronization operation introducing a memory
 		barrier, which would prevent compiler or hardware access reorderings, occurs in between.
@@ -952,7 +967,8 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		but in research circles is generally taken to mean {\em data race}.
 		This thesis will avoid it entirely, using those two more precise terms instead.
 	\item {\bf Reduction.}
-		The act of making a {\em state space} smaller by finding multiple execution sequences that can be proved equivalent,
+		The act of making a {\em state space} smaller by finding multiple execution sequences
+		that can be proved {\em equivalent},
 		such that all but one may be skipped over.
 	\item {\bf Schedule.}
 		Another term for {\em interleaving} with a more theoretical nuance.
@@ -976,8 +992,8 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		means contradiction cannot be derived from the axioms.
 		See also {\em completeness}.
 	\item {\bf Stateless model checking.}
-		Concurrency testing {\em dynamic analysis} technique involving controlling a system's nondeterminism
-		to exhaustively check all possible thread interleavings.
+		Concurrency testing {\em dynamic analysis} technique involving controlling a system's {\em nondeterminism}
+		to exhaustively check all possible {\em thread interleavings}.
 		See \sect{\ref{sec:overview-stateless}}.
 		Often ``MC'' for short in this thesis (to mean either ``model checking'' or ''model checker'' depending on context).
 		This name is potentially confusing for tools which explore {\em state spaces}:
@@ -989,7 +1005,13 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		but rather the program's internal assertions serve as informal specifications,
 		alongside the MC's own bug-detection predicates.
 	\item {\bf State space.}
-		% TODO
+		The set of all possible behaviours of a program under any interleaving of threads.
+		As opposed to modern {\em stateless model checkers}, older MCs stored the set of states explicitly,
+		attempting to cover them by traversing as few edges (executing as few {\em transitions}) as possible;
+		hence the name.
+		Modern MCs instead cover these states implicitly by instead exhaustively executing all {\em interleavings},
+		using {\em DPOR} to prune redundant {\em equivalent} ones which could only revisit old states.
+		The slightly misleading name is kept for consistency with prior work (sorry).
 	\item {\bf Static analysis.}
 		Class of program analysis techniques which process the source code,
 		usually at syntax-tree or LLVM IR level,
@@ -998,7 +1020,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		Opposite of {\em dynamic analysis}.
 	\item {\bf Systematic testing.}
 		Another name for {\em stateless model checking}.
-	\item {\bf TA.} See {\em teaching assistant}.
+	\item {\bf TA.} {\em Teaching assistant}.
 	\item {\bf Teaching assistant.}
 		A student who volunteers to help run a class, holding office hours, grading projects, and so on,
 		compensated either with course credit or pay from the university.
@@ -1016,7 +1038,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 	\item {\bf Transition.}
 		% not the kind of transition that's for people
 		A sequence of execution steps by a single thread,
-		characterized by the two different program states at beginning and end.
+		bounded by the two different program states at beginning and end.
 		In this thesis, will be used exclusively when the terminal program states are {\em preemption points},
 		and no intermediate state is a preemption point as well.
 	\item {\bf Userspace.}
