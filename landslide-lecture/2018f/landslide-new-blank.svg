@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/PR-SVG-20010719/DTD/svg10.dtd">
+<svg width="38cm" height="25cm" viewBox="158 218 743 483" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #ffffff" x="160" y="220" width="740" height="480"/>
+  <g>
+    <rect style="fill: #bfbfff" x="320" y="440" width="460" height="249"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="320" y="440" width="460" height="249"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="550" y="568.1">
+      <tspan x="550" y="568.1"></tspan>
+    </text>
+  </g>
+  <text font-size="27.0933" style="fill: #000000;text-anchor:start;font-family:Utopia;font-style:normal;font-weight:700" x="340" y="480">
+    <tspan x="340" y="480">Simulator (hardware emulation)</tspan>
+  </text>
+  <g>
+    <rect style="fill: #ffff57" x="360" y="340" width="360" height="60"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="360" y="340" width="360" height="60"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="540" y="373.6">
+      <tspan x="540" y="373.6"></tspan>
+    </text>
+  </g>
+  <text font-size="27.0933" style="fill: #000000;text-anchor:start;font-family:Utopia;font-style:normal;font-weight:700" x="380" y="380">
+    <tspan x="380" y="380">Pebbles (reference kernel)</tspan>
+  </text>
+  <g>
+    <rect style="fill: #c0ffc0" x="380" y="240" width="320" height="60"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="380" y="240" width="320" height="60"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="540" y="273.6">
+      <tspan x="540" y="273.6"></tspan>
+    </text>
+  </g>
+  <text font-size="27.0933" style="fill: #000000;text-anchor:start;font-family:Utopia;font-style:normal;font-weight:700" x="420" y="280">
+    <tspan x="420" y="280">P2 (thread library)</tspan>
+  </text>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="560" y1="400" x2="560" y2="430.264"/>
+    <polygon style="fill: #000000" points="560,437.764 555,427.764 560,430.264 565,427.764 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="560,437.764 555,427.764 560,430.264 565,427.764 "/>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="520" y1="440" x2="520" y2="409.736"/>
+    <polygon style="fill: #000000" points="520,402.236 525,412.236 520,409.736 515,412.236 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="520,402.236 525,412.236 520,409.736 515,412.236 "/>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="520" y1="340" x2="520" y2="309.736"/>
+    <polygon style="fill: #000000" points="520,302.236 525,312.236 520,309.736 515,312.236 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="520,302.236 525,312.236 520,309.736 515,312.236 "/>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="560" y1="300" x2="560" y2="330.264"/>
+    <polygon style="fill: #000000" points="560,337.764 555,327.764 560,330.264 565,327.764 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="560,337.764 555,327.764 560,330.264 565,327.764 "/>
+  </g>
+  <text font-size="18.0622" style="fill: #000000;text-anchor:start;font-family:Utopia;font-style:normal;font-weight:700" x="580" y="320">
+    <tspan x="580" y="320">system calls</tspan>
+  </text>
+  <text font-size="18.0622" style="fill: #000000;text-anchor:start;font-family:Utopia;font-style:normal;font-weight:700" x="580" y="420">
+    <tspan x="580" y="420">hardware drivers</tspan>
+  </text>
+</svg>
