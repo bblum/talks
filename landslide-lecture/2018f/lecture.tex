@@ -52,7 +52,7 @@
 \definecolor{olivegreen}{RGB}{0,127,0}
 
 \begin{document}
-\renewcommand{\inserttotalframenumber}{38}
+\renewcommand{\inserttotalframenumber}{39}
 \normalem
 \begin{frame}
 	\titlepage
@@ -785,34 +785,71 @@
 \begin{frame}{Previous Semesters}
 	%% S'15, F'15, S'16: 48 groups signed up to use Landslide; 38 found bugs
 	%% S'15, F'15, S'16, F'16, S'17: 79 groups signed up to use Landslide; 59 found bugs
-	S'15, F'15, S'16, F'16, S'17, F'17: 94 groups signed up to use Landslide; 71 found bugs
+	%% S'15, F'15, S'16, F'16, S'17, F'17: 94 groups signed up to use Landslide; 75 found bugs % not sure why 75 -> 75
+	%%S'15, F'15, S'16, F'16, S'17, F'17, S'18: 103 groups signed up to use Landslide; 75 found bugs
+	S'15--S'18: 103 groups signed up to use Landslide; 75 found bugs
 	\linegap
 
-	%%44 {\em deterministic} bugs (e.g. swexn, initialization)
-	%% F17 lecture - stats up to S17
-	%% 91 {\em deterministic} bugs (e.g. swexn, initialization)
-	% S18 lecture - stats up to F17
-	109 {\em deterministic} bugs (e.g. swexn, initialization)
-	\linegap
-
-	%%85 distinct {\em non-deterministic} bugs (among 32 groups)
-	%% F17 lecture - stats up to S17
-	%% 113 distinct {\em non-deterministic} bugs (among 44 groups)
-	% S18 lecture - stats up to F17
-	122 distinct {\em non-deterministic} bugs (among 49 groups)
+	% all this now from table 5.2 in thesis
+	115 {\em deterministic} bugs (e.g. swexn, initialization)
 	\begin{itemize}
-		\item 36 groups (73\%) fixed $\ge 1$ such bug
-		%\item 33 groups (75\%) fixed $\ge 1$ such bug
-		%%\item 24 groups (75\%) fixed $\ge 1$ such bug
+		\item 87 (76\%) of these were fixed before submitting P2
 			\begin{itemize}
 				\item (as verified by running Landslide again -- not a guarantee!)
 			\end{itemize}
-		\item 26 groups (53\%) fixed {\em all} such bugs
-		%\item 24 groups (55\%) fixed {\em all} such bugs
-		%%\item 15 groups (47\%) fixed {\em all} such bugs
-		\item Most ambitious group: 11 distinct races found + fixed!
 	\end{itemize}
 	\linegap
+
+	122 distinct {\em non-deterministic} bugs
+	\begin{itemize}
+		\item 80 (66\%) of these were fixed before submitting P2
+			\begin{itemize}
+				\item (verified by running Landslide again, same)
+			\end{itemize}
+	\end{itemize}
+	\linegap
+
+	75 groups in total found any bugs
+	\begin{itemize}
+		\item 58 (77\%) groups fixed at least 1 bug
+		\item 35 (47\%) groups fixed all found bugs
+		\item Most ambitious group: 11 bugs found \& fixed!
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Survey Results}
+	F'17, S'18: Asked students what they thought of it all
+	\begin{itemize}
+		\item (also ran similar study at Penn State U. \& U. of Chicago)
+	\end{itemize}
+
+	\begin{center}
+	\includegraphics[width=0.8\textwidth]{survey6.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Survey Results}
+	\addtocounter{framenumber}{-1}
+	F'17, S'18: Asked students what they thought of it all
+	\begin{itemize}
+		\item (also ran similar study at Penn State U. \& U. of Chicago)
+	\end{itemize}
+
+	\begin{center}
+	\includegraphics[width=0.8\textwidth]{survey9.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Survey Results}
+	\addtocounter{framenumber}{-1}
+	F'17, S'18: Asked students what they thought of it all
+	\begin{itemize}
+		\item (also ran similar study at Penn State U. \& U. of Chicago)
+	\end{itemize}
+
+	\begin{center}
+	\includegraphics[width=0.8\textwidth]{survey10.pdf}
+	\end{center}
 \end{frame}
 
 %\begin{frame}{A new treat} %since last semester}
@@ -1031,6 +1068,69 @@
 \begin{frame}{State Space Reduction}
 	\begin{center}
 	\includegraphics[width=\textwidth]{diamond1.png}
+	\end{center}
+\end{frame}
+
+\begin{frame}{More Survey Results}
+	(To dispel any accusations that I might have omitted survey questions with less good results)
+	\linegap
+
+	\begin{center}
+	\includegraphics[width=0.8\textwidth]{survey1.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{More Survey Results}
+	(To dispel any accusations that I might have omitted survey questions with less good results)
+	\linegap
+
+	\begin{center}
+	\includegraphics[width=0.8\textwidth]{survey2.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{More Survey Results}
+	(To dispel any accusations that I might have omitted survey questions with less good results)
+	\linegap
+
+	\begin{center}
+	\includegraphics[width=0.8\textwidth]{survey3.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{More Survey Results}
+	(To dispel any accusations that I might have omitted survey questions with less good results)
+	\linegap
+
+	\begin{center}
+	\includegraphics[width=0.8\textwidth]{survey4.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{More Survey Results}
+	(To dispel any accusations that I might have omitted survey questions with less good results)
+	\linegap
+
+	\begin{center}
+	\includegraphics[width=0.8\textwidth]{survey5.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{More Survey Results}
+	(To dispel any accusations that I might have omitted survey questions with less good results)
+	\linegap
+
+	\begin{center}
+	\includegraphics[width=0.8\textwidth]{survey7.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{More Survey Results}
+	(To dispel any accusations that I might have omitted survey questions with less good results)
+	\linegap
+
+	\begin{center}
+	\includegraphics[width=0.8\textwidth]{survey8.pdf}
 	\end{center}
 \end{frame}
 
