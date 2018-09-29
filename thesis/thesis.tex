@@ -118,15 +118,10 @@ Haryadi Gunawi, University of Chicago
 \maketitle
 
 \begin{dedication}
-%For Elsie, Margie, Johnny, Mel, Eve, and David.
-%%, who brought me here today.
 For my family, my teachers, and my students.
 \end{dedication}
 
 \pagestyle{plain} % for toc, was empty
-
-%% Obviously, it's probably a good idea to break the various sections of your thesis
-%% into different files and input them into this file...
 
 \begin{abstract}
 Concurrent programming presents a challenge to students and experts alike because of the complexity of multithreaded interactions and the difficulty to reproduce and reason about bugs.
@@ -150,13 +145,26 @@ and evaluate several real-world transactional benchmarks to show that stateless 
 \end{abstract}
 
 \begin{acknowledgments}
-Even as I built Landslide by myself,
-implementation is of course barely the first step of scientific contribution.
-I would honor here the many people who supported me during these 7 years and made this thesis possible.
+I honor here the many people who supported me during these 7 years and made this journey possible.
 
 \subsubsection{Thesis}
 
-% garth,
+Professor Garth Gibson is largely responsible for shaping me into the researcher I am today.
+%Thanks to Garth's guidance,
+%this thesis has grown into something that past-me,
+%first starting research with the simple vision ``make a better autograder for 410'',
+%could not have then imagined.
+Despite having primary research interests in other fields,
+Garth enthusiastically took on the project,
+and always pushed me to explore new problem domains,
+to design scientifically thorough experiments,
+to write prose explaining difficult concepts approachably,
+to appreciate related work as charitably as possible,
+and to seek guidance from industry people with relevant experience,
+despite my often stubborn refusal to leave my little comfort zone.
+So, even when it took me sending 10+ email reminders to get your attention,
+truly,
+thanks for everything, Garth.
 
 Professor David Eckhardt
 provided unending guidance on education, writing, life, you name it,
@@ -166,10 +174,19 @@ and supplied constant enthusiasm and reassurance that Landslide was a boon to 15
 I can't express the depth of my gratitude to Dave strongly enough,
 even though three of the Landslide-friendly tests never made it upstream into the official P2 test suite.
 
-% jiri,
-% .. orient me in the world of research ..
+Ji\v{r}\'{i} \v{S}im\v{s}a, another student of Garth's,
+first sparked my interest in the field,
+and then gave invaluable support during my first few years.
+Ji\v{r}\'{i}'s mentorship
+oriented me in the world of research and helped me find my bearings as a grad student,
+from teaching me how DPOR works
+to helping revise my paper drafts
+to offering the kind of candid career advice you can't get from a professor.
+Had I not met Ji\v{r}\'{i} and learned about dBug during grad school applications way back,
+none of this would have happened.
 
-% these 3 names ar ethe ones without which the thesis flat out could not have happened
+% FIXME - cmon latex pls??
+\pagebreak
 
 Many others have collaborated with me directly on the research itself,
 whom I thank here in approximate chapter order.
@@ -190,21 +207,31 @@ that make up about half of Chapter~\ref{chap:tm}'s evaluation suite.
 
 \subsubsection{Academia}
 
-Without SIGBOVIK's unique brand of humorous, self-aware, and {\em definitely legitimate} research,
-I probably would not have been interested in grad school in the first place,
-or perhaps would have grown too frustrated for lack of a cathartic outlet for conference paper woes.
-I thank all who've worn the mantle of Harry Bovik over the years,
-from the conference's original founders,
-to every paper author,
-to all future organizers who'll keep those ``mainstream'' conferences on their toes well into the future.
+The community of 15-410 TAs,
+having surrounded me pretty much since starting undergrad,
+nurtured my love of teaching
+well before taking the class myself and well after graduation.
+As skilled as the instructor is,
+15-410 could not be the world's best operating systems class
+without TAs who value thorough grading, the Socratic method,
+and empathy to struggling students as much
+from year to year as the crew I have known.
+It was a blessing to serve, and later do research, among you all.
+I am also grateful to Adam Blank and Miriam Zimmerman
+for founding and organizing the class Great Practical Ideas,
+which teaches oft-neglected programming skills such as version control and debugging,
+which I had the opportunity to teach as head instructor one semester.
 
-% [ ] 410 ta community
-% [ ] emarhavil
-% [ ] pdl consortium industry ppl who offered good advices
-% [ ] anyone who ever said how cool it was that i helped students for my research
-% [ ] adam and co. for GPI, if you feel like it
-
-% blurry line
+I thank the Parallel Data Lab, my research group at CMU,
+for supporting me at the PDL retreat every fall,
+pushing me to refine my presentation skills and to network with strangers (now familiar faces) from industry.
+I also thank the retreat's industry attendees from each of the PDL Consortium member companies
+for their interest even in more theoretical work
+and the enlightening conversations resulting therefrom.
+I thank everyone outside my immediate research circle who,
+whether at the retreat or otherwise,
+told me how cool they thought my research was for directly helping students --
+every such reminder helped me keep my head up during darker times.
 
 I am grateful to the ThursDz Council,
 my group of now-former grad student, Shadyside-bound (in spirit if not in person) restaurant-hoppers,
@@ -219,8 +246,15 @@ Tom Murphy 7,
 and
 William Lovas:
 you each have been role models to me
-%each in your own way
 perhaps more than you know.
+
+Without SIGBOVIK's unique brand of humorous, self-aware, and {\em definitely legitimate} research,
+I probably would not have been interested in grad school in the first place,
+or perhaps would have grown too frustrated along the way for lack of a cathartic outlet for conference paper woes.
+I thank all who've worn the mantle of Harry Bovik over the years,
+from the conference's original founders,
+to every paper author,
+to all future organizers who'll keep those ``mainstream'' conferences on their toes well into the future.
 
 \subsubsection{Life}
 
@@ -232,13 +266,19 @@ perhaps more than you know.
 Lastly,
 the Android: Netrunner community has been such an important part of my life
 for nearly as long as I've been a grad student.
+Netrunner is a tabletop strategy deckbuilding card game
+that depicts cyberspace hacking battles (completely different from real-life computer security)
+alongside dystopian social issues (some of which seem oddly more familiar with each passing year).
+Its characters have a diversity of ethnicity, gender identity, and sexual orientation
+unparalleled in any other game I know of,
+and the community that has grown around it reflects those values.
 I thank in particular the other Stimhack moderators,
 the members of {\sf \#rainbow-coalition},
 and the local Pittsburgh crew
 for their support and encouragement
 and friendships very real and deep, even when forged only in text,
 %\footnote{and Slack emojis},
-that I hope will well outlive the card game that brought us together.
+that I hope will long outlive the silly card game that brought us together.
 %It'd be an injustice to list only a few names here and omit others, but you know who you are.
 
 \end{acknowledgments}
