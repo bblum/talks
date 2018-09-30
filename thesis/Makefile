@@ -1,6 +1,6 @@
 .PHONY: clean
 
-thesis: thesis.tex intro.tex overview.tex landslide.tex quicksand.tex education.tex tm.tex cmuthesis.cls citations.bib # quicksand.tex 410.tex pintos.tex tm.tex related.tex
+thesis: thesis.tex intro.tex overview.tex landslide.tex quicksand.tex education.tex tm.tex related.tex future.tex cmuthesis.cls citations.bib
 	xelatex $< && bibtex $(<:%.tex=%) && xelatex $< && xelatex $< || true
 
 clean:
