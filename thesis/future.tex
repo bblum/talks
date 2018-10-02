@@ -26,6 +26,8 @@ Meanwhile, this chapter takes a broader interpretation of ``future work'',
 namely,
 how might future Landslides solve research problems I didn't even pose to begin with.
 %The reader looking for their own thesis topic would most likely find it here.
+%The reader should beware of wild speculation ahead
+%which may assume solutions to extremely difficult problems with a wave of the hand.
 
 \subsubsection{User-friendliness}
 
@@ -67,24 +69,59 @@ to quickly check small updates on top of an already-verified codebase.
 
 \subsubsection{Test cases}
 
+In its current form, Landslide is limited to testing only those behaviours that the test case it's hooked up to can generate.
+The most obvious limitation of this is resource exhaustion scenarios:
+stateless model checking simply cannot handle tests long-running enough to exhaust system memory
+(succumbing to exponential explosion long before),
+% "involve" here, for subjunctive?
+so cannot exercise any flow control that involves {\tt malloc()} failing, for example.
+This specific issue could be solved using by-hand annotations to block all preemption points until just before exhaustion,
+%(requires model-checking expertise on the programmer's part)
+or by extending Landslide to inject allocation failures at {\tt malloc()} callsites (akin to {\tt \_xbegin()}).
+%(assumes certain behavioural properties of the allocation library).
+However,
+these require the user to realize in advance that she should worry about allocation-failure bugs,
+and to configure Landslide specifically to target them.
+In general, a mature testing tool should not require the user to
+know in advance where her bugs might be
+before being able to conduct an effective test.
+
+In future work, a stateless model checking framework could collaborate with its user to semi-automatically design better tests.
+% i hate the way maple actually does it, in principle, but i need to cite smth here
+Concurrency coverage metrics such as proposed by Maple \cite{maple}
+% wild speculation
+could be extended to capture possible program behaviours under any test input,
+not just within the fixed state space under one given test,
+and symbolic execution frameworks such as Contessa \cite{contessa}
+could search for possible test inputs to suggest changes to the test case which might expose them.
+In cases where not-yet-covered conditional branches require
+certain function return values,
+such as {\tt malloc()} failing,
+the tool could offer to add failure injection with the user's approval,
+or at least prompt her to write a new test with that as a subgoal.
+
+In the case study of submitted P2 bugs (\sect{\ref{sec:education-eval-bug-case-study}}),
+I noticed several submissions of a common pattern
+in which Landslide overlooked the {\tt thr\_exit()} use-after-free bug:
+they all manually recycled the exited thread's stack using an internal free-list,
+rather than calling {\tt free()} or {\tt remove\_pages},
+so Landslide's heap-checker failed to see anything out of the ordinary about the subsequent writes to it.
+Explicit annotations about the custom free-list's invariants could make Landslide treat it like {\tt free()}
+and catch the errant write,
+but that begs the question of knowing about the bug in advance.
+Catching this bug would require extending the test case to {\tt thr\_fork()} a new thread
+to reuse the old stack and suffer data corruption from the stray write.
+In this case, the user might happen to find this just by increasing the number of threads/iterations,
+which is just good verification principles,
+but in general, automatically inferring such data structure invariants
+to suggest better assertions
+% is this true??
+remains an open problem.
+
 % test case design, writing code that actually checks the properties you're interested in
 % for example the mutex test, with the if (!xtest) yield check
 % then even after you got the right properties, optimizing the state space
 % with without_function, ignore_sym, etc, while preserving the guarantee
-
-% envision a framework that uses some code coverage tester to guide choice of pps and/or the user's without_function calls 
-% to get that coverage -- although relating flow control coverage directly to concurrency coverage is not straightforward
-% framework can also use 'git diff's, like comparing the most recent commit against an already-trusted codebase,
-% to figure out how to isolate just the stuff the change affects (memory intersection & data flow resulting from those conflix)
-% and then automatically assign some without_functions/etc to test just that commit
-
-% failure injection, testing malloc/etc failures
-% eg student condvars which loop around malloc failures can deadlock
-% can use retry set reduction in principle to prune the same kind of equivalences
-
-% also here we've got discussion of the exit-UAF buggers where landslide oops verifs the test anyway
-% because they're using a free pool and not free()
-% need a 3rd thread at least, to expose this (by actually getting corruption)
 
 \subsubsection{Verification}
 
