@@ -69,7 +69,8 @@ automatically analyzing the functions touched by each patch,
 and heuristically prioritizing preemption points therein
 to quickly check small updates on top of an already-verified codebase.
 
-\section{Test cases}
+%\section{Test cases}
+\section{Verification}
 
 In its current form, Landslide is limited to testing only those behaviours that the test case it's hooked up to can generate.
 The most obvious limitation of this is resource exhaustion scenarios:
@@ -87,15 +88,15 @@ and to configure Landslide specifically to target them.
 In general, a mature testing tool should not require the user to
 know in advance where her bugs might be
 before being able to conduct an effective test.
-
+%
 In future work, a stateless model checking framework could collaborate with its user to semi-automatically design better tests.
 % i hate the way maple actually does it, in principle, but i need to cite smth here
 Concurrency coverage metrics such as proposed by Maple \cite{maple}
 % wild speculation
-could be extended to capture possible program behaviours under any test input,
+could be extended to capture possible behaviours under any test input,
 not just within the fixed state space under one given test,
 and symbolic execution frameworks such as Contessa \cite{contessa}
-could search for possible test inputs to suggest changes to the test case which might expose them.
+could search for possible inputs to suggest changes which might expose them.
 In cases where not-yet-covered conditional branches require
 certain function return values,
 such as {\tt malloc()} failing,
@@ -119,6 +120,13 @@ but in general, automatically inferring such data structure invariants
 to suggest better assertions
 % is this true??
 remains an open problem.
+Future work might combine Landslide's ability to prove correctness for finite $K,N$ parameters
+with a formal induction proof that generalizes the result,
+finding a minimum number of threads necessary to expose all behaviours
+(at least 3 in this example),
+% 2 papers rec'd from https://twitter.com/bblum0/status/1018233122750640130
+% although i checked these & couldn't figure out how if at all they were doing generalization
+although I know of no related work which addresses the second half of this problem.
 Likewise, \sect{\ref{sec:tm-abstraction}}'s abstraction reduction requires the user
 to believe that {\tt lock}({\tt spinlock}) and friends correctly express the mutual exclusion property in informal code%
 \footnote{In Figure~\ref{fig:htm-lock}(a), the
@@ -133,7 +141,7 @@ Future work could further check such tests against external formal specification
 %analogously to seL4 \cite{sel4},
 to make the abstraction reduction more trustworthy.
 
-\section{Verification}
+%\section{Verification}
 
 As important as Quicksand's convergence theorem (\sect{\ref{sec:quicksand-soundness}}),
 the HTM equivalence proofs (\sect{\ref{sec:tm-design}}),
@@ -141,7 +149,7 @@ and other soundness results from prior work are,
 they fall short of fully end-to-end formal verification
 in terms of trusting the output of stateless model checkers in practice.
 In addition to the issue of test cases,
-discussed above,
+%discussed above,
 there is also currently no guarantee that Landslide's concrete implementation
 matches the theoretical properties.
 My personal faith in Landslide's implementation comes from years of empirical observation:
@@ -163,20 +171,10 @@ As the concurrency model becomes more complex,
 more opportunities arise for the implementation to deviate from what the soundness theorem actually proves.
 Kernels like seL4 \cite{sel4} and CertiKOS \cite{certikos}
 and concurrency-aware compilers like CompCertTSO \cite{compcerttso},
-all formally verified,
+all formally verified against external specifications,
 provide important pioneering steps in this direction
 \footnote{Of course, being verified themselves, these projects have no need for a verified Landslide,
 but checking unverified (e.g. student) code with such would still be an improvement.}.
-
-% extending landslide's verification for a limited nr of K N to infinite with induction/proof assistance
-
-% - this should prob go in quicksand chapater
-% identifying & skipping redundancies in smaller ID state spaces via memoization (same applies to ICB!)
-
-% arugment why ML is NOT appropriate for smc in general -- if you try to train it to choose thread interleavings / search ordering,
-% even if you're already in not-enough-cpu-time heuristics land, you're biasing it to find only the types of bugs you've already seen
-% and destroying its ability to find novelties
-% if your ML provides a partial verification, it is impossible for a human to understand what that verification means
 
 \section{Heuristics}
 
@@ -195,6 +193,11 @@ These flaws are especially visible in the {\tt avl\_fixed} transactional verific
 % TODO: publish the htm evaluation logs
 % state space estimation could probably be drastically improved with machine learning
 % accordingly, all the state space estimate logs (ie, quicksand logs) from the tsx chapter are made open-source on so-and-so
+
+% arugment why ML is NOT appropriate for smc in general -- if you try to train it to choose thread interleavings / search ordering,
+% even if you're already in not-enough-cpu-time heuristics land, you're biasing it to find only the types of bugs you've already seen
+% and destroying its ability to find novelties
+% if your ML provides a partial verification, it is impossible for a human to understand what that verification means
 
 % ICB incorporations
 % into quicksand - when SS estimates are too high, fall back on a preemption bounded version to find bugs - improve the partial verif
