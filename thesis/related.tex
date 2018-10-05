@@ -128,6 +128,7 @@ Its choice of a familiar pthread-like synchronization API makes it suitable for 
 and its recent extension to HTM adds support for more modern concurrency patterns as well.
 
 \subsubsection{Algorithms}
+\label{sec:related-algs}
 
 To date a number of techniques have been proposed to mitigate exponential explosion,
 the Sisyphean rock of SCT.
@@ -203,6 +204,15 @@ although does not yet incorporate it into this thesis's own contributions
 (as discussed in Chapter~\ref{chap:warpzone}).
 Chapter~\ref{chap:quicksand}'s Quicksand algorithm is, effectively, another such heuristic search strategy,
 focusing on preemption point subsets rather than context switch bounding.
+\revision{Maple \cite{maple} proposed a heuristic metric for measuring the amount of ``concurrency coverage'',
+analogous to line-by-line coverage for sequential programs,
+and prioritizes testing interleavings which increase the coverage metric,
+although it makes several limiting assumptions such as
+% "vulnerability window", in its words
+preemption locality
+% this is like, TOTAL bs, completely results-oriented empiricism
+% and at worst, intentionally blinding yourself to the actually difficult bugs
+and independence of values read/written.}
 DeMeter \cite{demeter} adapted abstraction reduction to distributed systems verification under the name Dynamic Interface Reduction,
 while dBug \cite{dbug-phdthesis} applied abstraction reduction to synchronization primitives,
 and I showed how it could be applied similarly to transactional memory in \sect{\ref{sec:tm-abstraction}}.
@@ -580,7 +590,7 @@ This approach skips the initial verification step entirely,
 but greatly reduces the diagnosis effort required of the user,
 which was a common complaint about Landslide's preemption traces.
 
-\subsubsection{Kernel verification}
+\subsubsection{Formal verification}
 
 seL4 \cite{sel4} is a microkernel fully designed and specified in Haskell and translated into C.
 Its proofs guarantee not only standard security properties such as process isolation and bounded interrupt latency,
@@ -593,7 +603,9 @@ seL4's authors reported over 2 person-years of development effort, with the majo
 %
 CertiKOS \cite{certikos} extends this approach to include full concurrency and fine-grained locking
 in the scope of verification,
-using a proof in Coq that also took 2 person-years to complete.
+using a proof in the Coq proof assistant
+\cite{coq}
+that also took 2 person-years to complete.
 Its safety properties hold under all possible interleavings,
 and include data-race freedom as well as standard sequential properties
 such as no null dereference and no buffer or integer overflow,
@@ -617,3 +629,14 @@ Future work could check preemptive and/or multiprocessor kernels
 by first checking safety properties in the absence of concurrency,
 then checking with Landslide that concurrency introduces no new program behaviour not already verified,
 to provide a less formal, but still hopefully useful, verification guarantee.
+%
+\revision{Lastly, CompCertTSO \cite{compcerttso} extends the CompCert verified compiler \cite{compcert}
+to capture x86's relaxed memory semantics,
+guaranteeing that a program written in the ClightTSO subset of C
+is translated accurately to assembly with the same behaviour.
+Like CertiKOS, its implementation is verified in Coq.
+Although Landslide checks programs directly at the executable level,
+blind to the code the programmer personally wrote,
+extending that pipeline with a certifying compiler would
+improve the overall verification,
+ensuring that Landslide was checking the behaviour the programmer actually intended to write.}

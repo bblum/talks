@@ -29,7 +29,7 @@ how might future Landslides solve research problems I didn't even pose to begin 
 %The reader should beware of wild speculation ahead
 %which may assume solutions to extremely difficult problems with a wave of the hand.
 
-\subsubsection{User-friendliness}
+\section{User-friendliness}
 
 In the user study survey (\sect{\ref{sec:education-eval-survey}}),
 students most often complained
@@ -47,7 +47,8 @@ or to click and drag preemption points across the source code to figure out how 
 State space size management remains an issue, as ever.
 While Quicksand's professed selling point is that the user need input only a CPU budget,
 at the same time,
-pruning out the overall state space would allow Quicksand to achieve more meaningful results in that same budget.
+pruning uninteresting branches out of the overall state space
+would allow Quicksand to achieve more meaningful results in that same budget.
 Theoretical advances in state space reduction come out every year (\sect{\ref{sec:related-algs}}),
 but the user's human intuition can also contribute if properly encouraged.
 For the P2 tests (\sect{\ref{sec:education-pebbles-tests}}),
@@ -57,7 +58,8 @@ and even more still for the HTM tests (\sect{\ref{sec:tm-eval-exp-setup}}),
 but a user writing her own tests would have to configure DPOR by hand.
 A more mature version would coach the user to decide which functions focus the test on,
 using state space estimation to give an idea of expected testing time,
-and listing DPOR's memory conflicts to help her identify more candidate functions to potentially ignore.
+and listing the variables/locations of DPOR's memory conflicts
+to help her identify more candidate functions to potentially ignore.
 % there are a LOT of "hmm"s here for future research to address
 % most basically like, a modification could have a side effect that would lead to changed behaviour
 % arising from a preemption in a *subsequent* function
@@ -67,7 +69,7 @@ automatically analyzing the functions touched by each patch,
 and heuristically prioritizing preemption points therein
 to quickly check small updates on top of an already-verified codebase.
 
-\subsubsection{Test cases}
+\section{Test cases}
 
 In its current form, Landslide is limited to testing only those behaviours that the test case it's hooked up to can generate.
 The most obvious limitation of this is resource exhaustion scenarios:
@@ -112,24 +114,59 @@ but that begs the question of knowing about the bug in advance.
 Catching this bug would require extending the test case to {\tt thr\_fork()} a new thread
 to reuse the old stack and suffer data corruption from the stray write.
 In this case, the user might happen to find this just by increasing the number of threads/iterations,
-which is just good verification principles,
+which is just good testing practice,
 but in general, automatically inferring such data structure invariants
 to suggest better assertions
 % is this true??
 remains an open problem.
+Likewise, \sect{\ref{sec:tm-abstraction}}'s abstraction reduction requires the user
+to believe that {\tt lock}({\tt spinlock}) and friends correctly express the mutual exclusion property in informal code%
+\footnote{In Figure~\ref{fig:htm-lock}(a), the
+{\tt \flow{if} (!\call{\_xtest()}) \call{thr\_yield}(\const{-1});}
+part required expert knowledge of HTM semantics to write correctly:
+an unconditional yield there
+would cause % oops
+the transaction to abort every time,
+verifying mutual exclusion in the failure path only.}.
+Future work could further check such tests against external formal specifications
+% better citation? that silly planning assignment of ours even?
+%analogously to seL4 \cite{sel4},
+to make the abstraction reduction more trustworthy.
 
-% test case design, writing code that actually checks the properties you're interested in
-% for example the mutex test, with the if (!xtest) yield check
-% then even after you got the right properties, optimizing the state space
-% with without_function, ignore_sym, etc, while preserving the guarantee
+\section{Verification}
 
-\subsubsection{Verification}
-
-% soundness concerns - the xbegin/delay-xbegin pp soundness bug popped up in the implementation, despite the soundness thm
-% current SoA for this is to manually inspect the state spaces that arize for small K,N and just hope...
-% as concurrency model becomes more complex, more opportunities for the implementation to deviate from what
-% the soundness theorem actually proves
-% how to prove landslide is actually doing what you think? analogous to sel4 spec/impl verif...
+As important as Quicksand's convergence theorem (\sect{\ref{sec:quicksand-soundness}}),
+the HTM equivalence proofs (\sect{\ref{sec:tm-design}}),
+and other soundness results from prior work are,
+they fall short of fully end-to-end formal verification
+in terms of trusting the output of stateless model checkers in practice.
+In addition to the issue of test cases,
+discussed above,
+there is also currently no guarantee that Landslide's concrete implementation
+matches the theoretical properties.
+My personal faith in Landslide's implementation comes from years of empirical observation:
+inspecting small state spaces
+(such as Figure~\ref{fig:retry-reduction})
+by hand
+to check that preemption points show up in the right places
+and that DPOR prunes the expected equivalences;
+as well as checking that the relationships between larger state spaces satisfy expected invariants,
+such as when testing two sets of preemption points, one a subset of the other,
+or testing the same but one with an additional reduction applied,
+% this first "the" realllly helps disambiguate the sentence
+the one's resulting state space must be smaller than the other's.
+Nevertheless, discrepancies may still lurk undiscovered:
+the failure injection bug described in \sect{\ref{sec:tm-eval-exp-setup}}
+took until implementing retry set reduction to discover,
+well after publishing the first experimental results under it in \cite{sigbovik-htm}.
+As the concurrency model becomes more complex,
+more opportunities arise for the implementation to deviate from what the soundness theorem actually proves.
+Kernels like seL4 \cite{sel4} and CertiKOS \cite{certikos}
+and concurrency-aware compilers like CompCertTSO \cite{compcerttso},
+all formally verified,
+provide important pioneering steps in this direction
+\footnote{Of course, being verified themselves, these projects have no need for a verified Landslide,
+but checking unverified (e.g. student) code with such would still be an improvement.}.
 
 % extending landslide's verification for a limited nr of K N to infinite with induction/proof assistance
 
@@ -141,7 +178,7 @@ remains an open problem.
 % and destroying its ability to find novelties
 % if your ML provides a partial verification, it is impossible for a human to understand what that verification means
 
-\subsubsection{Heuristics}
+\section{Heuristics}
 
 In the author's experience,
 the WBE algorithm (used in Landslide for estimating number of interleavings) consistently underestimates,
