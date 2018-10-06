@@ -1211,9 +1211,21 @@ I report their estimated state space size and runtime measured after that timeou
 			% [JOB 4] progress: 683895/2710056 brs (25.235453%), ETA 28d 21h 54m 32s (elapsed 9h 59m 54s)
 			% [JOB 4] progress: 714585/1792330 brs (39.869037%), ETA 4d 14h 46m 38s (elapsed 9h 59m 54s)
 			& 3,1 & \cpu{43.24}	& \ints{774}	& \cpu{24.02}	& \ints{224}	& \cpu{22.79}	& \ints{140} \\
-			& 3,2 &\ETAdag{1y 299d}	&\ETAdag{4510472}& \ETAdag{qqq}	& \ETAdag{qqq}	&\ETAdag{10d 16h}&\ETAdag{2322150}\\
+			& 3,2 &\ETAdag{1y 299d}&\ETAdag{4510472}&\ETAdag{294d 5h}&\ETAdag{8185793}&\ETAdag{10d 16h}&\ETAdag{2322150}\\
+			% argh.. since re running the retry set i feel like i have to re run the others...
+			% the small state spaces though all end up similar perf numbers though;
+			% i wonder why this one alone broke 1mil?
 			% [JOB 4] progress: 759740/4510472 brs (16.843911%), ETA 1y 298d 22h 14m 13s (elapsed 9h 59m 55s)
+			% [JOB 4] progress: 1133447/8185793 brs (13.846513%), ETA 293d 19h 13m 36s (elapsed 9h 59m 55s) % good retry
 			% [JOB 4] progress: 646606/2322150 brs (27.845142%), ETA 10d 5h 50m 15s (elapsed 9h 59m 55s)
+			% old, owned retry set --
+			% ls-id-log-20180817141549.log.ByMMKx.gz
+			% [JOB 4] BUG FOUND: landslide-trace-1534529755.156051.html (981774 interleavings; 132 preemptions; ...)
+			% it's almost certainly getting retry set blocked
+			% so you just have to detect a retry set block deadlock, and un deadlock it
+			% this should not affect other tests (not even in cpu time (beyond icache considerations))
+			% when you fix it and re run it, remember to use leave-logs, and put a ALWAYS prince in landslide
+			% to see when it happens
 			& 4,1 & \cpu{9225.52}	& \ints{212146}	& \cpu{376.70}	& \ints{11973}	& \cpu{2158.93}	& \ints{44995} \\
 			%% i don't even remember which test case this commented stuff was for anymore
 			% measured with !CONSIDER_ONLY_MOST_RECENT_DPOR_PREFERRED_TID
@@ -1251,19 +1263,24 @@ I report their estimated state space size and runtime measured after that timeou
 			\hline
 			{\tt avl\_fixed}
 			& 2,1 & \cpu{739.60} 	& \ints{20459} 	& \cpu{332.32}	& \ints{9675}	& \cpu{122.40}	& \ints{2774} \\
-			& 2,2 & \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	& \ETAdag{qqq}	&\ETAdag{36393y}&\ETAdag{35094477}\\
+			& 2,2 &\ETAdag{58880y}&\ETAdag{4.62$\times\mathit{10^7}$}&\ETAdag{51191y}&\ETAdag{3.33$\times\mathit{10^7}$}&\ETAdag{36393y}&\ETAdag{3.51$\times\mathit{10^7}$}\\
+			% [JOB 19] progress: 366191/46150466 brs (0.793472%), ETA 58879y 219d 6h 4m 16s (elapsed 9h 59m 28s)
+			% [JOB 19] progress: 351391/33318009 brs (1.054658%), ETA 51191y 111d 17h 37m 55s (elapsed 9h 59m 28s)
 			% progress: 302022/35094477 brs (0.860597%), ETA 36392y 304d 6h 53m 45s (elapsed 9h 58m 49s)
-			& 3,1 & \ETAdag{5y 292d}&\ETAdag{2873664642}&\ETAdag{qqq}& \ETAdag{qqq}	&\ETAdag{97y 100d}&\ETAdag{1698185036} \\
+			& 3,1 & \ETAdag{5y 292d}&\ETAdag{2.87$\times\mathit{10^9}$}&\ETAdag{735y 212d}&\ETAdag{3.35$\times\mathit{10^8}$}&\ETAdag{97y 100d}&\ETAdag{1.70$\times\mathit{10^9}$} \\
 			% [JOB 18] progress: 447687/2873664642 brs (0.015579%), ETA 5y 291d 11h 13m 30s (elapsed 9h 59m 41s)
+			% [JOB 25] progress: 18151/335288683 brs (0.005414%), ETA 735y 211d 9h 1m 8s (elapsed 22m 25s)
 			% [JOB 18] progress: 357586/1698185036 brs (0.021057%), ETA 97y 99d 8h 44m 33s (elapsed 9h 59m 41s)
 			\hline
 			{\tt map\_basic}
 			& 2,1 & \cpu{1950.48}	& \ints{30719}	& \cpu{867.68}	& \ints{13237}	& \cpu{367.91}	& \ints{5446} \\
-			& 2,2 & \ETAdag{1y 176d}&\ETAdag{75516602}&\ETAdag{qqq}	& \ETAdag{qqq}	&\ETAdag{13d 11h}&\ETAdag{565334} \\
+			& 2,2 & \ETAdag{1y 176d}&\ETAdag{7.55$\times\mathit{10^7}$}&\ETAdag{11y 94d}&\ETAdag{9.57$\times\mathit{10^7}$}&\ETAdag{13d 11h}&\ETAdag{565334} \\
 			% [JOB 22] progress: 87777/75516602 brs (0.116235%), ETA 1y 176d 16h 38m 50s (elapsed 3h 1m 48s)
+			% [JOB 22] progress: 128715/95718464 brs (0.134472%), ETA 11y 93d 8h 25m 39s (elapsed 4h 52m 39s)
 			% [JOB 22] progress: 18380/565334 brs (3.251171%), ETA 13d 1h 5m 3s (elapsed 38m 33s)
-			& 3,1 &\ETAdag{6y 133d}&\ETAdag{1847957714}&\ETAdag{qqq}& \ETAdag{qqq}	&\ETAdag{4y 156d}&\ETAdag{888242178} \\
+			& 3,1 &\ETAdag{6y 133d}&\ETAdag{1.85$\times\mathit{10^9}$}&\ETAdag{8y 282d}&\ETAdag{7.90$\times\mathit{10^8}$}&\ETAdag{4y 156d}&\ETAdag{8.88$\times\mathit{10^8}$} \\
 			% [JOB 22] progress: 284530/1847957714 brs (0.015397%), ETA 6y 132d 6h 20m 26s (elapsed 9h 49m 5s)
+			% [JOB 22] progress: 282358/789973638 brs (0.035743%), ETA 8y 281d 14h 50m 3s (elapsed 9h 49m 54s)
 			% [JOB 22] progress: 274532/888242178 brs (0.030907%), ETA 4y 155d 23h 50m 51s (elapsed 9h 47m 5s)
 			\hline
 			{\tt map\_basicer}
