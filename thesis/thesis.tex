@@ -407,19 +407,58 @@ that will long outlive the silly card game that brought us together.
 
 Concurrency testing is, in a way, a microcosm for research in general:
 an exponentially large problem
-% (literally and figuratively for each side of the analogy, respectively)
 that invariably thwarts they whoever try to solve it ``perfectly'';
 it bears fruit only to one who can find their own human-oriented meaning in partial results and compromises.
+I speak of course literally on one side of this analogy, figuratively on the other.
+This thesis has demonstrated such meaning for stateless model checking,
+choosing perhaps one of the most challenging demographics of programmers in need of concurrency testing,
+the undergraduate operating systems student,
+as its target audience.
+Along the way, it justified its techniques' applicability to problems beyond CMU's walls as well
+by showing positive results at other universities
+and by addressing new concurrency models developed by industry in just the last decade.
+% also by comparing the preemption bounds of quicksand eval's bugs to prior work in ICB
+% and finding them to actually be skewed to DEEPER bugs than in the "real" "world", so take that
+As I write this I am also collaborating with 15-410 staff
+to integrate Landslide as an official part of the course grading infrastructure,
+so in some sense the na\"{i}ve wish to make an ``automatic TA'' that first made me interested in grad school
+has also been fulfilled.
 
-asdfasdasdf
-
-% TODO: Get a little bit preachy about how computer programs should be created to help humans,
-% not to look as much like scifi as possible, by knowing their limits, asking for help when they get confused, etc.
-
+For as long as people have written science fiction books,
+we have fantasized about robots that can make any complex intuitive decision a human can
+in addition to the superhuman arithmetic ability that comes standard with silicon.
+Recent trends in machine learning have pursued this aesthetic,
+using statistics and pattern recognition to provide convincing output even on never-before-seen inputs,
+but few such systems are designed to also alert the user when their output confidence is low.
+% appropriate for serving ads (penalty for being wrong -- no click)
+% appropriate for drug synthesis (clinical trial vets the output)
+% not appropriate for... govt surveillance o.o;
+% not appropriate for program verification
+As tempting as it is to fantasize an oracle capable of telling for certain whether your program is free of concurrency bugs,
+that would be a disservice to both user and machine:
+the human skill that artificial intelligence should really try to emulate is
+knowing its limits and asking for help when it gets confused.
 % ways humans cooperate to make landslide better:
 % - test case design incl. preemption sealing
 % - abstraction reduction
 % - manual inspection of data races
+
+It's become fashionable among my peers lately,
+whenever a new exploit is announced in the news,
+to declare that security is doomed,
+that computers were a mistake,
+that we should all retire and become llama farmers,
+and so on.
+There is no doubt that we are burdened with massive technical debt from the mistakes made
+during computer science's infancy.
+Nevertheless,
+safety-oriented programming languages and type systems are growing ever more popular,
+and meanwhile formal verification techniques to check existing code,
+written in the old unsafe ways, grow ever more powerful.
+Landslide's ability to reach impressionable student minds is my little contribution in this long battle.
+I have hope that we may one day live in peace with our silicon creations,
+understanding and respecting their limitations just as they complement ours.
+This thesis has been a profoundly meaningful journey for me and I hope you enjoyed reading it.
 
 %\appendix
 %\include{appendix}
