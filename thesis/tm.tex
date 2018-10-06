@@ -785,6 +785,7 @@ as follows.
 		\item {\tt map\_basicer}: {\tt map\_basic} modified with a larger initial size to skip the resizing step.
 		\item {\tt avl\_mutex}: {\tt avl\_fixed} with transactional sections simplified by abstraction into a mutex.
 		\item {\tt map\_mutex}: {\tt map\_basic} simplified likewise.
+		\item {\tt map\_basicer\_mutex}: {\tt map\_basicer} simplified likewise.
 	\end{itemize}
 	\item Lock abstraction tests
 	\begin{itemize}
@@ -1777,10 +1778,16 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 			& 3,1 & \ETAdag{173d 17h} & \ETAdag{12572187} \\
 			% [JOB 9] progress: 496281/12572187 brs (3.947451%), ETA 173d 6h 38m 55s (elapsed 9h 59m 43s)
 			% total CPU time consumed: 10h 20s (36020148608 usecs) (core saturation: 12%)
-			\\
-			\\
-			\\
-			\\
+			\cline{1-4}
+			{\tt map\_basicer}
+			& 2,1 & \cpu{14.34} & \ints{9} \\
+			{\tt \_mutex}
+			& 2,2 & \cpu{147.27} & \ints{2953} \\
+			& 2,3 & \cpu{12946.21} & \ints{244691} \\
+			& 3,1 & \cpu{637.81} & \ints{12707} \\
+			& 3,2 & \cpu{qqq} & \ints{qqq} \\
+			& 4,1 & \ETAdag{33h 33m} & \ETAdag{1778661} \\
+			% [JOB 3] progress: 601402/1778661 brs (33.812059%), ETA 23h 33m 16s (elapsed 9h 59m 55s)
 			\\
 		\end{tabular}
 		\\
