@@ -29,9 +29,15 @@ orienting the reader's understanding of Landslide in the space of said tradeoffs
 \section{Systematic Concurrency Testing}
 
 Equal partners in concurrency testing are the practical and the theoretical:
-the former meaning tool implementations that target specific problem domains and help users as best one can,
-and the latter meaning algorithmic advances to bring ever-larger state spaces within the realm of computational feasibility.
-I discuss my most closely related works split in two sections accordingly.
+%the former meaning
+tool implementations that target specific problem domains
+%and manage practical tradeoffs,
+%and help users as best one can,
+%and the latter meaning
+and algorithmic advances to make ever-larger state spaces computationally feasible.
+%within the realm of computational feasibility.
+The following two subsections discuss the most closely related prior work accordingly.
+%I discuss my most closely related works split in two sections accordingly.
 
 \subsubsection{Tools}
 
@@ -145,7 +151,7 @@ which Landslide includes in its implementation.
 It is a {\em sound} reduction algorithm, meaning it will never fail to test a possible program behavior, despite skipping many execution sequences.
 \sect{\ref{sec:landslide-dpor}} provides a detailed walk-through of how DPOR works,
 as many of this thesis's contributions build directly upon it.
-
+%
 DPOR has since been extended in several ways to achieve further reduction
 and to incorporate new concurrency models.
 Optimal DPOR \cite{optimal-dpor} extends sleep sets into the more expressive {\em wakeup trees},
@@ -636,7 +642,7 @@ guaranteeing that a program written in the ClightTSO subset of C
 is translated accurately to assembly with the same behaviour.
 Like CertiKOS, its implementation is verified in Coq.
 Although Landslide checks programs directly at the executable level,
-blind to the code the programmer personally wrote,
+blind to the source code the programmer personally wrote,
 extending that pipeline with a certifying compiler would
 improve the overall verification,
-ensuring that Landslide was checking the behaviour the programmer actually intended to write.}
+ensuring that Landslide was actually checking the behaviour the programmer intended.}

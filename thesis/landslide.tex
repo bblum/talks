@@ -1411,7 +1411,7 @@ the exploration is complete.
 
 Although a superhuman reader may quickly reach intuitive understanding
 of complex algorithms from dense prose and mathematical notation alone,
-I also present here a friendly example of using DPOR on Figure~\ref{fig:concurrency-bug}'s example program,
+mortal readers may prefer the following example of using DPOR on the program from Figure~\ref{fig:concurrency-bug},
 whose original state space is shown in Figure~\ref{fig:tree}.
 In this program both threads are always enabled, imposing no scheduling constraints,
 so memory conflicts alone will drive exploration.
@@ -1500,7 +1500,7 @@ shown in Figure~\ref{fig:dpor-example-2}.
 
 Ultimately, the second half of the state space is pruned symmetrically.
 In general, the number of ways to interleave two threads executing $N$ and $M$ events each is given by ${N+M \choose N}$%
-\footnote{Generalizing to $K$ threads, and simplifying to the same number $N$ of events each,
+\footnote{Generalizing to $K$ threads, and simplifying to $N$ events each,
 this formula becomes $\frac{n!k!}{n!^k}$.};
 in this case, the original state space's size was ${3+3 \choose 3} = 20$.
 DPOR's reduction is characterized by replacing $N$ and $M$ with the number of {\em conflicting} events only;
@@ -1724,14 +1724,17 @@ Simplified from \cite{estimation}: $t(b)$, the time for each branch, is 1, becau
 	\mathsf{estimate} = \frac{1}{\sum_{b \in B} \mathsf{proportion}(b)}
 \]
 
-It is easy to see how these formulas might fit into DPOR's incremental search procedure:
+It is easy to see how these might fit into DPOR's incremental search procedure:
 at the end of each branch compute its $\mathsf{proportion}$ and add it in to a global $\mathsf{estimate}$ value.
 However, DPOR may tag new branches to explore that would affect past branches' proportions,
 requiring them to be recomputed,
-which is not feasible without storing the entire exponentially-sized tree in memory.
+%which is not feasible without
+which would require
+storing the entire exponentially-sized tree in memory.
 Instead, Landslide also stores per-subtree estimates at intermediate $v_i$ nodes, $1 < i < n$,
 along the current branch.
-Whenever DPOR marks a new $k$th branch for exploration
+Whenever DPOR marks a new $k$th branch
+%for exploration
 at some $v_i$
 %with $\mathsf{marked~children}(v_i) = k$,
 its estimate
@@ -1741,7 +1744,7 @@ whose estimates must also incorporate the new $\mathsf{marked~children}$ value.
 This allows Landslide to update the global estimate after each branch in $O(n)$ time and memory,
 without recomputing past branch proportions individually.
 
-\subsubsection{Runtime (Recursive) estimation}
+\subsubsection{Run-time (Recursive) estimation}
 
 The RE, used to estimate total execution time,
 computes at each node the expected time to execute all subtrees rooted at children of that node,

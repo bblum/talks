@@ -123,7 +123,7 @@ The rest of this dissertation is organized as follows.
 	%\item {\bf Pintos:} Chapter~\ref{chap:410} discusses my evaluation of Landslide in the University of Chicago's and Berkeley's OS class environments using the Pintos kernel, corresponding to contribution 2 above.
 	\item {\bf Transactional Memory:} Chapter~\ref{chap:tm} presents my extension of Landslide's concurrency model to handle transactional concurrency and the evaluation thereof, corresponding to contribution 3 above.
 	\item {\bf Related Work:} Chapter~\ref{chap:relatedwork} honors my neighbours and ancestors in research spirit.
-	\item {\bf Future Work:} Chapter~\ref{chap:warpzone} % TODO
+	\item {\bf Future Work:} Chapter~\ref{chap:warpzone} lists stateless model checking's remaining shortcomings and how new research might address them.
 	\item {\bf Conclusion:} Chapter~\ref{chap:conclusion} provides some thoughts on the future of the field.
 \end{itemize}
 
@@ -159,17 +159,16 @@ while the royal ``we'' should be taken to include the reader,
 such as when surveying background material or related work,
 to which the author and reader share more similar relationships.
 The impersonal ``the programmer'' will be referred to as she/her
-to highlight her role as the intended user, separate from the underlying research,
+to challenge readers' unconscious bias about gender in computer science,
+as well as to highlight her role as the intended user, separate from the underlying research.
 %to distinguish her from the thesis audience concerned with the underlying research,
-and also to challenge readers' unconscious bias about gender in computer science.
 Individual students who participated in the user studies will be given the more inclusive they/them.
 Gender-neutral pronouns will also be used on the author themself.
 
 This document is, in a way, only half the work of the thesis, the other half being Landslide's implementation.
 While some readers may prefer to be taught in prose and/or mathematical notation how an algorithm works,
 others may find that disorienting and wish to see things in a way a compiler would understand.
-The beginning of Chapter~\ref{chap:landslide} provides source code links,
-and the rest of it serves as a guide to browsing the repository.
+Chapter~\ref{chap:landslide} provides source code links and serves as a guide to browsing the repository.
 Later chapters will often make parenthetical references to specific files and/or functions
 therein which implement a feature under discussion.
 

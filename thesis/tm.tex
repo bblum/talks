@@ -1791,8 +1791,13 @@ on account of DPOR no longer needing to reorder the (now) read-read access pairs
 Secondly, {\tt spinlock} and {\tt spin\_fixed} take longer to test per interleaving
 %(CPU time divided by state space size)
 than {\tt mutex}
-% TODO recalc
-(roughly 9 interleavings per second for the former, 22 for the latter),
+% old ver.
+%(roughly 9 interleavings per second for the former, 22 for the latter),
+% lock spin fixed:
+% (4+998+138911+186+169893+286910) / (355+10557+3600000+2827+3600000+3600000) = 5.51
+% lock mutex:
+% (4+180+9372+489480+132+714882+15064) / (344+1683+40521+2499968+1500+3600000+66589) = 19.79
+(roughly 6 interleavings per second for the former, 20 for the latter),
 because while {\tt mutex} abstracts away threads needing to wait their turn for the critical section
 behind an API Landslide understands,
 the spinlock's wait loop is open-coded, and Landslide must fall back on its costlier heuristic synchronization detection
@@ -1816,6 +1821,7 @@ In this way (and also, of course, because {\tt mutex}'s state spaces are smaller
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Discussion}
+\label{sec:tm-discussion}
 
 In this section I review some of the evaluation's results in a broader context,
 list the current limitations of Landslide's implementation,
@@ -1833,7 +1839,8 @@ Accordingly, I implemented the optimization as conservatively as possible in the
 ({\tt update\_hax\_abort\_set()} and
 {\tt update\_hax\_abandon\_abort\_set()}, respectively).
 
-Likewise, the cases of {\tt htm2}(2,3) and (4,1),
+% TODO: is this true? at all? htm2 is bigger in STM only because it's got a separate expliit abort
+Likewise, the cases of {\tt htm2}(2,3), (2,4), and (4,1),
 in which retry sets achieved better reduction than STM mode,
 show that the latter does not necessarily subsume the former,
 and that combining the two could in theory achieve further reduction still.
