@@ -204,14 +204,41 @@ such as subtrees pruned by sleep set reduction
 (\sect{\ref{sec:landslide-sleepsets}}; $\bigstar$4 in Figure~\ref{fig:dpor-example-2}),
 would likely require analyzing DPOR's memory conflicts as well.
 
-There is much room to expand Landslide's use of heuristics to find bugs as soon as possible should they exist.
-% TODO
-incorporate ICB \cite{chess-icb}
+There is much room to expand Landslide's use of heuristics to balance verification with fast bug-finding.
+Landslide's maximal state space mode (\sect{\ref{sec:tm-verif}}) currently requires the user to decide in advance
+whether she thinks a full verification is possible within the time limit,
+and supply {\tt -M} if so,
+sacrificing some bug-finding power up front
+(or just running the test twice).
+Quicksand could make this decision automatically,
+always dedicating one of its available CPUs to the maximal state space
+while the rest run Iterative Deepening as normal.
+Currently, Landslide explores each state space sequentially,
+but if extended with Distributed DPOR \cite{parallel-dpor},
+Quicksand could also dynamically allocate more or fewer CPUs to the maximal state space according to its ETA.
 % ICB incorporations
 % into quicksand - when SS estimates are too high, fall back on a preemption bounded version to find bugs - improve the partial verif
 % into education - provide more partial verifs to students (but is it clear they'll understand the subtleties of it?)
 % into txn - incorporate failure injection into the model
-
+Likewise, Quicksand could
+incorporate ICB \cite{chess-icb}
+to get the best of both worlds:
+when testing smaller data-race jobs,
+start them in ICB mode to begin with,
+and when the ETAs of larger jobs (including the maximal one) grow too large,
+downgrade them to ICB to try to at least get a partial verification for that preemption point set
+rather than discarding it entirely.
+ICB could also be extended to include HTM failure injections as part of its model,
+counting them either as part of the overall preemption bound
+or under a separate abort bound.
+State space estimation under ICB currently
+counts only DPOR's tagged branches that don't get skipped under the preemption bound,
+estimating that bound's state space size
+and resetting whenever the bound increases;
+it could also be extended to be ICB-aware,
+counting branches skipped due to the bound separately
+and computing two estimates at once,
+which would in turn allow Quicksand to make more informed decisions about when to use ICB.
 
 % arugment why ML is NOT appropriate for smc in general -- if you try to train it to choose thread interleavings / search ordering,
 % even if you're already in not-enough-cpu-time heuristics land, you're biasing it to find only the types of bugs you've already seen
@@ -224,13 +251,17 @@ but is also notorious for amplifying any biases in its training set in often unp
 \cite{conceptnet-bias}.
 In the domain of concurrency testing, this would translate to being able to find only types of bugs
 already seen in the training data, abandoning any novel bug patterns to further obscurity.
-Granted, Iterative Deepening and ICB also deprioritize ``deeper'' bugs,
+Granted,
+Iterative Deepening and
+ICB also deprioritize ``deeper'' bugs,
 as measured by number of unique or total preemptions, respectively,
-but this strategy is at least backed up by empirical evidence
-% TODO: upgrade citation to also have a section reference to that icb bound table from quicksand eval
-\cite{chess-icb},
-and when a bug is not found,
-the strategy is transparent enough that the user can understand the nature of the partial verification.
+%in terms of minimum necessary preemption count,
+%but this strategy is informed by empirical evidence
+%% TODO: upgrade citation to also have a section reference to that icb bound table from quicksand eval
+%\cite{chess-icb},
+%and
+but when a bug is not found
+these strategies are also transparent enough that the user can understand the nature of the partial verification.
 %
 Machine learning would be more appropriate for improving state space estimation,
 whose output is already a black-box oracle from the user's perspective,
