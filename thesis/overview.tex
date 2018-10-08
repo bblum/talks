@@ -423,7 +423,21 @@ Iterative Deepening, presented in Chapter~\ref{chap:quicksand}, is another such 
 \section{Data Race Analysis}
 \label{sec:background-datarace}
 
-\begin{figure}[t]
+Data race analysis \cite{eraser} identifies pairs of unsynchronized memory accesses between threads.
+
+\subsection{Definition}
+
+Two instructions are said to race if:
+\begin{enumerate}
+	\item they both access the same memory address,
+	\item at least one is a write,
+	\item the threads do not hold the same lock,
+	\item and no synchronization enforces an order on the thread transitions (the {\em Happens-Before} relation, described below).
+\end{enumerate}
+%In Figure~\ref{fig:example}, lines 3 and 5 each race with 2 and 6, and line 6 races with 8.
+In Figure~\ref{fig:hb-example}, the pairs of lines marked with comments (A1 and A2, B1 and B2) race.
+
+\begin{figure}[h]
         \small
 	\begin{center}
 \begin{tabular}{c}
@@ -467,19 +481,6 @@ Applying Happens-Before to program (a) will miss the potential race possible bet
 while using Limited Happens-Before on (b) will produce a false alarm on B1/B2.}}
 \label{fig:hb-example}
 \end{figure}
-
-\subsection{Definition}
-
-Data race analysis \cite{eraser} identifies pairs of unsynchronized memory accesses between threads.
-Two instructions are said to race if:
-\begin{enumerate}
-	\item they both access the same memory address,
-	\item at least one is a write,
-	\item the threads do not hold the same lock,
-	\item and no synchronization enforces an order on the thread transitions (the {\em Happens-Before} relation, described below).
-\end{enumerate}
-%In Figure~\ref{fig:example}, lines 3 and 5 each race with 2 and 6, and line 6 races with 8.
-In Figure~\ref{fig:hb-example}, the pairs of lines marked with comments (A1 and A2, B1 and B2) race.
 
 A data race analysis may be either {\em static} (inspecting source code) \cite{racerx} or {\em dynamic} (tracking individual accesses arising at run-time) \cite{tsan}.
 This paper focuses exclusively on dynamic analysis,
