@@ -154,6 +154,9 @@ as many of this thesis's contributions build directly upon it.
 %
 DPOR has since been extended in several ways to achieve further reduction
 and to incorporate new concurrency models.
+\revision{Distributed DPOR \cite{parallel-dpor}
+allows the exploration to be parallelized,
+with a minimum of overhead from redundant interleavings that would ordinarily be pruned in sequential DPOR.}
 Optimal DPOR \cite{optimal-dpor} extends sleep sets into the more expressive {\em wakeup trees},
 which provably tests exactly one interleaving from each equivalence class,
 i.e., the optimal possible reduction,
@@ -162,7 +165,7 @@ Extending the equivalence relation itself to capture not just memory {\em addres
 but also the {\em values} read and written,
 SATCheck \cite{satcheck} and Maximal Causality Reduction (MCR) \cite{mcr}
 use an SMT solver \cite{z3} to identify additional pruning opportunities.
-Implementing wakeup trees or SMT-driven exploration in Landslide is left to future work.
+Implementing parallelization, wakeup trees, or SMT-driven exploration in Landslide is left to future work.
 
 Several other recent advances extend DPOR to new concurrency models,
 beyond the shared-memory-threading model outlined in \sect{\ref{sec:landslide-dpor}}.
