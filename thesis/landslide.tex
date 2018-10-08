@@ -1987,7 +1987,7 @@ Therefore, within a certain preemption bound $B$,
 interleavings with more than $B$ context switches may still be tested.
 }.
 The DPOR implementation then checks, for some $I_{ij}$ it wants to mark for exploration,
-whether {\tt ICB\_BLOCKED(}$T_j${\tt )} at the state after $t_i$,
+whether {\tt ICB\_BLOCKED}($T_j$) at the state after $t_i$,
 and skips it if so ({\tt tag\_good\_sibling()}/{\tt tag\_all\_siblings()}).
 
 Then, the entire state space is repeated with increasing bound until no such are filtered.
@@ -2059,7 +2059,192 @@ The reader interested in further algorithm details and the corresponding soundne
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Heuristic loop, deadlock, and synchronization detection}
+\subsection{Heuristic loop, synchronization, and deadlock detection}
 \label{sec:landslide-blocking}
 
-% TODO
+Despite the ease of automatically instrumenting a fixed concurrency API such as P2's,
+the variety of student implementations inevitably results in many behaviours outside Landslide's model.
+This section documents the heuristics Landslide uses to approximate a program's formal behaviour in such situations.
+
+\subsubsection{Infinite loop detection}
+
+All modern presentations of stateless model checking assume finite program length.
+Even though all test cases used in this thesis's experiments are hand-written to ensure runtime
+not just finite but also short (on account of exponential state space sizes),
+bugs may still cause a program to get stuck in an infinite loop unexpectedly.
+Detecting such loops in general is of course uncomputable \cite{entscheidungsproblem},
+but Landslide has the benefit of knowledge from past iterations to inform its sense of how long the program ``should'' run.
+
+\begin{figure}[h]
+	\begin{center}
+		\begin{tabular}{cc}
+			\includegraphics[width=0.28\textwidth]{heuristic-livelock.pdf}
+			&
+			\includegraphics[width=0.28\textwidth]{heuristic-tightloop.pdf}
+			\\
+			(a) Infinite loop around preemption points.
+			&
+			(b) Stuck between preemption points.
+		\end{tabular}
+	\end{center}
+	\caption{Detecting infinite loops heuristically by comparison to past interleavings.}
+	\label{fig:heuristic-loop}
+\end{figure}
+
+Landslide checks for two distinct categories of infinite loops,
+visualized in Figure~\ref{fig:heuristic-loop}.
+Firstly, it keeps a running average of how many preemption points deep each completed interleaving has been in the past.
+Whenever a new preemption point is reached, Landslide checks
+if its depth is greater than the heuristic constant factor of 20
+({\tt PROGRESS\_DEPTH\_\allowbreak{}FACTOR})
+times the previous average.
+If the depth exceeds that cutoff, it reports an infinite loop bug.
+Whether this represents a livelock or just a mundane sequential logic bug is for the user to decide.
+However, as
+different interleavings do
+often execute different program logic and vary in length accordingly,
+Landslide waits to test 10 interleavings ({\tt PROGRESS\_CONFIDENT\_\allowbreak{}BRANCHES})
+before applying this heuristic;
+in the case of fewer,
+it scales the depth factor by a heuristic exponential factor of 1.1
+to represent its lower confidence
+({\tt PROGRESS\_BRANCH\_UNCERTAINTY\_EXPONENT}).
+In the special case of the first branch ever tested,
+Landslide will abort after a fixed preemption point depth limit of 4000 ({\tt TOO\_DEEP\_0TH\_BRANCH})
+-- a program with such $N$ would probably have an impossibly large state space anyway.
+
+Secondly, a program may get stuck in a loop where no preemption points are encountered each new iteration.
+For example, race-induced data corruption may cause a list to end up circularly linked, %oops
+leading a search or append operation to fail to terminate.
+Landslide also maintains a running average of instructions per transition,
+and each instruction, compares if more instructions have elapsed since the last preemption point
+than a constant times that average.
+Because transitions may themselves vary greatly in number of instructions as each represents completely different program logic,
+this heuristic is much more lenient than the preemption-point-counting one,
+using a multiplicative factor of 4000 ({\tt PROGRESS\_TRIGGER\_FACTOR}).
+If such a loop is encountered within the P2 synchronization primitives,
+which should generally be free of $O(n)$ operations,
+Landslide uses a more aggressive cutoff of 2000
+({\tt PROGRESS\_AGGRESSIVE\_TRIGGER\_FACTOR}).
+Also, as transitions between data-race preemption points may have as few as 1 instruction each,
+Landslide caps the average from below at a minimum of 1000 ({\tt PROGRESS\_MIN\_TRIGGER\_AVERAGE})
+to keep the average relatively stable.
+%(100 was found, empirically, to be not enough).
+
+These checks are both implemented in {\tt check\_infinite\_loop()} in {\tt landslide.c}.
+
+\subsubsection{Yield-loop detection}
+
+One very common student implementation pattern in P2s and kernels is to open-code
+synchronization between threads using a loop that spins around a condition that the loop itself cannot fulfill,
+waiting for another thread to allow it to proceed,
+rather than using the established synchronization API%
+\footnote{Even when the student doesn't open-code any such synchronization and always uses {\tt deschedule}
+or primitives built thereupon,
+{\tt mutex\_test} (\sect{\ref{sec:education-pebbles-tests}})
+often relies on this functionality, as data-race preemption points within {\tt mutex\_lock()}
+would otherwise disrupt Landslide's ability to recognize blocking on a contended lock.}.
+If Landslide failed to recognize that the thread was in principle blocked,
+just as if it had called {\tt deschedule} or {\tt cond\_wait()},
+this would result in an infinitely deep branch
+as it keeps trying to schedule the waiting thread,
+blocking all of its attempted context switches to the thread that could make progress.
+These loops need not necessarily {\tt yield} each iteration:
+they may spin blindly,
+assuming progress is being made on another CPU,
+which is not possible under Landslide as it serializes execution.
+
+Landslide detects such ad-hoc {\em yield-loop blocking}
+by keeping a counter for each thread to track how many {\tt yield}s it has invoked since the last ``interesting'' activity.
+Interesting here is defined heuristically as any other known P2 API call,
+with the exception of {\tt mutex\_lock()} and {\tt mutex\_unlock()}%
+\footnote{Landslide must recognize yield-blocking loops that contain mutex operations
+to allow for open-coded reimplementations of {\tt cond\_wait()},
+% see comment above "USER_MUTEX_YIELD_ACTIVITY" in user sync.c
+which for example the {\tt paraguay} test uses intentionally,
+because it is testing the correctness of the student's {\tt cond\_wait()}.}.
+Whenever this counter reaches the heuristic cutoff of 10 ({\tt TOO\_MANY\_YIELDS}),
+Landslide declares the thread blocked,
+and treats it just as if it had invoked {\tt deschedule()} for purposes of DPOR
+({\tt check\_user\_yield\_activity()} in {\tt user\_sync.c}).
+% this also involves propagating yield-blockedness back up the branch, along those 10 pps where it was still counting up to 10
+% and also refusing to run any other threads while yield is going on - KEEP_RUNNING_YIELDING_THREADS
+%
+In cases where {\tt yield} itself is not involved,
+Landslide also counts the number of atomic instructions ({\tt xchg}, {\tt xadd}, {\tt cmpxchg}, etc),
+and marks the thread blocked if it exceeds 100 such ({\tt TOO\_MANY\_XCHGS\_TIGHT\_LOOP})%
+\footnote{If preemption points exist in between, instead only 20 such ({\tt TOO\_MANY\_XCHGS\_WITH\_PPS}),
+to avoid stressing DPOR's $O(n)$ independence computation.}.
+When such a loop contains neither {\tt yield} nor atomics,
+Landslide falls back on the standard infinite loop detector and reports a bug directly, as described above.
+Future work could extend this to include more modern ways of establishing memory safety such as
+acquire/release barriers
+%\cite{sully-thesis}
+and hardware transactions.
+
+In order to detect when a thread should be unblocked from its yield loop,
+Landslide simply leverages DPOR's existing computation of memory conflicts:
+whatever condition the blocked thread was waiting for
+will show up in the conflicts between it and whichever thread fulfills it.
+Hence, every memory conflict detected during DPOR is also checked against any
+currently yield-loop-blocked threads, unblocking them in the case of a match
+({\tt check\_unblock\_yield\_loop()} in {\tt user\_sync.c}).
+If that memory access is not sufficient to let the blocked thread start making progress again,
+it will simply trigger the yield-blocking heuristic again.
+In theory, this could result in a livelock between two threads,
+each in principle blocked in a yield loop,
+but where the conditions of the loop happen to conflict with each other,
+causing the threads to keep waking each other up;
+however,
+% hmm... is this true? like if they use mutexes on each other or smth, or use HTM to check a condition
+% where the htm failure path uses a stop the world thing...
+I have never observed this in practice, as the conditions of such blocking loops are usually read-only.
+Future work could heuristically address this by deprioritizing such threads,
+as measured by the number of times they've yield-blocked,
+so that a third thread which could actually make progress may run if it exists.
+
+% mutex learning
+% to unblock from open coded accesses in eg unlock_and_vanish
+% this is more for blocked_on_addr stuff, not yield blocked stuff
+% kind of clunky and uninteresting to talk abt tbh
+
+\subsubsection{False-positive deadlock avoidance}
+
+In cases where the yield-loop heuristic described above produces false positives,
+i.e., blocking a thread which could make progress on its own after all,
+Landslide must avoid reporting a deadlock bug if no other thread ends up waking it up through memory conflicts.
+After all other threads quiesce,
+which ordinarily would trigger deadlock detection,
+Landslide checks the system for any yield-looping threads that were blocked heuristically%
+\footnote{This includes threads blocked on specific mutexes using the {\tt blocked\_on\_addr} field,
+which is set when {\tt yield} is invoked within {\tt mutex\_lock()} without waiting for 10 loops.}.
+If any exist, it forces them awake and allows them to proceed;
+if they are truly blocked in principle,
+they will merely trip the yield-loop limit and go back to sleep again.
+
+Two other forms of heuristic blocking exist in Landslide which are also subject to this retry procedure.
+Firstly, when an interleaving has already exhausted the number of preemptions allowed under ICB's current bound,
+other threads which are runnable but which require preemptions to switch to are considered ``ICB-blocked''.
+When yield-looping mixes with ICB-blocking, the yielding thread will require a preemption
+for the other thread to fulfill its blocking condition.
+In such a case, simply spending all 128 deadlock-avoidance retries on the yield-looping thread will not solve anything,
+so the ICB-blocked thread must be forced awake with higher priority,
+disregarding the preemption bound,
+to allow the system to progress.
+Secondly, in programs which use HTM,
+threads blocked by retry sets (\sect{\ref{sec:tm-retrysets}})
+must be forced awake with priority before yield-blocked threads,
+along similar reasoning.
+
+Landslide will retry this process up to a heuristic limit of 128 times ({\tt DEADLOCK\_FP\_MAX\_\allowbreak()ATTEMPTS}
+before issuing a deadlock bug report.
+The overhead of this check is linear time in the number of retries permitted,
+although this is typically negligible compared to the exponential size of state spaces overall.
+If the heuristic limit is too small, very ``loopy'' programs
+(which invoke xchg or yield therein)
+could falsely exhaust this limit while not being truly deadlocked,
+so a good limit should be well higher than the total number of concurrency events expected for any Landslide-friendly test.
+The cost of a high limit manifests in the length of preemption traces when deadlock is declared,
+which will display a proportional number of meaningless preemption points,
+although future work could easily truncate them retrospectively.
+This check is implemented in {\tt try\_avoid\_fp\_deadlock()} in {\tt arbiter.c}.
