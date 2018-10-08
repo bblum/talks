@@ -178,6 +178,8 @@ but checking unverified (e.g. student) code with such would still be an improvem
 
 \section{Heuristics}
 
+% TODO: does this need some estimate progress graphs
+% some RE ones would even need a log scale y axis maybe
 In my experience,
 the WBE algorithm (used in Landslide for estimating number of interleavings) consistently underestimates,
 being often seen to count (nearly) monotonically up toward the true value as exploration progresses,
@@ -244,8 +246,10 @@ which would in turn allow Quicksand to make more informed decisions about when t
 % even if you're already in not-enough-cpu-time heuristics land, you're biasing it to find only the types of bugs you've already seen
 % and destroying its ability to find novelties
 % if your ML provides a partial verification, it is impossible for a human to understand what that verification means
-As a matter of personal philosophy,
-I would strongly caution against using machine learning to try to expose bugs faster.
+
+%% commenting this first part out bc it will probably aggro garth...
+%As a matter of personal philosophy,
+%I would strongly caution against using machine learning to try to expose bugs faster.
 Machine learning has become popular recently as a magic cure-all for many programming problems,
 but is also notorious for amplifying any biases in its training set in often unpredictable ways
 \cite{conceptnet-bias}.
