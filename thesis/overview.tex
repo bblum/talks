@@ -90,25 +90,25 @@ and infinite loops (which must be identified heuristically \cite{entscheidungspr
 \begin{figure}[t]
 	\begin{tabular}{cc}
 		\begin{tabular}{p{0.45\textwidth}p{0.5\textwidth}}
-			{\footnotesize
+			{\small
 			\begin{tabular}{l}
-				\texttt{int x;} \\
-				\texttt{void count() \{} \\
-				\texttt{~~~~for (int i = 0; i < 1000; i++)} \\
+				\texttt{\ctype{int} x;} \\
+				\texttt{\ctype{void} \call{count}() \{} \\
+				\texttt{~~~~\call{for} (\ctype{int} i = \const{0}; i < \const{1000}; i++)} \\
 				\texttt{~~~~~~~~x++;} \\
 				\texttt{\}} \\
-				\texttt{void main() \{} \\
-				\texttt{~~~~tid1 = thr\_create(count);} \\
-				\texttt{~~~~tid2 = thr\_create(count);} \\
-				\texttt{~~~~thr\_join(tid1);} \\
-				\texttt{~~~~thr\_join(tid2);} \\
-				\texttt{~~~~printf("\%d\textbackslash{}n", x);} \\
+				\texttt{\ctype{void} \call{main}() \{} \\
+				\texttt{~~~~tid1 = \call{thr\_create}(count);} \\
+				\texttt{~~~~tid2 = \call{thr\_create}(count);} \\
+				\texttt{~~~~\call{thr\_join}(tid1);} \\
+				\texttt{~~~~\call{thr\_join}(tid2);} \\
+				\texttt{~~~~\call{printf}(\const{"\%d\textbackslash{}n"}, x);} \\
 				\texttt{\}} \\
 			\end{tabular}
 			}
 			&
-			{\footnotesize \begin{tabular}{ll}
-				{\bf \normalsize Thread 1} & {\bf \normalsize Thread 2} \\
+			{\small \begin{tabular}{ll}
+				{\bf Thread 1} & {\bf Thread 2} \\
 				\hline
 				\texttt{load tmp <- x;} & \\
 				& \texttt{load tmp <- x;} \\
@@ -143,33 +143,33 @@ These include {\em locks}, {\em descheduling}, {\em condition variables}, {\em s
 
 \begin{figure}[t]
 	\begin{tabular}{p{0.45\textwidth}p{0.5\textwidth}}
-		{\footnotesize
+		{\small
 		\begin{tabular}{l}
-			\texttt{typedef struct mutex \{} \\
-			\texttt{~~~~volatile int held;} \\
-			\texttt{~~~~int owner;} \\
-			\texttt{\} mutex\_t;} \\
-			\texttt{void mutex\_lock(mutex\_t *mp) \{}\\
-			\texttt{~~~~while (xchg(mp->held, 1))} \\
-			\texttt{~~~~~~~~yield(mp->owner);} \\
-			\texttt{~~~~mp->owner = gettid();} \\
+			\texttt{\ctype{typedef struct mutex} \{} \\
+			\texttt{~~~~\ctype{volatile int} held;} \\
+			\texttt{~~~~\ctype{int} owner;} \\
+			\texttt{\} \ctype{mutex\_t};} \\
+			\texttt{\ctype{void} \call{mutex\_lock}(\ctype{mutex\_t} *mp) \{}\\
+			\texttt{~~~~\flow{while} (\call{xchg}(mp->held, \const{1}))} \\
+			\texttt{~~~~~~~~\call{yield}(mp->owner);} \\
+			\texttt{~~~~mp->owner = \call{gettid}();} \\
 			\texttt{\}} \\
-			\texttt{void mutex\_unlock(mutex\_t *mp) \{}\\
-			\texttt{~~~~mp->owner = -1;} \\
-			\texttt{~~~~mp->held = 0;} \\
+			\texttt{\ctype{void} \call{mutex\_unlock}(\ctype{mutex\_t} *mp) \{}\\
+			\texttt{~~~~mp->owner = \ctype{-1};} \\
+			\texttt{~~~~mp->held = \ctype{0};} \\
 			\texttt{\}} \\
 		\end{tabular}
 		}
 		&
-		{\footnotesize
+		{\small
 		\begin{tabular}{l}
-			\texttt{int x;} \\
-			\texttt{mutex\_t m;} \\
-			\texttt{void count() \{} \\
-			\texttt{~~~~for (int i = 0; i < 1000; i++) \{} \\
-			\texttt{~~~~~~~~mutex\_lock(\&m);} \\
+			\texttt{\ctype{int} x;} \\
+			\texttt{\ctype{mutex\_t} m;} \\
+			\texttt{\ctype{void} \call{count}() \{} \\
+			\texttt{~~~~\flow{for} (\ctype{int} i = \const{0}; i < \const{1000}; i++) \{} \\
+			\texttt{~~~~~~~~\call{mutex\_lock}(\&m);} \\
 			\texttt{~~~~~~~~x++;} \\
-			\texttt{~~~~~~~~mutex\_unlock(\&m);} \\
+			\texttt{~~~~~~~~\call{mutex\_unlock}(\&m);} \\
 			\texttt{~~~~\}} \\
 			\texttt{\}} \\
 		\end{tabular}
@@ -223,8 +223,9 @@ The example program in Figure~\ref{fig:htm-example} demonstrates how these primi
 },
 using GCC's compiler intrinsics \cite{htm-gcc}.
 
-\begin{figure}[h]
+\begin{figure}[t]
 	\begin{center}
+		\small
 		\begin{tabular}{l}
 		\texttt{\ctype{void} \call{count}() \{} \\
 		\texttt{~~~~\flow{for} (\ctype{int} i = \const{0}; i < \const{1000}; i++) \{} \\
@@ -427,15 +428,15 @@ Iterative Deepening, presented in Chapter~\ref{chap:quicksand}, is another such 
 	\begin{center}
 \begin{tabular}{c}
 \begin{tabular}{rll}
-        & \multicolumn{2}{c}{\texttt{int x = 0; bool y = false; mutex\_t mx;}} \\
+	& \multicolumn{2}{c}{\texttt{\ctype{int} x = \const{0}; \ctype{bool} y = \const{false}; \ctype{mutex\_t} mx;}} \\
         \\
         & {\bf Thread 1} & {\bf Thread 2} \\
-        1 & \texttt{\hilight{brickred}{x++;}~// A1} & \\
-        2 & \texttt{mutex\_lock(\&mx);} & \\
-        3 & \texttt{mutex\_unlock(\&mx);} & \\
-        4 & & \texttt{mutex\_lock(\&mx);} \\
-        5 & & \texttt{mutex\_unlock(\&mx);} \\
-        6 & & \texttt{\hilight{brickred}{x++;}~// A2} \\
+	1 & \texttt{\hilight{brickred}{x++;}~\ccomment{// A1}} & \\
+	2 & \texttt{\call{mutex\_lock}(\&mx);} & \\
+	3 & \texttt{\call{mutex\_unlock}(\&mx);} & \\
+	4 & & \texttt{\call{mutex\_lock}(\&mx);} \\
+	5 & & \texttt{\call{mutex\_unlock}(\&mx);} \\
+	6 & & \texttt{\hilight{brickred}{x++;}~\ccomment{// A2}} \\
 \end{tabular}
 \\
 \\
@@ -445,14 +446,14 @@ Iterative Deepening, presented in Chapter~\ref{chap:quicksand}, is another such 
 \begin{tabular}{rll}
         %& \multicolumn{2}{c}{\texttt{int x = 0; bool y = false; mutex\_t mx;}} \\
         & {\bf Thread 1} & {\bf Thread 2} \\
-        1 & \texttt{\hilight{brickred}{x++;}~// B1} & \\
-        2 & \texttt{mutex\_lock(\&mx);} & \\
-        3 & \texttt{y = true;} & \\
-        4 & \texttt{mutex\_unlock(\&mx);} & \\
-        5 & & \texttt{mutex\_lock(\&mx);} \\
-        6 & & \texttt{bool tmp = y;} \\
-        7 & & \texttt{mutex\_unlock(\&mx);} \\
-        8 & & \texttt{if (tmp) \hilight{brickred}{x++;}~// B2} \\
+	1 & \texttt{\hilight{brickred}{x++;}~\ccomment{// B1}} & \\
+	2 & \texttt{\call{mutex\_lock}(\&mx);} & \\
+	3 & \texttt{y = \const{true};} & \\
+	4 & \texttt{\call{mutex\_unlock}(\&mx);} & \\
+	5 & & \texttt{\call{mutex\_lock}(\&mx);} \\
+	6 & & \texttt{\ctype{bool} tmp = y;} \\
+	7 & & \texttt{\call{mutex\_unlock}(\&mx);} \\
+	8 & & \texttt{\flow{if} (tmp) \hilight{brickred}{x++;}~\ccomment{// B2}} \\
         %8 & & \texttt{if (tmp)} \\
         %9 & & \texttt{~~~~\hilight{brickred}{x++;}~// B2} \\
 \end{tabular}
