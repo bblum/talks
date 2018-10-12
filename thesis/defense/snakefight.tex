@@ -50,7 +50,9 @@
 \newcommand\pfalse{\bot}
 
 \newcommand\hilight[2]{\color{#1}#2\color{black}}
-\definecolor{olivegreen}{RGB}{0,127,0}
+\definecolor{darkorange}{RGB}{192,128,0}
+\definecolor{darkblue}{RGB}{0,97,192}
+\definecolor{olivegreen}{RGB}{0,128,0}
 
 \begin{document}
 \renewcommand{\inserttotalframenumber}{39}
@@ -76,9 +78,9 @@
 		\\
 		{\bf Thread 1} & {\bf Thread 2} \\
 		\\
-		\texttt{\hilight{orange}{mutex\_lock}(m);}      & \texttt{atomic\_xadd(\&x, 1);} \\
+		\texttt{\hilight{darkorange}{mutex\_lock}(m);}      & \texttt{atomic\_xadd(\&x, 1);} \\
 		\texttt{x++;}				   & \texttt{\hilight{olivegreen}{yield}();} \\
-		\texttt{\hilight{blue}{mutex\_unlock}(m);}      & \texttt{atomic\_xadd(\&x, 1);} \\
+		\texttt{\hilight{darkblue}{mutex\_unlock}(m);}      & \texttt{atomic\_xadd(\&x, 1);} \\
 		\texttt{assert(x >= 1);}			& \texttt{assert(x >= 2);} \\
 		\\
 		\\
@@ -95,14 +97,14 @@
 		\\
 		{\bf Thread 1} & {\bf Thread 2} \\
 		\\
-		\texttt{\hilight{orange}{mutex\_lock}(m);} \\
+		\texttt{\hilight{darkorange}{mutex\_lock}(m);} \\
 		\texttt{int tmp = x;} \\
 								& \texttt{atomic\_xadd(\&x, 1);} \\
 								& \texttt{\hilight{olivegreen}{yield}();} \\
 								& \texttt{atomic\_xadd(\&x, 1);} \\
 		\texttt{x = tmp + 1;} \\
 								& \texttt{\hilight{red}{assert(x >= 2);}} \\
-		\texttt{\hilight{blue}{mutex\_unlock}(m);} \\
+		\texttt{\hilight{darkblue}{mutex\_unlock}(m);} \\
 		\texttt{assert(x >= 1);}
 	\end{tabular}
 	\end{center}
@@ -271,14 +273,14 @@
 		\\
 		{\bf Thread 1} & {\bf Thread 2} \\
 		\\
-		\texttt{\hilight{orange}{mutex\_lock}(m);} \\
+		\texttt{\hilight{darkorange}{mutex\_lock}(m);} \\
 		\texttt{int tmp = x;} \\
 								& \texttt{atomic\_xadd(\&x, 1);} \\
 								& \texttt{\hilight{olivegreen}{yield}();} \\
 								& \texttt{atomic\_xadd(\&x, 1);} \\
 		\texttt{x = tmp + 1;} \\
 								& \texttt{\hilight{red}{assert(x >= 2);}} \\
-		\texttt{\hilight{blue}{mutex\_unlock}(m);} \\
+		\texttt{\hilight{darkblue}{mutex\_unlock}(m);} \\
 		\texttt{assert(x >= 1);}
 	\end{tabular}
 	\end{center}
@@ -688,18 +690,19 @@
 \begin{frame}{Example}
 	\begin{center}
 		\begin{tabular}{l}
-			\texttt{if ((status = \_xbegin()) == SUCCESS) \{} \\ %\_XBEGIN\_STARTED) \{} \\
+			\texttt{if ((status = \hilight{darkorange}{\_xbegin}()) == SUCCESS) \{} \\ %\_XBEGIN\_STARTED) \{} \\
 			%\texttt{} \\
 			%\texttt{} \\
 			\texttt{~~~~count++;} \\
-			\texttt{~~~~\_xend();} \\
+			\texttt{~~~~\hilight{darkblue}{\_xend}();} \\
 			\texttt{\} else \{}\\ %if (status != \_XABORT\_EXPLICIT) \{} \\
-			\texttt{~~~~mutex\_lock(\&count\_lock);} \\
+			\texttt{~~~~\hilight{darkorange}{mutex\_lock}(\&count\_lock);} \\
 			\texttt{~~~~count++;} \\
-			\texttt{~~~~mutex\_unlock(\&count\_lock);} \\
+			\texttt{~~~~\hilight{darkblue}{mutex\_unlock}(\&count\_lock);} \\
 			\texttt{\}} \\
 		\end{tabular}
 	\end{center}
+	% TODO: cite orig software TM, intel HTM
 \end{frame}
 
 \begin{frame}{HTM Execution Semantics}
@@ -757,18 +760,18 @@
 		\begin{tabular}{l|l}
 			{\bf Thread 1} & {\bf Thread 2} \\
 			\hline
-			{\tt \_xbegin() == SUCCESS} \\
+			{\tt \hilight{darkorange}{\_xbegin}() == SUCCESS} \\
 			{\tt count++;} \\
-				& {\tt \_xbegin() == SUCCESS} \\
+				& {\tt \hilight{darkorange}{\_xbegin}() == SUCCESS} \\
 				& {\tt count++;} \\
-				& {\tt xend();} \\
-			{\tt xend()}...? \\
+				& {\tt \hilight{darkblue}{\_xend}();} \\
+			{\tt \hilight{darkblue}{\_xend}()}...? \\
 			{\em <conflict detected>} \\
 			\\
-			{\tt \_xbegin() == FAIL} \\
-			{\tt mutex\_lock(...);} \\
+			{\tt \hilight{darkorange}{\_xbegin}() == FAIL} \\
+			{\tt \hilight{darkorange}{mutex\_lock}(...);} \\
 			{\tt count++;} \\
-			{\tt mutex\_unlock(...);} \\
+			{\tt \hilight{darkblue}{mutex\_unlock}(...);} \\
 		\end{tabular}
 	\end{center}
 \end{frame}
@@ -799,7 +802,7 @@
 
 	Equivalence theorem
 	\begin{itemize}
-		\item Safe to automatically skip all interleavings within transactions
+		\item Safe to automatically skip all interleavings within transactions %$\qed$
 			\begin{itemize}
 				\item Exponential state space reduction
 				\item Traditional reduction (DPOR) applied on top
@@ -824,7 +827,197 @@
 	\end{center}
 \end{frame}
 
+\begin{frame}{Example bug}
+	\begin{center}
+		\begin{tabular}{l|l}
+			{\bf Thread 1} & {\bf Thread 2} \\
+			\hline
+			{\tt \hilight{darkorange}{\_xbegin}() == FAIL} \\
+			{\tt \hilight{darkorange}{mutex\_lock}(...);} \\
+			{\tt count++;} \\
+			{\tt \hilight{darkblue}{mutex\_unlock}(...);} \\
+				& {\tt \hilight{darkorange}{\_xbegin}() == SUCCESS} \\
+				& {\tt count++;} \\
+				& {\tt \hilight{darkblue}{\_xend}();} \\
+			\\
+			\\
+		\end{tabular}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Example bug}
+	\begin{center}
+		\begin{tabular}{l|l}
+			{\bf Thread 1} & {\bf Thread 2} \\
+			\hline
+			{\tt \hilight{darkorange}{\_xbegin}() == FAIL} \\
+			{\tt \hilight{darkorange}{mutex\_lock}(...);} \\
+			{\tt int tmp = count;} \\
+			{\em \hilight{red}{<data-race PP>}} \\
+				& {\tt \hilight{darkorange}{\_xbegin}() == SUCCESS} \\
+				& {\tt count++;} \\
+				& {\tt \hilight{darkblue}{\_xend}();} \\
+			{\tt count = tmp + 1;} \\
+			{\tt \hilight{darkblue}{mutex\_unlock}(...);} \\
+		\end{tabular}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Example bug - Solution {\em [Dehesa-Azuara '16]}}
+	\begin{center}
+		\begin{tabular}{l}
+			\texttt{if ((status = \hilight{darkorange}{\_xbegin}()) == SUCCESS) \{} \\ %\_XBEGIN\_STARTED) \{} \\
+			%\texttt{} \\
+			%\texttt{} \\
+			\texttt{~~~~\hilight{red}{if (mutex\_held(\&count\_lock))}} \\
+			\texttt{~~~~~~~~\hilight{red}{\_xabort();}} \\
+			\texttt{~~~~count++;} \\
+			\texttt{~~~~\hilight{darkblue}{\_xend}();} \\
+			\texttt{\} else \{}\\ %if (status != \_XABORT\_EXPLICIT) \{} \\
+			\texttt{~~~~\hilight{darkorange}{mutex\_lock}(\&count\_lock);} \\
+			\texttt{~~~~count++;} \\
+			\texttt{~~~~\hilight{darkblue}{mutex\_unlock}(\&count\_lock);} \\
+			\texttt{\}} \\
+		\end{tabular}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Example bug - Solution {\em [Dehesa-Azuara '16]}}
+	\begin{center}
+		\begin{tabular}{l|l}
+			{\bf Thread 1} & {\bf Thread 2} \\
+			\hline
+			{\tt \hilight{darkorange}{\_xbegin}() == FAIL} \\
+			{\tt \hilight{darkorange}{mutex\_lock}(...);} \\
+			{\tt int tmp = count;} \\
+			{\em \hilight{red}{<data-race PP>}} \\
+				& {\tt \hilight{darkorange}{\_xbegin}() == SUCCESS} \\
+				& {\tt \hilight{red}{if (mutex\_held(...))}} \\
+				& {\tt \hilight{red}{~~~~\_xabort();}} \\
+			{\tt count = tmp + 1;} \\
+			{\tt \hilight{darkblue}{mutex\_unlock}(...);} \\
+				& {\tt \hilight{darkorange}{mutex\_lock}(...);} \\
+				& {\tt count++;} \\
+				& {\tt \hilight{darkblue}{mutex\_unlock}(...);} \\
+		\end{tabular}
+	\end{center}
+\end{frame}
+
+
 \begin{frame}{Evaluation}
+	Questions
+	\begin{itemize}
+		\item Does Landslide find previously-unknown bugs in HTM programs?
+		\item Does Landslide verify HTM code in reasonable time?
+	\end{itemize}
+	\linegap
+
+	Test suite
+	\begin{itemize}
+		\item Hand-written unit tests
+		\item Transactional data structures {\em [Dehesa-Azuara '16]}
+		\item Spinlock from TSX LevelDB implementation {\em [vamsikc '14]}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Evaluation - Bug-finding}
+	Example - {\tt count++} data race
+	\begin{itemize}
+		\item Landslide finds assertion failure in 7 seconds % 2,1 with -M, 5 interleavings, wall clock time
+	\end{itemize}
+	\linegap
+
+	AVL tree - atomicity violation
+	\begin{itemize}
+		\item Transactions omitted the {\tt mutex\_held()} check
+		\item Landslide finds segfault in 15 seconds % 3,1 with quicksand; 14 interleavings, wall clock time
+		%\item Same author who proposed the fix... % this bullet exists in summary slide
+	\end{itemize}
+	\linegap
+
+	Spinlock - performance degradation
+	\begin{itemize}
+		\item Implemented {\tt mutex\_held()} using {\tt cmpxchg} (= atomic read + write)
+		\item Unconditional write during {\tt xbegin} path $\rightarrow$ always aborts!
+		\item Landslide finds assertion failure in 3 seconds % 2,2 with -M, 2 interleavings, wall clock time
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Evaluation - Verification}
+	$K,N$ = $K$ threads, each $N$ iterations of test logic
+	\linegap
+
+	Microbenchmarks
+	\begin{itemize}
+			% numbers taken from retry sets column
+		\item {\tt mutex\_held()} pattern: $K,N$ = 2,4 (79min); 4,1 (6min)
+		\item Using {\tt xadd} instead: $K,N$ = 2,4 (19min); 3,2 (39min), 4,1 (1min)
+		\item More, see thesis...
+	\end{itemize}
+	\pause
+	\linegap
+
+	HTM data structures
+	\begin{itemize}
+			% numbers taken from retry sets column
+		\item Hashmap insert: $K,N$ = 2,1 (27sec) % map_basicer. not dealing with resizing here
+		\item AVL tree insert: $K,N$ = 2,1 (5min)
+			\pause
+		\begin{itemize}
+			\item but... requires $K \times N \ge 3$ to expose the segfault...
+			\begin{itemize}
+				\item Estimated time for $K,N$ = 3,1... 736 years...
+					% 2,2 -> 51000 years lmao
+			\end{itemize}
+		\end{itemize}
+	\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Evaluation - Verification}
+	Abstraction reduction {\em [Simsa '13]}
+	\begin{itemize}
+		\item Verify locking primitives \& client code separately against common API
+	\end{itemize}
+	\linegap
+
+	HTM locks
+	\begin{itemize}
+			% numbers are now using STM semantics instead
+			% bc of retry loop around the xbegin
+			% can't really mention this in the talk
+		\item Spinlock, $K,N$ = 2,2 (2min), 3,1 (28sec)
+			\begin{itemize}
+				\item Depends on ad-hoc yield-loop heuristics; slow
+			\end{itemize}
+		\item Spin replaced w/P2 mutex: $K,N$ = 2,4 (7hrs), 4,1 (11min)
+	\end{itemize}
+	\pause
+	\linegap
+
+	HTM data structures w/verified locks
+	\begin{itemize}
+		\item Hashmap insert: $K,N$ = 2,3 (4hrs), 3,1 (11min)
+		\item AVL tree insert: $K,N$ = 2,4 (4min), 3,2 (23min), 4,1 (3min)
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Summary}
+	HTM adds new ``dimension'' of concurrency
+	\begin{itemize}
+		\item Equivalence theorem lets Landslide emulate execution semantics
+		\item Allows exponential reduction of non-observable behaviours
+	\end{itemize}
+	\linegap
+
+	Even simple programs tricky to get right
+	\begin{itemize}
+		\item Author of {\tt mutex\_held()} pattern got it wrong once...
+		\item Landslide can check even unpredictable performance characteristics
+	\end{itemize}
+	\linegap
+
+	Abstraction reduction eases both implementation \& verification burden
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -832,6 +1025,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Conclusion}
+
+\begin{frame}{Conclusion}
+\end{frame}
 
 \breakslide{
 \begin{center}
@@ -898,12 +1094,12 @@
 			{\bf Thread 1}  & {\bf Thread 2} \\
 			\texttt{\hilight{red}{x++;}}    & \\
 			\texttt{mutex\_lock(m);}	& \\
-			\texttt{\hilight{blue}{y = true;}}      & \\
+			\texttt{\hilight{darkblue}{y = true;}}      & \\
 			\texttt{mutex\_unlock(m);}      & \\
 				& \texttt{mutex\_lock(m);} \\
-				& \texttt{\hilight{blue}{bool tmp = y;}} \\
+				& \texttt{\hilight{darkblue}{bool tmp = y;}} \\
 				& \texttt{mutex\_unlock(m);} \\
-				& \texttt{\hilight{blue}{if (tmp)}~\hilight{red}{x++;}} \\
+				& \texttt{\hilight{darkblue}{if (tmp)}~\hilight{red}{x++;}} \\
 		\end{tabular}
 		\linegap
 
@@ -1123,12 +1319,13 @@
 	\end{center}
 \end{frame}
 
-% TODO: slide number c.c
-\begin{frame}{Don't you need \texttt{if (mutex\_held(\&count\_lock)) \_xabort();} in that transaction on slide 42?}
-	\begin{center}
-	Yes.
-	\end{center}
-\end{frame}
+%% including this stuff in the talk now so this bonus slide is frivolous
+%% TODO: slide number c.c
+%\begin{frame}{Don't you need \texttt{if (mutex\_held(\&count\_lock)) \_xabort();} in that transaction on slide 42?}
+%	\begin{center}
+%	Yes.
+%	\end{center}
+%\end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Bibliography}
@@ -1165,9 +1362,14 @@
 		\item {\bf [Blum '12]}: Ben Blum. Landslide: Systematic Dynamic Race Detection in Kernel
 			Space. CMU-CS-12-118. May 2012.
 		\item {\bf [Kasicki '12]}: Baris Kasicki. Data races vs. data race bugs: telling the difference with Portend. ASPLOS '12.
+		\item {\bf [Simsa '13]}: Systematic and Scalable Testing of Concurrent Programs.
+			CMU-CS-13-133. December 2013.
 		\item {\bf [Coons '13]}: Katherine Coons et al. Bounded Partial Order Reduction. OOPSLA 2013.
+		\item {\bf [vamsikc '14]}: leveldb-tsx. https://github.com/vamsikc/leveldb-tsx/
 		\item {\bf [Huang '15]}: Jeff Huang. Stateless model checking concurrent programs with maximal causality reduction. PLDI '15.
 		\item {\bf [Jensen '15]}: Stateless Model Checking of Event-Driven Applications. OOPSLA 2015.
+		\item {\bf [Dehesa-Azuara '16]}: Hardware transactional memory with intel's TSX.
+			http://www.contrib.andrew.cmu.edu/\textasciitilde{}mdehesaa/, 2016.
 	\end{itemize}
 \end{frame}
 
