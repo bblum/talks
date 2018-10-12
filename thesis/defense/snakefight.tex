@@ -53,6 +53,11 @@
 \definecolor{darkorange}{RGB}{192,128,0}
 \definecolor{darkblue}{RGB}{0,97,192}
 \definecolor{olivegreen}{RGB}{0,128,0}
+\definecolor{lavender}{RGB}{102,65,208} % (?? i don't know what happened here anymore but it looks good)
+\definecolor{seafoam}{RGB}{56,158,68} % * 2/3
+\definecolor{salmon}{RGB}{208,89,74} % * 7/8
+\definecolor{goldish}{RGB}{128,96,32}
+\definecolor{gray}{RGB}{128,128,128}
 
 \begin{document}
 \renewcommand{\inserttotalframenumber}{39}
@@ -146,28 +151,28 @@
 	\begin{itemize}
 		\item Equivalence reductions: DPOR {\em [Flanagan '05]}, MCR {\em [Huang '15]}
 		\item Heuristic search ordering: ICB {\em [Musuvathi '08]}, PCT {\em [Burckhardt '10]}
-		\item There will always be a {\bf bigger test case}!
+		\item There will always be a {\bf bigger test case}...
 	\end{itemize}
 	\pause
 	\linegap
 
-	Too much manual intervention for non-expert use
+	Too much manual intervention %for non-expert use
 	\begin{itemize}
 		\item Manual kernel annotations: Landslide {\em [Blum '12]} {\tiny that's me!}
 			% TODO: smth about choosing pps?
 		\item State space size estimation {\em [Simsa '12]}
 			% TODO change this bullet pt to be more explicitly about 
-		\item Widespread adoption requires {\bf fully automated instrumentation}!
+		\item Widespread adoption requires {\bf fully automated instrumentation}...
 	\end{itemize}
 	\pause
 	\linegap
 
-	Limited sources of nondeterminism
+	Sources of nondeterminism
 	\begin{itemize}
 		\item Timer-driven schedule nondeterminism (all prior work)
 		\item Weak memory nondeterminism {\em [Zhang '15]}
 		\item Event-driven applications {\em [Jensen '15]}
-		\item {\bf Hardware transactional memory}?
+		\item {\bf Hardware transactional memory}...
 	\end{itemize}
 \end{frame}
 
@@ -197,42 +202,68 @@
 	and real-world programs alike.
 \end{frame}
 
-\definecolor{gray}{RGB}{128,128,128}
+\begin{frame}{Thesis Statement}
+	% data race pps (as well as txn equivalence)
+	\hilight{gray}{Combining both theoretically-founded automatic reduction techniques
+	% iterative deepening
+	% (say smth like: "landslide also has a wealth of other user-tunable heuristics
+	% for expert users, which you can read about in the document; for this talk i will focus just on the CPU budget thing")
+	% XXX: need to prepare for the question -- "what evidence do you have that users actually want this cpu budget stuff",
+	% ",or, that it helps vs just running something unlimited vs a normal icb test"
+	% (well, for the 2nd half of the Q, i can talk about how ID outperforms ICB on verficiations)
+	and user-informed heuristic ones, stateless model checking...}
+	\begin{itemize}
+		\item ...can sufficiently mitigate exponential explosion...
+		% education
+		\item ...to be a practical testing technique for inexperienced users...
+		% htm
+		% TODO: this last part you just added for this talk; does the thesis version of the statmeent need to include too?
+		\item ...and real-world programs alike.
+	\end{itemize}
+\end{frame}
+
 
 \begin{frame}{Thesis Statement}
-	The Iterative Deepening algorithm makes MC appropriate for both educational and real-world programs.
-	\vspace{4.14em}
+	The Iterative Deepening algorithm %combines theory and heuristics to
+	practically debugs and verifies many exponential state spaces.
+	\vspace{4.54em}
 
-	Ad-hoc synchronization heuristics make MC accessible to student programmers.
-	\vspace{4.14em}
+	Landslide's automatic instrumentation makes MC accessible to students.
+	\vspace{4.54em}
 
-	A new transactional concurrency model keeps MC applicable to the latest real-world techniques.
-	\vspace{4.14em}
+	New reduction techniques for transactional memory keep MC up-to-date
+	with the latest real-world concurrency techniques.
+	\vspace{4.54em}
 \end{frame}
 \begin{frame}{Outline}
-	\hilight{gray}{The Iterative Deepening algorithm makes MC appropriate for both educational and real-world programs.} \\
+	\hilight{gray}{The Iterative Deepening algorithm %combines theory and heuristics to
+	practically debugs and verifies many exponential state spaces.} \\
+	%\hilight{gray}{The Iterative Deepening algorithm makes MC appropriate for both educational and real-world programs.} \\
 	\begin{itemize}
 		\item {\bf Quicksand and Iterative Deepening}
 		\begin{itemize}
-			\item Algorithm overview \& data-race preemption points
+			\item Data-race preemption points \& algorithm overview
 			\item Verification \& experimental results
 		\end{itemize}
 	\end{itemize}
-	\hilight{gray}{Ad-hoc synchronization heuristics make MC accessible to student programmers.} \\
+	\hilight{gray}{Landslide's automatic instrumentation makes MC accessible to students.} \\
+	%\hilight{gray}{Ad-hoc synchronization heuristics make MC accessible to student programmers.} \\
 	\begin{itemize}
 		\item {\bf Educational use}
 		\begin{itemize}
-			\item Pebbles \& 15-410 user study
-			\item Pintos \& upcoming plans
+			\item Pebbles \& Pintos OS projects
+			\item Bug-finding, grades, \& surveys
 		\end{itemize}
 	\end{itemize}
 
-	\hilight{gray}{A new transactional concurrency model keeps MC applicable to the latest real-world techniques.} \\
+	\hilight{gray}{New reduction techniques for transactional memory keep MC up-to-date
+	with the latest real-world concurrency techniques.} \\
+	%\hilight{gray}{A new transactional concurrency model keeps MC applicable to the latest real-world techniques.} \\
 	\begin{itemize}
 		\item {\bf Transactional memory}
 		\begin{itemize}
-			\item Example \& challenges
-			\item Equivalence \& failure injection
+			\item Concurrency model \& failure injection
+			\item Bug-finding \& verification
 		\end{itemize}
 	\end{itemize}
 \end{frame}
@@ -385,9 +416,14 @@
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{Results - Bugs found}
+\begin{frame}{Results - Bugs found (CPU time)}
 	\begin{center}
 		\includegraphics[width=0.8\textwidth]{../../oopsla/bugs-talk.pdf}
+	\end{center}
+\end{frame}
+\begin{frame}{Results - Bugs found (wall-clock time)}
+	\begin{center}
+		\includegraphics[width=0.8\textwidth]{../../oopsla/bugs-wallclock-talk.pdf}
 	\end{center}
 \end{frame}
 \begin{frame}{Results - Full verifications}
@@ -404,8 +440,8 @@
 	\linegap
 
 	Otherwise? Quicksand's heuristic search ordering finds bugs faster anyway
-	\pause
-	\linegap
+	%\pause
+	%\linegap
 
 	%Future work
 	%\begin{itemize}
@@ -535,8 +571,8 @@
 	Participation
 	\begin{itemize}
 		\item CMU: 103/177 students (7 semesters)
-		\item PSU: 38/136 students (1 semester)
 		\item U. Chicago: 4/21 students (1 semester)
+		\item PSU: 38/136 students (1 semester)
 	\end{itemize}
 	\linegap
 
@@ -544,11 +580,14 @@
 	\begin{itemize}
 		\item CMU: 115 deterministic, 122 concurrency bugs in 75/103 P2s
 		\item U. Chicago: 3 deterministic, 4 concurrency bugs in 3/4 kernels
+			% TODO: what to do abt this bullet pts
+			%\pause
+		\item PSU: (no log collection due to IRB issues)
 		% \item Case study tej
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{Effect on Grades}
+\begin{frame}{Effect on Grades (CMU)}
 	Compared Landslide users' vs. non-users' submitted P2 grades...
 	\begin{itemize}
 		\item ``Does Landslide help students submit better projects?''
@@ -561,7 +600,7 @@
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{Effect on Grades}
+\begin{frame}{Effect on Grades (CMU)}
 	\begin{center}
 		\includegraphics[width=\textwidth]{../photo-of-ze-studence.pdf}
 	\end{center}
@@ -608,18 +647,27 @@
 \begin{frame}{Survey}
 	14(ish) questions, investigate both education \& happiness
 	\begin{itemize}
-		\item {\em Education:} Did Landslide help students learn more from P2?
-		\item {\em Happiness:} Did Landslide help students save time/effort?
+		\item {\bf Education:} Did Landslide help students learn more from P2?
+		\item {\bf Happiness:} Did Landslide help students save time/effort?
 	\end{itemize}
+	\pause
 	\linegap
 
-	Self-report any false positives
+	Self-report any {\bf false positives}
 	\begin{itemize}
 		\item Landslide crashes aside, 3 FP bug reports, all simple bugs (now fixed)
 			% nonexistent MAGIC_BREAK bc of different address space in shell
 			% simultaneous landslides corrupt each other
 			% invalid heap access when new_pages "too close"
 		\item No FPs related to yield-loop/etc heuristics
+	\end{itemize}
+	\linegap
+
+	Self-report opinions {\bf whether it was worthwhile}
+	\begin{itemize}
+		\item Mostly ``worked as advertised'' praise
+		\item One PSU student found a bug from inspecting a data-race by hand,
+			after Landslide timed out testing with no bug report
 	\end{itemize}
 \end{frame}
 
@@ -655,6 +703,7 @@
 
 \begin{frame}{Summary}
 	Landslide helps students find \& fix bugs during projects
+	% TODO: should this be moved ot the earlier bug finding slide
 	\begin{itemize}
 		\item 73\% of CMU users found $\ge 1$ bug
 		\item 56\% of CMU users fixed $\ge 1$ bug
@@ -668,7 +717,7 @@
 	\end{itemize}
 	\linegap
 
-	Survey results showed students enlightenedly happy
+	Survey results showed students ``enlightenedly happy'' % dave eckhardt scare quotes if i ever saw some
 	\linegap
 
 	15-410 course staff now including Landslide in official grading :)
@@ -768,7 +817,7 @@
 			{\tt \hilight{darkblue}{\_xend}()}...? \\
 			{\em <conflict detected>} \\
 			\\
-			{\tt \hilight{darkorange}{\_xbegin}() == FAIL} \\
+			{\tt \hilight{darkorange}{\_xbegin}() == ABORTED} \\
 			{\tt \hilight{darkorange}{mutex\_lock}(...);} \\
 			{\tt count++;} \\
 			{\tt \hilight{darkblue}{mutex\_unlock}(...);} \\
@@ -807,6 +856,7 @@
 				\item Exponential state space reduction
 				\item Traditional reduction (DPOR) applied on top
 			\end{itemize}
+			% TODO prob just comment this out
 		\item More in bonus slides...
 	\end{itemize}
 \end{frame}
@@ -832,7 +882,7 @@
 		\begin{tabular}{l|l}
 			{\bf Thread 1} & {\bf Thread 2} \\
 			\hline
-			{\tt \hilight{darkorange}{\_xbegin}() == FAIL} \\
+			{\tt \hilight{darkorange}{\_xbegin}() == ABORTED} \\
 			{\tt \hilight{darkorange}{mutex\_lock}(...);} \\
 			{\tt count++;} \\
 			{\tt \hilight{darkblue}{mutex\_unlock}(...);} \\
@@ -850,7 +900,7 @@
 		\begin{tabular}{l|l}
 			{\bf Thread 1} & {\bf Thread 2} \\
 			\hline
-			{\tt \hilight{darkorange}{\_xbegin}() == FAIL} \\
+			{\tt \hilight{darkorange}{\_xbegin}() == ABORTED} \\
 			{\tt \hilight{darkorange}{mutex\_lock}(...);} \\
 			{\tt int tmp = count;} \\
 			{\em \hilight{red}{<data-race PP>}} \\
@@ -887,7 +937,7 @@
 		\begin{tabular}{l|l}
 			{\bf Thread 1} & {\bf Thread 2} \\
 			\hline
-			{\tt \hilight{darkorange}{\_xbegin}() == FAIL} \\
+			{\tt \hilight{darkorange}{\_xbegin}() == ABORTED} \\
 			{\tt \hilight{darkorange}{mutex\_lock}(...);} \\
 			{\tt int tmp = count;} \\
 			{\em \hilight{red}{<data-race PP>}} \\
@@ -944,7 +994,7 @@
 \end{frame}
 
 \begin{frame}{Evaluation - Verification}
-	$K,N$ = $K$ threads, each $N$ iterations of test logic
+	$K,N$ = $K$ threads, each $N$ iterations of test logic; 10 hour timeout
 	\linegap
 
 	Microbenchmarks
@@ -952,7 +1002,8 @@
 			% numbers taken from retry sets column
 		\item {\tt mutex\_held()} pattern: $K,N$ = 2,4 (79min); 4,1 (6min)
 		\item Using {\tt xadd} instead: $K,N$ = 2,4 (19min); 3,2 (39min), 4,1 (1min)
-		\item More, see thesis...
+		\item Is that ``enough''? Generalize with manual inspection?
+		%\item More, see thesis...
 	\end{itemize}
 	\pause
 	\linegap
@@ -978,6 +1029,8 @@
 	Abstraction reduction {\em [Simsa '13]}
 	\begin{itemize}
 		\item Verify locking primitives \& client code separately against common API
+			% say: again relying on human to write the right test case
+		\item {\em Add} verification costs instead of {\em multiplying}
 	\end{itemize}
 	\linegap
 
@@ -986,7 +1039,7 @@
 			% numbers are now using STM semantics instead
 			% bc of retry loop around the xbegin
 			% can't really mention this in the talk
-		\item Spinlock, $K,N$ = 2,2 (2min), 3,1 (28sec)
+		\item Spinlock: $K,N$ = 2,2 (2min), 3,1 (28sec)
 			\begin{itemize}
 				\item Depends on ad-hoc yield-loop heuristics; slow
 			\end{itemize}
@@ -1027,6 +1080,66 @@
 \section{Conclusion}
 
 \begin{frame}{Conclusion}
+	% data race pps (as well as txn equivalence)
+	Combining %both
+	{\bf theoretically-founded automatic reduction techniques}
+	\vspace{4.82em}
+
+	and {\bf user-informed heuristic ones},
+	\vspace{4.82em}
+
+	stateless model checking...
+	\begin{itemize}
+		\item ...can sufficiently mitigate exponential explosion...
+		\item ...to be a practical testing technique for inexperienced users...
+		\item ...and real-world programs alike.
+	\end{itemize}
+\end{frame}
+\begin{frame}{Conclusion}
+	Combining %both
+	{\bf theoretically-founded automatic reduction techniques}
+	\begin{itemize}
+		\item Verification with data-race preemption points
+		\item Yield-loop blocking
+		\item Equivalent emulation of HTM semantics
+	\end{itemize}
+	and {\bf user-informed heuristic ones},
+	\begin{itemize}
+		\item Quicksand's CPU budget argument
+		\item Exposing data-race reports to students
+		\item Abstraction reduction for HTM primitives
+	\end{itemize}
+	\hilight{gray}{stateless model checking...}
+	\begin{itemize}
+		\item \hilight{gray}{...can sufficiently mitigate exponential explosion...}
+		\item \hilight{gray}{...to be a practical testing technique for inexperienced users...}
+		\item \hilight{gray}{...and real-world programs alike.}
+	\end{itemize}
+\end{frame}
+\begin{frame}{Closing remarks}
+	``Verifying C programs is doomed, why can't PL design handle this?''
+	\begin{itemize}
+		\item seL4 {\em [Klein '09]}: secure kernel verified end-to-end in Haskell
+		\item Rust {\em [Matsakis '14]}: concurrency-aware type system, no data races
+	\end{itemize}
+	\pause
+	\linegap
+
+	But... we still have to try.
+	\begin{itemize}
+		\item Computers can't handle $O(N^K)$
+			\begin{itemize}
+				\item ``ok, $N^K$, that's, wow, 700 years...''
+			\end{itemize}
+		\item Humans can help?
+			\begin{itemize}
+				\item ``can we get same results with smaller $N$, $K$?''
+			\end{itemize}
+	\end{itemize}
+	\pause
+	\linegap
+
+	One day live in peace with our silicon children?
 \end{frame}
 
 \breakslide{
@@ -1076,10 +1189,10 @@
 			{\bf Thread 1}  & {\bf Thread 2} \\
 			\texttt{\hilight{red}{x++;}}    & \\
 			\texttt{mutex\_lock(m);}	& \\
-			\texttt{// unrelated}	   & \\
+			\texttt{\hilight{lavender}{// unrelated}}	   & \\
 			\texttt{mutex\_unlock(m);}      & \\
 				& \texttt{mutex\_lock(m);} \\
-				& \texttt{// unrelated} \\
+				& \texttt{\hilight{lavender}{// unrelated}} \\
 				& \texttt{mutex\_unlock(m);} \\
 				& \texttt{\hilight{red}{x++;}} \\
 		\end{tabular}
@@ -1094,12 +1207,12 @@
 			{\bf Thread 1}  & {\bf Thread 2} \\
 			\texttt{\hilight{red}{x++;}}    & \\
 			\texttt{mutex\_lock(m);}	& \\
-			\texttt{\hilight{darkblue}{y = true;}}      & \\
+			\texttt{\hilight{lavender}{y = true;}}      & \\
 			\texttt{mutex\_unlock(m);}      & \\
 				& \texttt{mutex\_lock(m);} \\
-				& \texttt{\hilight{darkblue}{bool tmp = y;}} \\
+				& \texttt{\hilight{lavender}{bool tmp = y;}} \\
 				& \texttt{mutex\_unlock(m);} \\
-				& \texttt{\hilight{darkblue}{if (tmp)}~\hilight{red}{x++;}} \\
+				& \texttt{\hilight{lavender}{if (tmp)}~\hilight{red}{x++;}} \\
 		\end{tabular}
 		\linegap
 
@@ -1126,21 +1239,21 @@
 	\end{center}
 \end{frame}
 
-\begin{frame}{Quicksand results - Bugs found by CPU time}
-	\begin{center}
-		\includegraphics[width=0.8\textwidth]{../../oopsla/bugs-talk.pdf}
-	\end{center}
-\end{frame}
-\begin{frame}{Quicksand results - Bugs found by wall-clock time}
-	\begin{center}
-		\includegraphics[width=0.8\textwidth]{../../oopsla/bugs-wallclock-talk.pdf}
-	\end{center}
-\end{frame}
-\begin{frame}{Quicksand results - Tests fully verified (CPU time)}
-	\begin{center}
-		\includegraphics[width=0.8\textwidth]{../../oopsla/verifs-talk.pdf}
-	\end{center}
-\end{frame}
+%\begin{frame}{Quicksand results - Bugs found by CPU time}
+%	\begin{center}
+%		\includegraphics[width=0.8\textwidth]{../../oopsla/bugs-talk.pdf}
+%	\end{center}
+%\end{frame}
+%\begin{frame}{Quicksand results - Bugs found by wall-clock time}
+%	\begin{center}
+%		\includegraphics[width=0.8\textwidth]{../../oopsla/bugs-wallclock-talk.pdf}
+%	\end{center}
+%\end{frame}
+%\begin{frame}{Quicksand results - Tests fully verified (CPU time)}
+%	\begin{center}
+%		\includegraphics[width=0.8\textwidth]{../../oopsla/verifs-talk.pdf}
+%	\end{center}
+%\end{frame}
 \begin{frame}{Quicksand results - MC + DR vs single-pass DR}
 	\begin{center}
 		\includegraphics[width=0.8\textwidth]{../../oopsla/dr-false-negatives-poster.pdf}
@@ -1247,10 +1360,6 @@
 	\end{itemize}
 \end{frame}
 
-\definecolor{lavender}{RGB}{102,65,208} % (?? i don't know what happened here anymore but it looks good)
-\definecolor{seafoam}{RGB}{56,158,68} % * 2/3
-\definecolor{salmon}{RGB}{208,89,74} % * 7/8
-\definecolor{goldish}{RGB}{128,96,32}
 \newcommand\tii{\ensuremath{\hilight{lavender}{\mathbf{Ti}}}\xspace}
 \newcommand\tjj{\ensuremath{\hilight{seafoam}{\mathbf{Tj}}}\xspace}
 \newcommand\tkk{\ensuremath{\hilight{salmon}{\mathbf{Tk}}}\xspace}
@@ -1319,6 +1428,43 @@
 	\end{center}
 \end{frame}
 
+\begin{frame}{How good is $K,N$?}
+	\begin{center}
+		\small
+		\begin{tabular}{c||c|c|c||c}
+			{\bf test} & {\bf \#txn} & {\bf \#sync} & {\bf \#race} & {\bf max events verified} \\
+			\hline
+			{\tt htm2}	      & 1     & 2     & 4     & 42    \\ % 2,3
+			{\tt counter}	   & 1     & 0     & 1     & 16    \\ % 2,4
+			{\tt swap}	      & 1     & 4     & 8     & 52    \\ % 2,2
+			{\tt fig63}	     & 1     & 0     & $K$-1 & 18    \\ % 3,2 k=3 -> 18; 2,4 -> 16
+			{\tt avl\_insert}       & 1     & 2     & 7     & 20    \\ % 2,1 nb. only 5 drpps under -A -S but w/e
+			% nb less than 9 on stm
+			{\tt avl\_fixed}	& 1     & 2     & 9     & 24    \\ % 2,1 nb. again, only 5 under -A -S
+			% nb stm takes it down from 13 to 10 races
+			{\tt map\_basic}	& 1     & 4     & 13    & 36    \\ % 2,1
+			% mysteriously had this at 6 at one point but ive no idea where that came from
+			{\tt map\_basicer}      & 1     & 2     & 5     & 32    \\ % 2,2
+
+			% TODO: check these again, will 2,4 even complete on mutex
+			{\tt lock}({\tt spinlock})      & 1     & 2     & 4     & 28    \\ % 2,2
+			{\tt lock}({\tt spin\_fixed})   & 1     & 2     & 4     & 28    \\ % 2,2 or 4,1
+			{\tt lock}({\tt mutex})	 & 1     & 2     & 2     & 30    \\ % 2,3 gives 30; 2,4 would give 40
+			% not putting lock_fast because it like, doesn't have a "state space" per se
+		\end{tabular}
+	\end{center}
+	\linegap
+
+	\begin{itemize}
+		\item {\em [Abdulla '14]} reports 19 threads (??)
+			\begin{itemize}
+				\item {\sf filesystem(19)}: classic DPOR: 4096; (their) optimal DPOR: 64
+			\end{itemize}
+			% not really a quote, but their x axis from figure 9 graph, whose y axis goes up to 10k
+		\item {\em [Zhang '15]} verifs up to 10 ``concurrent events'' (weak mem r/w?)
+	\end{itemize}
+\end{frame}
+
 %% including this stuff in the talk now so this bonus slide is frivolous
 %% TODO: slide number c.c
 %\begin{frame}{Don't you need \texttt{if (mutex\_held(\&count\_lock)) \_xabort();} in that transaction on slide 42?}
@@ -1338,7 +1484,7 @@
 			Annals of Statistics, 1952.
 		\item {\bf [Lamport '78]}:
 			Leslie Lamport. Time, clocks, and the ordering of events in a distributed system.
-			Commun. ACM, 1978.
+			Communications of the ACM, 1978.
 		\item {\bf [Godefroid '97]}: Patrice Godefroid.
 			VeriSoft. A tool for the automatic analysis of concurrent reactive software. CAV 1997.
 		%\item {\bf [Holzmann '97]}: The model checker SPIN. TOSE 1997.
@@ -1350,24 +1496,25 @@
 			model checking software. POPL 2005.
 		\item {\bf [Musuvathi '08]}: Madanlal Musuvathi et al. Finding and Reproducing Heisenbugs in Concurrent
 			Programs. OSDI 2008.
-		\item {\bf [Yang '08]}: Yu Yang et al. Efficient stateful dynamic partial order reduction. SPIN 2008.
+		\item {\bf [Yang '08]}: Yu Yang et al. Efficient stateful DPOR. SPIN 2008.
+		\item {\bf [Buckhardt '10]}: A randomized scheduler with probabilistic guarantees of finding bugs. ASPLOS 2010.
 	\end{itemize}
 \end{frame}
 \begin{frame}{References}
 	\footnotesize
 	\begin{itemize}
-		\item {\bf [Buckhardt '10]}: A randomized scheduler with probabilistic guarantees of finding bugs. ASPLOS 2010.
 		\item {\bf [Simsa '12]}: Jiri Simsa. Runtime Estimation and Resource Allocation for
-			Concurrency Testing. CMU-PDL-12-113. December 2012.
-		\item {\bf [Blum '12]}: Ben Blum. Landslide: Systematic Dynamic Race Detection in Kernel
-			Space. CMU-CS-12-118. May 2012.
+			Concurrency Testing. Tech report (CMU-PDL-12-113). December 2012.
+		\item {\bf [Blum '12]}: Ben Blum. Landslide: Systematic Dynamic Race Detection in Kernel Space.
+			MS thesis (CMU-CS-12-118). May 2012.
 		\item {\bf [Kasicki '12]}: Baris Kasicki. Data races vs. data race bugs: telling the difference with Portend. ASPLOS '12.
 		\item {\bf [Simsa '13]}: Systematic and Scalable Testing of Concurrent Programs.
-			CMU-CS-13-133. December 2013.
-		\item {\bf [Coons '13]}: Katherine Coons et al. Bounded Partial Order Reduction. OOPSLA 2013.
-		\item {\bf [vamsikc '14]}: leveldb-tsx. https://github.com/vamsikc/leveldb-tsx/
-		\item {\bf [Huang '15]}: Jeff Huang. Stateless model checking concurrent programs with maximal causality reduction. PLDI '15.
-		\item {\bf [Jensen '15]}: Stateless Model Checking of Event-Driven Applications. OOPSLA 2015.
+			Ph.D. thesis (CMU-CS-13-133). December 2013.
+		\item {\bf [Coons '13]}: Katherine Coons et al. Bounded POR. OOPSLA 2013.
+		\item {\bf [Abdulla '14]}: Parosh Abdulla et al. Optimal DPOR. POPL 2014.
+		\item {\bf [vamsikc '14]}: leveldb-tsx. https://github.com/vamsikc/leveldb-tsx/, 2014.
+		\item {\bf [Huang '15]}: Jeff Huang. Stateless MCing concurrent programs with maximal causality reduction. PLDI '15.
+		\item {\bf [Jensen '15]}: Stateless MCing of Event-Driven Applications. OOPSLA 2015.
 		\item {\bf [Dehesa-Azuara '16]}: Hardware transactional memory with intel's TSX.
 			http://www.contrib.andrew.cmu.edu/\textasciitilde{}mdehesaa/, 2016.
 	\end{itemize}
