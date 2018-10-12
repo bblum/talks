@@ -434,6 +434,8 @@
 				\item Still needs heuristics to handle ad-hoc synchronization
 			\end{itemize}
 			% FIXME: need introduce p3 here?
+			% Or cut?
+		\item Kernel (``P3'') - reimplement said reference kernel (CMU only)
 	\end{itemize}
 	\pause
 	\linegap
@@ -451,8 +453,9 @@
 		%\begin{itemize}
 				% fork is part of exec and the loader is already provided
 			\item ``userprog'': UNIX-like process lifecycle
-				%({\tt exec},
-				({\tt exit}, {\tt wait})
+				({\tt exec}, % students don't really implement any complciated part of this though
+				% i think just like. the argument copying??
+				{\tt exit}, {\tt wait})
 			%\item File descriptor management ({\tt create}, {\tt remove}, {\tt open}, {\tt read}, ...)
 				% filesys project is beyond scope of landslide
 				% DONT say: the u chicago professor chose to discard the hard concurrency parts
@@ -463,6 +466,32 @@
 \end{frame}
 
 \begin{frame}{Instrumentation}
+	Understanding concurrency primitives/APIs
+	\begin{itemize}
+		\item Kernel-level testing requires manual annotation {\em [Blum '12]}
+		\item P2 (fixed APIs), Pintos (basecode provided) annotated automatically
+	\end{itemize}
+	\pause
+	\linegap
+
+	Ad-hoc synchronization (e.g. {\tt while (!ready) yield();})
+	\begin{itemize}
+		\item Not an infinite loop bug!
+		\item Heuristically ``block'' threads when 10+ {\tt yield()}s %({\tt xchg}, etc.)
+		\item Existing memory analysis %(DPOR)
+			on loop condition to unblock
+			\begin{itemize}
+					% TODO: cut this and just say it out loud?
+				\item (e.g., what other thread writes to {\tt ready}?)
+				% it's kinda... idk how to critique its unsoundness.
+				% they self-admit to the unsoundness but like, leaving the cycle in,
+				% is the wrong approach to begin with
+				\item Prior work {\em [Coons '13]} likely to leave threads blocked too long
+			\end{itemize}
+		\item Check for false-positive blocking to avoid false-positive deadlocks
+	\end{itemize}
+
+
 	% Unlike kernels [Blum '12], P2 can be......
 	% TODO talk abt yield loops, 
 	% compare to prior technique - delay abounding - which sucks bc (verify this by reading BPOR) it doesn't actually
@@ -538,12 +567,19 @@
 
 \begin{frame}{Effect on Grades}
 	\begin{center}
+		\includegraphics[width=\textwidth]{photo-of-ze-studence-cdf-no-pre-study.pdf}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Effect on Grades}
+	\begin{center}
 		\includegraphics[width=\textwidth]{../photo-of-ze-studence-cdf.pdf}
 	\end{center}
 \end{frame}
 
 \begin{frame}{Statistical Significance}
-	Compared users' vs. non-users' grade distributions with k-sample Anderson-Darling {\em [Anderson, Darling '52]}
+	Compared %users' vs. non-users'
+	grade distributions with k-sample Anderson-Darling {\em [A., D. '52]}
 	\linegap
 
 	Control 1: non-users from {\bf same semester}
@@ -652,15 +688,15 @@
 \begin{frame}{Example}
 	\begin{center}
 		\begin{tabular}{l}
-			\texttt{if ((status = \_xbegin()) == \_XBEGIN\_STARTED) \{} \\
+			\texttt{if ((status = \_xbegin()) == SUCCESS) \{} \\ %\_XBEGIN\_STARTED) \{} \\
 			%\texttt{} \\
 			%\texttt{} \\
-			\texttt{~~~~foo++;} \\
+			\texttt{~~~~count++;} \\
 			\texttt{~~~~\_xend();} \\
 			\texttt{\} else \{}\\ %if (status != \_XABORT\_EXPLICIT) \{} \\
-			\texttt{~~~~mutex\_lock(\&foo\_lock);} \\
-			\texttt{~~~~foo++;} \\
-			\texttt{~~~~mutex\_unlock(\&foo\_lock);} \\
+			\texttt{~~~~mutex\_lock(\&count\_lock);} \\
+			\texttt{~~~~count++;} \\
+			\texttt{~~~~mutex\_unlock(\&count\_lock);} \\
 			\texttt{\}} \\
 		\end{tabular}
 	\end{center}
@@ -670,7 +706,7 @@
 	Attempting a transaction
 	\begin{itemize}
 		\item Code between \xbegin and \xend is provisionally executed
-		\item All writes kept in cache until \xend
+		\item All writes kept in CPU cache until \xend
 		\item \xend commits changes atomically (w.r.t. other CPUs)
 	\end{itemize}
 	\pause
@@ -694,7 +730,9 @@
 	\begin{itemize}
 		\item Capture all sites of nondeterminism as preemption points
 		\item Control nondeterminism to force each possibility at each point
-		\item (Identify equivalences to prune unnecessary preemption points)
+			\begin{itemize}
+				\item (identifying equivalences to prune redundant branches)
+			\end{itemize}
 	\end{itemize}
 	\pause
 	\linegap
@@ -712,6 +750,27 @@
 			%\end{itemize}
 		\item Suffices to enumerate all {\em observationally-equivalent} schedules.
 	\end{itemize}
+\end{frame}
+
+\begin{frame}{Example}
+	\begin{center}
+		\begin{tabular}{l|l}
+			{\bf Thread 1} & {\bf Thread 2} \\
+			\hline
+			{\tt \_xbegin() == SUCCESS} \\
+			{\tt count++;} \\
+				& {\tt \_xbegin() == SUCCESS} \\
+				& {\tt count++;} \\
+				& {\tt xend();} \\
+			{\tt xend()}...? \\
+			{\em <conflict detected>} \\
+			\\
+			{\tt \_xbegin() == FAIL} \\
+			{\tt mutex\_lock(...);} \\
+			{\tt count++;} \\
+			{\tt mutex\_unlock(...);} \\
+		\end{tabular}
+	\end{center}
 \end{frame}
 
 \begin{frame}{Concurrency model}
@@ -735,6 +794,18 @@
 			\item Treat each \xbegin as a failure injection point
 		\end{itemize}
 	\end{itemize}
+	\pause
+	\linegap
+
+	Equivalence theorem
+	\begin{itemize}
+		\item Safe to automatically skip all interleavings within transactions
+			\begin{itemize}
+				\item Exponential state space reduction
+				\item Traditional reduction (DPOR) applied on top
+			\end{itemize}
+		\item More in bonus slides...
+	\end{itemize}
 \end{frame}
 
 \begin{frame}{Failure Injection - 2 dimensions of concurrency}
@@ -744,27 +815,30 @@
 \end{frame}
 \begin{frame}{Failure Injection - 2 dimensions of concurrency}
 	\begin{center}
+		\includegraphics[width=\textwidth]{failure-injection-1.pdf}
+	\end{center}
+\end{frame}
+\begin{frame}{Failure Injection - 2 dimensions of concurrency}
+	\begin{center}
 		\includegraphics[width=\textwidth]{failure-injection-2.pdf}
 	\end{center}
 \end{frame}
 
-\begin{frame}{Deliverables}
-	In the thesis, I will:
-	\begin{itemize}
-		\item Implement the HTM(-equivalent) concurrency model in Landslide
-		\item Extend the model to support STM
-		\item Prove equivalence to HTM/STM semantics % under MC
-		\item Bugfind/verify a suite of unit tests \& real-world TM programs
-	\end{itemize}
+\begin{frame}{Evaluation}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{End}
+\section{Conclusion}
 
-\breakslide{\Large Q\&A
+\breakslide{
+\begin{center}
+	% TODO: replace with HIL for honban
+	\Large Q\&A
+	%\includegraphics[width=0.4\textwidth]{../how-i-learned.png}
+\end{center}
 %\linegap
 %
 %\begin{center}
@@ -776,78 +850,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Bonus Slides}
-
-\breakslide{\Large Bonus Slides}
-
-\begin{frame}{15-410...}
-	% TODO:
-	% study of tej/etc specific bugs
-	% list tests cases provided to studence & PSU-specific ones too
-\end{frame}
-
-\begin{frame}{HTM: Even more dimensions of nondeterminism}
-	% The gotcha: When xbegin can fail, it can emit diff error codes, which depend on what happened within.
-	\begin{center}
-		\begin{tabular}{l}
-			\texttt{if ((status = \_xbegin()) == \_XBEGIN\_STARTED) \{} \\
-			\texttt{~~~~if (count < 100)}\\
-			\texttt{~~~~~~~~\_xabort();} \\
-			\texttt{~~~~count++;} \\
-			\texttt{~~~~\_xend();} \\
-			\texttt{\} else if (status != \_XABORT\_EXPLICIT) \{} \\
-			\texttt{~~~~mutex\_lock(\&count\_lock);} \\
-			\texttt{~~~~count++;} \\
-			\texttt{~~~~mutex\_unlock(\&count\_lock);} \\
-			\texttt{\}} \\
-		\end{tabular}
-	\end{center}
-	\linegap
-
-	\xbegin can fail with multiple possible error codes
-	\begin{itemize}
-		\item MC will identify on-the-fly when (e.g.) {\tt \_XABORT\_EXPLICIT} is possible
-		\item Treat such transactions as having multiple failure injection possibilities
-		\item Future work: dataflow analysis to identify when failure reason never used
-	\end{itemize}
-\end{frame}
-
-\begin{frame}{HTM: Possible \xabort error codes}
-	From GCC 4.8.2 manual \S 6.56.8, ``X86 transaction memory intrinsics'':
-	\begin{itemize}
-		\item {\tt \_XABORT\_EXPLICIT} - Transaction explicitely [sic] aborted with \xabort.
-			%The parameter passed to \xabort is available with {\tt \_XABORT\_CODE(status)}
-		\item {\tt \_XABORT\_RETRY} - Transaction retry is possible.
-		\item {\tt \_XABORT\_CONFLICT} - Transaction abort due to a memory conflict with another thread
-		\item {\tt \_XABORT\_CAPACITY} - Transaction abort due to the transaction using too much memory
-		\item {\tt \_XABORT\_DEBUG} - Transaction abort due to a debug trap
-		\item {\tt \_XABORT\_NESTED} - Transaction abort in a inner nested transaction 
-	\end{itemize}
-\end{frame}
-
-%\begin{frame}{Interleaving t'xns non-atomically $\rightarrow$ state space explosion}
-%	% imagine a pair of transactions each with multiple conflicting accesses
-%	% they should be treated as atomic
-%\end{frame}
-
-%\begin{frame}{STM: Judging when aborts are possible}
-%\end{frame}
-
-\begin{frame}{HTM: Sources of Benchmarks}
-	\begin{itemize}
-		%\item Shamay, https://github.com/cmpxchg16/tsx.me, 2014
-		\item Dehesa-Azuara and Stanley, http://www.contrib.andrew.cmu.edu/\textasciitilde{}mdehesaa/, 2016
-		%\item Chapman et al., Hybrid STM/HTM for nested transactions on OpenJDK, OOPSLA 2016
-		%\item Wang et al., Eunomia: Scaling Concurrent Search Trees under Contention Using HTM, PPoPP 2017
-			% TODO: add, that one lock thingy
-	\end{itemize}
-\end{frame}
-
-%%%%
-
 \section{Warp Zone}
 
-\breakslide{\Large Super Extra Bonus Slides Copy-Pasted from OOPSLA}
+\subsection{Quicksand}
+\breakslide{\Large Bonus Slides - Quicksand}
 
 \begin{frame}{Data-Race Definitions}
 	\textbf{Data race:} 2 threads access the same memory, and...
@@ -973,14 +979,166 @@
 	\end{itemize}
 \end{frame}
 
-% TODO: slide number c.c
-\begin{frame}{Don't you need \texttt{if (mutex\_held(\&foo\_lock)) \_xabort();} in that transaction on slide 31?}
-	Yes.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Education}
+\breakslide{\Large Bonus Slides - Education}
+
+\begin{frame}{15-410...}
+	% TODO:
+	% study of tej/etc specific bugs
+	% list tests cases provided to studence & PSU-specific ones too
 \end{frame}
 
-\begin{frame}{References}
-	\small
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{HTM}
+\breakslide{\Large Bonus Slides - HTM}
+
+\begin{frame}{HTM: Even more dimensions of nondeterminism}
+	% The gotcha: When xbegin can fail, it can emit diff error codes, which depend on what happened within.
+	\begin{center}
+		\begin{tabular}{l}
+			\texttt{if ((status = \_xbegin()) == \_XBEGIN\_STARTED) \{} \\
+			\texttt{~~~~if (count >= 100)}\\
+			\texttt{~~~~~~~~\_xabort();} \\
+			\texttt{~~~~count++;} \\
+			\texttt{~~~~\_xend();} \\
+			\texttt{\} else if (status != \_XABORT\_EXPLICIT) \{} \\
+			\texttt{~~~~mutex\_lock(\&count\_lock);} \\
+			\texttt{~~~~count++;} \\
+			\texttt{~~~~mutex\_unlock(\&count\_lock);} \\
+			\texttt{\}} \\
+		\end{tabular}
+	\end{center}
+	\linegap
+
+	\xbegin can fail with multiple possible error codes
 	\begin{itemize}
+		\item MC will identify on-the-fly when (e.g.) {\tt \_XABORT\_EXPLICIT} is possible
+		\item Treat such transactions as having multiple failure injection possibilities
+		\item Future work: dataflow analysis to know when failure reason never used
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{HTM: Possible \xabort error codes}
+	From GCC 4.8.2 manual \S 6.56.8, ``X86 transaction memory intrinsics'':
+	\begin{itemize}
+		\item {\tt \_XABORT\_EXPLICIT} - Transaction explicitely [sic] aborted with \xabort.
+			%The parameter passed to \xabort is available with {\tt \_XABORT\_CODE(status)}
+		\item {\tt \_XABORT\_RETRY} - Transaction retry is possible.
+		\item {\tt \_XABORT\_CONFLICT} - Transaction abort due to a memory conflict with another thread
+		\item {\tt \_XABORT\_CAPACITY} - Transaction abort due to the transaction using too much memory
+		\item {\tt \_XABORT\_DEBUG} - Transaction abort due to a debug trap
+		\item {\tt \_XABORT\_NESTED} - Transaction abort in a inner nested transaction
+	\end{itemize}
+\end{frame}
+
+%\begin{frame}{Interleaving t'xns non-atomically $\rightarrow$ state space explosion}
+%	% imagine a pair of transactions each with multiple conflicting accesses
+%	% they should be treated as atomic
+%\end{frame}
+
+%\begin{frame}{STM: Judging when aborts are possible}
+%\end{frame}
+
+\begin{frame}{HTM: Sources of Benchmarks}
+	\begin{itemize}
+		%\item Shamay, https://github.com/cmpxchg16/tsx.me, 2014
+		\item Dehesa-Azuara and Stanley, http://www.contrib.andrew.cmu.edu/\textasciitilde{}mdehesaa/, 2016
+		%\item Chapman et al., Hybrid STM/HTM for nested transactions on OpenJDK, OOPSLA 2016
+		%\item Wang et al., Eunomia: Scaling Concurrent Search Trees under Contention Using HTM, PPoPP 2017
+			% TODO: add, that one lock thingy
+		\item vamsikc, TSX LevelDB implementation, https://github.com/vamsikc/leveldb-tsx/, 2014
+	\end{itemize}
+\end{frame}
+
+\definecolor{lavender}{RGB}{102,65,208} % (?? i don't know what happened here anymore but it looks good)
+\definecolor{seafoam}{RGB}{56,158,68} % * 2/3
+\definecolor{salmon}{RGB}{208,89,74} % * 7/8
+\definecolor{goldish}{RGB}{128,96,32}
+\newcommand\tii{\ensuremath{\hilight{lavender}{\mathbf{Ti}}}\xspace}
+\newcommand\tjj{\ensuremath{\hilight{seafoam}{\mathbf{Tj}}}\xspace}
+\newcommand\tkk{\ensuremath{\hilight{salmon}{\mathbf{Tk}}}\xspace}
+
+\newcommand\tiiat[1]{\ensuremath{\hilight{lavender}{\mathbf{Ti}@#1}}\xspace}
+\newcommand\tjjat[1]{\ensuremath{\hilight{seafoam} {\mathbf{Tj}@#1}}\xspace}
+\newcommand\tkkat[1]{\ensuremath{\hilight{salmon}  {\mathbf{Tk}@#1}}\xspace}
+
+\begin{frame}{HTM failure injection equivalence}
+		For any interleaving %prefix
+	\[
+	\begin{tabular}{c}
+		$\tiiat{\alpha},\tiiat{\beta_1}\dots\tiiat{\beta_b},$\\
+		$\tjjat{\gamma_1}\dots\tjjat{\gamma_j},$ \\
+		$\tkkat{\kappa_1}\dots\tkkat{\kappa_k},$ \\
+		$\tiiat{\beta_{b+1}}$ % $\dots\tiiat{\beta_{n-1}}$ -- excluded bc might abort
+	\end{tabular}
+	\]
+	with $b<n$, $j \ne i$, $k \ne i$, etc., either:
+	\begin{enumerate}
+		\item $\tiiat{\alpha},\tjjat{\gamma_1}\dots\tjjat{\gamma_j},\tkkat{\kappa_1}\dots\tkkat{\kappa_k},\tiiat{\phi_1}\dots$
+			\begin{itemize}
+				\item (conflicting case), or
+			\end{itemize}
+		\item $\tiiat{\alpha},\tiiat{\beta_1}\dots\tiiat{\beta_b}\dots\tiiat{\beta_n},\tjjat{\gamma_1}\dots\tjjat{\gamma_j},\tkkat{\kappa_1}\dots\tkkat{\kappa_k}$
+			\begin{itemize}
+				\item (independent case)
+			\end{itemize}
+	\end{enumerate}
+	exists and is observationally equivalent.
+\end{frame}
+\begin{frame}{HTM data-race soundness}
+	Let:
+	\begin{itemize}
+		\item
+			$\tiiat{\mu},\tjjat{\nu}$ be a memory conflict in an interleaving $\mathcal{I}$
+		\begin{itemize}
+			\item (normalized under failure injection equivalence)
+		\end{itemize}
+		\item
+		$\mathsf{lockify}_m(\mathcal{I})$ be a function over interleavings
+			\begin{itemize}
+				\item replaces {\tt xbegin} with {\tt mutex\_lock}($m$) (if successful)
+				\item replaces {\tt xend} with {\tt mutex\_unlock}($m$)
+			\end{itemize}
+		%$\tkkat{L}$ with $\tkkat{\mathsf{lock}(m)}$ if $L$ is a successful HTM begin,
+		%with a no-op if $L$ is a transaction abort,
+		%or with $\tkkat{\mathsf{unlock}(m)}$ if $L$ is an HTM end,
+		%or no replacement otherwise.
+		\item
+			$\mathcal{I}' = \exists m. \mathsf{lockify}_m(\mathcal{I})$,
+			\begin{itemize}
+				\item $m$ represents a unique abstract global lock
+				\item (failure injection equivalence guarantees mutual exclusion of $m$)
+			\end{itemize}
+	\end{itemize}
+	\linegap
+
+	Then $\tiiat{\mu},\tjjat{\nu}$ is a data race in $\mathcal{I}$ iff it is a data race in $\mathcal{I}'$.
+\end{frame}
+
+\begin{frame}{Retry Reduction}
+	% TODO: split this into a step by step
+	\begin{center}
+		\includegraphics[width=\textwidth]{../retry-sets.pdf}
+	\end{center}
+\end{frame}
+
+% TODO: slide number c.c
+\begin{frame}{Don't you need \texttt{if (mutex\_held(\&count\_lock)) \_xabort();} in that transaction on slide 42?}
+	\begin{center}
+	Yes.
+	\end{center}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Bibliography}
+
+\begin{frame}{References}
+	\footnotesize
+	\begin{itemize}
+		\item {\bf [A., D. '52]}: T. Anderson and D. Darling.
+			Asymptotic theory of certain ``goodness-of-fit'' criteria based on stochastic processes.
+			Annals of Statistics, 1952.
 		\item {\bf [Lamport '78]}:
 			Leslie Lamport. Time, clocks, and the ordering of events in a distributed system.
 			Commun. ACM, 1978.
@@ -999,7 +1157,7 @@
 	\end{itemize}
 \end{frame}
 \begin{frame}{References}
-	\small
+	\footnotesize
 	\begin{itemize}
 		\item {\bf [Buckhardt '10]}: A randomized scheduler with probabilistic guarantees of finding bugs. ASPLOS 2010.
 		\item {\bf [Simsa '12]}: Jiri Simsa. Runtime Estimation and Resource Allocation for
@@ -1007,6 +1165,7 @@
 		\item {\bf [Blum '12]}: Ben Blum. Landslide: Systematic Dynamic Race Detection in Kernel
 			Space. CMU-CS-12-118. May 2012.
 		\item {\bf [Kasicki '12]}: Baris Kasicki. Data races vs. data race bugs: telling the difference with Portend. ASPLOS '12.
+		\item {\bf [Coons '13]}: Katherine Coons et al. Bounded Partial Order Reduction. OOPSLA 2013.
 		\item {\bf [Huang '15]}: Jeff Huang. Stateless model checking concurrent programs with maximal causality reduction. PLDI '15.
 		\item {\bf [Jensen '15]}: Stateless Model Checking of Event-Driven Applications. OOPSLA 2015.
 	\end{itemize}
