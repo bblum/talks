@@ -56,11 +56,12 @@
 \definecolor{lavender}{RGB}{102,65,208} % (?? i don't know what happened here anymore but it looks good)
 \definecolor{seafoam}{RGB}{56,158,68} % * 2/3
 \definecolor{salmon}{RGB}{208,89,74} % * 7/8
+\definecolor{pinkish}{RGB}{224,0,56} % * 7/8
 \definecolor{goldish}{RGB}{128,96,32}
 \definecolor{gray}{RGB}{128,128,128}
 
 \begin{document}
-\renewcommand{\inserttotalframenumber}{39}
+\renewcommand{\inserttotalframenumber}{67}
 \normalem
 \begin{frame}
 	\titlepage
@@ -79,14 +80,14 @@
 \begin{frame}{Concurrency!}
 	\begin{center}
 	\begin{tabular}{ll}
-		Initially \texttt{x = 0;} \\
+		Initially \texttt{count = 0;} \\
 		\\
 		{\bf Thread 1} & {\bf Thread 2} \\
 		\\
-		\texttt{\hilight{darkorange}{mutex\_lock}(m);}      & \texttt{atomic\_xadd(\&x, 1);} \\
-		\texttt{x++;}				   & \texttt{\hilight{olivegreen}{yield}();} \\
-		\texttt{\hilight{darkblue}{mutex\_unlock}(m);}      & \texttt{atomic\_xadd(\&x, 1);} \\
-		\texttt{assert(x >= 1);}			& \texttt{assert(x >= 2);} \\
+		\texttt{\hilight{darkorange}{mutex\_lock}(m);}      & \texttt{atomic\_xadd(\&count, 1);} \\
+		\texttt{count++;}				   & \texttt{\hilight{olivegreen}{yield}();} \\
+		\texttt{\hilight{darkblue}{mutex\_unlock}(m);}      & \texttt{atomic\_xadd(\&count, 1);} \\
+		\texttt{assert(count >= 1);}			& \texttt{assert(count >= 2);} \\
 		\\
 		\\
 		\\
@@ -98,19 +99,19 @@
 \begin{frame}{Concurrency!}
 	\begin{center}
 	\begin{tabular}{ll}
-		Initially \texttt{x = 0;} \\
+		Initially \texttt{count = 0;} \\
 		\\
 		{\bf Thread 1} & {\bf Thread 2} \\
 		\\
 		\texttt{\hilight{darkorange}{mutex\_lock}(m);} \\
-		\texttt{int tmp = x;} \\
-								& \texttt{atomic\_xadd(\&x, 1);} \\
+		\texttt{int tmp = count;} \\
+								& \texttt{atomic\_xadd(\&count, 1);} \\
 								& \texttt{\hilight{olivegreen}{yield}();} \\
-								& \texttt{atomic\_xadd(\&x, 1);} \\
-		\texttt{x = tmp + 1;} \\
-								& \texttt{\hilight{red}{assert(x >= 2);}} \\
+								& \texttt{atomic\_xadd(\&count, 1);} \\
+		\texttt{count = tmp + 1;} \\
+								& \texttt{\hilight{pinkish}{assert(count >= 2);}} \\
 		\texttt{\hilight{darkblue}{mutex\_unlock}(m);} \\
-		\texttt{assert(x >= 1);}
+		\texttt{assert(count >= 1);}
 	\end{tabular}
 	\end{center}
 \end{frame}
@@ -149,8 +150,17 @@
 \begin{frame}{Challenges} %\& Existing Coping Techniques}
 	Unpredictable state space explosion
 	\begin{itemize}
-		\item Equivalence reductions: DPOR {\em [Flanagan '05]}, MCR {\em [Huang '15]}
-		\item Heuristic search ordering: ICB {\em [Musuvathi '08]}, PCT {\em [Burckhardt '10]}
+		%\item Equivalence reductions: DPOR {\em [Flanagan '05]}, MCR {\em [Huang '15]}
+		\item Dynamic Partial Order Reduction (DPOR) {\em [Flanagan '05]}
+			\begin{itemize}
+				\item identifies \& skips equivalent interleavings
+			\end{itemize}
+		%\item Heuristic search ordering: ICB {\em [Musuvathi '08]}, PCT {\em [Burckhardt '10]}
+		\item Iterative Context Bounding (ICB) {\em [Musuvathi '08]}
+			\begin{itemize}
+				\item finds bugs faster by prioritizing interleavings with fewer preemptions
+			\end{itemize}
+			\pause
 		\item There will always be a {\bf bigger test case}...
 	\end{itemize}
 	\pause
@@ -158,10 +168,10 @@
 
 	Too much manual intervention %for non-expert use
 	\begin{itemize}
-		\item Manual kernel annotations: Landslide {\em [Blum '12]} {\tiny that's me!}
-			% TODO: smth about choosing pps?
 		\item State space size estimation {\em [Simsa '12]}
-			% TODO change this bullet pt to be more explicitly about 
+			% TODO: i just switched the order of these; see how that feels
+		\item Manual kernel annotations: Landslide {\em [Blum '12]} {\tiny that's me!}
+			\pause
 		\item Widespread adoption requires {\bf fully automated instrumentation}...
 	\end{itemize}
 	\pause
@@ -170,8 +180,9 @@
 	Sources of nondeterminism
 	\begin{itemize}
 		\item Timer-driven schedule nondeterminism (all prior work)
-		\item Weak memory nondeterminism {\em [Zhang '15]}
-		\item Event-driven applications {\em [Jensen '15]}
+		\item Weak memory {\em [Zhang '15]},
+			event-driven {\em [Jensen '15]}
+			\pause
 		\item {\bf Hardware transactional memory}...
 	\end{itemize}
 \end{frame}
@@ -186,7 +197,8 @@
 
 \begin{frame}{Thesis Statement}
 	% data race pps (as well as txn equivalence)
-	Combining both theoretically-founded automatic reduction techniques
+	Combining %both
+	theoretically-founded automatic reduction techniques
 	% iterative deepening
 	% (say smth like: "landslide also has a wealth of other user-tunable heuristics
 	% for expert users, which you can read about in the document; for this talk i will focus just on the CPU budget thing")
@@ -204,7 +216,8 @@
 
 \begin{frame}{Thesis Statement}
 	% data race pps (as well as txn equivalence)
-	\hilight{gray}{Combining both theoretically-founded automatic reduction techniques
+	\hilight{gray}{Combining %both
+	theoretically-founded automatic reduction techniques
 	% iterative deepening
 	% (say smth like: "landslide also has a wealth of other user-tunable heuristics
 	% for expert users, which you can read about in the document; for this talk i will focus just on the CPU budget thing")
@@ -224,7 +237,7 @@
 
 
 \begin{frame}{Thesis Statement}
-	The Iterative Deepening algorithm %combines theory and heuristics to
+	The Quicksand algorithm %combines theory and heuristics to
 	practically debugs and verifies many exponential state spaces.
 	\vspace{4.54em}
 
@@ -236,11 +249,11 @@
 	\vspace{4.54em}
 \end{frame}
 \begin{frame}{Outline}
-	\hilight{gray}{The Iterative Deepening algorithm %combines theory and heuristics to
+	\hilight{gray}{The Quicksand algorithm %combines theory and heuristics to
 	practically debugs and verifies many exponential state spaces.} \\
-	%\hilight{gray}{The Iterative Deepening algorithm makes MC appropriate for both educational and real-world programs.} \\
+	%\hilight{gray}{The Quicksandalgorithm makes MC appropriate for both educational and real-world programs.} \\
 	\begin{itemize}
-		\item {\bf Quicksand and Iterative Deepening}
+		\item {\bf Quicksand}
 		\begin{itemize}
 			\item Data-race preemption points \& algorithm overview
 			\item Verification \& experimental results
@@ -291,28 +304,24 @@
 		\item Too few PPs: Many bugs will go undetected
 		\item Preempt everywhere: Completion is often infeasible % say: "for some programs"
 	\end{itemize}
-	\linegap
-
-	Prior model checkers hard-code a fixed set of PPs, committing to one state space in advance.
-	% say: "...then attempt to cope with the resulting exponentially sized problem, however big it may be"
 \end{frame}
 
 \begin{frame}{Example (Revisited)}
 	\begin{center}
 	\begin{tabular}{ll}
-		Initially \texttt{x = 0;} \\
+		Initially \texttt{count = 0;} \\
 		\\
 		{\bf Thread 1} & {\bf Thread 2} \\
 		\\
 		\texttt{\hilight{darkorange}{mutex\_lock}(m);} \\
-		\texttt{int tmp = x;} \\
-								& \texttt{atomic\_xadd(\&x, 1);} \\
+		\texttt{int tmp = count;} \\
+								& \texttt{atomic\_xadd(\&count, 1);} \\
 								& \texttt{\hilight{olivegreen}{yield}();} \\
-								& \texttt{atomic\_xadd(\&x, 1);} \\
-		\texttt{x = tmp + 1;} \\
-								& \texttt{\hilight{red}{assert(x >= 2);}} \\
+								& \texttt{atomic\_xadd(\&count, 1);} \\
+		\texttt{count = tmp + 1;} \\
+								& \texttt{\hilight{pinkish}{assert(count >= 2);}} \\
 		\texttt{\hilight{darkblue}{mutex\_unlock}(m);} \\
-		\texttt{assert(x >= 1);}
+		\texttt{assert(count >= 1);}
 	\end{tabular}
 	\end{center}
 \end{frame}
@@ -320,13 +329,13 @@
 \begin{frame}{State Space (Revisited)}
 	\begin{center}
 		\includegraphics[width=0.96\textwidth]{../../oopsla/tree-maximal-only.pdf}
-		\linegap
-
-		None of these branches contain the necessary preemption!
-		\linegap
-
-		A {\bf data-race preemption point} is required to find the bug.
 	\end{center}
+	\linegap
+
+	None of these branches contain the necessary preemption!
+	\linegap
+
+	A {\bf data-race preemption point} is required to find the bug.
 \end{frame}
 
 \begin{frame}{Data Race Analysis}
@@ -335,42 +344,60 @@
 		\item At least one of the accesses is a write
 		\item The threads are not holding the same mutex
 		\item One access {\em happens-before} the other
-			(e.g., no \texttt{cond\_signal()} in between)
+			%(e.g., no \texttt{cond\_signal()} in between)
+			(e.g., no \texttt{cond\_wait()})
 	\end{itemize}
 	\pause
 	\linegap
 
-	Two flavors
+	%Prior model checkers hard-code a fixed set of PPs, committing to one state space in advance.
+	Prior model checkers commit to a fixed set of PPs in advance.
 	\begin{itemize}
-		\item {\bf Pure HB}: Whether accesses were {\em observed simultaneously}, false-negative prone
-			{\em [Lamport '78]}
-		\item {\bf Limited HB}: Whether threads {\em could be reordered}, false-positive prone
-			{\em [O'Callahan '03]}
+		\item ``Preempt on {\tt mutex\_lock()}, {\tt mutex\_unlock()} only''
+		\item ``Preempt on every single memory access''
 	\end{itemize}
+	\linegap
+
+	Insight: Decide where to preempt on-the-fly
+	% say: "...then attempt to cope with the resulting exponentially sized problem, however big it may be"
+
+	%Two flavors
+	%\begin{itemize}
+	%	\item {\bf Pure HB}: Whether accesses were {\em observed simultaneously}, false-negative prone
+	%		{\em [Lamport '78]}
+	%	\item {\bf Limited HB}: Whether threads {\em could be reordered}, false-positive prone
+	%		{\em [O'Callahan '03]}
+	%\end{itemize}
 \end{frame}
 
-\begin{frame}{Iterative Deepening (in Pictures)}
+\begin{frame}{Quicksand (in Pictures)}
 	\begin{center}
 	\vspace{-0.88em}
 	\includegraphics[width=0.86\textwidth]{../../oopsla/dr-jobs-1.pdf}
 	\end{center}
 \end{frame}
-\begin{frame}{Iterative Deepening (in Pictures)}
+\begin{frame}{Quicksand (in Pictures)}
 	\begin{center}
 	\vspace{-0.88em}
 	\includegraphics[width=0.86\textwidth]{../../oopsla/dr-jobs-2.pdf}
 	\end{center}
 \end{frame}
-\begin{frame}{Iterative Deepening (in Pictures)}
+\begin{frame}{Quicksand (in Pictures)}
 	\begin{center}
 	\vspace{-0.88em}
 	\includegraphics[width=0.86\textwidth]{../../oopsla/dr-jobs-3.pdf}
 	\end{center}
 \end{frame}
-\begin{frame}{Iterative Deepening (in Pictures)}
+\begin{frame}{Quicksand (in Pictures)}
 	\begin{center}
 	\vspace{-0.88em}
 	\includegraphics[width=0.86\textwidth]{../../oopsla/dr-jobs-4.pdf}
+	\end{center}
+\end{frame}
+\begin{frame}{Quicksand (in Pictures)}
+	\begin{center}
+	\vspace{-0.88em}
+	\includegraphics[width=0.86\textwidth]{dr-jobs-maximal.pdf}
 	\end{center}
 \end{frame}
 
@@ -378,13 +405,13 @@
 
 \begin{frame}{Total Verification}
 	\textbf{Convergence theorem:} Testing maximal state space, after detecting all data races, $\equiv$ preempting everywhere!
-	\begin{itemize}
-		\item Insight: $\forall$ arbitrary buggy interleaving, $\exists$ equivalent interleaving % say 'under DPOR' i guess?
-			using only sync/data-race PPs, \& Quicksand will eventually reach it.
-	\end{itemize}
+	%\begin{itemize}
+	%	\item Insight: $\forall$ arbitrary buggy interleaving, $\exists$ equivalent interleaving % say 'under DPOR' i guess?
+	%		using only sync/data-race PPs, \& Quicksand will eventually reach it.
+	%\end{itemize}
 	\linegap
 
-	Hence, Iterative Deepening provides ``best of both worlds'':
+	Hence, Quicksand provides ``best of both worlds'':
 	\begin{itemize}
 		\item Provides total safety guarantee for small tests
 		\item Finds bugs quickly for large tests when completion is infeasible
@@ -401,11 +428,12 @@
 
 	Each tested for 10 CPU-hours with
 	\begin{itemize}
-		\item Quicksand, finding data-race candidates with...
-			\begin{itemize}
-				\item ...``Pure'' Happens-Before analysis {\em [Lamport '78]}
-				\item ...``Limited'' Happens-Before analysis {\em [O'Callahan '03]}
-			\end{itemize}
+		\item Quicksand % parallelized 10-fold
+			%, finding data-race candidates with...
+			%\begin{itemize}
+			%	\item ...``Pure'' Happens-Before analysis {\em [Lamport '78]}
+			%	\item ...``Limited'' Happens-Before analysis {\em [O'Callahan '03]}
+			%\end{itemize}
 		\item Stand-alone Landslide using ICB {\em [Musuvathi '08]}, preempting at...
 			\begin{itemize}
 				\item ...synchronization APIs only {\em [Simsa '10]}
@@ -418,17 +446,17 @@
 
 \begin{frame}{Results - Bugs found (CPU time)}
 	\begin{center}
-		\includegraphics[width=0.8\textwidth]{../../oopsla/bugs-talk.pdf}
+		\includegraphics[width=0.8\textwidth]{../quicksand-bugs-talkver.pdf}
 	\end{center}
 \end{frame}
 \begin{frame}{Results - Bugs found (wall-clock time)}
 	\begin{center}
-		\includegraphics[width=0.8\textwidth]{../../oopsla/bugs-wallclock-talk.pdf}
+		\includegraphics[width=0.8\textwidth]{../quicksand-bugs-wallclock-talkver.pdf}
 	\end{center}
 \end{frame}
 \begin{frame}{Results - Full verifications}
 	\begin{center}
-		\includegraphics[width=0.8\textwidth]{../../oopsla/verifs-talk.pdf}
+		\includegraphics[width=0.8\textwidth]{../quicksand-verifs-talkver.pdf}
 	\end{center}
 \end{frame}
 
@@ -461,7 +489,8 @@
 \breakslide{\Large Education}
 
 \begin{frame}{Setting}
-	CMU (15-410, S'15-S'18), PSU (CMPSC 473, S'18)
+	%CMU (15-410, S'15-S'18), PSU (CMPSC 473, S'18)
+	CMU (15-410), PSU (CMPSC 473)
 	\begin{itemize}
 		\item Thread library (``P2'')
 			\begin{itemize}
@@ -478,7 +507,8 @@
 	\pause
 	\linegap
 
-	U. Chicago (CMSC 23000, F'17)
+	%U. Chicago (CMSC 23000, F'17)
+	U. Chicago (CMSC 23000)
 	\begin{itemize}
 		\item Pintos %(``threads'' and ``userprog'')
 		\begin{itemize}
@@ -524,9 +554,15 @@
 				% it's kinda... idk how to critique its unsoundness.
 				% they self-admit to the unsoundness but like, leaving the cycle in,
 				% is the wrong approach to begin with
-				\item Prior work {\em [Coons '13]} likely to leave threads blocked too long
+					% TODO: move this to bonus slides, save a min of expl
+				%\item Prior work {\em [Coons '13]} likely to leave threads blocked too long
 			\end{itemize}
-		\item Check for false-positive blocking to avoid false-positive deadlocks
+			\pause
+		\item ``Ok, what if I just {\tt yield()} 10 times because I feel like it?''
+			\begin{itemize}
+				\item If deadlock suspected, try waking up to avoid false positives
+			\end{itemize}
+		%\item Check for false-positive blocking to avoid false-positive deadlocks
 	\end{itemize}
 
 
@@ -594,7 +630,8 @@
 	\end{itemize}
 	\linegap
 
-	...as well as subsequent P3 (kernel) grades
+	%...as well as subsequent P3 (kernel) grades
+	...as well as subsequent kernel grades
 	\begin{itemize}
 		\item ``Does Landslide teach students lasting lessons about concurrency?''
 	\end{itemize}
@@ -739,7 +776,7 @@
 \begin{frame}{Example}
 	\begin{center}
 		\begin{tabular}{l}
-			\texttt{if ((status = \hilight{darkorange}{\_xbegin}()) == SUCCESS) \{} \\ %\_XBEGIN\_STARTED) \{} \\
+			\texttt{if (\hilight{darkorange}{\_xbegin}() == SUCCESS) \{} \\ %\_XBEGIN\_STARTED) \{} \\
 			%\texttt{} \\
 			%\texttt{} \\
 			\texttt{~~~~count++;} \\
@@ -903,7 +940,7 @@
 			{\tt \hilight{darkorange}{\_xbegin}() == ABORTED} \\
 			{\tt \hilight{darkorange}{mutex\_lock}(...);} \\
 			{\tt int tmp = count;} \\
-			{\em \hilight{red}{<data-race PP>}} \\
+			{\em \hilight{pinkish}{<data-race PP>}} \\
 				& {\tt \hilight{darkorange}{\_xbegin}() == SUCCESS} \\
 				& {\tt count++;} \\
 				& {\tt \hilight{darkblue}{\_xend}();} \\
@@ -916,11 +953,11 @@
 \begin{frame}{Example bug - Solution {\em [Dehesa-Azuara '16]}}
 	\begin{center}
 		\begin{tabular}{l}
-			\texttt{if ((status = \hilight{darkorange}{\_xbegin}()) == SUCCESS) \{} \\ %\_XBEGIN\_STARTED) \{} \\
+			\texttt{if (\hilight{darkorange}{\_xbegin}() == SUCCESS) \{} \\ %\_XBEGIN\_STARTED) \{} \\
 			%\texttt{} \\
 			%\texttt{} \\
-			\texttt{~~~~\hilight{red}{if (mutex\_held(\&count\_lock))}} \\
-			\texttt{~~~~~~~~\hilight{red}{\_xabort();}} \\
+			\texttt{~~~~\hilight{pinkish}{if (mutex\_is\_locked(\&count\_lock))}} \\
+			\texttt{~~~~~~~~\hilight{pinkish}{\_xabort();}} \\
 			\texttt{~~~~count++;} \\
 			\texttt{~~~~\hilight{darkblue}{\_xend}();} \\
 			\texttt{\} else \{}\\ %if (status != \_XABORT\_EXPLICIT) \{} \\
@@ -940,10 +977,10 @@
 			{\tt \hilight{darkorange}{\_xbegin}() == ABORTED} \\
 			{\tt \hilight{darkorange}{mutex\_lock}(...);} \\
 			{\tt int tmp = count;} \\
-			{\em \hilight{red}{<data-race PP>}} \\
+			{\em \hilight{pinkish}{<data-race PP>}} \\
 				& {\tt \hilight{darkorange}{\_xbegin}() == SUCCESS} \\
-				& {\tt \hilight{red}{if (mutex\_held(...))}} \\
-				& {\tt \hilight{red}{~~~~\_xabort();}} \\
+				& {\tt \hilight{pinkish}{if (mutex\_is\_locked(...))}} \\
+				& {\tt \hilight{pinkish}{~~~~\_xabort();}} \\
 			{\tt count = tmp + 1;} \\
 			{\tt \hilight{darkblue}{mutex\_unlock}(...);} \\
 				& {\tt \hilight{darkorange}{mutex\_lock}(...);} \\
@@ -979,7 +1016,7 @@
 
 	AVL tree - atomicity violation
 	\begin{itemize}
-		\item Transactions omitted the {\tt mutex\_held()} check
+		\item Forgot the {\tt mutex\_is\_locked()} check $\rightarrow$ data corruption
 		\item Landslide finds segfault in 15 seconds % 3,1 with quicksand; 14 interleavings, wall clock time
 		%\item Same author who proposed the fix... % this bullet exists in summary slide
 	\end{itemize}
@@ -987,7 +1024,7 @@
 
 	Spinlock - performance degradation
 	\begin{itemize}
-		\item Implemented {\tt mutex\_held()} using {\tt cmpxchg} (= atomic read + write)
+		\item {\tt mutex\_is\_locked()} used {\tt cmpxchg} (= atomic read + write)
 		\item Unconditional write during {\tt xbegin} path $\rightarrow$ always aborts!
 		\item Landslide finds assertion failure in 3 seconds % 2,2 with -M, 2 interleavings, wall clock time
 	\end{itemize}
@@ -1000,10 +1037,10 @@
 	Microbenchmarks
 	\begin{itemize}
 			% numbers taken from retry sets column
-		\item {\tt mutex\_held()} pattern: $K,N$ = 2,4 (79min); 4,1 (6min)
-		\item Using {\tt xadd} instead: $K,N$ = 2,4 (19min); 3,2 (39min), 4,1 (1min)
+		\item {\tt mutex\_is\_locked()} pattern: $K,N$ = 2,4 (79min); 4,1 (6min)
+		%\item Using {\tt xadd} instead: $K,N$ = 2,4 (19min); 3,2 (39min), 4,1 (1min)
+		\item (more tests in thesis)
 		\item Is that ``enough''? Generalize with manual inspection?
-		%\item More, see thesis...
 	\end{itemize}
 	\pause
 	\linegap
@@ -1065,7 +1102,7 @@
 
 	Even simple programs tricky to get right
 	\begin{itemize}
-		\item Author of {\tt mutex\_held()} pattern got it wrong once...
+		\item Author of {\tt mutex\_is\_locked()} pattern got it wrong once...
 		\item Landslide can check even unpredictable performance characteristics
 	\end{itemize}
 	\linegap
@@ -1077,8 +1114,31 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Conclusion}
+\section{Part 4}
+\subsection{End}
 
+\breakslide{\Large Conclusion}
+
+\begin{frame}{Conclusion}
+	% data race pps (as well as txn equivalence)
+	Combining %both
+	theoretically-founded automatic reduction techniques
+	% iterative deepening
+	% (say smth like: "landslide also has a wealth of other user-tunable heuristics
+	% for expert users, which you can read about in the document; for this talk i will focus just on the CPU budget thing")
+	% XXX: need to prepare for the question -- "what evidence do you have that users actually want this cpu budget stuff",
+	% ",or, that it helps vs just running something unlimited vs a normal icb test"
+	% (well, for the 2nd half of the Q, i can talk about how ID outperforms ICB on verficiations)
+	and user-informed heuristic ones, stateless model checking...
+	\begin{itemize}
+		\item ...can sufficiently mitigate exponential explosion...
+		% education
+		\item ...to be a practical testing technique for inexperienced users...
+		% htm
+		% TODO: this last part you just added for this talk; does the thesis version of the statmeent need to include too?
+		\item ...and real-world programs alike.
+	\end{itemize}
+\end{frame}
 \begin{frame}{Conclusion}
 	% data race pps (as well as txn equivalence)
 	Combining %both
@@ -1096,14 +1156,14 @@
 	\end{itemize}
 \end{frame}
 \begin{frame}{Conclusion}
-	Combining %both
-	{\bf theoretically-founded automatic reduction techniques}
+	\hilight{gray}{Combining %both
+	{\bf theoretically-founded automatic reduction techniques}}
 	\begin{itemize}
 		\item Verification with data-race preemption points
-		\item Yield-loop blocking
+		\item Student yield-loop blocking % student (adj). from "studence"
 		\item Equivalent emulation of HTM semantics
 	\end{itemize}
-	and {\bf user-informed heuristic ones},
+	\hilight{gray}{and {\bf user-informed heuristic ones},}
 	\begin{itemize}
 		\item Quicksand's CPU budget argument
 		\item Exposing data-race reports to students
@@ -1187,14 +1247,14 @@
 	\begin{center}
 		\begin{tabular}{ll}
 			{\bf Thread 1}  & {\bf Thread 2} \\
-			\texttt{\hilight{red}{x++;}}    & \\
+			\texttt{\hilight{pinkish}{x++;}}    & \\
 			\texttt{mutex\_lock(m);}	& \\
 			\texttt{\hilight{lavender}{// unrelated}}	   & \\
 			\texttt{mutex\_unlock(m);}      & \\
 				& \texttt{mutex\_lock(m);} \\
 				& \texttt{\hilight{lavender}{// unrelated}} \\
 				& \texttt{mutex\_unlock(m);} \\
-				& \texttt{\hilight{red}{x++;}} \\
+				& \texttt{\hilight{pinkish}{x++;}} \\
 		\end{tabular}
 		\linegap
 
@@ -1205,14 +1265,14 @@
 	\begin{center}
 		\begin{tabular}{ll}
 			{\bf Thread 1}  & {\bf Thread 2} \\
-			\texttt{\hilight{red}{x++;}}    & \\
+			\texttt{\hilight{pinkish}{x++;}}    & \\
 			\texttt{mutex\_lock(m);}	& \\
 			\texttt{\hilight{lavender}{y = true;}}      & \\
 			\texttt{mutex\_unlock(m);}      & \\
 				& \texttt{mutex\_lock(m);} \\
 				& \texttt{\hilight{lavender}{bool tmp = y;}} \\
 				& \texttt{mutex\_unlock(m);} \\
-				& \texttt{\hilight{lavender}{if (tmp)}~\hilight{red}{x++;}} \\
+				& \texttt{\hilight{lavender}{if (tmp)}~\hilight{pinkish}{x++;}} \\
 		\end{tabular}
 		\linegap
 
@@ -1220,40 +1280,40 @@
 	\end{center}
 \end{frame}
 
-\begin{frame}{Iterative Deepening Reductions}
+\begin{frame}{Quicksand (Iterative Deepening) Reductions}
 	If one job is a subset of another, testing either might let us skip the other.
 	\begin{center}
 		\includegraphics[width=\textwidth]{../../oopsla/reduction-nothing.png}
 	\end{center}
 \end{frame}
-\begin{frame}{Iterative Deepening Reductions}
+\begin{frame}{Quicksand (Iterative Deepening) Reductions}
 	If one job is a subset of another, testing either might let us skip the other.
 	\begin{center}
 		\includegraphics[width=\textwidth]{../../oopsla/reduction-deferred.png}
 	\end{center}
 \end{frame}
-\begin{frame}{Iterative Deepening Reductions}
+\begin{frame}{Quicksand (Iterative Deepening) Reductions}
 	If one job is a subset of another, testing either might let us skip the other.
 	\begin{center}
 		\includegraphics[width=\textwidth]{../../oopsla/reduction-complete.png}
 	\end{center}
 \end{frame}
 
-%\begin{frame}{Quicksand results - Bugs found by CPU time}
-%	\begin{center}
-%		\includegraphics[width=0.8\textwidth]{../../oopsla/bugs-talk.pdf}
-%	\end{center}
-%\end{frame}
-%\begin{frame}{Quicksand results - Bugs found by wall-clock time}
-%	\begin{center}
-%		\includegraphics[width=0.8\textwidth]{../../oopsla/bugs-wallclock-talk.pdf}
-%	\end{center}
-%\end{frame}
-%\begin{frame}{Quicksand results - Tests fully verified (CPU time)}
-%	\begin{center}
-%		\includegraphics[width=0.8\textwidth]{../../oopsla/verifs-talk.pdf}
-%	\end{center}
-%\end{frame}
+\begin{frame}{Quicksand results - Bugs found by CPU time}
+	\begin{center}
+		\includegraphics[width=0.8\textwidth]{../quicksand-bugs-hb-talkver.pdf}
+	\end{center}
+\end{frame}
+\begin{frame}{Quicksand results - Bugs found by wall-clock time}
+	\begin{center}
+		\includegraphics[width=0.8\textwidth]{../quicksand-bugs-hb-wallclock-talkver.pdf}
+	\end{center}
+\end{frame}
+\begin{frame}{Quicksand results - Tests fully verified (CPU time)}
+	\begin{center}
+		\includegraphics[width=0.8\textwidth]{../quicksand-verifs-hb-talkver.pdf}
+	\end{center}
+\end{frame}
 \begin{frame}{Quicksand results - MC + DR vs single-pass DR}
 	\begin{center}
 		\includegraphics[width=0.8\textwidth]{../../oopsla/dr-false-negatives-poster.pdf}
@@ -1264,7 +1324,7 @@
 	\begin{center}
 		\footnotesize
 	\begin{tabular}{r|c|c}
-		{\bf Bound} & {\bf SSS (sync PPs only)} & {\bf SSS (preempt everywhere)} \\
+		{\bf Bound} & {\bf ICB (sync PPs only)} & {\bf ICB (preempt everywhere)} \\
 		\hline
 		0       & 2     & 1     \\
 		1       & 82    & 86    \\
@@ -1277,12 +1337,12 @@
 	\end{center}
 	\linegap
 
-	Bugs by type (Pure HB trial):
+	Bugs by type (Pure HB Quicksand):
 	\begin{itemize}
 		\item 56 deadlocks
 		\item 49 heap errors (47 use-after-free)
 		\item 35 assertion failures
-		\item 31 page fault crashes
+		\item 31 page/segmentation fault crashes
 		\item 1 infinite loop
 		\item 1 recursive mutex lock
 	\end{itemize}
@@ -1306,15 +1366,15 @@
 	% The gotcha: When xbegin can fail, it can emit diff error codes, which depend on what happened within.
 	\begin{center}
 		\begin{tabular}{l}
-			\texttt{if ((status = \_xbegin()) == \_XBEGIN\_STARTED) \{} \\
+			\texttt{if ((status = \hilight{darkorange}{\_xbegin}()) == \_XBEGIN\_STARTED) \{} \\
 			\texttt{~~~~if (count >= 100)}\\
-			\texttt{~~~~~~~~\_xabort();} \\
+			\texttt{~~~~~~~~\hilight{pinkish}{\_xabort}();} \\
 			\texttt{~~~~count++;} \\
-			\texttt{~~~~\_xend();} \\
+			\texttt{~~~~\hilight{darkblue}{\_xend}();} \\
 			\texttt{\} else if (status != \_XABORT\_EXPLICIT) \{} \\
-			\texttt{~~~~mutex\_lock(\&count\_lock);} \\
+			\texttt{~~~~\hilight{darkorange}{mutex\_lock}(\&count\_lock);} \\
 			\texttt{~~~~count++;} \\
-			\texttt{~~~~mutex\_unlock(\&count\_lock);} \\
+			\texttt{~~~~\hilight{darkblue}{mutex\_unlock}(\&count\_lock);} \\
 			\texttt{\}} \\
 		\end{tabular}
 	\end{center}
@@ -1349,16 +1409,16 @@
 %\begin{frame}{STM: Judging when aborts are possible}
 %\end{frame}
 
-\begin{frame}{HTM: Sources of Benchmarks}
-	\begin{itemize}
-		%\item Shamay, https://github.com/cmpxchg16/tsx.me, 2014
-		\item Dehesa-Azuara and Stanley, http://www.contrib.andrew.cmu.edu/\textasciitilde{}mdehesaa/, 2016
-		%\item Chapman et al., Hybrid STM/HTM for nested transactions on OpenJDK, OOPSLA 2016
-		%\item Wang et al., Eunomia: Scaling Concurrent Search Trees under Contention Using HTM, PPoPP 2017
-			% TODO: add, that one lock thingy
-		\item vamsikc, TSX LevelDB implementation, https://github.com/vamsikc/leveldb-tsx/, 2014
-	\end{itemize}
-\end{frame}
+%\begin{frame}{HTM: Sources of Benchmarks}
+%	\begin{itemize}
+%		%\item Shamay, https://github.com/cmpxchg16/tsx.me, 2014
+%		\item Dehesa-Azuara and Stanley, http://www.contrib.andrew.cmu.edu/\textasciitilde{}mdehesaa/, 2016
+%		%\item Chapman et al., Hybrid STM/HTM for nested transactions on OpenJDK, OOPSLA 2016
+%		%\item Wang et al., Eunomia: Scaling Concurrent Search Trees under Contention Using HTM, PPoPP 2017
+%			% TODO: add, that one lock thingy
+%		\item vamsikc, TSX LevelDB implementation, https://github.com/vamsikc/leveldb-tsx/, 2014
+%	\end{itemize}
+%\end{frame}
 
 \newcommand\tii{\ensuremath{\hilight{lavender}{\mathbf{Ti}}}\xspace}
 \newcommand\tjj{\ensuremath{\hilight{seafoam}{\mathbf{Tj}}}\xspace}
@@ -1467,7 +1527,7 @@
 
 %% including this stuff in the talk now so this bonus slide is frivolous
 %% TODO: slide number c.c
-%\begin{frame}{Don't you need \texttt{if (mutex\_held(\&count\_lock)) \_xabort();} in that transaction on slide 42?}
+%\begin{frame}{Don't you need \texttt{if (mutex\_is\_locked(\&count\_lock)) \_xabort();} in that transaction on slide 42?}
 %	\begin{center}
 %	Yes.
 %	\end{center}
@@ -1497,12 +1557,13 @@
 		\item {\bf [Musuvathi '08]}: Madanlal Musuvathi et al. Finding and Reproducing Heisenbugs in Concurrent
 			Programs. OSDI 2008.
 		\item {\bf [Yang '08]}: Yu Yang et al. Efficient stateful DPOR. SPIN 2008.
-		\item {\bf [Buckhardt '10]}: A randomized scheduler with probabilistic guarantees of finding bugs. ASPLOS 2010.
+		\item {\bf [Klein '09]}: Gerwin Klein et al. seL4: formal verif. of an OS kernel. SOSP 2009.
 	\end{itemize}
 \end{frame}
 \begin{frame}{References}
 	\footnotesize
 	\begin{itemize}
+		%\item {\bf [Burckhardt '10]}: A randomized scheduler with probabilistic guarantees of finding bugs. ASPLOS 2010.
 		\item {\bf [Simsa '12]}: Jiri Simsa. Runtime Estimation and Resource Allocation for
 			Concurrency Testing. Tech report (CMU-PDL-12-113). December 2012.
 		\item {\bf [Blum '12]}: Ben Blum. Landslide: Systematic Dynamic Race Detection in Kernel Space.
@@ -1510,10 +1571,11 @@
 		\item {\bf [Kasicki '12]}: Baris Kasicki. Data races vs. data race bugs: telling the difference with Portend. ASPLOS '12.
 		\item {\bf [Simsa '13]}: Systematic and Scalable Testing of Concurrent Programs.
 			Ph.D. thesis (CMU-CS-13-133). December 2013.
-		\item {\bf [Coons '13]}: Katherine Coons et al. Bounded POR. OOPSLA 2013.
+		%\item {\bf [Coons '13]}: Katherine Coons et al. Bounded POR. OOPSLA 2013.
 		\item {\bf [Abdulla '14]}: Parosh Abdulla et al. Optimal DPOR. POPL 2014.
+		\item {\bf [Matsakis '14]}: Nicholas Matsakis et al. The Rust Language. HILT 2014.
 		\item {\bf [vamsikc '14]}: leveldb-tsx. https://github.com/vamsikc/leveldb-tsx/, 2014.
-		\item {\bf [Huang '15]}: Jeff Huang. Stateless MCing concurrent programs with maximal causality reduction. PLDI '15.
+		%\item {\bf [Huang '15]}: Jeff Huang. Stateless MCing concurrent programs with maximal causality reduction. PLDI '15.
 		\item {\bf [Jensen '15]}: Stateless MCing of Event-Driven Applications. OOPSLA 2015.
 		\item {\bf [Dehesa-Azuara '16]}: Hardware transactional memory with intel's TSX.
 			http://www.contrib.andrew.cmu.edu/\textasciitilde{}mdehesaa/, 2016.
