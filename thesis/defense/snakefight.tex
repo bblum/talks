@@ -60,8 +60,15 @@
 \definecolor{goldish}{RGB}{128,96,32}
 \definecolor{gray}{RGB}{128,128,128}
 
+\definecolor{sect-quicksand}{RGB}{0,96,128}
+\definecolor{sect-410}{RGB}{0,128,64}
+\definecolor{sect-htm}{RGB}{128,0,64}
+\definecolor{sect-pastel-quicksand}{RGB}{144,180,192}
+\definecolor{sect-pastel-410}{RGB}{144,192,168}
+\definecolor{sect-pastel-htm}{RGB}{192,144,168}
+
 \begin{document}
-\renewcommand{\inserttotalframenumber}{67}
+\renewcommand{\inserttotalframenumber}{69}
 \normalem
 \begin{frame}
 	\titlepage
@@ -74,10 +81,12 @@
 \newcommand\linegap{\vspace{0.2in}}
 \newcommand\breakslide[1]{\begin{frame}{} \begin{center} #1 \end{center} \end{frame}}
 
+% TODO: on the title slide, shouldn't there be a "PResented in partial requirement..."?
+
 \section{Part 0}
 \subsection{Motivation}
 
-\begin{frame}{Concurrency!}
+\begin{frame}{Concurrency}
 	\begin{center}
 	\begin{tabular}{ll}
 		Initially \texttt{count = 0;} \\
@@ -96,7 +105,7 @@
 	\end{tabular}
 	\end{center}
 \end{frame}
-\begin{frame}{Concurrency!}
+\begin{frame}{Concurrency}
 	\begin{center}
 	\begin{tabular}{ll}
 		Initially \texttt{count = 0;} \\
@@ -116,8 +125,56 @@
 	\end{center}
 \end{frame}
 
+\begin{frame}{Concurrency Testing} % "..is hard"?
+	% what's so bad abt concurrecny bugs
+	% - manifest at random depending on interrupts/etc
+	%   - (fine in testing but in production, loaded server, more interrupts, more interleavings, more crashes)
+	% - difficult to reproduce
+	% - difficult to know yr testing "coverage" - did you *really* fix that bug, or just make it more rare?
+	% - difficult to use, as evidenced by most systems classes still teaching kids to use stress (or worse, unit) tests
+	Concurrency bugs...
+	\begin{itemize}
+		\item Manifest at random
+		\item Difficult to reproduce
+		\item Difficult to know when truly fixed % what is ``coverage''?
+	\end{itemize}
+	\linegap
+
+	Testing approaches
+	\begin{itemize}
+		\item Unit tests: only 1 ``most likely'' interleaving
+		\item Stress tests: exposes ``less likely'' interleavings (if lucky), % to expose "less likely" ones
+			cannot verify
+		\item Verification: steep learning curve, unpredictable runtime
+			%still no widespread adoption % -- why?
+	\end{itemize}
+\end{frame}
+\begin{frame}{Practical Concurrency Testing}
+	%Goals
+	\textbf{Landslide}, this thesis's solution
+	\begin{itemize}
+		\item No randomness, despite nondeterminism
+		\item Confirm when you fixed bugs, not just find them % not 'verify'
+			% TODO: make alnguage match, "Automatic so and so"
+		\item User-friendly enough for students
+		% \item Test wide variety of types of concurrency % txn
+			% TODO : figure out how to ref 
+		% ????
+		\item Combines with human intuition to verify tests neither could do alone
+	\end{itemize}
+	%
+	% enter landslide
+	% - test yr nondeterministic program without randomness/unpredictability
+	% - provide formal verification guarantees so you know when you actually fixed that bug
+	%   - (well, subject to assumptions about the test case you're running under, etc etc)
+	% - user friendly enough even for ze studence
+	% 
+	% say: "What if there was a program that... ...I'm here to tell you that I've built such a program,
+	% it's called Landslide, and why you should let me graduate for it" (figure out smth more diplomatic here...)
+\end{frame}
+
 \begin{frame}{Stateless Model Checking}
-	Stateless Model Checking {\em [Godefroid '97]} (MC)
+	Stateless Model Checking (MC) {\em [Godefroid '97]}
 	\begin{itemize}
 		\item Test framework controls thread scheduling
 		\item Each test iteration, test a different interleaving
@@ -127,17 +184,19 @@
 	\linegap
 
 	\begin{center}
-		\includegraphics[width=0.25\textwidth]{../../oopsla/exponential-curve.pdf}
+		\includegraphics[width=0.4\textwidth]{exponence.pdf}
 	\end{center}
 \end{frame}
 
-\begin{frame}{State Space Example}
+% better: remember to say, "If you're wondering what the deal is with "stateless"...
+% the name is a historical accident & we can talk abt that in the Q+As"
+\begin{frame}{Stateless Model Checking - The State Space}
 	\begin{center}
 		\includegraphics[width=0.96\textwidth]{../../oopsla/tree-maximal-only.pdf}
 	\end{center}
 	\linegap
 
-	Possible interleavings represented as a tree
+	Possible interleavings (under given test case) represented as a tree
 	\begin{itemize}
 		\item Node: Intermediate execution state
 		\item Edge: State transition from executing a thread
@@ -170,7 +229,7 @@
 	\begin{itemize}
 		\item State space size estimation {\em [Simsa '12]}
 			% TODO: i just switched the order of these; see how that feels
-		\item Manual kernel annotations: Landslide {\em [Blum '12]} {\tiny that's me!}
+		\item Manual kernel annotations {\em [Blum '12]} %{\tiny that's me!}
 			\pause
 		\item Widespread adoption requires {\bf fully automated instrumentation}...
 	\end{itemize}
@@ -208,7 +267,8 @@
 	and user-informed heuristic ones,
 	stateless model checking can sufficiently mitigate exponential explosion to be
 	% education
-	a practical testing technique for inexperienced users
+	practical for inexperienced users
+	%a practical testing technique for inexperienced users
 	% htm
 	% TODO: this last part you just added for this talk; does the thesis version of the statmeent need to include too?
 	and real-world programs alike.
@@ -226,30 +286,31 @@
 	% (well, for the 2nd half of the Q, i can talk about how ID outperforms ICB on verficiations)
 	and user-informed heuristic ones, stateless model checking...}
 	\begin{itemize}
-		\item ...can sufficiently mitigate exponential explosion...
+		\item \hilight{sect-quicksand}{...can sufficiently mitigate exponential explosion...}\xspace
 		% education
-		\item ...to be a practical testing technique for inexperienced users...
+		%\item ...to be a practical testing technique for inexperienced users...
+		\item \hilight{sect-410}{...to be practical for inexperienced users...}\xspace
 		% htm
 		% TODO: this last part you just added for this talk; does the thesis version of the statmeent need to include too?
-		\item ...and real-world programs alike.
+		\item \hilight{sect-htm}{...and real-world programs alike.}\xspace
 	\end{itemize}
 \end{frame}
 
 
-\begin{frame}{Thesis Statement}
-	The Quicksand algorithm %combines theory and heuristics to
-	practically debugs and verifies many exponential state spaces.
+\begin{frame}{Contributions}
+	\hilight{sect-quicksand}{The Quicksand algorithm %combines theory and heuristics to
+	practically debugs and verifies many exponential state spaces.}
 	\vspace{4.54em}
 
-	Landslide's automatic instrumentation makes MC accessible to students.
+	\hilight{sect-410}{Landslide's automatic instrumentation makes MC accessible to students.}
 	\vspace{4.54em}
 
-	New reduction techniques for transactional memory keep MC up-to-date
-	with the latest real-world concurrency techniques.
+	\hilight{sect-htm}{New reduction techniques for transactional memory keep MC up-to-date
+	with the latest real-world concurrency techniques.}
 	\vspace{4.54em}
 \end{frame}
 \begin{frame}{Outline}
-	\hilight{gray}{The Quicksand algorithm %combines theory and heuristics to
+	\hilight{sect-pastel-quicksand}{The Quicksand algorithm %combines theory and heuristics to
 	practically debugs and verifies many exponential state spaces.} \\
 	%\hilight{gray}{The Quicksandalgorithm makes MC appropriate for both educational and real-world programs.} \\
 	\begin{itemize}
@@ -259,7 +320,7 @@
 			\item Verification \& experimental results
 		\end{itemize}
 	\end{itemize}
-	\hilight{gray}{Landslide's automatic instrumentation makes MC accessible to students.} \\
+	\hilight{sect-pastel-410}{Landslide's automatic instrumentation makes MC accessible to students.} \\
 	%\hilight{gray}{Ad-hoc synchronization heuristics make MC accessible to student programmers.} \\
 	\begin{itemize}
 		\item {\bf Educational use}
@@ -269,7 +330,7 @@
 		\end{itemize}
 	\end{itemize}
 
-	\hilight{gray}{New reduction techniques for transactional memory keep MC up-to-date
+	\hilight{sect-pastel-htm}{New reduction techniques for transactional memory keep MC up-to-date
 	with the latest real-world concurrency techniques.} \\
 	%\hilight{gray}{A new transactional concurrency model keeps MC applicable to the latest real-world techniques.} \\
 	\begin{itemize}
@@ -293,15 +354,16 @@
 \section{Part 1}
 \subsection{Quicksand}
 
-\breakslide{\Large Quicksand}
+\breakslide{\Large \bf \hilight{sect-quicksand}{Quicksand}}
 
 \begin{frame}{Preemption Points}
-	The burning question: ``Which {\bf preemption points} (PPs) are important?''
+	The burning question: ``Which {\bf preemption points} are important?''
 	\linegap
 
-	State space of interleavings is {\em parameterized} by PPs.
+	State space %of interleavings
+	is {\em parameterized} by preemption points.
 	\begin{itemize}
-		\item Too few PPs: Many bugs will go undetected
+		\item Too few: Many bugs will go undetected
 		\item Preempt everywhere: Completion is often infeasible % say: "for some programs"
 	\end{itemize}
 \end{frame}
@@ -343,7 +405,7 @@
 	\begin{itemize}
 		\item At least one of the accesses is a write
 		\item The threads are not holding the same mutex
-		\item One access {\em happens-before} the other
+		\item Neither access {\em happens-before} the other
 			%(e.g., no \texttt{cond\_signal()} in between)
 			(e.g., no \texttt{cond\_wait()})
 	\end{itemize}
@@ -351,7 +413,8 @@
 	\linegap
 
 	%Prior model checkers hard-code a fixed set of PPs, committing to one state space in advance.
-	Prior model checkers commit to a fixed set of PPs in advance.
+	%Prior model checkers commit to a fixed set of PPs in advance.
+	Prior model checkers commit to fixed preemption points in advance.
 	\begin{itemize}
 		\item ``Preempt on {\tt mutex\_lock()}, {\tt mutex\_unlock()} only''
 		\item ``Preempt on every single memory access''
@@ -405,10 +468,13 @@
 
 \begin{frame}{Total Verification}
 	\textbf{Convergence theorem:} Testing maximal state space, after detecting all data races, $\equiv$ preempting everywhere!
-	%\begin{itemize}
-	%	\item Insight: $\forall$ arbitrary buggy interleaving, $\exists$ equivalent interleaving % say 'under DPOR' i guess?
-	%		using only sync/data-race PPs, \& Quicksand will eventually reach it.
-	%\end{itemize}
+	\begin{itemize}
+		\item $\forall$ arbitrary buggy interleaving, $\exists$ equivalent interleaving % say 'under DPOR' i guess?
+			using only sync/data-race PPs, \& Quicksand will eventually reach it.
+			\begin{itemize}
+				\item ({\em equivalence} defined under DPOR {\em [Flanagan '05]})
+			\end{itemize}
+	\end{itemize}
 	\linegap
 
 	Hence, Quicksand provides ``best of both worlds'':
@@ -461,10 +527,10 @@
 \end{frame}
 
 \begin{frame}{Summary}
-	Incorporate data-race analysis to add new PPs in a feedback loop
+	Use data-race analysis to add new preemption points in a feedback loop
 	\linegap
 
-	Enough time to saturate \& test every data-race PP? Full verification
+	Enough time to saturate \& test every data-race? Full verification
 	\linegap
 
 	Otherwise? Quicksand's heuristic search ordering finds bugs faster anyway
@@ -486,7 +552,7 @@
 \section{Part 2}
 \subsection{Education}
 
-\breakslide{\Large Education}
+\breakslide{\Large \bf \hilight{sect-410}{Education}}
 
 \begin{frame}{Setting}
 	%CMU (15-410, S'15-S'18), PSU (CMPSC 473, S'18)
@@ -618,7 +684,7 @@
 		\item U. Chicago: 3 deterministic, 4 concurrency bugs in 3/4 kernels
 			% TODO: what to do abt this bullet pts
 			%\pause
-		\item PSU: (no log collection due to IRB issues)
+		\item PSU: (no log collection) %due to IRB issues)
 		% \item Case study tej
 	\end{itemize}
 \end{frame}
@@ -643,43 +709,44 @@
 	\end{center}
 \end{frame}
 
-\begin{frame}{Effect on Grades}
+% TODO: put p values
+\begin{frame}{Effect on Grades (CMU)} % - statistically significant?}
 	\begin{center}
 		\includegraphics[width=\textwidth]{photo-of-ze-studence-cdf-no-pre-study.pdf}
 	\end{center}
 \end{frame}
 
-\begin{frame}{Effect on Grades}
+\begin{frame}{Effect on Grades (CMU)} % - statistically significant?}
 	\begin{center}
 		\includegraphics[width=\textwidth]{../photo-of-ze-studence-cdf.pdf}
 	\end{center}
 \end{frame}
 
-\begin{frame}{Statistical Significance}
-	Compared %users' vs. non-users'
-	grade distributions with k-sample Anderson-Darling {\em [A., D. '52]}
-	\linegap
-
-	Control 1: non-users from {\bf same semester}
-	\begin{itemize}
-		\item {\bf P2} grade distributions differ with $p = 0.036 < 0.05$
-		\item {\bf P3} grade distributions differ with $p = 0.034 < 0.05$
-			\pause
-		\item Possible bias: stronger students volunteer for Landslide in first place
-	\end{itemize}
-	\pause
-	\linegap
-
-	Control 2: non-users from {\bf past semesters} (when Landslide not offered)
-	\begin{itemize}
-		\item {\bf P2} grade distributions differ with $p = 0.671$...
-		\item {\bf P3} grade distributions differ with $p = 0.145$...
-			\pause
-		\item Possible bias: grading criteria may drift across semesters
-			% FIXME does this bullet belong in this sub list
-		\item Possible bias: maybe Landslide finds bugs the official tests don't
-	\end{itemize}
-\end{frame}
+%\begin{frame}{Statistical Significance}
+%	Compared %users' vs. non-users'
+%	grade distributions with k-sample Anderson-Darling {\em [A., D. '52]}
+%	\linegap
+%
+%	Control 1: non-users from {\bf same semester}
+%	\begin{itemize}
+%		\item {\bf P2} grade distributions differ with $p = 0.036 < 0.05$
+%		\item {\bf P3} grade distributions differ with $p = 0.034 < 0.05$
+%			\pause
+%		\item Possible bias: stronger students volunteer for Landslide in first place
+%	\end{itemize}
+%	\pause
+%	\linegap
+%
+%	Control 2: non-users from {\bf past semesters} (when Landslide not offered)
+%	\begin{itemize}
+%		\item {\bf P2} grade distributions differ with $p = 0.671$...
+%		\item {\bf P3} grade distributions differ with $p = 0.145$...
+%			\pause
+%		\item Possible bias: grading criteria may drift across semesters
+%			% FIXME does this bullet belong in this sub list
+%		\item Possible bias: maybe Landslide finds bugs the official tests don't
+%	\end{itemize}
+%\end{frame}
 
 \begin{frame}{Survey}
 	14(ish) questions, investigate both education \& happiness
@@ -708,31 +775,31 @@
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{Survey Results (educational value)}
+\begin{frame}{Survey Results} % (educational value)}
 	\begin{center}
 		\includegraphics[width=\textwidth]{../survey6.pdf} % easier to diagnose?
 	\end{center}
 \end{frame}
 
-\begin{frame}{Survey Results (happiness value)}
-	\begin{center}
-		\includegraphics[width=\textwidth]{../survey5.pdf} % easy to understand?
-	\end{center}
-\end{frame}
+%\begin{frame}{Survey Results} % (happiness value)}
+%	\begin{center}
+%		\includegraphics[width=\textwidth]{../survey5.pdf} % easy to understand?
+%	\end{center}
+%\end{frame}
 
-\begin{frame}{Survey Results (educational value)}
+\begin{frame}{Survey Results} % (educational value)}
 	\begin{center}
 		\includegraphics[width=\textwidth]{../survey9.pdf} % 100 cpu hours
 	\end{center}
 \end{frame}
 
-\begin{frame}{Survey Results (educational value)}
+\begin{frame}{Survey Results} % (educational value)}
 	\begin{center}
 		\includegraphics[width=\textwidth]{../survey8.pdf} % learned to understand concurrency
 	\end{center}
 \end{frame}
 
-\begin{frame}{Survey Results (happiness value)}
+\begin{frame}{Survey Results} % (happiness value)}
 	\begin{center}
 		\includegraphics[width=\textwidth]{../survey10.pdf} % recommend to friend
 	\end{center}
@@ -771,7 +838,7 @@
 \newcommand\xend{\texttt{\_xend()}\xspace}
 \newcommand\xabort{\texttt{\_xabort()}\xspace}
 
-\breakslide{\Large Transactional Memory}
+\breakslide{\Large \bf \hilight{sect-htm}{Transactional Memory}}
 
 \begin{frame}{Example}
 	\begin{center}
@@ -893,8 +960,7 @@
 				\item Exponential state space reduction
 				\item Traditional reduction (DPOR) applied on top
 			\end{itemize}
-			% TODO prob just comment this out
-		\item More in bonus slides...
+		%\item More in bonus slides...
 	\end{itemize}
 \end{frame}
 
@@ -1117,7 +1183,7 @@
 \section{Part 4}
 \subsection{End}
 
-\breakslide{\Large Conclusion}
+\breakslide{\Large \bf Conclusion}
 
 \begin{frame}{Conclusion}
 	% data race pps (as well as txn equivalence)
@@ -1129,15 +1195,13 @@
 	% XXX: need to prepare for the question -- "what evidence do you have that users actually want this cpu budget stuff",
 	% ",or, that it helps vs just running something unlimited vs a normal icb test"
 	% (well, for the 2nd half of the Q, i can talk about how ID outperforms ICB on verficiations)
-	and user-informed heuristic ones, stateless model checking...
-	\begin{itemize}
-		\item ...can sufficiently mitigate exponential explosion...
-		% education
-		\item ...to be a practical testing technique for inexperienced users...
-		% htm
-		% TODO: this last part you just added for this talk; does the thesis version of the statmeent need to include too?
-		\item ...and real-world programs alike.
-	\end{itemize}
+	and user-informed heuristic ones,
+	\linegap
+
+	stateless model checking
+	\hilight{sect-quicksand}{can sufficiently mitigate exponential explosion}\xspace
+	\hilight{sect-410}{to be practical for inexperienced users}\xspace
+	\hilight{sect-htm}{and real-world programs alike.}\xspace
 \end{frame}
 \begin{frame}{Conclusion}
 	% data race pps (as well as txn equivalence)
@@ -1147,34 +1211,38 @@
 
 	and {\bf user-informed heuristic ones},
 	\vspace{4.82em}
+	\linegap
 
-	stateless model checking...
-	\begin{itemize}
-		\item ...can sufficiently mitigate exponential explosion...
-		\item ...to be a practical testing technique for inexperienced users...
-		\item ...and real-world programs alike.
-	\end{itemize}
+	stateless model checking
+	\hilight{sect-quicksand}{can sufficiently mitigate exponential explosion}\xspace
+	\hilight{sect-410}{to be practical for inexperienced users}\xspace
+	\hilight{sect-htm}{and real-world programs alike.}\xspace
 \end{frame}
 \begin{frame}{Conclusion}
-	\hilight{gray}{Combining %both
-	{\bf theoretically-founded automatic reduction techniques}}
+	%\hilight{gray}{Combining %both
+	%{\bf theoretically-founded automatic reduction techniques}}
+	Combining %both
+	{\bf theoretically-founded automatic reduction techniques}
 	\begin{itemize}
-		\item Verification with data-race preemption points
-		\item Student yield-loop blocking % student (adj). from "studence"
-		\item Equivalent emulation of HTM semantics
+		\item \hilight{sect-quicksand}{Verification with data-race preemption points}
+		\item \hilight{sect-410}{Student yield-loop blocking} % student (adj). from "studence"
+		\item \hilight{sect-htm}{Equivalent emulation of HTM semantics}
 	\end{itemize}
-	\hilight{gray}{and {\bf user-informed heuristic ones},}
+	% TODO: incremental reveal
+	%\hilight{gray}{and {\bf user-informed heuristic ones},}
+	and {\bf user-informed heuristic ones},
 	\begin{itemize}
-		\item Quicksand's CPU budget argument
-		\item Exposing data-race reports to students
-		\item Abstraction reduction for HTM primitives
+		\item \hilight{sect-quicksand}{Quicksand's CPU budget argument}
+		\item \hilight{sect-410}{Exposing data-race reports to students}
+		%\item Encouraging students to exercise their intuition % ??
+		\item \hilight{sect-htm}{Abstraction reduction for HTM primitives}
 	\end{itemize}
-	\hilight{gray}{stateless model checking...}
-	\begin{itemize}
-		\item \hilight{gray}{...can sufficiently mitigate exponential explosion...}
-		\item \hilight{gray}{...to be a practical testing technique for inexperienced users...}
-		\item \hilight{gray}{...and real-world programs alike.}
-	\end{itemize}
+	\linegap
+
+	\hilight{gray}{stateless model checking}\xspace
+	\hilight{sect-pastel-quicksand}{can sufficiently mitigate exponential explosion}\xspace
+	\hilight{sect-pastel-410}{to be practical for inexperienced users}\xspace
+	\hilight{sect-pastel-htm}{and real-world programs alike.}\xspace
 \end{frame}
 \begin{frame}{Closing remarks}
 	``Verifying C programs is doomed, why can't PL design handle this?''
@@ -1222,7 +1290,7 @@
 \section{Warp Zone}
 
 \subsection{Quicksand}
-\breakslide{\Large Bonus Slides - Quicksand}
+\breakslide{\Large \bf \hilight{sect-quicksand}{Bonus Slides - Quicksand}}
 
 \begin{frame}{Data-Race Definitions}
 	\textbf{Data race:} 2 threads access the same memory, and...
@@ -1350,7 +1418,7 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Education}
-\breakslide{\Large Bonus Slides - Education}
+\breakslide{\Large \bf \hilight{sect-410}{Bonus Slides - Education}}
 
 \begin{frame}{15-410...}
 	% TODO:
@@ -1360,7 +1428,7 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{HTM}
-\breakslide{\Large Bonus Slides - HTM}
+\breakslide{\Large \bf \hilight{sect-htm}{Bonus Slides - HTM}}
 
 \begin{frame}{HTM: Even more dimensions of nondeterminism}
 	% The gotcha: When xbegin can fail, it can emit diff error codes, which depend on what happened within.
@@ -1539,9 +1607,9 @@
 \begin{frame}{References}
 	\footnotesize
 	\begin{itemize}
-		\item {\bf [A., D. '52]}: T. Anderson and D. Darling.
-			Asymptotic theory of certain ``goodness-of-fit'' criteria based on stochastic processes.
-			Annals of Statistics, 1952.
+		%\item {\bf [A., D. '52]}: T. Anderson and D. Darling.
+		%	Asymptotic theory of certain ``goodness-of-fit'' criteria based on stochastic processes.
+		%	Annals of Statistics, 1952.
 		\item {\bf [Lamport '78]}:
 			Leslie Lamport. Time, clocks, and the ordering of events in a distributed system.
 			Communications of the ACM, 1978.
