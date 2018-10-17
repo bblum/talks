@@ -490,12 +490,13 @@
 \end{frame}
 
 \begin{frame}{Evaluation}
-	79 ``P2'' thread libraries from CMU, 78 ``Pintos'' kernels from U. Chicago \& Stanford
+	629 tests of submitted ``P2'' thread libraries (CMU) and ``Pintos'' kernels (U. Chicago \& Stanford)
+	%79 ``P2'' thread libraries from CMU, 78 ``Pintos'' kernels from U. Chicago \& Stanford
 	\linegap
 
-	%629 pairs of \{P2 or Pintos\} + test case
-	629 pairs of P2 or Pintos + test case
-	\linegap
+	%%629 pairs of \{P2 or Pintos\} + test case
+	%629 pairs of P2 or Pintos + test case
+	%\linegap
 
 	Each tested for 10 CPU-hours with
 	\begin{itemize}
@@ -711,31 +712,6 @@
 		\item {\bf Education:} Did Landslide help students learn more from P2?
 		\item {\bf Happiness:} Did Landslide help students save time/effort?
 	\end{itemize}
-	\pause
-	\linegap
-
-	Self-report any {\bf false positives}
-	\begin{itemize}
-		\item Landslide crashes aside, 3 FP bug reports, all simple bugs (now fixed)
-			% nonexistent MAGIC_BREAK bc of different address space in shell
-			% simultaneous landslides corrupt each other
-			% invalid heap access when new_pages "too close"
-		\item No FPs related to yield-loop/etc heuristics
-	\end{itemize}
-	\linegap
-
-	Self-report opinions {\bf whether it was worthwhile}
-	\begin{itemize}
-		\item Mostly ``worked as advertised'' praise
-		\item One PSU student found a bug from inspecting a data-race by hand,
-			after Landslide timed out testing with no bug report
-	\end{itemize}
-\end{frame}
-
-\begin{frame}{Survey Results} % (educational value)}
-	\begin{center}
-		\includegraphics[width=\textwidth]{../survey6.pdf} % easier to diagnose?
-	\end{center}
 \end{frame}
 
 \begin{frame}{Survey Results} % (educational value)}
@@ -754,6 +730,26 @@
 	\begin{center}
 		\includegraphics[width=\textwidth]{../survey10.pdf} % recommend to friend
 	\end{center}
+\end{frame}
+
+\begin{frame}{Survey Results}
+	Self-report any {\bf false positives}
+	\begin{itemize}
+		\item Landslide crashes aside, 3 FP bug reports, all simple bugs (now fixed)
+			% nonexistent MAGIC_BREAK bc of different address space in shell
+			% simultaneous landslides corrupt each other
+			% invalid heap access when new_pages "too close"
+		\item No FPs related to yield-loop/etc heuristics
+	\end{itemize}
+	\pause
+	\linegap
+
+	Self-report opinions {\bf whether it was worthwhile}
+	\begin{itemize}
+		\item Mostly ``worked as advertised'' praise
+		\item One PSU student found a bug from inspecting a data-race by hand,
+			after Landslide timed out testing with no bug report
+	\end{itemize}
 \end{frame}
 
 \begin{frame}{Summary}
@@ -788,7 +784,7 @@
 \newcommand\xend{\texttt{\_xend()}\xspace}
 \newcommand\xabort{\texttt{\_xabort()}\xspace}
 
-\breakslide{\Large \bf \hilight{sect-htm}{Transactional Memory}}
+\breakslide{\Large \bf \hilight{sect-htm}{Hardware Transactional Memory}}
 
 \begin{frame}{Example}
 	\begin{center}
@@ -823,8 +819,8 @@
 		\item Possible reasons:
 			\begin{itemize}
 				\item Memory conflict with another thread
-				\item False sharing (conflict on same cache-line)
-				\item Cache eviction, random interrupt, ...
+				%\item False sharing (conflict on same cache-line)
+				\item Cache conflicts, cache eviction, random interrupt, ...
 			\end{itemize}
 		\item Changes discarded, local state reverted, \xbegin returns failure
 		\item {\tt else} branch runs some user-supplied backup plan
@@ -879,28 +875,31 @@
 \end{frame}
 
 \begin{frame}{Concurrency model}
-	What are a transactional program's {\em observable} behaviours?
-	\begin{itemize}
-		\item Transactional writes, if successful, appear atomically %to other threads
-		%\begin{itemize}
-		%	\item Equivalent to a lock protecting that state
-		%		% note that also inserting DR PPs within a transaction is not allowed
-		%\end{itemize}
-		%	\pause
-		\item Simultaneous transactions succeed only if no conflicts
-		%\begin{itemize}
-		%	\item Equivalent
-		%		%(modulo performance)
-		%		to serialize independent transactions
-		%\end{itemize}
-		%	\pause
-		\item Failing transactions' effects rolled-back with no trace
-		%\begin{itemize}
-		%	\item Treat each \xbegin as a failure injection point
-		%\end{itemize}
-	\end{itemize}
-	\pause
+	That first {\tt count++} never happened...!
 	\linegap
+
+	%What are a transactional program's {\em observable} behaviours?
+	%\begin{itemize}
+	%	\item Transactional writes, if successful, appear atomically %to other threads
+	%	%\begin{itemize}
+	%	%	\item Equivalent to a lock protecting that state
+	%	%		% note that also inserting DR PPs within a transaction is not allowed
+	%	%\end{itemize}
+	%	%	\pause
+	%	\item Simultaneous transactions succeed only if no conflicts
+	%	%\begin{itemize}
+	%	%	\item Equivalent
+	%	%		%(modulo performance)
+	%	%		to serialize independent transactions
+	%	%\end{itemize}
+	%	%	\pause
+	%	\item Failing transactions' effects rolled-back with no trace
+	%	%\begin{itemize}
+	%	%	\item Treat each \xbegin as a failure injection point
+	%	%\end{itemize}
+	%\end{itemize}
+	%\pause
+	%\linegap
 
 	Equivalence theorem
 	\begin{itemize}
@@ -1118,14 +1117,18 @@
 	\end{itemize}
 	\linegap
 
-	Even simple programs tricky to get right
-	\begin{itemize}
-		\item Author of {\tt mutex\_is\_locked()} pattern got it wrong once...
-		\item Landslide can check even unpredictable performance characteristics
-	\end{itemize}
+	Landslide found surprising bugs in AVL tree, spinlock
 	\linegap
 
-	Abstraction reduction eases both implementation \& verification burden
+	%Even simple programs tricky to get right
+	%\begin{itemize}
+	%	\item Author of {\tt mutex\_is\_locked()} pattern got it wrong once...
+	%	\item Landslide can check even unpredictable performance characteristics
+	%\end{itemize}
+	%\linegap
+
+	Abstraction reduction eases %both implementation \&
+	verification burden
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1471,6 +1474,7 @@
 \begin{frame}{Survey Results} \begin{center} \includegraphics[width=\textwidth]{../survey3.pdf} \end{center} \end{frame}
 \begin{frame}{Survey Results} \begin{center} \includegraphics[width=\textwidth]{../survey4.pdf} \end{center} \end{frame}
 \begin{frame}{Survey Results} \begin{center} \includegraphics[width=\textwidth]{../survey5.pdf} \end{center} \end{frame}
+\begin{frame}{Survey Results} \begin{center} \includegraphics[width=\textwidth]{../survey6.pdf} \end{center} \end{frame}
 \begin{frame}{Survey Results} \begin{center} \includegraphics[width=\textwidth]{../survey7.pdf} \end{center} \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
