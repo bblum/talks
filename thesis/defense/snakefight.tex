@@ -155,10 +155,8 @@
 	\begin{itemize}
 		\item No randomness, despite nondeterminism
 		\item Confirm when you fixed bugs, not just find them % not 'verify'
-			% TODO: make alnguage match, "Automatic so and so"
 		\item User-friendly enough for students
 		% \item Test wide variety of types of concurrency % txn
-			% TODO : figure out how to ref 
 		% ????
 		\item Combines with human intuition to verify tests neither could do alone
 	\end{itemize}
@@ -230,7 +228,6 @@
 	\begin{itemize}
 			% TODO: remember to say, "that lets you choose more intelligently, but still by hand, yr PPs
 		\item State space size estimation {\em [Simsa '12]}
-			% TODO: i just switched the order of these; see how that feels
 		\item Manual kernel annotations {\em [Blum '12]} %{\tiny that's me!}
 			\pause
 		\item Widespread adoption requires {\bf fully automated instrumentation}...
@@ -272,7 +269,6 @@
 	practical for inexperienced users
 	%a practical testing technique for inexperienced users
 	% htm
-	% TODO: this last part you just added for this talk; does the thesis version of the statmeent need to include too?
 	and real-world programs alike.
 \end{frame}
 
@@ -293,7 +289,6 @@
 		%\item ...to be a practical testing technique for inexperienced users...
 		\item \hilight{sect-410}{...to be practical for inexperienced users...}\xspace
 		% htm
-		% TODO: this last part you just added for this talk; does the thesis version of the statmeent need to include too?
 		\item \hilight{sect-htm}{...and real-world programs alike.}\xspace
 	\end{itemize}
 \end{frame}
@@ -476,13 +471,11 @@
 	\end{center}
 \end{frame}
 
-% TODO put a pict of mario-man, i.e maximal state space
-
 \begin{frame}{Total Verification}
-	\textbf{Convergence theorem:} Testing maximal state space, after detecting all data races, $\equiv$ preempting everywhere!
+	Soundness theorem: Testing maximal state space, after detecting all data races, $\equiv$ preempting everywhere!
 	\begin{itemize}
 		\item $\forall$ arbitrary buggy interleaving, $\exists$ equivalent interleaving % say 'under DPOR' i guess?
-			using only sync/data-race PPs, \& Quicksand will eventually reach it.
+			using only sync/data-race preemption points %, \& Quicksand will eventually reach it.
 			%\begin{itemize}
 			%	\item ({\em equivalence} defined under DPOR {\em [Flanagan '05]})
 			%\end{itemize}
@@ -512,9 +505,10 @@
 			%	\item ...``Pure'' Happens-Before analysis {\em [Lamport '78]}
 			%	\item ...``Limited'' Happens-Before analysis {\em [O'Callahan '03]}
 			%\end{itemize}
-		\item Stand-alone Landslide using ICB {\em [Musuvathi '08]}, preempting at...
+		\item Stand-alone Landslide %using ICB {\em [Musuvathi '08]},
+			preempting at...
 			\begin{itemize}
-				\item ...synchronization APIs only {\em [Simsa '10]}
+				\item ...synchronization APIs only {\em [Simsa '13]}
 				\item ...all shared memory accesses
 					%{\em [Holzmann '97]} % not spin
 					{\em [Yang '08]} % inspect
@@ -626,12 +620,10 @@
 		\item Existing memory analysis %(DPOR)
 			on loop condition to unblock
 			\begin{itemize}
-					% TODO: cut this and just say it out loud?
 				\item (e.g., what other thread writes to {\tt ready}?)
 				% it's kinda... idk how to critique its unsoundness.
 				% they self-admit to the unsoundness but like, leaving the cycle in,
 				% is the wrong approach to begin with
-					% TODO: move this to bonus slides, save a min of expl
 				%\item Prior work {\em [Coons '13]} likely to leave threads blocked too long
 			\end{itemize}
 			\pause
@@ -642,22 +634,8 @@
 		%\item Check for false-positive blocking to avoid false-positive deadlocks
 	\end{itemize}
 
-
-	% Unlike kernels [Blum '12], P2 can be......
-	% TODO talk abt yield loops, 
-	% compare to prior technique - delay abounding - which sucks bc (verify this by reading BPOR) it doesn't actually
-	% wake up the other thread at the right time (using memory conflix)
-
 	% pintos - bunch of gross patch stuff lmao
 \end{frame}
-
-% do even need this slide?
-%\begin{frame}{Evaluation Questions}
-%	asfda % TODO
-%	% submit better projects?
-%	% get better grades?
-%	% like the experience?
-%\end{frame}
 
 \begin{frame}{User Study}
 	P2 (CMU + PSU)
@@ -677,7 +655,6 @@
 		\item Returned preemption traces to students after deadline
 		\item Surveyed students on ease of debugging, etc.
 	\end{itemize}
-	% TODO: irb stuff in a bonus slide
 \end{frame}
 
 \begin{frame}{Results}
@@ -692,12 +669,7 @@
 	Bug-finding
 	\begin{itemize}
 		\item CMU: 115 deterministic, 122 concurrency bugs in 75/103 P2s
-			%\begin{itemize}
-			%	\item 3 false positives (self-reported)
-			%\end{itemize}
 		\item U. Chicago: 3 deterministic, 4 concurrency bugs in 3/4 kernels
-			% TODO: what to do abt this bullet pts
-			%\pause
 		\item PSU: (no log collection) %due to IRB issues)
 		% \item Case study tej
 	\end{itemize}
@@ -766,21 +738,15 @@
 	\end{center}
 \end{frame}
 
-%\begin{frame}{Survey Results} % (happiness value)}
-%	\begin{center}
-%		\includegraphics[width=\textwidth]{../survey5.pdf} % easy to understand?
-%	\end{center}
-%\end{frame}
-
 \begin{frame}{Survey Results} % (educational value)}
 	\begin{center}
-		\includegraphics[width=\textwidth]{../survey9.pdf} % 100 cpu hours
+		\includegraphics[width=\textwidth]{../survey8.pdf} % learned to understand concurrency
 	\end{center}
 \end{frame}
 
 \begin{frame}{Survey Results} % (educational value)}
 	\begin{center}
-		\includegraphics[width=\textwidth]{../survey8.pdf} % learned to understand concurrency
+		\includegraphics[width=\textwidth]{../survey9.pdf} % 100 cpu hours
 	\end{center}
 \end{frame}
 
@@ -792,7 +758,6 @@
 
 \begin{frame}{Summary}
 	Landslide helps students find \& fix bugs during projects
-	% TODO: should this be moved ot the earlier bug finding slide
 	\begin{itemize}
 		\item 73\% of CMU users found $\ge 1$ bug
 		\item 56\% of CMU users fixed $\ge 1$ bug
@@ -1200,10 +1165,14 @@
 	\vspace{4.82em}
 	\linegap
 
-	stateless model checking
-	\hilight{sect-quicksand}{can sufficiently mitigate exponential explosion}\xspace
-	\hilight{sect-410}{to be practical for inexperienced users}\xspace
-	\hilight{sect-htm}{and real-world programs alike.}\xspace
+	%stateless model checking
+	%\hilight{sect-quicksand}{can sufficiently mitigate exponential explosion}\xspace
+	%\hilight{sect-410}{to be practical for inexperienced users}\xspace
+	%\hilight{sect-htm}{and real-world programs alike.}\xspace
+	\hilight{gray}{stateless model checking}\xspace
+	\hilight{sect-pastel-quicksand}{can sufficiently mitigate exponential explosion}\xspace
+	\hilight{sect-pastel-410}{to be practical for inexperienced users}\xspace
+	\hilight{sect-pastel-htm}{and real-world programs alike.}\xspace
 \end{frame}
 \begin{frame}{Conclusion}
 	%\hilight{gray}{Combining %both
@@ -1215,7 +1184,26 @@
 		\item \hilight{sect-410}{Student yield-loop blocking} % student (adj). from "studence"
 		\item \hilight{sect-htm}{Equivalent emulation of HTM semantics}
 	\end{itemize}
-	% TODO: incremental reveal
+	%\hilight{gray}{and {\bf user-informed heuristic ones},}
+	and {\bf user-informed heuristic ones},
+	\vspace{4.82em}
+	\linegap
+
+	\hilight{gray}{stateless model checking}\xspace
+	\hilight{sect-pastel-quicksand}{can sufficiently mitigate exponential explosion}\xspace
+	\hilight{sect-pastel-410}{to be practical for inexperienced users}\xspace
+	\hilight{sect-pastel-htm}{and real-world programs alike.}\xspace
+\end{frame}
+\begin{frame}{Conclusion}
+	%\hilight{gray}{Combining %both
+	%{\bf theoretically-founded automatic reduction techniques}}
+	Combining %both
+	{\bf theoretically-founded automatic reduction techniques}
+	\begin{itemize}
+		\item \hilight{sect-quicksand}{Verification with data-race preemption points}
+		\item \hilight{sect-410}{Student yield-loop blocking} % student (adj). from "studence"
+		\item \hilight{sect-htm}{Equivalent emulation of HTM semantics}
+	\end{itemize}
 	%\hilight{gray}{and {\bf user-informed heuristic ones},}
 	and {\bf user-informed heuristic ones},
 	\begin{itemize}
@@ -1269,8 +1257,8 @@
 
 \section{Warp Zone}
 
-\subsection{Prior Work}
-\breakslide{\Large \bf Bonus Slides - Prior Work}
+\subsection{Background}
+\breakslide{\Large \bf Bonus Slides - Background}
 
 \begin{frame}{Dynamic Partial Order Reduction (DPOR) {\em [Flanagan '05]}}
 	State space for 2 threads doing {\tt tmp = count; tmp++; count = tmp;} (fixing one thread to run first)
@@ -1362,6 +1350,23 @@
 \subsection{Quicksand}
 \breakslide{\Large \bf \hilight{sect-quicksand}{Bonus Slides - Quicksand}}
 
+\begin{frame}{Verification Soundness}
+	\textbf{Reachability} of preemption points
+	\begin{itemize}
+		\item {\tt mutex\_lock()}, {\tt mutex\_unlock()}, {\tt yield()}, etc, are reachable.
+		\item A data race PP is reachable if it will be identified while preempting on other reachable PPs.
+	\end{itemize}
+	\linegap
+
+	{\bf Convergence}: Quicksand will eventually detect all reachable data races.
+	\linegap
+
+	{\bf Verification}: $\forall$ buggy interleavings, $\exists$ an equivalent interleaving exposing the same bug
+	that switches threads only on reachable PPs.
+	\linegap
+
+	No bugs found testing reachable PPs $\rightarrow$ no buggy interleaving can exist
+\end{frame}
 
 \begin{frame}{Quicksand Reductions}
 	If one job is a subset of another, testing either might let us skip the other.
@@ -1435,7 +1440,7 @@
 \subsection{Education}
 \breakslide{\Large \bf \hilight{sect-410}{Bonus Slides - Education}}
 
-\begin{frame}{Statistical Significance}
+\begin{frame}{Grades - Statistical Significance}
 	Compared %users' vs. non-users'
 	grade distributions with k-sample Anderson-Darling {\em [A., D. '52]}
 	\linegap
@@ -1444,22 +1449,29 @@
 	\begin{itemize}
 		\item {\bf P2} grade distributions differ with $p = 0.036 < 0.05$
 		\item {\bf P3} grade distributions differ with $p = 0.034 < 0.05$
-			\pause
+			%\pause
 		\item Possible bias: stronger students volunteer for Landslide in first place
 	\end{itemize}
-	\pause
+	%\pause
 	\linegap
 
 	Control 2: non-users from {\bf past semesters} (when Landslide not offered)
 	\begin{itemize}
 		\item {\bf P2} grade distributions differ with $p = 0.671$...
 		\item {\bf P3} grade distributions differ with $p = 0.145$...
-			\pause
+			%\pause
 		\item Possible bias: grading criteria may drift across semesters
 			% FIXME does this bullet belong in this sub list
 		\item Possible bias: maybe Landslide finds bugs the official tests don't
 	\end{itemize}
 \end{frame}
+
+\begin{frame}{Survey Results} \begin{center} \includegraphics[width=\textwidth]{../survey1.pdf} \end{center} \end{frame}
+\begin{frame}{Survey Results} \begin{center} \includegraphics[width=\textwidth]{../survey2.pdf} \end{center} \end{frame}
+\begin{frame}{Survey Results} \begin{center} \includegraphics[width=\textwidth]{../survey3.pdf} \end{center} \end{frame}
+\begin{frame}{Survey Results} \begin{center} \includegraphics[width=\textwidth]{../survey4.pdf} \end{center} \end{frame}
+\begin{frame}{Survey Results} \begin{center} \includegraphics[width=\textwidth]{../survey5.pdf} \end{center} \end{frame}
+\begin{frame}{Survey Results} \begin{center} \includegraphics[width=\textwidth]{../survey7.pdf} \end{center} \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{HTM}
@@ -1518,7 +1530,6 @@
 %		\item Dehesa-Azuara and Stanley, http://www.contrib.andrew.cmu.edu/\textasciitilde{}mdehesaa/, 2016
 %		%\item Chapman et al., Hybrid STM/HTM for nested transactions on OpenJDK, OOPSLA 2016
 %		%\item Wang et al., Eunomia: Scaling Concurrent Search Trees under Contention Using HTM, PPoPP 2017
-%			% TODO: add, that one lock thingy
 %		\item vamsikc, TSX LevelDB implementation, https://github.com/vamsikc/leveldb-tsx/, 2014
 %	\end{itemize}
 %\end{frame}
@@ -1584,8 +1595,7 @@
 	Then $\tiiat{\mu},\tjjat{\nu}$ is a data race in $\mathcal{I}$ iff it is a data race in $\mathcal{I}'$.
 \end{frame}
 
-\begin{frame}{Retry Reduction}
-	% TODO: split this into a step by step
+\begin{frame}{Retry Set Reduction}
 	\begin{center}
 		\includegraphics[width=\textwidth]{../retry-sets.pdf}
 	\end{center}
@@ -1609,7 +1619,6 @@
 			% mysteriously had this at 6 at one point but ive no idea where that came from
 			{\tt map\_basicer}      & 1     & 2     & 5     & 32    \\ % 2,2
 
-			% TODO: check these again, will 2,4 even complete on mutex
 			{\tt lock}({\tt spinlock})      & 1     & 2     & 4     & 28    \\ % 2,2
 			{\tt lock}({\tt spin\_fixed})   & 1     & 2     & 4     & 28    \\ % 2,2 or 4,1
 			{\tt lock}({\tt mutex})	 & 1     & 2     & 2     & 30    \\ % 2,3 gives 30; 2,4 would give 40
@@ -1628,13 +1637,29 @@
 	\end{itemize}
 \end{frame}
 
-%% including this stuff in the talk now so this bonus slide is frivolous
-%% TODO: slide number c.c
-%\begin{frame}{Don't you need \texttt{if (mutex\_is\_locked(\&count\_lock)) \_xabort();} in that transaction on slide 42?}
-%	\begin{center}
-%	Yes.
-%	\end{center}
-%\end{frame}
+\begin{frame}{HTM \& Weak Memory Reorderings}
+	TSO (x86): Stores may be reordered after subsequent loads
+	\linegap
+
+	\begin{center}
+	\begin{tabular}{l}
+		\texttt{if (\hilight{darkorange}{\_xbegin}() == \_XBEGIN\_STARTED) \{} \\
+		\texttt{~~~~if (prevent\_txn)} \\
+		\texttt{~~~~~~~~\_xabort();} \\
+		\texttt{~~~~count++;} \\
+		\texttt{~~~~\hilight{darkblue}{\_xend}();} \\
+		\texttt{\} else \{} \\
+		\texttt{~~~~\hilight{darkorange}{mutex\_lock}(\&m);} \\
+		\texttt{~~~~prevent\_txn = 1;} \\
+		\texttt{~~~~\hilight{red}{// XXX barrier needed here}} \\
+		%\texttt{~~~~// \_\_sync\_synchronize(); // uncomment to solve the bug} \\
+		\texttt{~~~~count++;} \\
+		\texttt{~~~~prevent\_txn = 0;} \\
+		\texttt{~~~~\hilight{darkblue}{mutex\_unlock}(\&m);} \\
+		\texttt{\}} \\
+	\end{tabular}
+	\end{center}
+\end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Bibliography}
@@ -1653,7 +1678,7 @@
 		\item {\bf [Savage '97]}: Stefan Savage.
 			Eraser: a dynamic data race detector for multi-threaded programs. SOSP 1997.
 		%\item {\bf [Holzmann '97]}: The model checker SPIN. TOSE 1997.
-		\item {\bf [Engler '03]}: Dawson Engler and Ken Ashcraft.
+		%\item {\bf [Engler '03]}: Dawson Engler and Ken Ashcraft.
 			RacerX: effective, static detection of race conditions and deadlocks. SOSP 2003.
 		\item {\bf [O'Callahan '03]}: Robert O'Callahan and Jong-Deok Choi.
 			Hybrid dynamic data race detection. PPoPP '03.
@@ -1662,18 +1687,18 @@
 		\item {\bf [Musuvathi '08]}: Madanlal Musuvathi et al. Finding and Reproducing Heisenbugs in Concurrent
 			Programs. OSDI 2008.
 		\item {\bf [Yang '08]}: Yu Yang et al. Efficient stateful DPOR. SPIN 2008.
-		\item {\bf [Klein '09]}: Gerwin Klein et al. seL4: formal verif. of an OS kernel. SOSP 2009.
 	\end{itemize}
 \end{frame}
 \begin{frame}{References}
 	\footnotesize
 	\begin{itemize}
+		\item {\bf [Klein '09]}: Gerwin Klein et al. seL4: formal verif. of an OS kernel. SOSP 2009.
 		%\item {\bf [Burckhardt '10]}: A randomized scheduler with probabilistic guarantees of finding bugs. ASPLOS 2010.
 		\item {\bf [Simsa '12]}: Jiri Simsa. Runtime Estimation and Resource Allocation for
 			Concurrency Testing. Tech report (CMU-PDL-12-113). December 2012.
 		\item {\bf [Blum '12]}: Ben Blum. Landslide: Systematic Dynamic Race Detection in Kernel Space.
 			MS thesis (CMU-CS-12-118). May 2012.
-		\item {\bf [Kasicki '12]}: Baris Kasicki. Data races vs. data race bugs: telling the difference with Portend. ASPLOS '12.
+		%\item {\bf [Kasicki '12]}: Baris Kasicki. Data races vs. data race bugs: telling the difference with Portend. ASPLOS '12.
 		\item {\bf [Simsa '13]}: Systematic and Scalable Testing of Concurrent Programs.
 			Ph.D. thesis (CMU-CS-13-133). December 2013.
 		%\item {\bf [Coons '13]}: Katherine Coons et al. Bounded POR. OOPSLA 2013.
