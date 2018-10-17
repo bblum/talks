@@ -569,12 +569,12 @@
 			\begin{itemize}
 				\item POSIX-like userspace thread library %(also teams of 2)
 				\item Implement {\tt thr\_create()}/{\tt exit()}/{\tt join()}, {\tt mutex\_lock()}, etc.
-				\item Reference ``Pebbles'' kernel provided
+				\item Reference ``Pebbles'' kernel provided, later reimplemented
 					% say: later they implement this in p3
 				%\item Fixed APIs $\rightarrow$ instrumentation can be automated
 				%\item Still needs heuristics to handle ad-hoc synchronization
 			\end{itemize}
-		\item Kernel (``P3'') - reimplement said reference kernel (CMU only)
+		%\item Kernel (``P3'') - reimplement said reference kernel (CMU only)
 	\end{itemize}
 	\pause
 	\linegap
@@ -669,8 +669,10 @@
 
 	Bug-finding
 	\begin{itemize}
-		\item CMU: 115 deterministic, 122 concurrency bugs in 75/103 P2s
-		\item U. Chicago: 3 deterministic, 4 concurrency bugs in 3/4 kernels
+		\item CMU: %115 deterministic,
+			122 concurrency bugs in 75/103 P2s
+		\item U. Chicago: %3 deterministic,
+			4 concurrency bugs in 3/4 kernels
 		\item PSU: (no log collection) %due to IRB issues)
 		% \item Case study tej
 	\end{itemize}
@@ -683,26 +685,26 @@
 	\end{itemize}
 	\linegap
 
-	%...as well as subsequent P3 (kernel) grades
-	...as well as subsequent kernel grades
-	\begin{itemize}
-		\item ``Does Landslide teach students lasting lessons about concurrency?''
-	\end{itemize}
+	%%...as well as subsequent P3 (kernel) grades
+	%...as well as subsequent kernel grades
+	%\begin{itemize}
+	%	\item ``Does Landslide teach students lasting lessons about concurrency?''
+	%\end{itemize}
 \end{frame}
 
 \begin{frame}{Effect on Grades (CMU)}
 	\begin{center}
-		\includegraphics[width=\textwidth]{../photo-of-ze-studence.pdf}
+		\includegraphics[width=\textwidth]{photo-of-ze-studence-box-p2-only.pdf}
 	\end{center}
 \end{frame}
 \begin{frame}{Effect on Grades (CMU)} % - statistically significant?}
 	\begin{center}
-		\includegraphics[width=\textwidth]{photo-of-ze-studence-cdf-no-pre-study.pdf}
+		\includegraphics[width=\textwidth]{photo-of-ze-studence-cdf-p2-only-no-pre-study.pdf}
 	\end{center}
 \end{frame}
 \begin{frame}{Effect on Grades (CMU)} % - statistically significant?}
 	\begin{center}
-		\includegraphics[width=\textwidth]{photo-of-ze-studence-cdf.pdf}
+		\includegraphics[width=\textwidth]{photo-of-ze-studence-cdf-p2-only.pdf}
 	\end{center}
 \end{frame}
 
@@ -1210,7 +1212,7 @@
 	%\hilight{gray}{and {\bf user-informed heuristic ones},}
 	and {\bf user-informed heuristic ones},
 	\begin{itemize}
-		\item \hilight{sect-quicksand}{Quicksand's CPU budget argument}
+		\item \hilight{sect-quicksand}{Prioritizing jobs based on fixed CPU budget}
 		\item \hilight{sect-410}{Exposing data-race reports to students}
 		%\item Encouraging students to exercise their intuition % ??
 		\item \hilight{sect-htm}{Abstraction reduction for HTM primitives}
@@ -1442,6 +1444,22 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Education}
 \breakslide{\Large \bf \hilight{sect-410}{Bonus Slides - Education}}
+
+\begin{frame}{Effect on Grades (CMU)}
+	\begin{center}
+		\includegraphics[width=\textwidth]{../photo-of-ze-studence.pdf}
+	\end{center}
+\end{frame}
+\begin{frame}{Effect on Grades (CMU)} % - statistically significant?}
+	\begin{center}
+		\includegraphics[width=\textwidth]{photo-of-ze-studence-cdf-no-pre-study.pdf}
+	\end{center}
+\end{frame}
+\begin{frame}{Effect on Grades (CMU)} % - statistically significant?}
+	\begin{center}
+		\includegraphics[width=\textwidth]{photo-of-ze-studence-cdf.pdf}
+	\end{center}
+\end{frame}
 
 \begin{frame}{Grades - Statistical Significance}
 	Compared %users' vs. non-users'
