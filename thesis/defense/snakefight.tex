@@ -145,7 +145,7 @@
 		\item Unit tests: only 1 ``most likely'' interleaving
 		\item Stress tests: exposes ``less likely'' interleavings (if lucky), % to expose "less likely" ones
 			cannot verify
-		\item Verification: steep learning curve, unpredictable runtime
+		\item Verification: steep learning curve, prohibitive runtime
 			%still no widespread adoption % -- why?
 	\end{itemize}
 \end{frame}
@@ -200,25 +200,26 @@
 	\begin{itemize}
 		\item Node: Intermediate execution state
 		\item Edge: State transition from executing a thread
+		\item Nondeterminism captured as different branches
+		\item State space size depends on which {\bf preemption points} used
 	\end{itemize}
-	\linegap
-
-	State space size depends on which {\bf preemption points} are used.
 \end{frame}
 
 \begin{frame}{Challenges} %\& Existing Coping Techniques}
-	Unpredictable state space explosion
+	State space explosion
 	\begin{itemize}
 		%\item Equivalence reductions: DPOR {\em [Flanagan '05]}, MCR {\em [Huang '15]}
-		\item Dynamic Partial Order Reduction (DPOR) {\em [Flanagan '05]}
-			\begin{itemize}
-				\item identifies \& skips equivalent interleavings
-			\end{itemize}
+		%\item Dynamic Partial Order Reduction (DPOR) {\em [Flanagan '05]}
+		\item Reduction algorithms to skip equivalent interleavings {\em [Flanagan '05]}
+			%\begin{itemize}
+			%	\item identifies \& skips equivalent interleavings
+			%\end{itemize}
+		\item Heuristic search ordering to expose bugs faster {\em [Musuvathi '08]}
 		%\item Heuristic search ordering: ICB {\em [Musuvathi '08]}, PCT {\em [Burckhardt '10]}
-		\item Iterative Context Bounding (ICB) {\em [Musuvathi '08]}
-			\begin{itemize}
-				\item finds bugs faster by prioritizing interleavings with fewer preemptions
-			\end{itemize}
+		%\item Iterative Context Bounding (ICB) {\em [Musuvathi '08]}
+		%	\begin{itemize}
+		%		\item finds bugs faster by prioritizing interleavings with fewer preemptions
+		%	\end{itemize}
 			\pause
 		\item There will always be a {\bf bigger test case}...
 	\end{itemize}
@@ -227,6 +228,7 @@
 
 	Too much manual intervention %for non-expert use
 	\begin{itemize}
+			% TODO: remember to say, "that lets you choose more intelligently, but still by hand, yr PPs
 		\item State space size estimation {\em [Simsa '12]}
 			% TODO: i just switched the order of these; see how that feels
 		\item Manual kernel annotations {\em [Blum '12]} %{\tiny that's me!}
@@ -298,20 +300,24 @@
 
 
 \begin{frame}{Contributions}
+	% this vspace used to be 4.54 for all 3 before i rephrased the quicksand bullet
+	% even tho it was 2 lines before and 2 lines now
+	% i had to do... this??? latex makes no friggin sense
 	\hilight{sect-quicksand}{The Quicksand algorithm %combines theory and heuristics to
-	practically debugs and verifies many exponential state spaces.}
-	\vspace{4.54em}
+	practically debugs and verifies many tests despite exponential explosion.}
+	\vspace{4.00em}
 
 	\hilight{sect-410}{Landslide's automatic instrumentation makes MC accessible to students.}
-	\vspace{4.54em}
+	\vspace{4.58em}
 
 	\hilight{sect-htm}{New reduction techniques for transactional memory keep MC up-to-date
 	with the latest real-world concurrency techniques.}
 	\vspace{4.54em}
+
 \end{frame}
 \begin{frame}{Outline}
 	\hilight{sect-pastel-quicksand}{The Quicksand algorithm %combines theory and heuristics to
-	practically debugs and verifies many exponential state spaces.} \\
+	practically debugs and verifies many tests despite exponential explosion.}
 	%\hilight{gray}{The Quicksandalgorithm makes MC appropriate for both educational and real-world programs.} \\
 	\begin{itemize}
 		\item {\bf Quicksand}
@@ -400,18 +406,18 @@
 	A {\bf data-race preemption point} is required to find the bug.
 \end{frame}
 
-\begin{frame}{Data Race Analysis}
+\begin{frame}{Data Race Analysis {\em [Savage '97]}}
 	A {\bf data race} is a pair of memory accesses between two threads, where:
 	\begin{itemize}
 		\item At least one of the accesses is a write
 		\item The threads are not holding the same mutex
 		\item Neither access {\em happens-before} the other
+		%\item Neither access happens-before the other
 			%(e.g., no \texttt{cond\_signal()} in between)
 			(e.g., no \texttt{cond\_wait()})
 	\end{itemize}
-	\pause
-	\linegap
-
+\end{frame}
+\begin{frame}{Quicksand}
 	%Prior model checkers hard-code a fixed set of PPs, committing to one state space in advance.
 	%Prior model checkers commit to a fixed set of PPs in advance.
 	Prior model checkers commit to fixed preemption points in advance.
@@ -421,7 +427,12 @@
 	\end{itemize}
 	\linegap
 
-	Insight: Decide where to preempt on-the-fly
+	Insight: decide where to preempt on-the-fly
+	\begin{itemize}
+		\item Data-race analysis identifies new preemption points
+		\item User supplies CPU budget
+		\item Prioritize based on state space estimation {\em [Simsa '12]}
+	\end{itemize}
 	% say: "...then attempt to cope with the resulting exponentially sized problem, however big it may be"
 
 	%Two flavors
@@ -448,7 +459,8 @@
 \begin{frame}{Quicksand (in Pictures)}
 	\begin{center}
 	\vspace{-0.88em}
-	\includegraphics[width=0.86\textwidth]{../../oopsla/dr-jobs-3.pdf}
+	%\includegraphics[width=0.86\textwidth]{../../oopsla/dr-jobs-3.pdf}
+	\includegraphics[width=0.86\textwidth]{dr-jobs-3-alt.pdf}
 	\end{center}
 \end{frame}
 \begin{frame}{Quicksand (in Pictures)}
@@ -471,9 +483,9 @@
 	\begin{itemize}
 		\item $\forall$ arbitrary buggy interleaving, $\exists$ equivalent interleaving % say 'under DPOR' i guess?
 			using only sync/data-race PPs, \& Quicksand will eventually reach it.
-			\begin{itemize}
-				\item ({\em equivalence} defined under DPOR {\em [Flanagan '05]})
-			\end{itemize}
+			%\begin{itemize}
+			%	\item ({\em equivalence} defined under DPOR {\em [Flanagan '05]})
+			%\end{itemize}
 	\end{itemize}
 	\linegap
 
@@ -561,13 +573,12 @@
 		\item Thread library (``P2'')
 			\begin{itemize}
 				\item POSIX-like userspace thread library %(also teams of 2)
+				\item Implement {\tt thr\_create()}/{\tt exit()}/{\tt join()}, {\tt mutex\_lock()}, etc.
 				\item Reference ``Pebbles'' kernel provided
 					% say: later they implement this in p3
-				\item Fixed APIs $\rightarrow$ instrumentation can be automated
-				\item Still needs heuristics to handle ad-hoc synchronization
+				%\item Fixed APIs $\rightarrow$ instrumentation can be automated
+				%\item Still needs heuristics to handle ad-hoc synchronization
 			\end{itemize}
-			% FIXME: need introduce p3 here?
-			% Or cut?
 		\item Kernel (``P3'') - reimplement said reference kernel (CMU only)
 	\end{itemize}
 	\pause
@@ -602,7 +613,7 @@
 \begin{frame}{Instrumentation}
 	Understanding concurrency primitives/APIs
 	\begin{itemize}
-		\item Kernel-level testing requires manual annotation {\em [Blum '12]}
+		\item Testing Pebbles kernels requires manual annotation {\em [Blum '12]}
 		\item P2 (fixed APIs), Pintos (basecode provided) annotated automatically
 	\end{itemize}
 	\pause
@@ -648,7 +659,7 @@
 %	% like the experience?
 %\end{frame}
 
-\begin{frame}{Method}
+\begin{frame}{User Study}
 	P2 (CMU + PSU)
 	\begin{itemize}
 		\item Guest lecture midway during project
@@ -681,6 +692,9 @@
 	Bug-finding
 	\begin{itemize}
 		\item CMU: 115 deterministic, 122 concurrency bugs in 75/103 P2s
+			%\begin{itemize}
+			%	\item 3 false positives (self-reported)
+			%\end{itemize}
 		\item U. Chicago: 3 deterministic, 4 concurrency bugs in 3/4 kernels
 			% TODO: what to do abt this bullet pts
 			%\pause
@@ -690,7 +704,7 @@
 \end{frame}
 
 \begin{frame}{Effect on Grades (CMU)}
-	Compared Landslide users' vs. non-users' submitted P2 grades...
+	Compared Landslide users' vs. non-users' submitted P2 grades
 	\begin{itemize}
 		\item ``Does Landslide help students submit better projects?''
 	\end{itemize}
@@ -708,45 +722,16 @@
 		\includegraphics[width=\textwidth]{../photo-of-ze-studence.pdf}
 	\end{center}
 \end{frame}
-
-% TODO: put p values
 \begin{frame}{Effect on Grades (CMU)} % - statistically significant?}
 	\begin{center}
 		\includegraphics[width=\textwidth]{photo-of-ze-studence-cdf-no-pre-study.pdf}
 	\end{center}
 \end{frame}
-
 \begin{frame}{Effect on Grades (CMU)} % - statistically significant?}
 	\begin{center}
-		\includegraphics[width=\textwidth]{../photo-of-ze-studence-cdf.pdf}
+		\includegraphics[width=\textwidth]{photo-of-ze-studence-cdf.pdf}
 	\end{center}
 \end{frame}
-
-%\begin{frame}{Statistical Significance}
-%	Compared %users' vs. non-users'
-%	grade distributions with k-sample Anderson-Darling {\em [A., D. '52]}
-%	\linegap
-%
-%	Control 1: non-users from {\bf same semester}
-%	\begin{itemize}
-%		\item {\bf P2} grade distributions differ with $p = 0.036 < 0.05$
-%		\item {\bf P3} grade distributions differ with $p = 0.034 < 0.05$
-%			\pause
-%		\item Possible bias: stronger students volunteer for Landslide in first place
-%	\end{itemize}
-%	\pause
-%	\linegap
-%
-%	Control 2: non-users from {\bf past semesters} (when Landslide not offered)
-%	\begin{itemize}
-%		\item {\bf P2} grade distributions differ with $p = 0.671$...
-%		\item {\bf P3} grade distributions differ with $p = 0.145$...
-%			\pause
-%		\item Possible bias: grading criteria may drift across semesters
-%			% FIXME does this bullet belong in this sub list
-%		\item Possible bias: maybe Landslide finds bugs the official tests don't
-%	\end{itemize}
-%\end{frame}
 
 \begin{frame}{Survey}
 	14(ish) questions, investigate both education \& happiness
@@ -897,18 +882,17 @@
 	\begin{itemize}
 		\item Simulate TM, interleaving transactions, rolling-back upon conflicts
 			\begin{itemize}
-				\item slow; invites state space explosion
+				\item Slow; invites state space explosion
 			\end{itemize}
 		\item Enforce atomicity via scheduler, anticipate aborts on every transaction
-			%via analysis
-			%\begin{itemize}
-			%	\item (under HTM, all transactions might abort)
-			%\end{itemize}
-		\item Suffices to enumerate all {\em observationally-equivalent} schedules.
+			\vspace{-1em} % latex... WTF??
+			\begin{itemize}
+				\item Suffices to enumerate all observationally-equivalent schedules.
+			\end{itemize}
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{Example}
+\begin{frame}{Example (Hardware POV)}
 	\begin{center}
 		\begin{tabular}{l|l}
 			{\bf Thread 1} & {\bf Thread 2} \\
@@ -933,32 +917,35 @@
 	What are a transactional program's {\em observable} behaviours?
 	\begin{itemize}
 		\item Transactional writes, if successful, appear atomically %to other threads
-		\begin{itemize}
-			\item Equivalent to a lock protecting that state
-				% note that also inserting DR PPs within a transaction is not allowed
-		\end{itemize}
-			\pause
+		%\begin{itemize}
+		%	\item Equivalent to a lock protecting that state
+		%		% note that also inserting DR PPs within a transaction is not allowed
+		%\end{itemize}
+		%	\pause
 		\item Simultaneous transactions succeed only if no conflicts
-		\begin{itemize}
-			\item Equivalent
-				%(modulo performance)
-				to serialize independent transactions
-		\end{itemize}
-			\pause
+		%\begin{itemize}
+		%	\item Equivalent
+		%		%(modulo performance)
+		%		to serialize independent transactions
+		%\end{itemize}
+		%	\pause
 		\item Failing transactions' effects rolled-back with no trace
-		\begin{itemize}
-			\item Treat each \xbegin as a failure injection point
-		\end{itemize}
+		%\begin{itemize}
+		%	\item Treat each \xbegin as a failure injection point
+		%\end{itemize}
 	\end{itemize}
 	\pause
 	\linegap
 
 	Equivalence theorem
 	\begin{itemize}
+		\item $\forall$ interleaving within transactions, $\exists$ equivalent interleaving
+			treating them atomically, which either succeeds or aborts immediately
 		\item Safe to automatically skip all interleavings within transactions %$\qed$
 			\begin{itemize}
 				\item Exponential state space reduction
-				\item Traditional reduction (DPOR) applied on top
+				\item Traditional reduction %(DPOR)
+					applied on top
 			\end{itemize}
 		%\item More in bonus slides...
 	\end{itemize}
@@ -1272,15 +1259,8 @@
 
 \breakslide{
 \begin{center}
-	% TODO: replace with HIL for honban
-	\Large Q\&A
-	%\includegraphics[width=0.4\textwidth]{../how-i-learned.png}
+	\includegraphics[width=0.4\textwidth]{../how-i-learned.png}
 \end{center}
-%\linegap
-%
-%\begin{center}
-%	\includegraphics[width=0.65\textwidth]{3word-questions.png}
-%\end{center}
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1289,8 +1269,38 @@
 
 \section{Warp Zone}
 
-\subsection{Quicksand}
-\breakslide{\Large \bf \hilight{sect-quicksand}{Bonus Slides - Quicksand}}
+\subsection{Prior Work}
+\breakslide{\Large \bf Bonus Slides - Prior Work}
+
+\begin{frame}{Dynamic Partial Order Reduction (DPOR) {\em [Flanagan '05]}}
+	State space for 2 threads doing {\tt tmp = count; tmp++; count = tmp;} (fixing one thread to run first)
+	\begin{center}
+		\includegraphics[width=\textwidth]{../statespace-tree.pdf}
+	\end{center}
+	\linegap
+
+	Number of ways to interleave $M$ and $N$ events: ${M+N \choose M}$
+\end{frame}
+%\begin{frame}{DPOR example}
+\begin{frame}{Dynamic Partial Order Reduction (DPOR) {\em [Flanagan '05]}}
+	Result of a single iteration of DPOR: alternate branches
+	which would reorder memory conflicts are ``tagged'' for exploration
+	\begin{center}
+		\includegraphics[width=\textwidth]{../dpor-example-0.pdf}
+	\end{center}
+\end{frame}
+\begin{frame}{Dynamic Partial Order Reduction (DPOR) {\em [Flanagan '05]}}
+	Result after 3 iterations; D-J pruned
+	\begin{center}
+		\includegraphics[width=\textwidth]{../dpor-example-1.pdf}
+	\end{center}
+\end{frame}
+\begin{frame}{Dynamic Partial Order Reduction (DPOR) {\em [Flanagan '05]}}
+	Right subtree symmetric; pruning L+M possible with {\em sleep set reduction}
+	\begin{center}
+		\includegraphics[width=0.9\textwidth]{../dpor-example-2.pdf}
+	\end{center}
+\end{frame}
 
 \begin{frame}{Data-Race Definitions}
 	\textbf{Data race:} 2 threads access the same memory, and...
@@ -1348,41 +1358,46 @@
 	\end{center}
 \end{frame}
 
-\begin{frame}{Quicksand (Iterative Deepening) Reductions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Quicksand}
+\breakslide{\Large \bf \hilight{sect-quicksand}{Bonus Slides - Quicksand}}
+
+
+\begin{frame}{Quicksand Reductions}
 	If one job is a subset of another, testing either might let us skip the other.
 	\begin{center}
 		\includegraphics[width=\textwidth]{../../oopsla/reduction-nothing.png}
 	\end{center}
 \end{frame}
-\begin{frame}{Quicksand (Iterative Deepening) Reductions}
+\begin{frame}{Quicksand Reductions}
 	If one job is a subset of another, testing either might let us skip the other.
 	\begin{center}
 		\includegraphics[width=\textwidth]{../../oopsla/reduction-deferred.png}
 	\end{center}
 \end{frame}
-\begin{frame}{Quicksand (Iterative Deepening) Reductions}
+\begin{frame}{Quicksand Reductions}
 	If one job is a subset of another, testing either might let us skip the other.
 	\begin{center}
 		\includegraphics[width=\textwidth]{../../oopsla/reduction-complete.png}
 	\end{center}
 \end{frame}
 
-\begin{frame}{Quicksand results - Bugs found by CPU time}
+\begin{frame}{Pure HB vs Limited HB - Bugs found by CPU time}
 	\begin{center}
 		\includegraphics[width=0.8\textwidth]{../quicksand-bugs-hb-talkver.pdf}
 	\end{center}
 \end{frame}
-\begin{frame}{Quicksand results - Bugs found by wall-clock time}
+\begin{frame}{Pure HB vs Limited HB - Bugs found by wall-clock time}
 	\begin{center}
 		\includegraphics[width=0.8\textwidth]{../quicksand-bugs-hb-wallclock-talkver.pdf}
 	\end{center}
 \end{frame}
-\begin{frame}{Quicksand results - Tests fully verified (CPU time)}
+\begin{frame}{Pure HB vs Limited HB - Tests fully verified (CPU time)}
 	\begin{center}
 		\includegraphics[width=0.8\textwidth]{../quicksand-verifs-hb-talkver.pdf}
 	\end{center}
 \end{frame}
-\begin{frame}{Quicksand results - MC + DR vs single-pass DR}
+\begin{frame}{Pure HB vs Limited HB - MC + DR vs single-pass DR}
 	\begin{center}
 		\includegraphics[width=0.8\textwidth]{../../oopsla/dr-false-negatives-poster.pdf}
 	\end{center}
@@ -1420,10 +1435,30 @@
 \subsection{Education}
 \breakslide{\Large \bf \hilight{sect-410}{Bonus Slides - Education}}
 
-\begin{frame}{15-410...}
-	% TODO:
-	% study of tej/etc specific bugs
-	% list tests cases provided to studence & PSU-specific ones too
+\begin{frame}{Statistical Significance}
+	Compared %users' vs. non-users'
+	grade distributions with k-sample Anderson-Darling {\em [A., D. '52]}
+	\linegap
+
+	Control 1: non-users from {\bf same semester}
+	\begin{itemize}
+		\item {\bf P2} grade distributions differ with $p = 0.036 < 0.05$
+		\item {\bf P3} grade distributions differ with $p = 0.034 < 0.05$
+			\pause
+		\item Possible bias: stronger students volunteer for Landslide in first place
+	\end{itemize}
+	\pause
+	\linegap
+
+	Control 2: non-users from {\bf past semesters} (when Landslide not offered)
+	\begin{itemize}
+		\item {\bf P2} grade distributions differ with $p = 0.671$...
+		\item {\bf P3} grade distributions differ with $p = 0.145$...
+			\pause
+		\item Possible bias: grading criteria may drift across semesters
+			% FIXME does this bullet belong in this sub list
+		\item Possible bias: maybe Landslide finds bugs the official tests don't
+	\end{itemize}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1607,14 +1642,16 @@
 \begin{frame}{References}
 	\footnotesize
 	\begin{itemize}
-		%\item {\bf [A., D. '52]}: T. Anderson and D. Darling.
-		%	Asymptotic theory of certain ``goodness-of-fit'' criteria based on stochastic processes.
-		%	Annals of Statistics, 1952.
+		\item {\bf [A., D. '52]}: T. Anderson and D. Darling.
+			Asymptotic theory of certain ``goodness-of-fit'' criteria based on stochastic processes.
+			Annals of Statistics, 1952.
 		\item {\bf [Lamport '78]}:
 			Leslie Lamport. Time, clocks, and the ordering of events in a distributed system.
 			Communications of the ACM, 1978.
 		\item {\bf [Godefroid '97]}: Patrice Godefroid.
 			VeriSoft. A tool for the automatic analysis of concurrent reactive software. CAV 1997.
+		\item {\bf [Savage '97]}: Stefan Savage.
+			Eraser: a dynamic data race detector for multi-threaded programs. SOSP 1997.
 		%\item {\bf [Holzmann '97]}: The model checker SPIN. TOSE 1997.
 		\item {\bf [Engler '03]}: Dawson Engler and Ken Ashcraft.
 			RacerX: effective, static detection of race conditions and deadlocks. SOSP 2003.
