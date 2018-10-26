@@ -630,14 +630,29 @@ but also that interrupts be perpetually disabled,
 taking concurrency entirely out of the equation to allow for greater extensibility
 and lessen the programmer's verification burden.
 %
+\revision{CSPEC \cite{cspec} is another recent system for formally specifying and verifying concurrent systems using Coq,
+which is then extracted into an executable version in Haskell.
+Its type system incorporates the notion of reordering independence,
+much akin to DPOR,
+although the complexity overhead is very high:
+a locked counter on TSO weak memory requires 10 abstraction layers
+to formally specify,
+requiring among other things reasoning about the lock's previous owner as well as the current one.}
+%
 Heroic as such end-to-end formal verification projects are,
 this thesis finds that trading off thoroughness for accessibility is also acceptable
 if it means helping more users overall.
-Future work could check preemptive and/or multiprocessor kernels
-%by combining Hyperkernel's approach,
-by first checking safety properties in the absence of concurrency,
-then checking with Landslide that concurrency introduces no new program behaviour not already verified,
-to provide a less formal, but still hopefully useful, verification guarantee.
+\revision{
+Stateless model checking offers a middle ground for users to achieve
+slightly less formal,
+but still theoretically-founded,
+verification guarantees
+even for unsafe programming languages.}
+%Future work could check preemptive and/or multiprocessor kernels
+%%by combining Hyperkernel's approach,
+%by first checking safety properties in the absence of concurrency,
+%then checking with Landslide that concurrency introduces no new program behaviour not already verified,
+%to provide a less formal, but still hopefully useful, verification guarantee.
 %
 \revision{Lastly, CompCertTSO \cite{compcerttso} extends the CompCert verified compiler \cite{compcert}
 to capture x86's relaxed memory semantics,
