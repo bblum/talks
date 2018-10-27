@@ -46,6 +46,7 @@
 %\usepackage{fontspec}
 \usepackage{mathspec}
 \usepackage{xeCJK}
+\usepackage[xetex]{xechangebar}
 
 %\setmainfont{XCharter}
 \setallmainfonts(Digits,Latin){XCharter}
@@ -125,6 +126,11 @@ For my family, my teachers, and my students.
 \end{dedication}
 
 \pagestyle{plain} % for toc, was empty
+
+%\newcommand\revision[1]{#1\xspace}
+\newcommand\revision[1]{\cbstart{}#1\cbend\xspace}
+%\newcommand\revisionminor[1]{#1\xspace}
+\newcommand\revisionminor[1]{\cbstart{}#1\cbend\xspace}
 
 \begin{abstract}
 Concurrent programming presents a challenge to students and experts alike because of the complexity of multithreaded interactions and the difficulty to reproduce and reason about bugs.
@@ -382,8 +388,6 @@ that will long outlive the silly card game that brought us together.
 	}
 	\vspace{2em}
 \end{flushright}}
-
-\newcommand\revision[1]{#1\xspace}
 
 \input{intro}
 \input{overview}
