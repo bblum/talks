@@ -2156,6 +2156,7 @@ which is not possible under Landslide as it serializes execution.
 
 Landslide detects such ad-hoc {\em yield-loop blocking}
 by keeping a counter for each thread to track how many {\tt yield}s it has invoked since the last ``interesting'' activity.
+% nb. not system calls, not even d/mr, as some student mutexes may use those and you don't want to count them
 Interesting here is defined heuristically as any other known P2 API call,
 with the exception of {\tt mutex\_lock()} and {\tt mutex\_unlock()}%
 \footnote{Landslide must recognize yield-blocking loops that contain mutex operations
@@ -2236,10 +2237,11 @@ threads blocked by retry sets (\sect{\ref{sec:tm-retrysets}})
 must be forced awake with priority before yield-blocked threads,
 along similar reasoning.
 
-Landslide will retry this process up to a heuristic limit of 128 times ({\tt DEADLOCK\_FP\_MAX\_\allowbreak()ATTEMPTS}
+Landslide will retry this process up to a heuristic limit of 128 times ({\tt DEADLOCK\_FP\_MAX\_\allowbreak{}ATTEMPTS}
 before issuing a deadlock bug report.
-The overhead of this check is linear time in the number of retries permitted,
-although this is typically negligible compared to the exponential size of state spaces overall.
+The overhead of this check is quadratic time in the number of retries permitted
+(as DPOR is quadratic in the overall branch depth),
+although this is negligible compared to the exponential size of state spaces overall.
 If the heuristic limit is too small, very ``loopy'' programs
 (which invoke xchg or yield therein)
 could falsely exhaust this limit while not being truly deadlocked,

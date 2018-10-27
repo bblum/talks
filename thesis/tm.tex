@@ -1492,7 +1492,7 @@ retry-set-enabled DPOR correctly prunes down to the optimal 6 interleavings,
 while the baseline treats it identically to the fully-conflicting {\tt counter}(2,1).
 Figure~\ref{fig:retry-reduction} depicts the difference between the state spaces explored by the two approaches.
 
-\begin{figure}[h]
+\begin{figure}[t]
 	\begin{center}
 		\includegraphics[width=\textwidth]{retry-sets.pdf}
 	\end{center}
@@ -1784,8 +1784,10 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 			{\tt \_mutex}
 			& 2,2 & \cpu{147.27} & \ints{2953} \\
 			& 2,3 & \cpu{12946.21} & \ints{244691} \\
+			& 2,4 & \ETAdag{qqq} & \ETAdag{qqq} \\
 			& 3,1 & \cpu{637.81} & \ints{12707} \\
-			& 3,2 & \cpu{qqq} & \ints{qqq} \\
+			& 3,2 & \ETAdag{102d 13h} & \ETAdag{13220616} \\
+			% [JOB 3] progress: 560711/13220616 brs (4.241187%), ETA 102d 2h 56m 44s (elapsed 9h 59m 55s)
 			& 4,1 & \ETAdag{33h 33m} & \ETAdag{1778661} \\
 			% [JOB 3] progress: 601402/1778661 brs (33.812059%), ETA 23h 33m 16s (elapsed 9h 59m 55s)
 			\\
