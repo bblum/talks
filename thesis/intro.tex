@@ -7,6 +7,11 @@ Please hold on. This thesis will be departing shortly for the Landslide terminal
 
 \subsubsection{Motivation}
 
+% "Concurrency is notoriously difficult to get right." [....]
+% dejafu A Concurrency Testing Library for Haskell (2016 ver.)
+% parrot?
+% TODO more
+
 % TODO: god.........
 Modern computer architectures have turned to increasing CPU core count, rather than clock speed, to improve processing power \cite{mooreslaw}.
 To take advantage of multiple cores for performance, programmers must write software to execute {\em concurrently} --
@@ -41,36 +46,36 @@ Unfortunately, the size of these state spaces is exponentially proportional to t
 For even moderately-sized programs, there may be more possible ways to interleave every thread's every instruction
 than particles in the universe.
 Accordingly, a programmer who wants her test to make reasonable progress through the state space must choose a subset of ways that her threads could interleave,
-focusing on fully testing that subset, while ignoring other possibilities she doesn't care about.
+focusing on fully testing that subset, while ignoring other possibilities she doesn't \revisionminor{think she cares} about.
 However, it is difficult to choose a subset of thread interleavings that will produce a meaningful, yet feasible test.
 Until computers can automatically navigate this trade-off in some intelligent way,
 programmers will continue to fall back to the random approach of stress testing.
 
 Another problem stateless model checking suffers is that certain types of programs cannot be tested without the programmer putting forth some manual instrumentation effort.
 For example, operating system kernels implement their own sources of concurrency and their own synchronization primitives,
-so the checker needs to be told how to identify and control the execution of each thread.
+so \revisionminor{a checker must} be told how to identify and control the execution of each thread.
 Some expert concurrency research wizards may be willing to add manual annotations to their code,
 but required manual effort is a serious downside for anyone with a looming deadline,
 and especially so for students who are still learning basic concurrency principles.
 %We should not expect programmers to add effortful manual annotations to their code,
 %or they will abandon our fancy technique to instead simply run stress tests until their deadline tomorrow evening.
 
-\subsubsection{Contribution}
+\subsubsection{Contributions}
 
 This thesis will solve both problems discussed above.
 My thesis statement is as follows:
 
-\vspace{1em}
-
 \begin{center}
-	{\em Combining %both
+\begin{tabular}{p{0.8\textwidth}}
+	\revisionminor{{\em Combining %both
 	theoretically-founded automatic reduction techniques
 	and user-informed heuristic ones,
 	stateless model checking can sufficiently mitigate exponential explosion
-	to be a practical testing technique for inexperienced users and real-world programs alike.}
+	to be a practical testing technique for inexperienced users and real-world programs alike.}}
+\end{tabular}
 \end{center}
 
-\vspace{1em}
+\vspace{0.75em}
 
 I have built Landslide \cite{landslide}, a stateless model checker for thread libraries and kernels,
 and I have developed some techniques for automatically choosing the best thread interleavings to test
@@ -81,8 +86,8 @@ This thesis will comprise three major contributions:
 	\item {\bf Meaningful state spaces (Chapter \ref{chap:quicksand}).}
 		I will present {\em Iterative Deepening}, a new algorithm for navigating the trade-off in how many preemption points to test at once.
 		Iterative Deepening incorporates state space estimation \cite{estimation} to decide on-the-fly whether each state space is worth pursuing, and uses data race analysis \cite{tsan} to find new preemption point candidates based on a program's dynamic behaviour.
-		This section will include a large evaluation of the technique, comparing its performance to three prior work approaches across 600+ unique tests.
-		I will show that Iterative Deepening of preemption points outperforms prior work in terms both of finding bugs quickly and of completely verifying correctness when no bug exists.
+		This section will include a large evaluation of the technique, comparing its performance to three \revisionminor{prior-work} approaches across 600+ unique tests.
+		I will show that Iterative Deepening of preemption points outperforms prior work in terms \revisionminor{of both} finding bugs quickly and completely verifying correctness when no bug exists.
 	\item {\bf Educational use (Chapter \ref{chap:education}).}
 		For the past five semesters, I have offered a fully-automated version of Landslide to students in 15-410, CMU's undergraduate Operating System Design and Implementation class \cite{kspec,thrlib}, for use as a debugging aid during the thread library project.
 		Recently I have also extended Landslide to handle Pintos kernel projects from other universities \cite{pintos}.
@@ -90,7 +95,7 @@ This thesis will comprise three major contributions:
 		to provide debugging feedback to their students.
 
 		At all three universities I then collected statistics on the numbers and types of bugs found,
-		and surveyed students to understand the human experience,
+		and surveyed students to understand the human experience.
 		This section will present the study's results
 		to evaluate the suitability of stateless model checking in an educational setting.
 	\item {\bf Hardware Transactional Memory (HTM) (Chapter \ref{chap:tm}).}
