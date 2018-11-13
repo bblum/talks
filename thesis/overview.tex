@@ -404,9 +404,12 @@ Over the years, researchers have developed many enhancements to DPOR, such as Op
 
 \begin{figure}[t]
 	\begin{center}
-	\includegraphics[width=0.4\textwidth]{dpor.pdf}
+	\includegraphics[width=0.6\textwidth]{dpor-new-colors.pdf}
 	\end{center}
-	\caption{DPOR identifies independent transitions by different threads which can commute without affecting program behaviour. Here, if the transitions marked 1 and 2 have no shared memory conflicts, the states marked with the red arrow are guaranteed identical. Hence, only one of the subtrees need be explored.}
+	\caption{DPOR identifies independent transitions by different threads which can commute
+	without affecting program behaviour.
+	\revisionminor{Here, because each thread's local operations on {\tt tmp1}/{\tt tmp2} are not shared memory conflicts,}
+	the states marked with the red arrow are guaranteed identical. Hence, only one of the subtrees need be explored.}
 	\label{fig:dpor}
 \end{figure}
 
