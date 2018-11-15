@@ -88,7 +88,7 @@ but whether this constitutes a bug is a matter of perspective.
 Was the program written to count to 2000, or was it written to compute a randomized distribution?
 In this thesis, we make no attempt to reason about the ``intent'' of programs,
 so we further restrict {\em concurrency bug} to denote a program behaviour which is mechanically identifiable,
-according to commonly-accepted notions of what programs behaviours are always bad.
+according to commonly-accepted notions of \revisionminor{which} programs behaviours are always bad.
 %
 Bug conditions include assertion failures,
 memory access errors (i.e., segmentation fault or bus error),
@@ -131,8 +131,9 @@ and infinite loops (which must be identified heuristically \cite{entscheidungspr
 			\\
 			(a) Source listing for a multithreaded program which might count to 2000.
 			&
-			(b) Example interleaving of the compiled assembly for (a),
-			in which 2 concurrent iterations of the loop yield 1 net increment of {\tt x}.
+			% revisionminor can't go here i guess
+			(b) Example interleaving of (a)'s compiled assembly,
+			in which two concurrent iterations of the loop yield one net increment of {\tt x}.
 		\end{tabular}
 	\end{tabular}
 	\caption{Example concurrent program in which simultaneous accesses to shared state may interleave to produce unexpected results.}
@@ -156,15 +157,16 @@ These include {\em locks}, {\em descheduling}, {\em condition variables}, {\em s
 		\begin{tabular}{l}
 			\texttt{\ctype{typedef struct mutex} \{} \\
 			\texttt{~~~~\ctype{volatile int} held;} \\
-			\texttt{~~~~\ctype{int} owner;} \\
+			%\texttt{~~~~\ctype{int} owner;} \\
 			\texttt{\} \ctype{mutex\_t};} \\
 			\texttt{\ctype{void} \call{mutex\_lock}(\ctype{mutex\_t} *mp) \{}\\
 			\texttt{~~~~\flow{while} (\call{xchg}(mp->held, \const{1}))} \\
-			\texttt{~~~~~~~~\call{yield}(mp->owner);} \\
-			\texttt{~~~~mp->owner = \call{gettid}();} \\
+			%\texttt{~~~~~~~~\call{yield}(mp->owner);} \\
+			\texttt{~~~~~~~~\call{yield}(-1);} \\
+			%\texttt{~~~~mp->owner = \call{gettid}();} \\
 			\texttt{\}} \\
 			\texttt{\ctype{void} \call{mutex\_unlock}(\ctype{mutex\_t} *mp) \{}\\
-			\texttt{~~~~mp->owner = \ctype{-1};} \\
+			%\texttt{~~~~mp->owner = \ctype{-1};} \\
 			\texttt{~~~~mp->held = \ctype{0};} \\
 			\texttt{\}} \\
 		\end{tabular}
@@ -192,17 +194,21 @@ These include {\em locks}, {\em descheduling}, {\em condition variables}, {\em s
 	\label{fig:mutex}
 \end{figure}
 
-Each such abstraction provides certain semantics about what thread interleavings can arise surrounding their use.
+Each such abstraction provides certain semantics about \revisionminor{which} thread interleavings can arise surrounding their use.
 When building a tool for testing concurrent programs,
 one may include some computational understanding of the behaviour of any, or all, of these abstractions.
 Annotating a certain abstraction's semantics treats it as a trusted concurrency primitive in its own right,
-and allows the testing tool to reduce the possible space of interleavings (or the set of false positive data-race candidates reported, etc.),
-at the cost of increasing the implementation and theoretical complexity of the analysis.
+and allows the testing tool to reduce the possible space of interleavings
+(or the set of false positive data-race candidates reported, etc.;
+\revisionminor{see \sect{\ref{sec:landslide-config-landslide}}})
+at the cost of increasing the implementation and theoretical complexity of the analysis
+\revisionminor{(\sect{\ref{sec:tm-abstraction}})}.
 This thesis will consider locks, descheduling, and transaction begin/end as the only concurrency primitives,
 and assume the others listed above are implemented using those as building blocks (an exercise for the reader \cite{thrlib}).
 
 Locks (or {\em mutexes}, short for ``mutual exclusion locks'') are objects, shared by multiple threads, which allow the programmer to mark certain {\em critical sections} of code that must not interleave with each other.
-When one thread completes a call to {\tt mutex\_lock(mp)}, all invocations by other threads on the same {\tt mp} will wait (or ``block'') until the corresponding {\tt mutex\_unlock(mp)}.
+When one thread completes a call to {\tt mutex\_lock(mp)}, all invocations by other threads on the same {\tt mp}
+will \revisionminor{block (i.e., wait)} until the corresponding {\tt mutex\_unlock(mp)}.
 Figure~\ref{fig:mutex}(a) shows how a yielding mutex (not the best implementation, but the simplest) may be implemented using {\tt xchg},
 and (b) shows how a mutex may be used to fix the example from Figure~\ref{fig:concurrency-bug}.
 
@@ -219,7 +225,8 @@ If a conflict between transactions is detected, the program state is rolled back
 Consequently, no intermediate state of a transacting thread is ever visible to other threads; all changes to memory within a transaction become globally visible ``all at once'' (or not at all).
 This method optimizes for a common no-contention case of little-to-no overhead, pushing extra both code and implementation complexity to handling conflicts.
 
-Transactional memory (TM) may be implemented either in hardware, using special instructions and existing cache coherence algorithms,
+Transactional memory (TM) may be implemented either in hardware,
+using special instructions and existing cache logic, %coherence algorithms,
 or in software, via library calls and a log-based commit approach.
 Software transactions (STM) \cite{stm-pldi06} can be used on any commodity processor, but must impose runtime overhead associated with logging.
 Hardware transactions (HTM) \cite{intel-tsx-overview}
@@ -275,7 +282,7 @@ to highlight the importance of researching advanced testing techniques in antici
 \section{Stateless Model Checking}
 \label{sec:overview-stateless} % ugh this label name
 
-Model checking \cite{verisoft} is a testing technique for systematically exploring the possible thread interleavings of a concurrent program.
+\revisionminor{Model checking \cite{partial-model-checking,verisoft}} is a testing technique for systematically exploring the possible thread interleavings of a concurrent program.
 A model checker executes the program repeatedly, each time according to a new thread interleaving, until all interleavings have been tested or the CPU budget is exhausted.
 During each execution, it forces threads to execute serially, thereby confining the program's nondeterminism to scheduler thread switches.
 It then controls the scheduling decisions
@@ -307,7 +314,7 @@ between 2 threads.
 		combined as ``preemption points'', forming a tree.
 	\end{tabular}
 	\caption{Visualization of interleaving state space for the program in Figure~\ref{fig:concurrency-bug}.
-	Thread 1 is represented by purple ovals, thread 2 by yellow squares, and time flows from top to bottom.
+	Thread~1 is represented by purple ovals, thread~2 by yellow squares, and time flows from top to bottom.
 	As the two threads execute the same code, without loss of generality thread 1 is fixed to run first --
 	the full state space is twice the size, and the other half is symmetric to the one shown.}
 	\label{fig:tree}
@@ -324,7 +331,9 @@ code patterns which look suspicious but are actually correct.
 A debugging tool which reports too many false alarms will dissuade developers from using it \cite{racerx}.
 Dynamic analysis, our approach, identifies program behaviours that are definitely wrong,
 so each bug report is accompanied by concrete evidence of the violation.
-Assertions, segfaults, use-after-free of heap memory, and deadlock are examples of such failures we check for,
+Assertions, \revisionminor{access violations}, use-after-free of heap memory,
+and deadlock are examples of \revisionminor{commonly-checked failures},
+%such failures we check for,
 although a checker may also include arbitrary program-specific predicates.
 
 \subsubsection{Preemption points}
@@ -342,12 +351,13 @@ The number of preemption points in each execution defines the depth of this tree
 and the number of threads available to run defines the branching factor.
 Hence, in a program with $n$ preemption points and $k$ threads available to run at each, the state space size is $O(n^k)$.
 Nevertheless, to fully test all of a program's possible behaviours, we must check the executions corresponding to every branch of the tree.
-Addressing the scaling problem in this exponential relation is the central research problem for all model checkers.
+Addressing the scaling problem in this exponential relation is the central research problem for all model checkers,
+\revisionminor{which this thesis will address in Chapter~\ref{chap:quicksand}}.
 
 Some model checkers explicitly store the set of visited program states as a means of identifying equivalent interleavings \cite{spin}.
 From the perspective of such tools, state spaces such as these wherein equivalent states may be reached by multiple paths
 are represented as a directed acyclic graph (DAG) instead of as a tree.
-This approach is called {\em stateful} model checking.
+This approach is called \revisionminor{{\em stateful} model checking \cite{spin}}.
 This thesis focuses on {\em stateless} model checking (and execution trees, not DAGs),
 which instead analyzes the sequence of execution events to avoid a prohibitive memory footprint.
 Henceforth ``stateless model checking'' will be abbreviated simply as ``model checking'' for brevity.
@@ -361,12 +371,16 @@ I will continue to use ``state space'' for consistency with prior work.
 At its essence, stateless model checking research is a perpetual struggle to become more and more efficient in order to test and verify bigger and bigger programs.
 But whence this efficiency?
 Techniques for coping with the exponential explosion fall into two categories:
-(1) removing redundant interleavings from the state space when we can prove they are equivalent to some interleaving already tested,
-or {\bf reduction techniques},
+%(1)
+{\em reduction techniques},
+i.e.,
+removing redundant interleavings from the state space when we can prove they are equivalent to some interleaving already tested,
 and
-(2) prioritizing interleavings judged as more likely to contain bugs should bugs exist
-in case we are unable to exhaustively test all interleavings after all,
-or {\bf search heuristics}.
+%(2)
+{\em search heuristics},
+i.e.,
+prioritizing interleavings judged as more likely to contain bugs (should bugs exist)
+in case we are unable to exhaustively test all interleavings after all.
 
 \subsubsection{Reduction techniques}
 
@@ -408,7 +422,7 @@ Over the years, researchers have developed many enhancements to DPOR, such as Op
 	\end{center}
 	\caption{DPOR identifies independent transitions by different threads which can commute
 	without affecting program behaviour.
-	\revisionminor{Here, because each thread's local operations on {\tt tmp1}/{\tt tmp2} are not shared memory conflicts,}
+	Here, because each thread's local operations on {\tt tmp1}/{\tt tmp2} are not shared memory conflicts,
 	the states marked with the red arrow are guaranteed identical. Hence, only one of the subtrees need be explored.}
 	\label{fig:dpor}
 \end{figure}
@@ -444,7 +458,8 @@ Two instructions are said to race if:
 	\item they both access the same memory address,
 	\item at least one is a write,
 	\item the threads do not hold the same lock,
-	\item and no synchronization enforces an order on the thread transitions (the {\em Happens-Before} relation, described below).
+	\item and no synchronization enforces an order on the thread transitions
+		(the {\em Happens-Before} \revisionminor{relation~\cite{lamport-clocks,hybriddatarace}}, described below).
 \end{enumerate}
 %In Figure~\ref{fig:example}, lines 3 and 5 each race with 2 and 6, and line 6 races with 8.
 In Figure~\ref{fig:hb-example}, the pairs of lines marked with comments (A1 and A2, B1 and B2) race.
@@ -551,14 +566,14 @@ This section describes the projects which students implement and which Landslide
 \label{sec:pebbles}
 
 The Pebbles kernel architecture
-is used at Carnegie Mellon University (CMU) in 15-410, Operating System Design and Education \cite{kspec,thrlib}.
+is used at Carnegie Mellon University (CMU) in 15-410, Operating System Design and \revisionminor{Implementation} \cite{kspec,thrlib}.
 In the course of a semester, students work on five programming assignments;
 the first two are individual, and the remaining three are the products of two-person teams.
 I will focus on the third and fourth of these, the thread library and kernel,
 called ``P2'' and ``P3'' respectively (the project numbers start at 0).
 The other three (a stack-crawling backtrace utility, a bare-metal game with device drivers, and a small extension to the P3 kernel) are not of concern in this thesis.
 The course's prerequisite is 15-213, Introduction to Computer Systems \cite{sigcse01:CSaPP}.
-Both P2 and P3 are built using the {\em Pebbles} system call specification, outlined in Table~\ref{tab:syscalls}
+Both P2 and P3 are built using the {\em Pebbles} system call specification, outlined in Table~\ref{tab:syscalls}.
 
 \begin{table}
         \center
@@ -613,14 +628,21 @@ Both P2 and P3 are built using the {\em Pebbles} system call specification, outl
 
 \subsubsection{P2}
 The thread library project \cite{thrlib} has two main components: implementing concurrency primitives, and implementing thread lifecycle and management routines.
-The required concurrency primitives are as follows:
+\revision{Students implement this project on top of a reference Pebbles kernel implementation (named Pathos~\cite{pathos}),
+which is distributed as an obfuscated binary to protect the subsequent challenges of P3.}
+The required concurrency primitives \revisionminor{for P2} are as follows:
 \begin{itemize}
 	\item Mutexes, with the interface {\tt mutex\_lock(mp)} and {\tt mutex\_unlock(mp)}, whose functionality is described earlier this chapter. Students may use any x86 atomic instruction(s) they desire, such as {\tt xchg}, {\tt xadd}, or {\tt cmpxchg}, and/or the {\tt deschedule}/ {\tt make\_runnable} system calls offered by the reference kernel.
 	\item Condition variables, with the interface {\tt cond\_wait(cvp, mp)}, {\tt cond\_signal} {\tt (cvp)}, and {\tt cond\_broadcast(cvp)}. {\tt cond\_wait} blocks the invoking thread, ``simultaneously'' releasing a mutex which protects some associated state (atomically, with respect to other calls to signal or broadcast under that mutex).
 		{\tt cond\_signal} and {\tt cond\_broadcast} wake one or all waiting threads.
 		Students must use the {\tt deschedule} and {\tt make\_runnable} system calls to implement blocking (busy-waiting is forbidden), and typically include an internal mutex to protect the condition variable's state as well.
 		The primary challenge of this exercise is ensuring the aforementioned atomicity between {\tt cond\_wait}'s unlock and deschedule, with respect to the rest of the interface.
-	\item Semaphores, with the interface {\tt sem\_wait(sp)} and {\tt sem\_signal(sp)} (sometimes called {\em proberen} and {\em verhogen} in other literature). The semaphore can be initialized to any integer value; if initialized to 1, it behaves like a mutex.
+	\item Semaphores, with the interface {\tt sem\_wait(sp)} and {\tt sem\_signal(sp)}
+		(sometimes called \revisionminor{$P$ and $V$ in other literature,
+		from Dutch,
+		originally {\em passering} and {\em vrijgave} \cite{ewd35},
+		later often explained as {\em proberen} and {\em verhogen}}).
+		The semaphore can be initialized to any integer value; if initialized to 1, it behaves like a mutex.
 		Students typically implement semaphores using mutexes and condition variables, not using atomic instructions or system calls directly.
 	\item Reader-writer locks (rwlocks), with the interface {\tt rwlock\_lock(rwp, mode)} and {\tt rwlock\_unlock(rwp)}. {\tt mode} may be either {\tt RWLOCK\_READ} or {\tt RWLOCK\_\allowbreak{}WRITE}.
 		Behaves as mutexes, but multiple readers may access the critical section simultaneously.
@@ -630,10 +652,11 @@ The interface to each also includes an associated {\tt \_init()} and {\tt \_dest
 
 The thread lifecycle/management routines are as follows:
 \begin{itemize}
-	\item {\tt thr\_init(stack\_size)} initializes the thread library, setting a default stack size to be allocated to new threads.
+	\item {\tt thr\_init(stack\_size)} initializes the thread library, setting a \revisionminor{custom, fixed} stack size to be allocated to new threads.
 	\item {\tt thr\_create(child\_func, child\_arg)} spawns a new thread to run the specified function with the specified argument. There is a semantic gap between this function and the {\tt thread\_fork} system call (which takes no parameters, makes no changes to the user's address space, and cannot meaningfully be invoked from C code) which students must bridge.
 		Returns an integer thread ID of the newly created thread.
-	\item {\tt thr\_exit(status)} aborts execution of the calling thread, recording an exit status value.
+	\item {\tt thr\_exit(status)} \revisionminor{completes} execution of the calling thread, recording an exit status value.
+		\revisionminor{This function does not return to its callsite.}
 		The main challenge of this function is to allow another thread to free the memory used for the exiting thread's stack,
 		without risking any corruption as long as the exiting thread continues to run.
 	\item {\tt thr\_join(tid, statusp)} blocks the calling thread until the thread with the specified thread ID exits, then returns, collecting its exit status.
@@ -645,15 +668,17 @@ Finally, students also implement automatic stack growth using the {\tt swexn} sy
 \subsubsection{P3}
 In P3, students implement a kernel which provides the same system calls shown in Table~\ref{tab:syscalls}, previously provided by the reference kernel.
 Pebbles adopts the Mach \cite{DBLP:conf/usenix/AccettaBBGRTY86} distinction between {\em tasks}, which are resource containers, and {\em threads}, each of which executes within a single task.
-This requires less implementation complexity than the more featureful Plan 9's {\tt rfork} \cite{Pike90plan9} or Linux's {\tt clone} models.
+This requires less implementation complexity than the more featureful
+\revisionminor{{\tt rfork} model, of Plan 9 \cite{Pike90plan9}, or the {\tt clone} model, of Linux}.
 
-Although the internal interfaces are not mandated like they were in P2, all Pebbles kernels must necessarily contain the same abstract components. These include:
+Although the interfaces are not mandated \revisionminor{as} they were in P2, all Pebbles kernels must necessarily contain the same abstract components. These include:
 \begin{itemize}
 	\item A round-robin scheduler, including context switching, timer handling, and runqueue management;
-	\item Some approach to locking, often analogous to P2's concurrency primitives (henceforth referred to as ``kernel mutexes''), 
-	 ll       and some approach to blocking threads indefinitely;
-	\item A virtual memory implementation, including a program loader;
-	\item Lifecycle management code for creation and destruction of kernel threads and processes;
+	\item Some approach to locking, often analogous to P2's concurrency primitives (henceforth referred to as ``kernel mutexes''),
+		and some approach to blocking threads indefinitely;
+	\item A virtual memory implementation \revisionminor{(page directories and tables, frame allocator, et cetera)};
+	\item A program loader;
+	\item Lifecycle management code for creation and destruction of \revisionminor{threads and tasks};
 	\item Other miscellany such as a suite of fault handlers to ensure no user program can cause the kernel itself to crash.
 \end{itemize}
 Because any combination of system calls or fault handlers can be invoked by user programs simultaneously,
@@ -679,7 +704,8 @@ rather than to be surprised by them afterwards during grading
 %
 One such example is the {\tt paraguay} unit test distributed with P2 (\sect{\ref{sec:education-pebbles-tests}}),
 which targets a subtle condition-variable bug.
-The test uses the {\tt misbehave} system call to target a particular thread interleaving likely to expose the bug
+The test uses the {\tt misbehave} system call to \revisionminor{amplify the probability of} a particular thread interleaving,
+likely to expose the bug,
 which is otherwise very unlikely to arise in normal execution.
 The reference kernel specification \cite{kspec} does not define the {\tt misbehave} modes' behaviours,
 as doing so would deprive students of the learning experience of discovering the interleaving in question on their own.
@@ -709,7 +735,7 @@ Otherwise, the project is identical to CMU 15-410's P2.
 \newcommand\uchos{CMSC 23000\xspace}
 
 The Pintos kernel architecture \cite{pintos} is used at several universities, including Berkeley, Stanford, and the University of Chicago.
-The Pintos basecode implements a rudimentary kernel, consisting of a context switcher, round-robin scheduler, locking primitives, and program loader.
+The Pintos basecode implements a rudimentary kernel, consisting of a context switcher, round-robin scheduler, locking primitives, and program loader,
 upon which students add more features in several projects.
 Most relevant to this thesis, the basecode provides the following functions/libraries, among others:
 \begin{itemize}
@@ -733,7 +759,8 @@ Although there is some variety in supplemental assignments, all Pintos courses i
 \end{itemize}
 
 Some schools further offer a virtual memory project, extending the provided VM with a frame table and supplemental page table and fault handler \cite{standford-cs140,uchicago-cs230}, or supplemental HTTP server and {\tt malloc} assignments \cite{berkeley-cs162}.
-Being largely architectural/algorithmic projects rather than concurrency-oriented ones, this thesis is not concerned with these assignments.
+\revisionminor{This thesis is not concerned with these assignments.
+as they are are largely architectural/algorithmic projects rather than concurrency-oriented ones.}
 The main concurrency challenges in Pintos projects arise from the {\em threads} and {\em userprog} assignments:
 implementing a correct {\tt alarm} routine,
 ensuring the priority scheduler remains safe in the presence of concurrent threads of the same priority,
@@ -752,11 +779,11 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		In {\em pthread}-like multithreaded programs, each {\em thread} is an actor.
 		In distributed systems, each machine is an actor.
 	\item {\bf API.}
+		\revisionminor{Short for ``application programming interface'' (which nobody ever says).}
 		The set of function signatures which comprise the interface to a body of code.
 		For example, the standard {\em mutex} API consists of
 		{\tt mutex\_init()}, {\tt mutex\_lock()}, {\tt mutex\_unlock()},
 		and optionally {\tt mutex\_trylock()} and {\tt mutex\_destroy()}.
-		From ``application programming interface'' (which nobody ever says).
 	\item {\bf Atomic.}
 		Said of a sequence of operations within a single thread,
 		whose intermediate state cannot be observed by or interfered with
@@ -780,12 +807,17 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		must technically also be atomicity violations.
 		Also, this thesis is focused on identifying failures, not root causes,
 		so will simply avoid the term entirely.
+	\item {\bf Benign.}
+		Said of a {\em data race}, or of {\em nondeterministic} behaviour in general,
+		which does not lead to a {\em concurrency bug} in any {\em interleaving}.
 	\item {\bf Branch.}
 		Another term for {\em interleaving}, with an emphasis on the {\em execution tree}
 		interpretation of {\em state spaces}.
 		May also refer to an entire subtree outside of the current interleaving,
 		characterized by the choice to run a certain {\em thread} at a certain past {\em preemption point},
 		comprising all possible interleavings which may arise with that as a prefix.
+	\item \revisionminor{{\bf Bug.}
+		See {\em concurrency bug}.}
 	\item {\bf Completeness.}
 		%Dual of {\em soundness}.
 		In logic, said of an inference system in which any proposition consistent with the axioms can be proved.
@@ -807,7 +839,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 	\item {\bf Conflict.} See {\em memory conflict}.
 	\item {\bf Data race.}
 		An unsynchronized pair of memory accesses between two threads that can, may, or did execute concurrently.
-		{\em Race} for short.
+		{\em Race} for short \revisionminor{(see also {\em race condition})}.
 		Distinguished further in this thesis as {\em limited happens-before} races and {\em pure happens-before} races;
 		see \sect{\ref{sec:background-datarace}}.
 		Distinct from the more nebulously-defined {\em concurrency bug},
@@ -839,7 +871,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		Searches for concrete evidence of undesirable program behaviour,
 		and is blind to what the source code looks like (or even what language it be written in).
 		Opposite of {\em static analysis}.
-	\item {\bf Dynamic partial order reduction}.
+	\item {\bf Dynamic partial order reduction} \revisionminor{(DPOR)}.
 		Exploration algorithm for {\em stateless model checkers} which
 		identifies alternate interleavings to explore likely to result
 		in reorderings of {\em memory conflicts} observed in the current branch.
@@ -866,7 +898,9 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 	\item {\bf False negative.}
 		Said of a tool's failure to produce a bug report when a bug does exist after all.
 		In theory this may mean that the {\em test case} might have been insufficient to expose the bug
-		(i.e., the code under test is wrong in any way whatsoever);
+		(\revisionminor{which the programmer may discover later via manual inspection,
+		or when her code fails in production,
+		or which may remain unnoticed}),
 		however, for pragmatic, tool-oriented discussion,
 		this thesis will use the term to mean bugs observable under the given test case which the tool itself fails to find.
 	\item {\bf False positive.}
@@ -939,6 +973,13 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		to subsequent parts of the program.
 		If one is a read and one is a write, reordering them may cause the read access to return a different value,
 		possibly affecting that thread's subsequent logic.
+	\item \revision{{\bf misbehave.}
+		An optional system call offered by {\em Pebbles} kernels, especially the official reference kernel,
+		that changes the scheduler's behaviour, according to a numeric mode argument,
+		to amplify the likelihood of specific illustrative low-probability {\em thread interleavings}.
+		Used in several {\em P2} test cases,
+		although exactly how thread scheduling changes according to each specified mode
+		is kept secret to preserve the intended challenge of debugging (see \sect{\ref{sec:410-secrecy}}).}
 	\item {\bf mutex.}
 		Short for ``mutual exclusion lock''. The name {\em P2} and {\em pthreads} use for their {\em lock API}.
 	\item {\bf Model checking.}
@@ -956,8 +997,17 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		Often used here to refer to the same thread library project at both CMU and PSU,
 		even though the latter did not call it by that name.
 		See \sect{\ref{sec:pebbles}}.
+	\item \revision{{\bf Pebbles.}
+		The educational kernel architecture used in 15-410 at CMU. See \sect{\ref{sec:pebbles}}.}
+	\item \revision{{\bf Pintos.}
+		The educational kernel architecture used in \uchos at the University of Chicago,
+		as well as several other universities. See \sect{\ref{sec:overview-pintos}}.}
 	\item {\bf pthreads.}
 		Thread library for Linux programs provided by POSIX.
+		\revision{The modern pthreads model traces its lineage back to
+		Mach's C threads \cite{mach-c-threads}
+		and DEC's Systems Research Center threads \cite{src-threads},
+		and is now specified by ISO/IEC/IEEE \cite{iso-posix}.}
 	\item {\bf Preemption.}
 		The act of interrupting one thread's execution to force a context switch to another.
 		Can be performed either deliberately by the {\em model checker}
@@ -989,9 +1039,24 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		In later chapters, ``Landslide'' will refer to the project as a whole, including Quicksand,
 		while the term ``Quicksand'' will be used only when specific reference to Iterative Deepening is required.
 	\item {\bf Race condition.}
-		A confusing term which CMU 15-410 teaches to mean {\em concurrency bug},
-		but in research circles is generally taken to mean {\em data race}.
-		This thesis will avoid it entirely, using those two more precise terms instead.
+		\revision{Another term for {\em nondeterminism} in general,
+		%or {\em concurrency bug}.
+		which may also carry more specific nuance depending on context.
+		The term dates back (at least) to 1954, describing electrical signals' nondeterministic order of arrival
+		in circuit design \cite{switching-circuits}.
+		That paper further distinguished race conditions as either ``critical'' or ``non-critical'',
+		corresponding to {\em buggy} or {\em benign} in our terminology.
+		%
+		CMU 15-410 teaches the term consistently with this definition,
+		although may also refer to the buggy subset only (i.e., {\em concurrency bugs}) for brevity.
+		%
+		Recently, many systems research papers have used the term to refer to {\em data races} in particular.%
+		\footnote{In the author's personal experience, readers of their M.S. thesis \cite{landslide}
+		have misinterpreted its title to believe % oops
+		that Landslide be only a data-race detector,
+		rather than a model checker.}
+		To avoid confusion, this thesis will avoid the term entirely,
+		using the above two more precise terms instead.}
 	\item {\bf Reduction.}
 		The act of making a {\em state space} smaller by finding multiple execution sequences
 		that can be proved {\em equivalent},
