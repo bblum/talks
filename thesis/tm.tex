@@ -869,20 +869,39 @@ but the previously-published verification results should be considered outdated.
 		\hline
 		\hline
 		{\tt htm1}
-			& 2,1	&\cpu{  26.48}&\wtm{6.48}&\ints{5}& \cpu{*8.21}& \wtm{*5.78}& \ints{5	}& \ETA{12} \\
+			& 2,1	&\cpu{  32.73}&\wtm{8.02}&\ints{5}& \cpu{*9.24}& \wtm{*6.49}& \ints{5}& \ETA{12} \\
+			% 5 interleavings tested; 1 preemptions; job time 3s; pldi time 8015847; new-fixed pldi cputime 32726660
+			% 5 interleavings tested; 1 preemptions; job time 2s; pldi time 6492339; new-fixed pldi cputime 9242577 -M
 		(assertion)
-			& 2,2	&\cpu{  45.23}&\wtm{8.28}&\ints{9}& \cpu{*8.42}& \wtm{*5.97}& \ints{9	}& \ETA{102} \\
-			& 2,3	&\cpu{ 53.88}&\wtm{9.92}&\ints{17}& \cpu{*8.80}& \wtm{*6.31}& \ints{17	}& \ETA{819} \\
-			& 2,4	&\cpu{ 90.24}&\wtm{14.63}&\ints{33}& \cpu{*9.72}& \wtm{*7.19}& \ints{33	}& \ETA{6553} \\
+			& 2,2	&\cpu{  50.72}&\wtm{9.22}&\ints{9}& \cpu{*9.93}& \wtm{*7.03}& \ints{9}& \ETA{102} \\
+			% 9 interleavings tested; 1 preemptions; job time 5s; pldi time 9220760; new-fixed pldi cputime 50719368
+			% 9 interleavings tested; 1 preemptions; job time 3s; pldi time 7028111; new-fixed pldi cputime 9933516 -M
+			& 2,3	&\cpu{ 88.35}&\wtm{14.63}&\ints{17}& \cpu{*10.03}& \wtm{*7.12}& \ints{17}& \ETA{819} \\
+			% 17 interleavings tested; 1 preemptions; job time 7s; pldi time 14632911; new-fixed pldi cputime 88346856
+			% 17 interleavings tested; 1 preemptions; job time 3s; pldi time 7119866; new-fixed pldi cputime 10025347 -M
+			& 2,4	&\cpu{108.31}&\wtm{17.44}&\ints{33}& \cpu{*11.24}& \wtm{*8.29}& \ints{33}& \ETA{6553} \\
+			% 33 interleavings tested; 1 preemptions; job time 9s; pldi time 17442317; new-fixed pldi cputime 108309778
+			% 33 interleavings tested; 1 preemptions; job time 3s; pldi time 8294161; new-fixed pldi cputime 11235910 -M
 		\cline{2-9}
-			& 3,1	&\cpu{ 39.75}&\wtm{8.21}&\ints{5}& \cpu{*8.15}& \wtm{*5.71}& \ints{5	}& \ETA{76} \\
-			& 3,2	&\cpu{ 46.91}&\wtm{8.40}&\ints{9}& \cpu{*8.37}& \wtm{*5.91}& \ints{9	}& \ETA{3686} \\
-			& 3,3	&\cpu{ 41.39}&\wtm{8.50}&\ints{17}& \cpu{*8.71}& \wtm{*6.26}& \ints{17	}& \ETA{176947} \\
-			& 3,4	&\cpu{ 92.98}&\wtm{15.19}&\ints{33}& \cpu{*10.36}& \wtm{*7.15}& \ints{33	}& \ETA{8493465} \\
+			& 3,1	&\cpu{ 60.63}&\wtm{11.63}&\ints{5}& \cpu{*9.63}& \wtm{*6.70}& \ints{5}& \ETA{76} \\
+			% 5 interleavings tested; 1 preemptions; job time 5s; pldi time 11631147; new-fixed pldi cputime 60628270
+			% 5 interleavings tested; 1 preemptions; job time 2s; pldi time 6695336; new-fixed pldi cputime 9627076 -M
+			& 3,2	&\cpu{ 78.69}&\wtm{13.17}&\ints{9}& \cpu{*9.43}& \wtm{*6.37}& \ints{9}& \ETA{3686} \\
+			% 9 interleavings tested; 1 preemptions; job time 6s; pldi time 13173912; new-fixed pldi cputime 78690603
+			% 9 interleavings tested; 1 preemptions; job time 2s; pldi time 6370046; new-fixed pldi cputime 9427268 -M
+			& 3,3	&\cpu{ 70.50}&\wtm{13.05}&\ints{17}& \cpu{*10.43}& \wtm{*6.96}& \ints{17}& \ETA{176947} \\
+			% 17 interleavings tested; 1 preemptions; job time 6s; pldi time 13045016; new-fixed pldi cputime 70504465
+			% 17 interleavings tested; 1 preemptions; job time 3s; pldi time 6962930; new-fixed pldi cputime 10427482 -M
+			& 3,4	&\cpu{ 70.69}&\wtm{12.96}&\ints{33}& \cpu{*11.74}& \wtm{*8.71}& \ints{33}& \ETA{8493465} \\
+			% 33 interleavings tested; 1 preemptions; job time 7s; pldi time 12964843; new-fixed pldi cputime 70692866
+			% 33 interleavings tested; 1 preemptions; job time 4s; pldi time 8710265; new-fixed pldi cputime 11743862 -M
 		\cline{2-9}
-			& 4,1	&\cpu{ 45.13}&\wtm{8.56}&\ints{5}& \cpu{*7.77}& \wtm{*5.30}& \ints{5	}& \ETA{460} \\
-			& 4,2	&\cpu{64.99}&\wtm{11.33}&\ints{9}& \cpu{*8.32}& \wtm{*5.59}& \ints{9	}& \ETA{132710} \\
-			\multicolumn{9}{c}{everything above this line needs rerun for dpor-preferred tid + thr\_bottom1} \\
+			& 4,1	&\cpu{ 51.83}&\wtm{9.85}&\ints{5}& \cpu{*9.56}& \wtm{*6.63}& \ints{5}& \ETA{460} \\
+			% 5 interleavings tested; 1 preemptions; job time 5s; pldi time 9851604; new-fixed pldi cputime 51833724
+			% 5 interleavings tested; 1 preemptions; job time 2s; pldi time 6627275; new-fixed pldi cputime 9560320 -M
+			& 4,2	&\cpu{ 44.83}&\wtm{8.94}&\ints{9}& \cpu{*9.83}& \wtm{*6.84}& \ints{9}& \ETA{132710} \\
+			% 9 interleavings tested; 1 preemptions; job time 4s; pldi time 8936964; new-fixed pldi cputime 44826654
+			% 9 interleavings tested; 1 preemptions; job time 2s; pldi time 6835025; new-fixed pldi cputime 9830626 -M
 		\hline
 		{\tt swapbug}
 			& 2,1	&\cpu{*26.25}&\wtm{*6.42}&\ints{*6}& \cpu{47.80}& \wtm{13.43}& \ints{33}	& \ETA{73} \\
