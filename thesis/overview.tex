@@ -572,7 +572,7 @@ the first two are individual, and the remaining three are the products of two-pe
 I will focus on the third and fourth of these, the thread library and kernel,
 called ``P2'' and ``P3'' respectively (the project numbers start at 0).
 The other three (a stack-crawling backtrace utility, a bare-metal game with device drivers, and a small extension to the P3 kernel) are not of concern in this thesis.
-The course's prerequisite is 15-213, Introduction to Computer Systems \cite{sigcse01:CSaPP}.
+The course's prerequisite is 15-213, Introduction to Computer Systems \cite{csapp,sigcse01:CSaPP}.
 Both P2 and P3 are built using the {\em Pebbles} system call specification, outlined in Table~\ref{tab:syscalls}.
 
 \begin{table}
@@ -628,7 +628,7 @@ Both P2 and P3 are built using the {\em Pebbles} system call specification, outl
 
 \subsubsection{P2}
 The thread library project \cite{thrlib} has two main components: implementing concurrency primitives, and implementing thread lifecycle and management routines.
-\revision{Students implement this project on top of a reference Pebbles kernel implementation (named Pathos~\cite{pathos}),
+\revision{Students implement it on top of a reference Pebbles kernel implementation (named Pathos~\cite{pathos}),
 which is distributed as an obfuscated binary to protect the subsequent challenges of P3.}
 The required concurrency primitives \revisionminor{for P2} are as follows:
 \begin{itemize}
