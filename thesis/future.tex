@@ -42,7 +42,8 @@ students most often complained
 that interpreting Landslide's preemption traces to diagnose and understand their bugs was too difficult.
 While the understanding step of course requires human intuition,
 there is certainly room to improve the diagnosis step beyond just showing the user one static HTML table.
-Related works like Symbiosis \cite{symbiosis} can find a minimal difference between the failing trace and a non-failing one,
+Related works \revisionminor{such as} Symbiosis \cite{symbiosis}
+can find a minimal difference between the failing trace and a non-failing one,
 which would allow the user to effortlessly pinpoint which preemptions are closest to the true root cause.
 Further, using ICB \cite{chess-icb} to show the user a minimum set of preemptions necessary to expose the bug
 could help her narrow down possible diagnoses more quickly.
@@ -101,7 +102,7 @@ Concurrency coverage metrics such as proposed by Maple \cite{maple}
 % wild speculation
 could be extended to capture possible behaviours under any test input,
 not just within the fixed state space under one given test,
-and symbolic execution frameworks such as Contessa \cite{contessa}
+and symbolic execution frameworks such as Contessa~\cite{contessa}
 could search for possible inputs to suggest changes which might expose them.
 In cases where not-yet-covered conditional branches require
 certain function return values,
@@ -129,7 +130,7 @@ remains an open problem.
 Future work might combine Landslide's ability to prove correctness for finite $K,N$ parameters
 with a formal induction proof that generalizes the result,
 finding a minimum number of threads necessary to expose all behaviours
-(at least 3 in this example),
+(at least \revisionminor{three} in this example),
 % 2 papers rec'd from https://twitter.com/bblum0/status/1018233122750640130
 % although i checked these & couldn't figure out how if at all they were doing generalization
 although I know of no related work which addresses the second half of this problem.
@@ -178,9 +179,9 @@ more opportunities arise for the implementation to deviate from what the soundne
 Kernels like seL4 \cite{sel4} and CertiKOS \cite{certikos}
 and concurrency-aware compilers like CompCertTSO \cite{compcerttso},
 all formally verified against external specifications,
-provide important pioneering steps in this direction
+provide important pioneering steps in this direction.%
 \footnote{Of course, being verified themselves, these projects have no need for a verified Landslide,
-but checking unverified (e.g. student) code with such would still be an improvement.}.
+but checking unverified (e.g., student) code with such would still be an improvement.}
 
 \section{Heuristics}
 

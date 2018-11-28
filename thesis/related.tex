@@ -26,7 +26,7 @@ While previous chapters cited prior work as necessary in background discussions,
 this chapter aims to comprehensively tour the field,
 orienting the reader's understanding of Landslide in the space of said tradeoffs.
 
-\section{Systematic Concurrency Testing}
+\section{Stateless Model Checking}
 
 Equal partners in concurrency testing are the practical and the theoretical:
 %the former meaning
@@ -41,10 +41,10 @@ The following two subsections discuss the most closely related prior work accord
 
 \subsubsection{Tools}
 
-Systematic concurrency testing dates back to Verisoft \cite{verisoft},
-the 1997 tool which first attempted to exhaustively explore the possibile ways to interleave threads.
+Stateless model checking dates back to Verisoft \cite{verisoft},
+the 1997 tool which first attempted to exhaustively explore the \revisionminor{possible} ways to interleave threads.
 Since then, researchers have built many tools along the same lines to test many kinds of programs.
-One of the best-known SCTs is Microsoft Research's CHESS \cite{chess},
+One of the best-known MCs is Microsoft Research's CHESS \cite{chess},
 a checker for userspace C++ programs which preempts on synchronization APIs by default,
 supporting compiler instrumentation to preempt on memory accesses as well,
 and which pioneered the ICB search strategy discussed below.
@@ -56,7 +56,7 @@ focus on distributed systems, where concurrent events are limited to message-pas
 R4 \cite{r4} and EventRacer \cite{eventracer} check event-driven concurrent programs typical in mobile applications.
 Like Landslide, SimTester \cite{simtester} is a Simics~\cite{simics}-based tool for kernel-level code,
 although it focuses on interrupt nondeterminism for testing device drivers,
-and is limited to injecting at most one interrupt per test run (as if under ICB with a bound of 1).
+and is limited to injecting at most one interrupt per test run (as if under ICB with a bound of~1).
 %
 %Other checkers target specific programming languages' concurrency models and/or thread communication APIs.
 dBug \cite{dbug-ssv}, another CMU original similar to CHESS,
@@ -77,7 +77,7 @@ as it checks specifications separate from the programs themselves
 %using explicit state tracking,
 rather than attempting to exhaustively exercise every thread interleaving directly.
 %
-D\'{e}j\`{a} Fu \cite{dejafu} is a SCT
+D\'{e}j\`{a} Fu \cite{dejafu} is a model checker
 for the Haskell language,
 whose strong type system guarantees that thread communication be confined to trusted, type-safe APIs.
 %to a trusted API that implements internal synchronization to preserve type safety.
@@ -86,17 +86,17 @@ It instruments these interfaces (STM among them)
 to check for deadlocks or nondeterministic behaviour in general,
 which either may arise despite the static no-data-race guarantee.
 
-The problem of relaxed memory nondeterminism alone has inspired the creation of several new SCTs in the past few years.
-Relacy \cite{relacy}, a header-only C++ SCT library for checking synchronization primitives,
+The problem of relaxed memory nondeterminism alone has inspired the creation of several new tools in the past few years.
+Relacy \cite{relacy}, a header-only C++ model checking library for checking synchronization primitives,
 was the first to broach this field,
-although requires custom annotations for non-atomic memory accesses
+although \revisionminor{it} requires custom annotations for non-atomic memory accesses
 and
 %(according to later citing papers) % cdschecker
 does not fully model all possible relaxed memory behaviours.
 %designed for verifying synchronization primitives,
 CDSChecker \cite{cdschecker} extends DPOR with a {\em reads-from} relation
 to capture most of the C++11 memory model's new behaviours.
-Nidhugg \cite{nidhugg} is a SCT for TSO and PSO which instruments LLVM abstract assembly,
+Nidhugg \cite{nidhugg} is a checker for TSO and PSO which instruments LLVM abstract assembly,
 % i don't actually know what the difference is #overlyhonestmethods
 although does not yet support the C++11 memory model.
 %% actually it doesn't -- they say they take the Source DPOR worse version. im confus?
@@ -112,7 +112,7 @@ and provide only limited support so far for read-modify-write atomics
 (at best, supporting them by introducing % oops
 some redundant exploration).
 %
-No relaxed-memory SCT has yet proposed a satisfactory model for the ``thin-air'' problem \cite{sully-thesis},
+No relaxed-memory MC has yet proposed a satisfactory model for the ``thin-air'' problem \cite{sully-thesis},
 which can cause state space cycles in a way not yet well-understood and remains future work.
 %and notably includes relaxed memory nondeterminism in its concurrency model.
 They also identify all data races
@@ -137,7 +137,7 @@ and its recent extension to HTM adds support for more modern concurrency pattern
 \label{sec:related-algs}
 
 To date a number of techniques have been proposed to mitigate exponential explosion,
-the Sisyphean rock of SCT.
+the Sisyphean rock of stateless MC.
 The notion that some interleavings of concurrent threads could lead to indistinguishable program states and be therefore redundant,
 known as {\em partial order reduction} (POR),
 was first proposed in \cite{partial-model-checking}
@@ -145,7 +145,7 @@ and explored in detail in \cite{partial-order-methods}.
 {\em Dynamic POR} (DPOR) was later developed in \cite{dpor},
 proposing to track communication events between threads on-the-fly (i.e., dynamically)
 rather than to rely on imprecise static alias analyses,
-and is now considered the baseline for all subsequent state space reduction approaches in SCT.
+and is now considered the baseline for all subsequent state space reduction approaches in stateless MC.
 That paper includes the {\em sleep sets} extension,
 which Landslide includes in its implementation.
 It is a {\em sound} reduction algorithm, meaning it will never fail to test a possible program behavior, despite skipping many execution sequences.
@@ -196,7 +196,7 @@ and proposed three reduction strategies, one sound and two heuristic,
 %to make some progress up the exponential mountain.
 to keep state spaces manageable.
 
-Of course, no matter how optimal a sound reduction, there will always be programs too large to test.
+Of course, no matter how \revisionminor{powerful} a sound reduction, there will always be programs too large to test.
 To provide even partial results for state spaces that exceed the testing budget
 (whether as predicted by automatic estimation \cite{estimation} or by a human's wild guess),
 various heuristic exploration strategies have been proposed.
@@ -283,7 +283,7 @@ by using hardware breakpoints and random sampling to achieve high performance.
 % TODO: read some more recent confs for data race shit since thesprop
 % probably like weak memory c.c
 
-Although many SCTs listed in the previous section are content to report any data races as outright bugs,
+Although many MCs listed in the previous section are content to report any data races as outright bugs,
 RacerX \cite{racerx} showed that tools must be careful not to overwhelm users with benign warnings
 they don't care about fixing.
 This has motivated replay analysis
@@ -293,7 +293,7 @@ It was first introduced in \cite{recordreplaydrs},
 which compares the program states immediately after the access pair for differences,
 preferring still to err on the side of false positives (as different program states might not necessarily lead to a failure).
 RaceFuzzer \cite{racefuzzer} avoids false positives by requiring an actual failure be exhibited, as Quicksand does,
-although it uses random schedule fuzzing rather than systematic testing for its concurrency coverage.
+although it uses random schedule fuzzing rather than model checking for its concurrency coverage.
 %
 Portend \cite{portend} is closest in spirit to Quicksand:
 it tests alternate executions based on single-pass data-race candidates to classify them in a taxonomy of likely severity,
@@ -303,7 +303,7 @@ However, it does not
 test alternate interleavings in advance of knowing any specific data races,
 % TODO more speicifc section refrance
 which \sect{\ref{sec:quicksand-eval}} showed is necessary to find certain bugs.
-Quicksand builds on Portend's approach by introducing a feedback loop between the data-race analysis and SCT,
+Quicksand builds on Portend's approach by introducing a feedback loop between the data-race analysis and model checking,
 which results in a stronger verification property
 when the test can be fully completed (\sect{\ref{sec:quicksand-soundness}}).
 Portend also uses symbolic execution to test input nondeterminism as well as schedule nondeterminism,
@@ -357,7 +357,7 @@ testing and debugging during a concurrent programming project,
 finding that unguided, students often approach testing haphazardly,
 not understanding the goal of good concurrency coverage,
 and also had difficulty understanding single failing executions.
-In fact, the study explicitly recommended tool support for testing many thread interleavings automatically (SCT)
+In fact, the study explicitly recommended tool support for testing many thread interleavings automatically (model checking)
 and for execution traces to communicate sequences of important events (preemption traces),
 which I dare say I have achieved in this thesis.
 A more recent study \cite{novices-programmers}
@@ -391,6 +391,22 @@ although it is tricky to avoid accientally encouraging % oops
 them to limit possible interleavings by just using one global lock for everything,
 which is counter to 15-410's educational goals.
 
+\revision{The Deadlock Empire~\cite{deadlockempire} is an educational introduction to concurrent programming and debugging,
+presented as an online puzzle-hunt of sorts, backed up by a fantasy-themed narrative.
+Each puzzle requires the user to manually step through the execution of multiple threads
+to find buggy interleavings.
+%which in some cases requires the use of an ``expand'' button that
+Though itself lacking in scientific analysis of its educational power,
+it demonstrates the kind of user-friendly features and overall approach
+that many students expressed desire for in their survey responses (\sect{\ref{sec:education-eval-survey}}).
+Future work could extend Landslide's preemption traces to include similar interactivity.}
+
+% TODO: more papers to look up:
+% Tool Design and Student Testing Behavior in an Introductory Java Course
+% Testing Strategies for the Automated Grading of Student Programs
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \section{Transactional memory}
 
 Transactional memory (TM), first introduced in 1993 \cite{transactional-memory},
@@ -412,13 +428,16 @@ while another \cite{stm-relaxed-memory} adds support for relaxed memory models.
 Meanwhile, two recent papers \cite{relaxed-transactions-pldi,relaxed-transactions-popl}
 have proposed formal models of HTM's execution semantics under relaxed memory likewise.
 Such extensions come with the challenge of even more complicated behavioural semantics
-for SCT to accurately model and verify in future work.
+for MCs to accurately model and verify in future work.
 
 Testing approaches for transactional programs are sparsely represented in the literature so far.
 Although several related works \cite{tm-correctness,tm-completeness,specifying-verifying-tm}
 are building up to formal proofs of the correctness of underlying TM {\em implementations},
 Landslide is the first I know of to verify client programs thereof.
-McRT STM \cite{mc-tm-with-spin} uses SPIN \cite{spin} to model check an STM implementation
+% TODO: citation as noun - global scan
+\revision{\cite{mc-tm-with-spin} used SPIN \cite{spin} to model check McRT STM \cite{mcrt-stm},
+an STM implementation built by Intel,
+verifying}
 up to 2 threads running 1 transaction each with up to 3 memory accesses.
 This kind of verification,
 analogous to \sect{\ref{sec:education-pebbles-tests}}'s {\tt mutex\_test},
@@ -488,15 +507,19 @@ While C's extremely rudimentary type system allows the compiler to statically ch
 for properties such as not accidentally dereferencing raw integer values as if they were pointers,
 more advanced programming languages may make guarantees about concurrent execution.
 %
+\revision{Language-level concurrency abstractions were first introduced by the Communicating Sequential Processes (CSP)
+model~\cite{communicating-sequential-processes},
+which defines a concurrent program as a set of isolated processes
+allowed to communicate only via blocking input/output commands.
 Erlang \cite{erlang}, an early concurrent functional language,
-introduced the actor model for concurrency,
-in which threads share no state and must communicate only by message-passing.
+introduced the actor model for concurrency based on the CSP model,
+in which threads likewise} share no state and must communicate only by message-passing.
 %One might say this statically guarantees freedom from data races;
 %from another point of view, data races do not even exist as a concept in this programming model.
 While this statically guarantees the absence of data races,
 programs may still execute nondeterministically,
 so concurrency bugs, especially deadlocks, are not ruled out.
-Concuerror \cite{concuerror}, discussed above, is a SCT tool for Erlang programs.
+Concuerror \cite{concuerror}, discussed above, is a MC tool for Erlang programs.
 %
 Haskell \cite{haskell} offers a more sophisticated interface to concurrency:
 threads may reference the same objects and even update shared references
@@ -516,9 +539,9 @@ and a trait system to ensure no shared state between threads by default.
 Its concurrency libraries then offer interfaces which relax this restriction,
 allowing threads even to simultaneously reference shared mutable state,
 using the type system to enforce sound locking discipline across such accesses,
-again preserving type soundness and data-race freedom%
-\footnote{The author themself contributed the original design for this latter feature.}.
-I know of no existing SCT for Rust as of yet.
+again preserving type soundness and data-race freedom.%
+\footnote{The author themself contributed the original design for this latter feature.}
+I know of no existing model checker for Rust as of yet.
 %
 The Relaxed Memory Calculus \cite{sully-thesis}
 proposes to extend C++ with annotations for weak memory atomics,
@@ -536,7 +559,7 @@ but at the cost of a more restrictive programming model.
 
 \subsubsection{Deterministic multithreading}
 
-Coming at nondeterminsm from the opposite angle as SCT,
+Coming at nondeterminsm from the opposite angle as model checking,
 which aims to push the frontier of testing coverage to expand as many interleavings as possible,
 is deterministic multithreading,
 which reduces the number of interleavings possible to begin with enough that said frontier can reach it more easily.
@@ -553,14 +576,14 @@ Parrot \cite{parrot} later integrated with the aforementioned dBug \cite{dbug-ss
 to offer a partially-determinizing runtime scheduler
 that offered near-baseline performance by allowing the programmer to
 manually annotate speed-critical nondeterministic sections
-and then check the resulting state spaces using dBug's SCT as normal.
+and then check the resulting state spaces using dBug's model checking as normal.
 %
 Most recently, Sofritas \cite{sofritas}
 proposed the Ordering-Free Region execution model
 which restricts nondeterminism to only order-enforcing operations such as blocking,
 and automatically suggests refinement annotations to the programmer
 when that would be too aggressive for the intended behaviour.
-These determinizing runtimes serve a different purpose than SCT:
+These determinizing runtimes serve a different purpose than MC:
 they seek to preserve the stability of existing code already running in production,
 whether or not concurrency bugs may exist,
 while this thesis aims to eradicate as many such bugs as possible beforehand.
@@ -568,12 +591,12 @@ As Parrot demonstrated, the two approaches are compatible in cases where either 
 
 \subsubsection{Symbolic execution}
 
-Analogous to SCT,
+Analogous to stateless MC,
 which seeks good coverage of possible thread execution paths under schedule nondeterminism,
 another popular testing approach is symbolic execution \cite{symbolic-execution},
 which seeks good coverage of possible flow control paths under input nondeterminism.
 Symbolic executors
-abstract a program's variables and use constraint solvers such as Z3 \cite{z3}
+abstract a program's variables and use constraint solvers such as Z3~\cite{z3}
 to work backwards and synthesize combinations of test inputs which can lead to a failure.
 %
 KLEE \cite{klee}, one well-known and open-source implementation,
@@ -583,7 +606,7 @@ often outdoing that achieved by programmers' own hand-written tests.
 Later, Contessa \cite{contessa} extended symbolic execution to include concurrency nondeterminism as well,
 by using a DPOR-like analysis on individual execution traces
 then including reordering possibilities in its SMT constraints.
-%rather than using explicit scheduling as SCT does.
+%rather than using explicit scheduling as MC does.
 This simultaneously exercises both input and schedule nondeterminism,
 %and achieves good bug-finding performance in practice,
 but does not provide the same verification guarantees as repeated DPOR iterations with explicit scheduling.
@@ -610,7 +633,23 @@ and proving bounded runtime besides to ensure good preemptibility.
 This degree of verification must however come at a cost:
 seL4's authors reported over 2 person-years of development effort, with the majority spent on the Haskell specification.
 %
-CertiKOS \cite{certikos} extends this approach to include full concurrency and fine-grained locking
+\revision{Verve \cite{verve}
+is another fully-verified kernel which uses type safety, rather than virtual memory isolation,
+to provide strong stability and isolation guarantees.
+It uses a small core written in typed assembly language (TAL)~\cite{tal}
+to provide runtime services such as stack management, interrupt handling, and garbage collection.
+The remaining higher-level kernel services are written in C\# and compiled to TAL.
+%
+Unlike seL4, whose proofs relied on human-driven interactive theorem proving,
+Verve's verification comes from automated type- and invariant-checking,
+relying on pre/postcondition and loop invariant annotations for its TAL core only,
+thereby imposing much less burden on its programmers.
+seL4's microkernel nature allows it to run untrusted code, such as drivers, in the safety of virtual memory isolation,
+while Verve's type safety restricts what programs can be run at all.
+Both approaches accept the limitation of non-parallel, uniprocessor execution.
+}
+%
+CertiKOS \cite{certikos} extends seL4's approach to include full concurrency and fine-grained locking
 in the scope of verification,
 using a proof in the Coq proof assistant
 \cite{coq}
@@ -621,7 +660,7 @@ such as no null dereference and no buffer or integer overflow,
 although it stops short of reasoning about relaxed memory orderings or the TLB cache.
 Many programmers would find a verification cost measured in person-years far too prohibitive,
 while others might argue that for safety-critical kernel code you can't afford {\em not} to verify so thoroughly.
-%
+
 More recently, Hyperkernel \cite{hyperkernel} extended the xv6 educational kernel \cite{xv6}
 to allow for partial, case-by-case verification of system call behaviour using state-machine specification in Python
 checked by an SMT solver.
