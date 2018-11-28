@@ -13,32 +13,33 @@ Yet we still build sand castles.
 \end{tabular}}
 {Yuri, Doki Doki Literature Club}
 
-Transactional memory (TM) is a concurrency primitive
+Transactional memory \revisionminor{(TM)~\cite{transactional-memory}} is a concurrency primitive
 by which programmers may attempt an arbitrary sequence of shared memory accesses,
 which will either be committed (made visible to other processors/threads) atomically,
 such that no intermediate state modification is ever visible,
-or in the case of a conflict which would prevent such,
-discarded with an error code returned to allow the programmer to write a synchronized backup path.
+or, in the case of a conflict which would prevent such,
+discarded with an error code returned to allow the programmer to \revisionminor{invoke} a synchronized backup path.
 %
 Transactional memory specifications typically have three API functions, abstractly speaking:
 \begin{itemize}
-	\item  {\sf xbegin} begins a transaction,
+	\item  {\sf \revisionminor{begin}} begins a transaction,
 		staging any subsequent shared memory accesses in some temporary thread-/processor-local storage,
 		and checking for conflicts with the accesses of any other threads or CPUs.
+		\revisionminor{When the transaction is started, {\sf begin} returns a success code.}
 		If the transaction is unsuccessful, as described below,
 		{\sf begin} instead returns an error code
 		indicating the programmer should fall back to some other, possibly slower, synchronization method.
-	\item {\sf xend} ends a transaction,
+	\item {\sf \revisionminor{end}} ends a transaction,
 		attempting to commit all staged accesses to the shared memory atomically with respect to
 		reads or writes from other concurrently-executing code.
 		If any of those accesses conflict (i.e., read/write or write/write)
 		with any other access to the same memory since the transaction started,
 		they are instead discarded and execution state reverts to the {\sf begin} with an error code as described above.
-	\item {\sf xabort} explicitly aborts a transaction,
+	\item {\sf \revisionminor{abort}} explicitly aborts a transaction,
 		regardless of any memory conflicts,
 		discarding changes and reverting execution as described above.
 		Some implementations allow an arbitrary abort code to be specified
-		which will appear in {\sf begin}'s error code.
+		which will appear \revisionminor{as} {\sf begin}'s error code.
 \end{itemize}
 
 % do they track changes in pthread-style TLS? or?
@@ -63,7 +64,7 @@ refers to Intel's implementation of HTM on Haswell and more recent microarchitec
 \cite{htm-haswell}.
 Restricted Transactional Memory (RTM)
 refers to the {\tt xbegin}, {\tt xend}, and {\tt xabort} subset of TSX instructions,
-which of course correspond to {\sf begin}, {\tt end}, and {\tt abort} listed above,
+which of course correspond to {\sf begin}, {\sf end}, and {\sf abort} listed above,
 as well as {\tt xtest}, an instruction which returns whether or not the CPU is executing transactionally.
 GCC and Clang expose these as C/C++ intrinsics named {\tt \_xbegin()}, {\tt \_xend()}, {\tt \_xabort()}, and {\tt \_xtest()}
 \cite{htm-gcc}.
@@ -74,7 +75,7 @@ optimized for simplicity for locking-like synchronization patterns
 % other possible things to cite here:
 % https://lwn.net/Articles/534758/
 % https://software.intel.com/en-us/node/683688
-\cite{speculative-lock-elision,lock-elision}
+\cite{speculative-lock-elision,lock-elision}.
 In this thesis I focus on RTM, the more general (i.e., expressive (i.e., bug-prone)) interface,
 and among all these acronyms restrict myself to ``HTM''
 (when referring to transactional memory as a concurrency primitive in the abstract)
@@ -252,7 +253,7 @@ While use of HTM in production requires the performance advantage
 of temporarily staging such accesses in local CPU cache,
 model checking such programs need be concerned only with the program's {\em observable} behaviours.
 I claim that MCing the simpler interleaving $\tiat{1}, \tjat{1-3}, \tiat{4-7}$
-is an equivalent verification as MCing the one above;
+is an equivalent verification \revisionminor{to} MCing the one above;
 in fact, this interleaving suffices to check
 all observable behaviours
 of all interleavings
@@ -313,7 +314,7 @@ Then, without loss of generality (for any number of other threads \tjj/\tkk, and
 	$\tiiat{\beta_{b+1}}\dots\tiiat{\beta_n}$ is independent with the transitions of \tjj and \tkk,
 	may be successfully executed until transaction commit,
 	and reordering them produces an equivalent interleaving,
-	satisfying case 2.
+	satisfying case~2.
 \end{proof}
 
 The claim's second part follows naturally.
@@ -365,7 +366,7 @@ For each, I state below what it means to race in an execution with synchronizing
 	\item {\bf Limited Happens-Before.}
 		%Under this definition,
 		To race in $I$ they must be reorderable at instruction granularity,
-		at least one with a thread switch immediately before or after.
+		at least one with a thread switch immediately before or after
 		\cite{tsan,hybriddatarace}.
 		\begin{itemize}
 			\llitem $I \Rightarrow I'$:
@@ -434,11 +435,11 @@ and inserts preemption points, failure injections,
 et cetera as necessary whenever the execution encounters them.
 
 Transactional test programs should be ported to the Pebbles userspace if not already,
-then any use of compiler HTM intrinsics replaced with Landslide's interface%
+then any use of compiler HTM intrinsics replaced with Landslide's interface.%
 \footnote{Attempts to execute a real TSX instruction under Landslide, instead of using the custom interface,
 will be reported as ``invalid opcode'' bugs,
 as neither of its supported simulation platforms support the feature.
-}.
+}
 They should then be put in either {\tt 410user/progs/} or {\tt user/progs/}
 and the {\tt 410TESTS} or {\tt STUDENTTESTS} line (respectively) of {\tt config-incomplete.mk} be edited to add the test name,
 before running {\tt p2-setup.sh} (\sect{\ref{sec:landslide-setup}})
@@ -453,7 +454,7 @@ Finally, Quicksand supports the following command-line options to enable various
 		preemption points on each {\tt \_xbegin()} and {\tt \_xend()} call,
 		failure injection on each of the former
 		(always returning {\tt \_XABORT\_RETRY} as the failure code)
-		(\sect{\ref{sec:txn-failure}}),
+		(\revisionminor{\sect{\ref{sec:tm-design-failure}}}, \sect{\ref{sec:txn-failure}}),
 		and treatment of transactional regions during data-race analysis (\sect{\ref{sec:txn-datarace}}).
 	\item {\tt -A} (for ``xAbort codes'')
 		enables multiple xabort failure codes (\sect{\ref{sec:txn-failure}}).
@@ -501,7 +502,7 @@ in which case not added to {\tt xabort\_codes\_todo} to avoid duplicate work.
 		if {\tt -S} is not set,
 		both {\tt xabort\_codes} lists are initialized to contain this code.
 		This represents the possibility for a hardware transaction to fail
-		for reasons outside of the programmer's control such as system interrupts or cache eviction.
+		for reasons outside of the programmer's control, such as system interrupts or cache eviction.
 		If {\tt -S} is set they are initialized to empty,
 		representing either STM's policy of failing only when a true memory conflict arises,
 		or a TSX user wrapping all her {\tt \_xbegin()}s in a retry loop such as in \cite{sigbovik-htm}.
@@ -530,6 +531,18 @@ in which case not added to {\tt xabort\_codes\_todo} to avoid duplicate work.
 		if {\tt -A} is set,
 		this code is added to both lists,
 		and execution of the transactional path immediately stops.
+		\revision{So called because doing so would trigger a mode switch,
+		which the specification allows to abort for any reason.%
+		\footnote{As far as I know, the reason for syscall aborts is both hardware- and kernel-dependent,
+		and in fact nondeterministic;
+		on my Haswell Core i7 running Linux 4.19, I observed a majority of {\tt \_XABORT\_CONFLICT}s,
+		a scant few {\tt \_XABORT\_CAPACITY}s,
+		and surprisingly many with no reason specified whatever;
+		however, not once did a transaction succeed with even a single {\tt gettid()} call
+		\cite{tsx-syscall}.
+		For simplicity of both implementation and client programs,
+		Landslide always distinguishes system call aborts with {\tt \_XABORT\_CAPACITY}.}
+		See below for discussion of other cache capacity concerns.}
 \end{itemize}
 
 {\bf Limitations.}
@@ -570,10 +583,10 @@ in addition to performing DPOR to select non-independent thread interleavings (\
 the abort codes under each {\tt xbegin} preemption point are also considered ``marked'' paths which must be tested.
 Hence {\tt explore()}, by way of {\tt any\_tagged\_child()},
 will pop off the {\tt xabort\_codes\_todo} queue
-when it's time to explore that preemption point in the usual depth-first manner%
+when it's time to explore that preemption point in the usual depth-first manner.%
 \footnote{The search order prioritizes abort codes before scheduling other threads
 at such preemption points,
-which is just an implementation detail, not theoretically necessary.}.
+which is just an implementation detail, not theoretically necessary.}
 The optional abort code is then passed through {\tt arbiter\_append\_choice()}/{\tt arbiter\_pop\_choice()}
 to {\tt cause\_transaction\_failure()},
 which edits the simulation state ({\tt \%eip} and {\tt \%eax})
@@ -610,7 +623,7 @@ while the two transactional paths (disjoint memory accesses) and the two abort p
 \begin{figure}[h]
         \begin{center}
         \begin{tabular}{ll}
-		\multicolumn{2}{c}{Initially {\tt \ctype{int} foo, bar = \const{0};}} \\
+		\multicolumn{2}{c}{Initially {\tt \ctype{int} foo = \const{0}, bar = \const{0};}} \\
                 \\
                 \begin{tabular}{l}
                 {\bf Thread 1} \\
@@ -690,7 +703,7 @@ thereby skipping over (i.e., pruning) reorderings of any other {\tt xbegin} resu
 Like sleep sets, it also considers the preempted thread ``retry-set blocked''
 (like sleep-set blocking \cite{optimal-dpor}),
 and refuses to run it until the conflicting thread runs its transaction first,
-unless such would result in deadlock%
+unless such would result in deadlock.%
 \footnote{
 	Before the search ordering update to Landslide's normal sleep sets implementation
 	(\sect{\ref{sec:landslide-sleepsets}}),
@@ -698,8 +711,8 @@ unless such would result in deadlock%
 	after the update,
 	it took until 981773 interleavings (>9 hours) into {\tt htm2}(3,2) to find one
 	and confirm the need to still explicitly avoid them by abandoning the retry set in such cases.
-	% TODO put a commit # here
-}.
+	\revisionminor{Commit 02b70c8 implements this fix.}
+}
 %The {\tt landslide} repository's {\tt retry-sets} branch implements this feature,
 Upcoming in the evaluation, Figure~\ref{fig:retry-reduction} will visualize the reduction achieved in two test cases.
 
@@ -813,7 +826,7 @@ To minimize variance in CPU-time measurements,
 I ensured the test machine was not loaded beyond normal web browser use,
 and ran only one instance of Landslide at a time;
 for further discussion of variance see \cite{sigbovik-htm}.
-The number of interleavings in each state space are, of course, deterministic and do not vary across runs.
+The number of interleavings in each state space \revisionminor{is}, of course, deterministic and do not vary across runs.
 
 I investigated the popular transactional benchmark suite STAMP \cite{stamp}
 to include in this test suite,
@@ -1486,7 +1499,7 @@ the likelihood that a bug exists which requires more threads or iterations to ex
 % but it's not clear how to state this "analogy" concisely in text
 
 Nevertheless, pushing $K$ and $N$ higher is obviously desirable,
-even if it means applying reductions that require human intuition to trust are sound.
+even if it means applying reductions that require human intuition to trust \revisionminor{their soundness}. %are sound.
 Moreover, much as verifying {\tt htm2}'s soundness is a positive result,
 the attempts at larger data structures quickly suffered exponential explosion
 for even small thread/iteration counts,
@@ -1543,14 +1556,14 @@ even for example on {\tt counter}(2,1)
 (whose abort path is just 1 {\tt xadd} operation),
 and whose optimal state space size should be 8 regardless of data-race preemption points),
 baseline DPOR tests reorderings of one thread's transaction both with the other's failure path,
-and with the other's data race therein%
+and with the other's data race therein.%
 \footnote{
 Not pictured in Figure~\ref{fig:retry-reduction} is the symmetric subtree of branches 5-6 in the right half of the state space,
 which would occur after branch 10, reordering the blue thread before the pink's data race.
 Such would be equivalent to branches 2 and 4,
 and is pruned by the normal sleep set algorithm (\sect{\ref{sec:landslide-sleepsets}}, {\tt equiv\_already\_explored()})
 even in baseline DPOR, with no need for retry sets.
-}.
+}
 Retry sets on the other hand identify and skip that equivalence
 (technically speaking, retry set DPOR reorders with the data race first during depth-first search,
 then skips generating a retry set for reordering the full abort path).
