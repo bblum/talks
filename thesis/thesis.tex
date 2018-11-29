@@ -117,7 +117,7 @@ Haryadi Gunawi, University of Chicago
 % permission added if \permission{} given.
 
 %\keywords{landslide terminal, baggage claim, ground transportation, ticketing}
-\keywords{concurrency, debugging, verification, model checking, data races, education, transactional memory}
+\keywords{concurrency, testing, debugging, verification, model checking, data races, education, transactional memory}
 
 \maketitle
 
@@ -133,8 +133,10 @@ For my family, my teachers, and my students.
 \newcommand\revisionminor[1]{\cbstart{}#1\cbend\xspace}
 
 \begin{abstract}
-Concurrent programming presents a challenge to students and experts alike because of the complexity of multithreaded interactions and the difficulty to reproduce and reason about bugs.
-Stateless model checking is a concurrency testing approach which forces a program to interleave its threads in many different ways, checking for bugs each time.
+Concurrent programming presents a challenge to students and experts alike because of the complexity of multithreaded interactions and the difficulty \revisionminor{of reproducing and reasoning} about bugs.
+Stateless model checking is a
+%concurrency
+testing approach which forces a program to interleave its threads in many different ways, checking for bugs each time.
 This technique is powerful, in principle capable of finding any nondeterministic bug in finite time,
 but suffers from exponential explosion as program size increases.
 Checking an exponential number of thread interleavings is not a practical or predictable approach for programmers to find concurrency bugs before their project deadlines.
