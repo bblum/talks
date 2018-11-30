@@ -205,7 +205,8 @@ which shows that correctly synchronizing even the simplest transactions may be s
 		%\texttt{\}} \\
 		\end{tabular}
 	\end{center}
-	\caption{Variant of the program in Figure~\ref{fig:htm-example-reproduced},
+	\caption[Variant of the program in Figure~\ref{fig:htm-example-reproduced}.]
+		{Variant of the program in Figure~\ref{fig:htm-example-reproduced},
 		with additional synchronization to protect the failure path from the transactional path.
 		The optional line 0 serves to prevent a cascade of failure paths
 		for the sake of performance
@@ -984,7 +985,8 @@ but the previously-published verification results should be considered outdated.
 			% 2 interleavings; 0 preemptions; job time 3s; pldi time 4712012; new-fixed pldi cputime 4711884
 	\end{tabular}
 	\end{center}
-	\caption{Landslide's bug-finding performance on various test configurations.
+	\caption[Landslide's bug-finding performance on various test configurations.]
+		{Landslide's bug-finding performance on various test configurations.
 		Iterative Deepening (\sect{\ref{sec:quicksand-id}}), optimized for fast bug-finding,
 		is compared against Maximal State Space mode (\sect{\ref{sec:landslide-quicksand-options}}),
 		optimized for fast verification.
@@ -1113,7 +1115,8 @@ Landslide also found two bugs in the ``real-world'' transactional algorithms I t
 		\end{tabular}
 	\end{center}
 	%\caption{mario man had a very large house. or a castle.}
-	\caption{Unmodified code from {\tt htmavl.hpp} showing the previously-unknown bug
+	\caption[Code from {\tt htmavl.hpp} showing the segfault bug Landslide found.]
+		{Unmodified code from {\tt htmavl.hpp} showing the previously-unknown segfault bug
 		Landslide found in {\tt avl\_insert}.
 		The transaction path fails to check {\tt \_retry},
 		leading to data races and corruption just as in {\tt htm1}.
@@ -1146,7 +1149,9 @@ Landslide also found two bugs in the ``real-world'' transactional algorithms I t
 		\texttt{\}} \\
 		\end{tabular}
 	\end{center}
-	\caption{Code from {\tt spinlock-rtm.c}, modified only to remove unrelated logic for brevity,
+	\caption[Code from {\tt spinlock-rtm.c} %, modified only to remove unrelated logic for brevity,
+		showing the performance bug Landslide found.]
+		{Code from {\tt spinlock-rtm.c}, modified only to remove unrelated logic for brevity,
 		showing the performance bug Landslide found in {\tt lock\_fast}({\tt spinlock}).
 		The {\tt isfree()} routine uses an atomic read-and-write operation where just a read would suffice,
 		which leads to superfluous memory conflicts in the transactional path
@@ -1389,7 +1394,8 @@ I report their estimated state space size and runtime measured after that timeou
 			% % [JOB 18] progress: 492976/93493027 brs (0.011233%), ETA 30y 319d 14h 48m 32s (elapsed 9h 59m 35s)
 		\end{tabular}
 	\end{center}
-	\caption{Transactional tests verified (or not) by Landslide.
+	\caption[Transactional tests verified (or not) by Landslide.]
+		{Transactional tests verified (or not) by Landslide.
 		Run with {\tt -M -X}, plus any additional reduction options listed.
 		``Baseline DPOR'' always tests every abort path, without distinguishing among failure reasons
 		(i.e., injecting only {\tt \_XABORT\_RETRY}).
@@ -1464,7 +1470,8 @@ reached among Landslide's verifications
 			% not putting lock_fast because it like, doesn't have a "state space" per se
 		\end{tabular}
 	\end{center}
-	\caption{Number of concurrency events per iteration of each test case.
+	\caption[Number of concurrency events per iteration of each test case.]
+		{Number of concurrency events per iteration of each test case.
 	Note that no test used any synchronization besides mutexes % ;
 	%while they do use the P2 thread API, %in the first place,
 	(the P2 thread API was annotated as trusted (\sect{\ref{sec:landslide-config-landslide}})
@@ -1528,7 +1535,8 @@ Figure~\ref{fig:retry-reduction} depicts the difference between the state spaces
 	\begin{center}
 		\includegraphics[width=\textwidth]{retry-sets.pdf}
 	\end{center}
-	\caption{Visualization of retry set state space reduction.
+	\caption[Number of concurrency events per iteration of each test case.]
+		{Visualization of retry set state space reduction.
 	On both {\tt counter}(2,1) and {\tt fig63}(2,1), baseline DPOR tests % oops
 	all 10 interleavings pictured,
 	with the middle 2 arising from the data-race preemption point within the abort path.
@@ -1831,7 +1839,8 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 		(b) Verifying the lock's client code.
 		\end{tabular}
 	\end{center}
-	\caption{Continuation of Table~\ref{tab:tm-verifs},
+	\caption[Continuation of Table~\ref{tab:tm-verifs}, demonstrating abstraction reduction.]
+		{Continuation of Table~\ref{tab:tm-verifs},
 		% XXX: if you put this citation, it will cause "(document)" to appear in the list of back-references
 		% in the corresponding bibliography entry, rather than an appropriate section number
 		demonstrating abstraction reduction %\cite{dbug-phdthesis}

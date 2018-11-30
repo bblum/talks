@@ -136,7 +136,7 @@ and infinite loops (which must be identified heuristically \cite{entscheidungspr
 			in which two concurrent iterations of the loop yield one net increment of {\tt x}.
 		\end{tabular}
 	\end{tabular}
-	\caption{Example concurrent program in which simultaneous accesses to shared state may interleave to produce unexpected results.}
+	\caption[Example concurrent program.]{Example concurrent program in which simultaneous accesses to shared state may interleave to produce unexpected results.}
 	\label{fig:concurrency-bug}
 \end{figure}
 
@@ -190,7 +190,8 @@ These include {\em locks}, {\em descheduling}, {\em condition variables}, {\em s
 		&
 		(b) The {\tt count} function from Figure~\ref{fig:concurrency-bug}, adjusted to use a mutex to ensure each increment of {\tt x} is uninterruptible.
 	\end{tabular}
-	\caption{Using a locking primitive to protect accesses to shared state.}
+	\caption[Using a locking primitive to protect accesses to shared state.]
+		{Using a locking primitive to protect accesses to shared state.}
 	\label{fig:mutex}
 \end{figure}
 
@@ -257,7 +258,8 @@ using GCC's compiler intrinsics \cite{htm-gcc}.
 		\texttt{\}} \\
 		\end{tabular}
 	\end{center}
-	\caption{The example {\tt count} routine from Figure~\ref{fig:mutex}, rewritten to use HTM.
+	\caption[The example {\tt count} routine from Figure~\ref{fig:mutex}, rewritten to use HTM.]
+		{The example {\tt count} routine from Figure~\ref{fig:mutex}, rewritten to use HTM.
 		If the transaction in the top branch aborts,
 		whether from a memory conflict or random system interrupt,
 		%from the programmer's intention,
@@ -313,7 +315,8 @@ between 2 threads.
 		(b) Interleavings (same order as in (a)), with common prefixes \\
 		combined as ``preemption points'', forming a tree.
 	\end{tabular}
-	\caption{Visualization of interleaving state space for the program in Figure~\ref{fig:concurrency-bug}.
+	\caption[Visualization of interleaving state space for the program in Figure~\ref{fig:concurrency-bug}.]
+		{Visualization of interleaving state space for the program in Figure~\ref{fig:concurrency-bug}.
 	Thread~1 is represented by purple ovals, thread~2 by yellow squares, and time flows from top to bottom.
 	As the two threads execute the same code, without loss of generality thread 1 is fixed to run first --
 	the full state space is twice the size, and the other half is symmetric to the one shown.}
@@ -420,7 +423,8 @@ Over the years, researchers have developed many enhancements to DPOR, such as Op
 	\begin{center}
 	\includegraphics[width=0.6\textwidth]{dpor-new-colors.pdf}
 	\end{center}
-	\caption{DPOR identifies independent transitions by different threads which can commute
+	\caption[DPOR identifies independent transitions by different threads.]
+		{DPOR identifies independent transitions by different threads which can commute
 	without affecting program behaviour.
 	Here, because each thread's local operations on {\tt tmp1}/{\tt tmp2} are not shared memory conflicts,
 	the states marked with the red arrow are guaranteed identical. Hence, only one of the subtrees need be explored.}
@@ -503,9 +507,10 @@ In Figure~\ref{fig:hb-example}, the pairs of lines marked with comments (A1 and 
 {\normalsize (b) No data race in any interleaving.}
 \end{tabular}
 	\end{center}
-\caption{{Data-race analyses may be prone to either {\em false negatives} or {\em false positives}.
-Applying Happens-Before to program (a) will miss the potential race possible between A1/A2 in an alternate interleaving,
-while using Limited Happens-Before on (b) will produce a false alarm on B1/B2.}}
+	\caption[Data-race analyses may be prone to either {\em false negatives} or {\em false positives}.]
+		{{Data-race analyses may be prone to either {\em false negatives} or {\em false positives}.
+	Applying Happens-Before to program (a) will miss the potential race possible between A1/A2 in an alternate interleaving,
+	while using Limited Happens-Before on (b) will produce a false alarm on B1/B2.}}
 \label{fig:hb-example}
 \end{figure}
 
@@ -622,7 +627,8 @@ Both P2 and P3 are built using the {\em Pebbles} system call specification, outl
                 \texttt{misbehave}* & Selects among several thread-scheduling policies. \\
                 \hline
         \end{tabular}
-        \caption{The Pebbles specifcation defines 25 system calls. Students are not required to implement ones marked with an asterisk (*), though the reference kernel provides them. }
+	\caption[The Pebbles specifcation defines 25 system calls.]
+		{The Pebbles specifcation defines 25 system calls. Students are not required to implement ones marked with an asterisk (*), though the reference kernel provides them.}
         \label{tab:syscalls}
 \end{table}
 

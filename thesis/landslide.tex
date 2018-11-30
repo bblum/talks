@@ -332,7 +332,8 @@ and will fail to identify the racing accesses on {\tt x}.
 		\texttt{\}} \\
 	\end{tabular}
 	\end{center}
-	\caption{Example demonstrating the need for {\tt misbehave} to force the kernel
+	\caption[Example demonstrating the need for {\tt misbehave}.]
+		{Example demonstrating the need for {\tt misbehave} to force the kernel
 	to yield during {\tt thread\_fork}.}
 	\label{fig:misbehave-example}
 \end{figure}
@@ -1608,7 +1609,8 @@ Figure~\ref{fig:sleepsets} summarizes the relevant interleavings to highlight on
 	\end{center}
 	\end{tabular}
 	\end{center}
-	\caption{Motivating example for the sleep sets optimization.
+	\caption[Motivating example for the sleep sets optimization.]
+		{Motivating example for the sleep sets optimization.
 	Three of Figure~\ref{fig:dpor-example-2}'s interleavings are highlighted,
 	with the always-independent {\tt tmpN++}s omitted for brevity.
 	}
@@ -1958,7 +1960,7 @@ Then, to summarize in pseudocode a na\"ive exploration of some state space $U$ a
 	\ForEach{$S \in U$}{
 		Execute($S$)
 	}
-	\caption{Straightforward exploration ordering}
+	\caption{Straightforward exploration ordering.}
 	\label{alg:not-icb}
 \end{algorithm}
 
@@ -1971,7 +1973,7 @@ ICB's approach could likewise be summarized as follows:
 			Execute($S$)
 		}
 	}
-	\caption{ICB exploration ordering}
+	\caption{ICB exploration ordering.}
 	\label{alg:icb}
 \end{algorithm}
 
