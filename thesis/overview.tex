@@ -697,7 +697,7 @@ when the task's parent may itself be exiting;
 meanwhile, threads in tasks that receive new children may need to be awakened from {\tt wait}.
 Careless solutions to this problem are prone to data races or deadlocks.
 
-% TODO: Talk about the hurdle (both for p2 and p3).
+% haha-never: Talk about the hurdle (both for p2 and p3).
 
 \subsubsection{Secrecy}
 \label{sec:410-secrecy}
@@ -759,7 +759,7 @@ Although there is some variety in supplemental assignments, all Pintos courses i
 \begin{itemize}
 	\item {\em Threads}: Students must implement an ``alarm clock'' (analogous to Pebbles's {\tt sleep} system call),
 		a priority scheduling algorithm, and a multi-level feedback queue scheduler.
-		% TODO: Later. Talk about how concurrency testing can only test certain parts of this crap.
+		% haha-never: Later. Talk about how concurrency testing can only test certain parts of this crap.
 	\item {\em Userprog}: Provided with rudimentary virtual memory and ELF loader implementations, students must implement argument passing and several system calls associated with userspace programs, including {\tt exec}, {\tt exit}, {\tt wait}, and file descriptor management.
 	\item {\em Filesys}: Provided with a simple ``flat'' filesystem implementation, students must extend it with a buffer cache, extensible files, and subdirectories.
 \end{itemize}
@@ -805,10 +805,8 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		in which the programmer's expectation of {\em atomicity} around a certain sequence of operations
 		is violated by another thread interleaving in between.
 		This is distinct from language-level {\em data races},
-		which may result in bugs by being reordered by the compiler or hardware;
-		% TODO: put a section reference for weak memory
-		% mb have to write a section on it here
-		however, this thesis checks programs at the executable level and assumes sequential consistency,
+		which may result in bugs by being reordered by the compiler or hardware (see {\em relaxed memory});
+		however, this thesis checks programs at the executable level and assumes {\em sequential consistency},
 		so all data races that still result in bugs (e.g., unprotected {\tt x++})
 		must technically also be atomicity violations.
 		Also, this thesis is focused on identifying failures, not root causes,
@@ -1006,6 +1004,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 	\item \revision{{\bf P3.}
 		Operating systems class project, occuring after {\em P2},
 		in which students implement their own {\em Pebbles} kernel from the ground up.}
+	\item \revision{{\bf Partial store order.} See {\em relaxed memory.}}
 	\item \revision{{\bf Pebbles.}
 		The educational kernel architecture used in 15-410 at CMU. See \sect{\ref{sec:pebbles}}.}
 	\item \revision{{\bf Pintos.}
@@ -1033,6 +1032,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		or to further restrict by predicates on the current stack trace.
 		See \sect{\ref{sec:landslide-pps}}.
 		Often called {\em preemption point} for short, with context hopefully making the distinction clear.
+	\item \revision{{\bf PSO.} {\em Partial store order}. See {\em relaxed memory}.}
 	\item {\bf Pure happens-before.}
 		Variant of {\em happens-before} that relates two events when any synchronization operation introducing a memory
 		barrier, which would prevent compiler or hardware access reorderings, occurs in between.
@@ -1060,7 +1060,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		although may also refer to the buggy subset only (i.e., {\em concurrency bugs}) for brevity.
 		%
 		Recently, many systems research papers have used the term to refer to {\em data races} in particular.%
-		\footnote{In the author's personal experience, readers of their M.S. thesis \cite{landslide}
+		\footnote{In the author's personal experience, many readers of their M.S. thesis \cite{landslide}
 		have misinterpreted its title to believe % oops
 		that Landslide be only a data-race detector,
 		rather than a model checker.}
@@ -1070,6 +1070,22 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		The act of making a {\em state space} smaller by finding multiple execution sequences
 		that can be proved {\em equivalent},
 		such that all but one may be skipped over.
+	\item \revision{{\bf Relaxed memory.}
+		Also known as {\em weak memory}.
+		A family of multiprocessor execution semantics
+		that allows reads and/or writes of shared memory to become visible to different CPUs in different sequences.
+		Under {\em total store order} (TSO),
+		implemented for example on x86,
+		one CPU's writes may appear reordered after its subsequent loads, from the perspective of another CPU.
+		Under {\em partial store order} (PSO),
+		either writes and/or reads may appear reordered after other subsequent writes and/or reads.
+		On ARM's implementation of PSO, all such combinations are possible.
+		Safe concurrent programming on such architectures requires careful use
+		of acquire and/or release memory barriers
+		\cite{sully-thesis}.
+		By contrast, {\em sequential consistency} (SC) permits no such reorderings.
+		% TODO: check that quicksand discussion shouldn't perhaps get a more subsection'ed sect reference
+		For further discussion see \sect{\ref{sec:quicksand-discussion}} and \sect{\ref{sec:tm-warpzone-relaxed}}.}
 	\item {\bf Schedule.}
 		Another term for {\em interleaving} with a more theoretical nuance.
 	\item {\bf Scheduler.}
@@ -1078,6 +1094,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		and allocating execution time among them (in round-robin, priority-driven, or other manner).
 		May also to refer to the analogous component of {\em Landslide}
 		which overrides the decision of the kernel scheduler.
+	\item {\bf Sequential consistency.} See {\em relaxed memory}.
 	\item {\bf Soundness.}
 		Said of a search algorithm
 		which provides the property that if a bug exists under the given test case,
@@ -1141,6 +1158,8 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		bounded by the two different program states at beginning and end.
 		In this thesis, will be used exclusively when the terminal program states are {\em preemption points},
 		and no intermediate state is a preemption point as well.
+	\item \revision{{\bf Total store order.} See {\em relaxed memory.}}
+	\item \revision{{\bf TSO.} {\em Total store order}. See {\em relaxed memory.}}
 	\item {\bf Userspace.}
 		Opposite of {\em kernelspace}.
 		Execution mode in which programs, such as {\em P2} or client code thereof,
@@ -1157,4 +1176,6 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		Formally certifying the correctness of a program under certain properties.
 		In this thesis, will always be constrained by the set of behaviours
 		the {\em test case} is capable of exposing in the first place.
+	\item \revision{{\bf Weak memory.}
+		See {\em relaxed memory.}}
 \end{enumerate}
