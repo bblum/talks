@@ -554,7 +554,8 @@ while others serve to improve or otherwise manipulate the state space.
 		(must be called with interrupts and/or scheduler preemption disabled).
 	\item {\tt tell\_landslide\_thread\_off\_rq(int tid)} - dual of the above.
 		If {\tt CURRENT\_THREAD\_\allowbreak{}LIVES\_ON\_RQ=0} (described above), this should be invoked (among other times) during context switch with the TID of the thread about to start running.
-		Alternatively (thanks sully), even for a kernel which takes the current thread off its literal runqueue,
+		Alternatively, %(thanks sully),
+		even for a kernel which takes the current thread off its literal runqueue,
 		the annotator may use these two calls to indicate the ``abstract runqueue'' which includes the current thread as well,
 		and set {\tt CURRENT\_THREAD\_LIVES\_ON\_RQ=1}.
 \end{itemize}

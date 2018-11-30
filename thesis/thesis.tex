@@ -156,7 +156,7 @@ and evaluate several real-world transactional benchmarks to show that stateless 
 \end{abstract}
 
 \begin{acknowledgments}
-I honor here the many people who supported me during these 7 years and made this journey possible.
+\revision{I honor here the many people who supported me during these 7 years and made this journey possible.
 
 \subsubsection{Thesis}
 
@@ -172,21 +172,25 @@ to design scientifically thorough experiments,
 to explain difficult concepts approachably,
 to appreciate related work as charitably as possible,
 and to seek guidance from industry people with relevant experience,
-despite my often stubborn refusal to leave my little comfort zone.
+despite my often stubborn refusal to leave my own little comfort zone.
 So, even when it took me sending 10+ email reminders to get your attention,
 truly,
 thanks for everything, Garth.
 
 Professor David A. Eckhardt
-provided unending guidance on education, writing, career, life, you name it,
-helped revise each semester's iteration of the recruiting lecture with a keen eye for the student mind,
-contributed substantially to the design of the survey,
-and supplied constant enthusiasm and encouragement that Landslide was a boon to 15-410.
-I can't express my gratitude to Dave strongly enough,
-even if it took until just this week for half of the Landslide-friendly tests to be included in the official P2 test suite.
+provided unending guidance on education, writing, career, and life in general, %life, you name it,
+helped revise each semester's %iteration of the
+recruiting lecture with a keen eye for the student mind,
+contributed several clever survey questions, %substantially to the design of the survey,
+and supplied constant %enthusiasm and
+encouragement about Landslide's value to 15-410, %that Landslide was a boon to 15-410,
+not to mention the red-ink-encrusted printed draft of this document I received immediately after my defense.
+My debt of thanks to Dave is of such magnitude that I may never hope to pay it back, but perhaps forward instead.
+%I can't express my gratitude to Dave strongly enough,
+%even if it took until just this week for half of the Landslide-friendly tests to be included in the official P2 test suite.
 %even though three of the Landslide-friendly tests never made it upstream into the official P2 test suite.
 
-Ji\v{r}\'{i} \v{S}im\v{s}a, another student of Garth's,
+Ji\v{r}\'{i} \v{S}im\v{s}a, another former student of Garth's,
 first sparked my interest in the field,
 and then gave invaluable support during my first few years.
 Ji\v{r}\'{i}'s mentorship
@@ -199,8 +203,8 @@ none of this would have happened.
 
 {Many others have collaborated with me directly on the research itself,
 whom I thank here in approximate chapter order.
-Michael J. Sullivan and Nathaniel Filardo were Landslide's first users besides myself back in its prototype days.
-Joshua Wise, Miriam Zimmerman, and Glenn Willen helped revise my explanation of DPOR in Chapter~\ref{chap:background}.
+Michael J. Sullivan and Nathaniel Wesley Filardo were Landslide's first users besides myself back in its prototype days.
+Joshua Wise, Miriam Zimmerman, and Glenn Willen helped revise my explanation of DPOR in Chapter~\ref{chap:landslide}.
 Professor Brandon Lucia provided valuable comments and revisions to Chapter~\ref{chap:quicksand}'s content
 that ultimately led to its publication at OOPSLA 2016.
 Michael J. Sullivan double-checked the proofs therein.
@@ -235,18 +239,22 @@ their smiles and gratitude were the true motivation of this thesis.
 
 \subsubsection{Academia}
 
-The community of 15-410 TAs,
-having surrounded me pretty much since starting undergrad,
+The community of 15-410 TAs
+%having surrounded me pretty much since starting undergrad,
 nurtured my love of teaching
 well before taking the class myself and well after graduation.
-As skilled as the instructor is,
+%As skilled as the instructor is,
 15-410 could not be the world's best operating systems class
-without TAs who value thorough grading, the Socratic method,
+without %TAs
+course staff %(staves)
+who value thorough grading, the Socratic method,
 and empathy to struggling students as much
 from year to year as the crew I have known.
-It was a blessing to serve, and later do research, among you all.
-Thanks also to Wind River for generously providing CMU with Simics educational licenses.
-I am also grateful to Adam Blank and Miriam Zimmerman
+It was a blessing to serve, and later to do research, among you all.
+Thanks to Wind River for generously
+providing CMU with Simics educational licenses.
+%I am also grateful
+Thanks also to Adam Blank and Miriam Zimmerman
 for founding and organizing the class Great Practical Ideas,
 which teaches oft-neglected programming skills such as version control and debugging,
 which I had the opportunity to teach as head instructor one semester.
@@ -254,17 +262,26 @@ which I had the opportunity to teach as head instructor one semester.
 I thank the Parallel Data Lab, my research group at CMU,
 for supporting me at the PDL retreat every fall,
 pushing me to refine my presentation skills and to network with strangers (now familiar faces) from industry.
-I also thank those industry attendees from each of the PDL Consortium member companies
-for their interest, even in more theoretical work,
-and the enlightening conversations resulting therefrom.
-I thank everyone outside my immediate research circle who,
-whether at the retreat or otherwise,
+I also thank those %industry
+attendees from each of the PDL Consortium member companies
+for their interest %, even in more theoretical work,
+and for the enlightening conversations resulting therefrom.
+%Thanks to the anonymous OOPSLA reviewer who went the extra mile to read my supplementary proofs
+%and urged me to improve the formalism to be more foundational
+%(the lack of any stronger criticism a silent vote of confidence for their overall correctness).
+Thanks to Niko Matsakis for the mentorship and collaboration during my two summers as a Rust research intern at Mozilla,
+and to the rest of the Rust community as well for their extremely important work
+bringing better concurrent programs to the world from a different angle.
+I thank everyone outside my %immediate
+research circle who
+%whether at the retreat or otherwise,
 insisted how cool my research was for directly helping students --
 every such reminder helped me keep my head up during darker times.
 
-I am grateful to the ThursDz Council,
+%I am grateful to
+The ThursDz Council,
 my group of now-former grad student, Shadyside-bound (in spirit if not in person) restaurant-hoppers,
-for both friendship and mentorship over the years.
+surrounded me with both friendship and mentorship over the years.
 In particular,
 %in alphabetical for lack of a better order,
 Chris Martens,
@@ -289,31 +306,122 @@ to all future organizers who'll keep those ``mainstream'' conferences on their t
 
 My parents, Eve and David Blum, and my grandparents, Margie Granach and Elsie Blum,
 provided bottomless emotional support throughout my education.
-I am grateful beyond words for the privileged life they provided
+I appreciate beyond words for the privileged life they provided
 that allowed me the opportunity to pursue higher education.
 
-% [ ] csd bgames
-% [ ] undergrad frenz
-% [ ] new frenz
-% [ ] family, incl louie
+Looking back on my 11 years at CMU,
+I am especially grateful for the friendships made early on %in my undergrad years
+that continued well past first graduation.
+From those who stayed in Pittsburgh %with me
+to those who %moved away but
+kept in touch,
+from my regular tabletop, board, and/or dance gaming partners
+to those who %inexhaustibly
+welcomed me with %company and
+a couch to sleep on during travel,
+I thank
+%-- and in any order other than alphabetical here would be far too cruel --
+Adam Blank,
+Alan Vangpat,
+Alex Yuschik,
+Anand Subramanian,
+Andrew Krieger,
+Car Bauer,
+Carolyn Sawyer,
+Elizabeth Kemp,
+Elly Fong-Jones,
+Emma Cating-Subramanian,
+Eric Faust,
+Gabe Routh,
+Greg Hanneman,
+Hazel Vird\'{o},
+Jack Ferris,
+Jake Lengyel,
+Jason Deng,
+Josh Keller,
+Joshua Wise,
+Josiah Boning,
+Julia Tuttle,
+Kellie Medlin,
+Laura Abbott,
+Margaret Meyerhofer,
+Michael ``rntz'' Arntzenius,
+Michael J. ``Sully'' Sullivan,
+Miriam Zimmerman,
+Naomi Saphra,
+Nathaniel Wesley Filardo,
+Philip ``8'' Gianfortoni,
+Rhett Lauffenburger,
+Richard Ha,
+Rory Glenn,
+Ryan Pearl,
+and
+Todd Eisenberger
+for their wonderful friendship.
+I am equally grateful to the new friends I made during my graduate years,
+whether through board/card/dance gaming, tea drinking, %and/or
+movie watching,
+and/or as more permanent Pittsburgh residents that I am extremely torn up about moving away from:
+%leaving behind (for now at least):
+Alexandra Lee Falk,
+Alexis Dyer,
+Barbara Jensen,
+Brendan McShane,
+Brian Saghy,
+Carlo Angiuli,
+Cassie Orr,
+Dan Guzek,
+Danny Gratzer,
+David Renshaw,
+Emily Forney,
+Evan Cavallo,
+Gabriele Farina,
+Grant Wu,
+Jenny Lin,
+Karl Schulz,
+Kristy Gardner,
+Lea Albaugh,
+Maija Mednieks,
+Marlena Abraham,
+Matt Stanec,
+Matthew Maurer,
+Sarah R. Allen,
+Sol Boucher,
+Stefan Muller,
+Zachary Waldman,
+Ziv Scully,
+and the rest of ThursDz already named previously.
+And to anyone who may read this list
+and feel even slightly disappointed that their name was left off:
+I owe you a nice dinner. Get in touch.
+
+日本語を
+一緒に
+勉強したり、
+会話したり、
+色々教えてくださったりした
+学習者さんたちとネイティブスピーカーさんたちへ、
+心から感謝を申し上げます。
+外国語を学ぶのは一生の二番目の達成感かもしれません。
 
 Lastly,
 the Android: Netrunner community has been such an important part of my life
 for nearly as long as I've been a grad student.
-Netrunner is a tabletop strategy deckbuilding card game
+Netrunner is a deckbuilding strategy card game
 that depicts cyberspace hacking battles (completely different from real-life computer security)
-alongside dystopian social issues (some of which seem oddly more familiar with each passing year).
-Its characters have a diversity of ethnicity, gender identity, and sexual orientation
+alongside dystopian social issues (becoming strangely more familiar with each passing year).
+Its characters have a diversity of ethnicity and gender identity %and sexual orientation
 unparalleled in any other game I know of,
 and the community that has grown around it reflects those values.
-I thank in particular the other Stimhack moderators,
+I thank especially the other Stimhack moderators,
 the members of {\sf \#rainbow-coalition},
 and the local Pittsburgh crew
-for their support and encouragement
-and friendships very real and deep, even when forged only in text,
+for their support and encouragement and
+friendships very real and deep, even when forged only in text,
 %\footnote{and Slack emojis},
 that will long outlive the silly card game that brought us together.
 %It'd be an injustice to list only a few names here and omit others, but you know who you are.
+}
 
 \end{acknowledgments}
 
