@@ -33,6 +33,10 @@
 \usepackage[numbers,sort]{natbib}
 \PassOptionsToPackage{hyphens}{url}
 \usepackage[backref,pageanchor=true,plainpages=false, pdfpagelabels, bookmarks,bookmarksnumbered,
+colorlinks=true,
+citecolor=citec,
+linkcolor=linkc,
+urlcolor=urlc,
 %pdfborder=0 0 0,  %removes outlines around hyper links in online display
 ]{hyperref}
 \usepackage{subfigure}
@@ -40,6 +44,7 @@
 \usepackage[linesnumbered,ruled]{algorithm2e}
 \usepackage{algpseudocode}
 \usepackage{microtype}
+\usepackage{cleveref}
 
 %% custom fonts
 
@@ -85,6 +90,11 @@
 %
 % \newcommand{\linksto}[1]{\csname nwf@backrefs@#1\endcsname}
 % \makeatother
+
+% NB. needs to be defined before mainmatter so they work in hyperref
+\definecolor{citec}{RGB}{168,0,84}
+\definecolor{linkc}{RGB}{0,84,168}
+\definecolor{urlc} {RGB}{168,84,0}
 
 \begin{document}
 \frontmatter

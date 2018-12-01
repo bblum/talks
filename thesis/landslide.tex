@@ -209,7 +209,7 @@ Unless otherwise specified these are boolean flags (1 or 0) and the example valu
 	\item {\tt EXPLORE\_BACKWARDS=0} - configure whether, at each newly encountered preemption point,
 		to allow the current thread to run first then later upon backtracking to preempt (0),
 		or to issue preemptions first and then try continuing the current thread later (1).
-		0 tends to produce shorter preemption traces while 1 tends to find bugs faster (\cite{landslide} \S{}8.7.1).
+		0 tends to produce shorter preemption traces while 1 tends to find bugs faster (\cite[\S{}8.7.1]{landslide}).
 		Not compatible with ICB.
 \end{itemize}
 
@@ -467,7 +467,7 @@ which the annotation scripts define in advance of processing the configuration t
 		leave the current thread on the runqueue,
 		removing it only when it's descheduling and should actually be considered blocked.
 		Set this option to 0 to support the former kernel type or 1 to support the latter.%
-		\footnote{This option replaces the deprecated {\tt kern\_current\_extra\_runnable()} annotation from {\tt student.c} described in \cite{landslide} \S{}6.2.3.}
+		\footnote{This option replaces the deprecated {\tt kern\_current\_extra\_runnable()} annotation from {\tt student.c} described in \cite[\S{}6.2.3]{landslide}.}
 		\revision{Whether or not a kernel requires this annotation could be auto-detected in future work.}
 	\item {\tt PREEMPT\_ENABLE\_FLAG=NAME} - name of a global variable which the kernel uses to toggle scheduler preemptability, for kernels which may disable preemption without disabling interrupts.
 		For kernels wherein preemptability is corresponds directly by interrupts, leave this option unspecified.
@@ -1137,7 +1137,7 @@ Each of these configurations may contain any number of
 \subsubsection{Stack trace inclusion/exclusion}
 
 {\tt check\_withins()} implements the allow/denylist behaviour for the former two of those commands
-(in a similar manner to the Preemption Sealing technique described in prior work \cite{sealing}).
+(in a similar manner to \revisionminor{prior work's Preemption Sealing} \cite{sealing}).
 It invokes the stack tracer (\sect{\ref{sec:landslide-stacktrace}})
 for a list of which functions are on the call stack
 (hence the importance of the stack tracer's complex logic to not miss any frames

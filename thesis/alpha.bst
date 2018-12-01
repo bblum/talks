@@ -86,7 +86,9 @@ FUNCTION {output.check}
 FUNCTION {output.bibitem}
 { newline$
   "\bibitem[" write$
+  "\hilight{citec}{" write$
   cite.label write$
+  "}" write$
   "]{" write$
   cite$ write$
   "}" write$
