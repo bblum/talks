@@ -678,7 +678,7 @@ three among these were deterministic; four were concurrency bugs.}
 		and \revisionminor{three} concurrency bugs in {\tt userprog} projects.
 		It found a deadlock in two groups' implementations,
 		% for one of these groups 2 traces were emitted, same stack trace (i think) just w diff pps
-		wherein {\tt process\_wait()}'s synchronization assumed
+		wherein {\tt process\_\allowbreak{}wait()}'s synchronization assumed
 		it would always be called before {\tt process\_exit()}.
 		In both cases the former's {\tt cond\_wait()} call would block forever if reordered after the latter.
 		This test also found several use-after-frees for one of those two groups,

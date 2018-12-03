@@ -15,7 +15,9 @@ As of this thesis's writing, Landslide supports the use of two possible simulato
 \end{itemize}
 
 % TODO: add some backup linkeroos
-The Bochs port of Landslide is likewise open-source and available at \url{https://github.com/bblum/landslide}.
+The Bochs port of Landslide is likewise open-source
+\revisionminor{under the \landslidelicense license}
+and available at \url{https://github.com/bblum/landslide}.
 % TODO: refresh
 The HEAD commit at the time of writing is 8127151.
 The Simics port uses Simics's proprietary API and is hence unlicensed and available upon request for educational use only.
@@ -99,6 +101,7 @@ The following command line arguments are recommended for the common user.
 	\item {\tt -v}: verbose mode (issues output for each executed interleaving by each instance of landslide, makes progress reports more detailed, etc)
 	\item {\tt -l}: leave Landslide log files from completed state spaces even when no bug was found (deleted automatically by default)
 	\item {\tt -h}: print help text and exit immediately
+	\item \revision{{\tt -s}: include ``secret'' options when printing help text}
 \end{itemize}
 
 The following ``secret'' arguments also exist, primarily for my own use in running experiments or debugging.

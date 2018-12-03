@@ -5,7 +5,7 @@ Please hold on. This thesis will be departing shortly for the Landslide terminal
 \end{tabular}}
 {Pittsburgh International Airport (paraphrased)}
 
-\subsubsection{Motivation}
+\section{Motivation}
 
 % "Concurrency is notoriously difficult to get right." [....]
 % dejafu A Concurrency Testing Library for Haskell (2016 ver.)
@@ -60,7 +60,7 @@ and especially so for students who are still learning basic concurrency principl
 %We should not expect programmers to add effortful manual annotations to their code,
 %or they will abandon our fancy technique to instead simply run stress tests until their deadline tomorrow evening.
 
-\subsubsection{Contributions}
+\section{Contributions}
 
 This thesis will solve both problems discussed above.
 My thesis statement is as follows:
@@ -110,7 +110,7 @@ This thesis will comprise three major contributions:
 		and show the verification results.
 \end{enumerate}
 
-\subsubsection{Organization}
+\section{Organization}
 
 The rest of this dissertation is organized as follows.
 
@@ -133,7 +133,9 @@ The rest of this dissertation is organized as follows.
 	\item {\bf Conclusion:} Chapter~\ref{chap:conclusion} provides some thoughts on the future of the field.
 \end{itemize}
 
-\subsubsection{Notes on reading this thesis}
+\section{Notes on reading this thesis}
+
+\subsubsection{Experience}
 
 I have tried to make this document accessible to readers of all programming experience levels,
 although some of the research being theoretical and several layers of abstractions deep,
@@ -150,6 +152,8 @@ which should equip them to understand every detail herein.
 Readers who are here only to skim and skip around should at least be aware of the glossary~(\sect{\ref{sec:glossary}})
 to help clarify any terminology confusion.
 
+\subsubsection{Vision}
+
 Color will be used in figures and graphs to add visual contrast and make the data easier to navigate at a glance,
 but only in redundant ways also signaled by symbols.
 I have made some effort to choose palettes friendly to color-blindness;
@@ -158,6 +162,10 @@ whether being color-blind or reading a physical copy printed in greyscale,
 they may be assured all important distinctions still render in monochrome.
 For example, ovals and rectangles typically depict different threads,
 and $\dagger$ distinguishes state space estimates from completed verifications.
+\revision{Should any vision-impaired reader require fully-textual figure descriptions,
+I would be happy to provide them upon request.}
+
+\subsubsection{Language}
 
 Pronoun use will vary between more specific and more ambiguous to convey additional nuance.
 The singular ``I'' is associated with my own research contributions,
@@ -168,13 +176,25 @@ The impersonal ``the programmer'' will be referred to as she/her
 to challenge readers' unconscious bias about gender in computer science,
 as well as to highlight her role as the intended user, separate from the underlying research.
 %to distinguish her from the thesis audience concerned with the underlying research,
-Individual students who participated in the user studies will be given the more inclusive they/them.
-Gender-neutral pronouns will also be used on the author themself.
+Gender-neutral pronouns will be used to refer to
+individual students who participated in the user studies,
+%will be given the more inclusive they/them.
+%Gender-neutral pronouns will also be used
+as well as
+on the author themself.
+
+\subsubsection{Code}
+
+\newcommand\landslidelicense{BSD\xspace}
 
 This document is, in a way, only half the work of the thesis, the other half being Landslide's implementation.
 While some readers may prefer to be taught in prose and/or mathematical notation how an algorithm works,
 others may find that disorienting and wish to see things in a way a compiler would understand.
-Chapter~\ref{chap:landslide} provides source code links and serves as a guide to browsing the repository.
+\revisionminor{
+The Landslide codebase is open-source under the \landslidelicense license,
+available at \url{https://github.com/bblum/landslide}.
+Chapter~\ref{chap:landslide} provides more detail and}
+serves as a guide to browsing the repository.
 Later chapters will often make parenthetical references to specific files and/or functions
 therein which implement a feature under discussion.
 
