@@ -44,7 +44,7 @@ urlcolor=urlc,
 \usepackage[linesnumbered,ruled]{algorithm2e}
 \usepackage{algpseudocode}
 \usepackage{microtype}
-\usepackage{cleveref}
+\usepackage[nameinlink]{cleveref}
 
 %% custom fonts
 
@@ -73,28 +73,15 @@ urlcolor=urlc,
 % Provides a draft mark at the top of the document.
 \draftstamp{\today}{DRAFT}
 
-% % nwf made this but i don't know how to get it to work?
-% \usepackage{etoolbox}
-% \makeatletter
-% \apptocmd{\ref}{%
-%   \immediate\write\@auxout%
-%     {\expandafter\string\csname nwf@backref\endcsname{#1}{\arabic{page}}}%
-% }{}{}
-%
-% \newcommand{\nwf@backref}[2]{%
-%   \ifcsdef{nwf@backrefs@#1}%
-%    {\csgappto{nwf@backrefs@#1}{, #2}}%
-%    {\csgdef{nwf@backrefs@#1}{#2}}%
-% }
-% \AtEndDocument{\let\nwf@backref\relax}
-%
-% \newcommand{\linksto}[1]{\csname nwf@backrefs@#1\endcsname}
-% \makeatother
-
 % NB. needs to be defined before mainmatter so they work in hyperref
-\definecolor{citec}{RGB}{168,0,84}
-\definecolor{linkc}{RGB}{0,84,168}
-\definecolor{urlc} {RGB}{168,84,0}
+\definecolor{citec}{RGB}{128,0,64}
+\definecolor{linkc}{RGB}{0,64,128}
+\definecolor{urlc} {RGB}{128,64,0}
+
+% format section references with no space after the \S
+% #1 is the ref number; the #2 and #3 here are the hyperlink boundaries
+\crefformat{section}{#2\S{}#1#3}
+\Crefformat{section}{#2\S{}#1#3}
 
 \begin{document}
 \frontmatter
@@ -214,15 +201,15 @@ none of this would have happened.
 {Many others have collaborated with me directly on the research itself,
 whom I thank here in approximate chapter order.
 Michael J. Sullivan and Nathaniel Wesley Filardo were Landslide's first users besides myself back in its prototype days.
-Joshua Wise, Miriam Zimmerman, and Glenn Willen helped revise my explanation of DPOR in Chapter~\ref{chap:landslide}.
-Professor Brandon Lucia provided valuable comments and revisions to Chapter~\ref{chap:quicksand}'s content
+Joshua Wise, Miriam Zimmerman, and Glenn Willen helped revise my explanation of DPOR in \Cref{chap:landslide}.
+Professor Brandon Lucia provided valuable comments and revisions to \Cref{chap:quicksand}'s content
 that ultimately led to its publication at OOPSLA 2016.
 Michael J. Sullivan double-checked the proofs therein.
 Professor Timothy Zhu from Penn State University
 and Professor Haryadi Gunawi and TA Kevin Zhao from the University of Chicago
 graciously allowed me to use their students as guinea pigs
 and helped greatly to improve Landslide's stability and robustness for use beyond CMU's walls,
-greatly enriching Chapter~\ref{chap:education}'s evaluation.
+greatly enriching \Cref{chap:education}'s evaluation.
 David Blum and Skye Toor provided
 invaluable advice on statistical analysis
 that helped me evaluate the student
@@ -236,7 +223,7 @@ that helped me evaluate the student
 grade distributions therein.
 Mario Dehesa-Azuara generously contributed the
 transactional memory data structures
-that make up about half of Chapter~\ref{chap:tm}'s evaluation suite.
+that make up about half of \Cref{chap:tm}'s evaluation suite.
 %
 Carlo Angiuli, Evan Cavallo, Ziv Scully, Jim McCann,
 Matthew Maurer, Stefan Muller, Guillaume Didier,

@@ -83,12 +83,12 @@ and for automatically instrumenting operating system kernels in an educational s
 This thesis will comprise three major contributions:
 
 \begin{enumerate}
-	\item {\bf Meaningful state spaces (Chapter \ref{chap:quicksand}).}
+	\item {\bf Meaningful state spaces (\Cref{chap:quicksand}).}
 		I will present {\em Iterative Deepening}, a new algorithm for navigating the trade-off in how many preemption points to test at once.
 		Iterative Deepening incorporates state space estimation \cite{estimation} to decide on-the-fly whether each state space is worth pursuing, and uses data race analysis \cite{tsan} to find new preemption point candidates based on a program's dynamic behaviour.
 		This section will include a large evaluation of the technique, comparing its performance to three \revisionminor{prior-work} approaches across 600+ unique tests.
 		I will show that Iterative Deepening of preemption points outperforms prior work in terms \revisionminor{of both} finding bugs quickly and completely verifying correctness when no bug exists.
-	\item {\bf Educational use (Chapter \ref{chap:education}).}
+	\item {\bf Educational use (\Cref{chap:education}).}
 		For the past five semesters, I have offered a fully-automated version of Landslide to students in 15-410, CMU's undergraduate Operating System Design and Implementation class \cite{kspec,thrlib}, for use as a debugging aid during the thread library project.
 		Recently I have also extended Landslide to handle Pintos kernel projects from other universities \cite{pintos}.
 		In the two most recent semesters, I collaborated with Operating Systems course staff at two such schools, the University of Chicago and University of California at Berkeley,
@@ -98,7 +98,7 @@ This thesis will comprise three major contributions:
 		and surveyed students to understand the human experience.
 		This section will present the study's results
 		to evaluate the suitability of stateless model checking in an educational setting.
-	\item {\bf Hardware Transactional Memory (HTM) (Chapter \ref{chap:tm}).}
+	\item {\bf Hardware Transactional Memory (HTM) (\Cref{chap:tm}).}
 		HTM is a relatively new concurrent programming technique \cite{htm-haswell,htm-experience}
 		which is not yet addressed by modern model checkers.
 		I have extended Landslide's concurrency model to support
@@ -115,22 +115,22 @@ This thesis will comprise three major contributions:
 The rest of this dissertation is organized as follows.
 
 \begin{itemize}
-	\item {\bf Background:} Chapter~\ref{chap:background} will present the requisite background material on concurrent programming, stateless model checking, and the various types of programs targeted by Landslide.
-	\item {\bf Landslide:} Chapter~\ref{chap:landslide} explains the design and implementation of Landslide
+	\item {\bf Background:} \Cref{chap:background} will present the requisite background material on concurrent programming, stateless model checking, and the various types of programs targeted by Landslide.
+	\item {\bf Landslide:} \Cref{chap:landslide} explains the design and implementation of Landslide
 		%the core of my stateless model checking framework,
 		and all the special features it's been equipped with over the years.
 		It is the foundation upon which all three contributions above build.
-	\item {\bf Quicksand:} Chapter~\ref{chap:quicksand} presents the Iterative Deepening framework which more intelligently chooses which state spaces to test, corresponding to contribution 1 above.
-	\item {\bf Education:} Chapter~\ref{chap:education} discusses my evaluation of Landslide
+	\item {\bf Quicksand:} \Cref{chap:quicksand} presents the Iterative Deepening framework which more intelligently chooses which state spaces to test, corresponding to contribution 1 above.
+	\item {\bf Education:} \Cref{chap:education} discusses my evaluation of Landslide
 		in CMU's 15-410 class environment using the Pebbles kernel,
 		and in the University of Chicago's and Berkeley's OS class environments using the Pintos kernel,
 		corresponding to contribution 2 above.
-	%\item {\bf Pebbles:} Chapter~\ref{chap:410} discusses my evaluation of Landslide in CMU's 15-410 class environment using the Pebbles kernel, corresponding to contribution 2 above.
-	%\item {\bf Pintos:} Chapter~\ref{chap:410} discusses my evaluation of Landslide in the University of Chicago's and Berkeley's OS class environments using the Pintos kernel, corresponding to contribution 2 above.
-	\item {\bf Transactional Memory:} Chapter~\ref{chap:tm} presents my extension of Landslide's concurrency model to handle transactional concurrency and the evaluation thereof, corresponding to contribution 3 above.
-	\item {\bf Related Work:} Chapter~\ref{chap:relatedwork} honors my neighbours and ancestors in research spirit.
-	\item {\bf Future Work:} Chapter~\ref{chap:warpzone} lists stateless model checking's remaining shortcomings and how new research might address them.
-	\item {\bf Conclusion:} Chapter~\ref{chap:conclusion} provides some thoughts on the future of the field.
+	%\item {\bf Pebbles:} \Cref{chap:410} discusses my evaluation of Landslide in CMU's 15-410 class environment using the Pebbles kernel, corresponding to contribution 2 above.
+	%\item {\bf Pintos:} \Cref{chap:410} discusses my evaluation of Landslide in the University of Chicago's and Berkeley's OS class environments using the Pintos kernel, corresponding to contribution 2 above.
+	\item {\bf Transactional Memory:} \Cref{chap:tm} presents my extension of Landslide's concurrency model to handle transactional concurrency and the evaluation thereof, corresponding to contribution 3 above.
+	\item {\bf Related Work:} \Cref{chap:relatedwork} honors my neighbours and ancestors in research spirit.
+	\item {\bf Future Work:} \Cref{chap:warpzone} lists stateless model checking's remaining shortcomings and how new research might address them.
+	\item {\bf Conclusion:} \Cref{chap:conclusion} provides some thoughts on the future of the field.
 \end{itemize}
 
 \section{Notes on reading this thesis}
@@ -140,16 +140,16 @@ The rest of this dissertation is organized as follows.
 I have tried to make this document accessible to readers of all programming experience levels,
 although some of the research being theoretical and several layers of abstractions deep,
 I cannot promise all easy reading.
-Chapter~\ref{chap:background}, Background, provides what I hope are friendly concrete examples
+\Cref{chap:background}, Background, provides what I hope are friendly concrete examples
 to help the reader feel comfortable with each level of intuition that upcoming algorithms will build upon.
 These should suffice for the experiments and overall contributions,
 if not necessarily the details of each algorithm or soundness proof.
-In particular, Chapter~\ref{chap:education}, Education,
+In particular, \Cref{chap:education}, Education,
 may be approached with no knowledge of concurrency or model checking,
 taking it merely as a study of a magic new debugging tool in the classroom setting.
-The more ambitious reader may proceed to the Landslide chapter's algorithm walkthroughs~(\sect{\ref{sec:landslide-algs}}),
+The more ambitious reader may proceed to the Landslide chapter's algorithm walkthroughs~(\cref{sec:landslide-algs}),
 which should equip them to understand every detail herein.
-Readers who are here only to skim and skip around should at least be aware of the glossary~(\sect{\ref{sec:glossary}})
+Readers who are here only to skim and skip around should at least be aware of the glossary~(\cref{sec:glossary})
 to help clarify any terminology confusion.
 
 \subsubsection{Vision}
@@ -193,7 +193,7 @@ others may find that disorienting and wish to see things in a way a compiler wou
 \revisionminor{
 The Landslide codebase is open-source under the \landslidelicense license,
 available at \url{https://github.com/bblum/landslide}.
-Chapter~\ref{chap:landslide} provides more detail and}
+\Cref{chap:landslide} provides more detail and}
 serves as a guide to browsing the repository.
 Later chapters will often make parenthetical references to specific files and/or functions
 therein which implement a feature under discussion.

@@ -30,7 +30,7 @@ It is intended for the aspiring developer or the ambitious user
 and hence unlike other chapters is written in the style of documentation rather than as a report of research results.
 The reader interested only in a theoretical introduction to model checking's foundational algorithms,
 with detailed and friendly examples to help establish intuitions the later chapters may require,
-may skip to \sect{\ref{sec:landslide-algs}}.
+may skip to \cref{sec:landslide-algs}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -40,7 +40,7 @@ may skip to \sect{\ref{sec:landslide-algs}}.
 
 This section describes the features of Landslide the average student user should expect to interact with.
 % TODO: make more specific section reference
-Separate user guides also exist, described in Chapter~\ref{chap:education}.
+Separate user guides also exist, described in \Cref{chap:education}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -65,7 +65,7 @@ These scripts accomplish the following setup tasks (among other trivialities):
 		which contain a pre-annotated Pebbles reference kernel binary or pre-annotated Pintos basecode, respectively.
 	\item Build the code in its new location.
 	\item Run the instrumentation script on the resulting binary to let Landslide know where all the important functions are
-		(see \sect{\ref{sec:landslide-glue}}).
+		(see \cref{sec:landslide-glue}).
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -73,7 +73,7 @@ These scripts accomplish the following setup tasks (among other trivialities):
 \subsection{Running Landslide through Quicksand}
 \label{sec:landslide-quicksand-options}
 
-The preferred method of invoking Landslide is through Quicksand, the Iterative Deepening wrapper program which has all of Chapter~\ref{chap:quicksand} to itself.
+The preferred method of invoking Landslide is through Quicksand, the Iterative Deepening wrapper program which has all of \Cref{chap:quicksand} to itself.
 % TODO: add quicksand symlink
 This is done via the {\tt ./landslide} script in the top-level directory, which:
 \begin{itemize}
@@ -83,7 +83,7 @@ This is done via the {\tt ./landslide} script in the top-level directory, which:
 	\item (If during the student user study,) compresses the resulting log files,
 		creates a snapshot tarball of them and the current version of the user's code,
 		and sends it to me for nefarious research purposes
-		\revisionminor{(see \sect{\ref{sec:education-pebbles-instrumentation}})}.
+		\revisionminor{(see \cref{sec:education-pebbles-instrumentation})}.
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -111,25 +111,25 @@ The following ``secret'' arguments also exist, primarily for my own use in runni
 		% TODO: put a section reference here
 	\item {\tt -I}: enable Iterative Context Bounding (requires {\tt -C}, although future work may relax this restriction);
 		this generally causes bugs to be found faster should they exist, but degrades completion time
-		(\sect{\ref{sec:landslide-icb}})
-	\item {\tt -0}: enable Preempt-Everywhere mode (\sect{\ref{sec:quicksand-eval}}, requires {\tt -C})
+		(\cref{sec:landslide-icb})
+	\item {\tt -0}: enable Preempt-Everywhere mode (\cref{sec:quicksand-eval}, requires {\tt -C})
 	\item {\tt -M}: enable Maximal State Space mode,
 		which prioritizes the maximal state space to optimize for fast verification,
 		abandoning all subset jobs even if they might find bugs faster
-		(\sect{\ref{sec:tm-eval}}, incompatible with {\tt -C}).
-		According to \sect{\ref{sec:quicksand-soundness}}'s soundness proofs,
+		(\cref{sec:tm-eval}, incompatible with {\tt -C}).
+		According to \cref{sec:quicksand-soundness}'s soundness proofs,
 		this is equivalent to {\tt -0}
 		(and according to my experience, \revisionminor{much} faster as well).
-	\item {\tt -H}: use Limited Happens-Before for data-race analysis (\sect{\ref{sec:background-hb}})
+	\item {\tt -H}: use Limited Happens-Before for data-race analysis (\cref{sec:background-hb})
 		(default for Pebbles kernelspace mode)
-	\item {\tt -V}: use vector-clock-based Pure Happens-Before for data-race analysis (\sect{\ref{sec:background-hb}})
+	\item {\tt -V}: use vector-clock-based Pure Happens-Before for data-race analysis (\cref{sec:background-hb})
 		(default for P2/PSU userspace and Pintos modes)
-	\item {\tt -X}: support transactional memory (Chapter~\ref{chap:tm})
-	\item {\tt -A}: support multiple abort codes during transaction failure (\sect{\ref{sec:tm-implementation}});
+	\item {\tt -X}: support transactional memory (\Cref{chap:tm})
+	\item {\tt -A}: support multiple abort codes during transaction failure (\cref{sec:tm-implementation});
 		required for testing programs which behave differently under different abort circumstances,
 		but impacts the state space size
-	\item {\tt -S}: suppress retry aborts during transaction failure (\sect{\ref{sec:tm-implementation}})
-	\item {\tt -R}: enable retry-set state space reduction for transactional tests (\sect{\ref{sec:tm-implementation}})
+	\item {\tt -S}: suppress retry aborts during transaction failure (\cref{sec:tm-implementation})
+	\item {\tt -R}: enable retry-set state space reduction for transactional tests (\cref{sec:tm-implementation})
 	\item {\tt -P}: support Pintos architecture (enabled automatically when {\tt pintos-setup.sh} is run)
 	\item {\tt -4}: support Pebbles architecture (enabled automatically when either {\tt p2-setup.sh} or {\tt psu-setup.sh} is run)
 		% TODO: put a section reference
@@ -151,7 +151,7 @@ This is recommended only for the enthusiastic user annotating her own kernel.
 The script {\tt pebsim/landslide} invokes Landslide thus.
 It should be run from within the {\tt pebsim/} directory.
 When supplied no arguments, it reads configuration options from {\tt pebsim/config.landslide}
-(a bash script expected to define certain variables as described in \sect{\ref{sec:landslide-glue}}).
+(a bash script expected to define certain variables as described in \cref{sec:landslide-glue}).
 The user may optionally specify a file containing additional config directives
 % , such as custom preemption points,
 as an argument.\footnote{
@@ -170,7 +170,7 @@ First, the following options may be changed without triggering a recompile of La
 They are implemented as bash functions defined in {\tt pebsim/build.sh}.
 
 \begin{itemize}
-	\item {\tt within\_function FUNC} - adds {\tt FUNC} to an allowlist of functions required to appear in the current stack trace before identifying a preemption point (see \sect{\ref{sec:landslide-pps}})
+	\item {\tt within\_function FUNC} - adds {\tt FUNC} to an allowlist of functions required to appear in the current stack trace before identifying a preemption point (see \cref{sec:landslide-pps})
 	\item {\tt without\_function FUNC} - as above, but a denylist instead of an allowlist
 	\item {\tt within\_user\_function FUNC} - as two above but finds the function in the userspace test program rather than the kernel code.
 	\item {\tt without\_user\_function FUNC} - difference to two above same as stated one above.
@@ -185,7 +185,7 @@ They are implemented as bash functions defined in {\tt pebsim/build.sh}.
 				or 0 to not use this feature.
 				From personal experience I found this option rather useless and recommend always supplying 0.
 				% TODO: fix this section ref
-				For further discussion see \sect{\ref{sec:quicksand-pps}}.
+				For further discussion see \cref{sec:quicksand-pps}.
 			\item {\tt CURRENT\_SYSCALL} indicates the system call number if a user-space data race comes from within a kernel system call which accesses user memory (Pebbles only).
 				Usually 0 (i.e., not in kernel code) but {\tt deschedule}'s system call number is common as well.
 		\end{itemize}
@@ -205,10 +205,10 @@ Unless otherwise specified these are boolean flags (1 or 0) and the example valu
 \begin{itemize}
 \item {\bf Search algorithm options}
 \begin{itemize}
-	\item {\tt ICB=0} - enable Iterative Context Bounding (\sect{\ref{sec:landslide-icb}});
-		corresponds to {\tt -I} in \sect{\ref{sec:landslide-quicksand-options}}.
-	\item {\tt PREEMPT\_EVERYWHERE=0} - enable Preempt-Everywhere mode (\sect{\ref{sec:quicksand-eval}});
-		corresponds to {\tt -0} in \sect{\ref{sec:landslide-quicksand-options}}.
+	\item {\tt ICB=0} - enable Iterative Context Bounding (\cref{sec:landslide-icb});
+		corresponds to {\tt -I} in \cref{sec:landslide-quicksand-options}.
+	\item {\tt PREEMPT\_EVERYWHERE=0} - enable Preempt-Everywhere mode (\cref{sec:quicksand-eval});
+		corresponds to {\tt -0} in \cref{sec:landslide-quicksand-options}.
 	\item {\tt EXPLORE\_BACKWARDS=0} - configure whether, at each newly encountered preemption point,
 		to allow the current thread to run first then later upon backtracking to preempt (0),
 		or to issue preemptions first and then try continuing the current thread later (1).
@@ -218,8 +218,8 @@ Unless otherwise specified these are boolean flags (1 or 0) and the example valu
 
 \item {\bf Memory analysis options}
 \begin{itemize}
-	\item {\tt PURE\_HAPPENS\_BEFORE=1} - select Pure Happens-Before (1) or Limited Happens-Before (2) (\sect{\ref{sec:background-hb}});
-		corresponds to {\tt -V}/{\tt -H} in \sect{\ref{sec:landslide-quicksand-options}}.
+	\item {\tt PURE\_HAPPENS\_BEFORE=1} - select Pure Happens-Before (1) or Limited Happens-Before (2) (\cref{sec:background-hb});
+		corresponds to {\tt -V}/{\tt -H} in \cref{sec:landslide-quicksand-options}.
 	\item {\tt FILTER\_DRS\_BY\_TID=1} - configures whether to use the {\tt TID} parameter of {\tt data\_\allowbreak{}race} described above.
 	\item {\tt FILTER\_DRS\_BY\_LAST\_CALL=0} - configures whether to use the {\tt LAST\_CALL} parameter of {\tt data\_race} described above.
 	\item {\tt ALLOW\_LOCK\_HANDOFF=0} - configures lockset tracking to permit or disallow a lock taken by one thread to be released by another thread.%
@@ -262,10 +262,10 @@ by creating a file in {\tt 410user/progs} and adding it to config.mk as usual,
 or for Pintos (under {\tt pebsim/pintos/src/tests/threads})
 by creating a file and adding it to both {\tt tests.c} and {\tt Make.tests}.
 Tests for the most common interactions during the P2 and Pintos projects are of course already supplied,
-as described in \sect{\ref{sec:education-pebbles-tests}} and \sect{\ref{sec:education-pintos-tests}}.
+as described in \cref{sec:education-pebbles-tests} and \cref{sec:education-pintos-tests}.
 
 Use of {\tt tell\_landslide()} annotations
-\revisionminor{(\sect{\ref{sec:tell-landslide}})}
+\revisionminor{(\cref{sec:tell-landslide})}
 is not necessary,
 although {\tt tell\_landslide\_\allowbreak{}preempt()} and {\tt tell\_landslide\_dump\_stack()}
 may optionally be used at the user's convenience.
@@ -299,7 +299,7 @@ with a mysterious argument (usually {\tt BGND\_BRWN >> FGND\_CYAN})
 before the creation of any child threads.
 The use of terminal color code constants is of course a red herring of obfuscation,
 as the true nature of the Pathos reference kernel's {\tt misbehave} modes
-is a closely-guarded secret among 15-410 course staff (\sect{\ref{sec:410-secrecy}}).
+is a closely-guarded secret among 15-410 course staff (\cref{sec:410-secrecy}).
 The mode in question causes the reference kernel to prioritize scheduling the child thread over the parent
 whenever {\tt thread\_fork} is called,
 and the target thread over the invoking thread
@@ -307,16 +307,16 @@ whenever {\tt make\_runnable} is called,
 which are necessary to allow Landslide to recognize a {\tt yield()} preemption point
 and be able to run the newly-runnable thread as soon as possible.
 
-To illustrate, consider the following program in Figure~\ref{fig:misbehave-example},
+To illustrate, consider the following program in \Cref{fig:misbehave-example},
 and suppose Landslide is configured to preempt only on mutex API calls
-(such as in the first step of Iterative Deepening (\sect{\ref{sec:quicksand-id}})).
+(such as in the first step of Iterative Deepening (\cref{sec:quicksand-id})).
 Because Landslide ignores all kernel-level synchronization short of context switches when testing user-level code,
 if the kernel created the child thread and returned from {\tt thread\_fork}
 (the system call underlying {\tt thr\_create()})
 without yielding first,
 the next preemption point will not occur until {\tt thr\_join()} waits for the child to exit.
 Hence, DPOR will erroneously think everything before that {\tt thr\_join()}
-happens-before (\sect{\ref{sec:landslide-dpor-hb}}) anything the child does,
+happens-before (\cref{sec:landslide-dpor-hb}) anything the child does,
 and will fail to identify the racing accesses on {\tt x}.
 
 \begin{figure}[h]
@@ -341,12 +341,12 @@ and will fail to identify the racing accesses on {\tt x}.
 	\label{fig:misbehave-example}
 \end{figure}
 
-Though Iterative Deepening's soundness (\sect{\ref{sec:quicksand-soundness}})
+Though Iterative Deepening's soundness (\cref{sec:quicksand-soundness})
 guarantees all data races will eventually be detected starting from just synchronization preemption points,
 it assumes threads becoming runnable counts among those.
 In that sense, {\tt misbehave} serves to restore the last synchronization preemptions where they belong.
 If at this point the reader wonders why Landslide doesn't just identify
-the {\tt thread\_create} and {\tt make\_runnable} system calls in the arbiter itself (\sect{\ref{sec:landslide-arbiter}})
+the {\tt thread\_create} and {\tt make\_runnable} system calls in the arbiter itself (\cref{sec:landslide-arbiter})
 and skip this mysterious user-visible complexity,
 they would be right to ask:
 I have left it this way for no better reason than to maintain consistency
@@ -372,7 +372,7 @@ In each row, the cell in the column corresponding to the executed thread will co
 indicating the code location of the preemption point {\em at the end} of that thread transition
 (i.e., each stack trace indicates ``this thread ran until it reached the indicated line of code'').
 The bug reports are formatted in \revisionminor{HTML}, recommended to be viewed in a web browser.
-An example is shown in Figure~\ref{fig:bugreport}.
+An example is shown in \Cref{fig:bugreport}.
 
 In addition to the preemption trace, the bug report provides some additional helpful information:
 a stack trace of the current thread at the ultimate point when the bug was executed
@@ -385,7 +385,7 @@ for example, use-after-frees will report separate stack traces
 indicating when the corresponding heap block was last allocated and freed.
 The intrepid source-diver may find all such cases of extra bug details
 by searching for the macro {\tt FOUND\_A\_BUG\_HTML\_INFO} in Landslide's code.}
-\revision{\sect{\ref{sec:future-friendly}} discusses how these bug reports might be further improved
+\revision{\cref{sec:future-friendly} discusses how these bug reports might be further improved
 by adding more information still,
 such as identifying data-race preemption points or listing memory conflicts that occurred during each transition.}
 
@@ -429,7 +429,7 @@ but a CMU 15-410 student who wishes to use Landslide on her kernel project shall
 \label{sec:landslide-config-landslide}
 
 The following annotations are specified in {\tt pebsim/config.landslide} akin to the static configuration options
-described in \sect{\ref{sec:landslide-directly}}..
+described in \cref{sec:landslide-directly}..
 These specify the names of kernel functions, global variables, default values, and so on
 which are required to accurately track the kernel's scheduler state:
 {\tt CONTEXT\_SWITCH},
@@ -501,8 +501,8 @@ which the annotation scripts define in advance of processing the configuration t
 		in order to avoid unnecessarily checking, for example,
 		all the different ways {\tt thr\_exit()} and {\tt thr\_join()} could interleave.
 		The user should be careful with this option to also enable the proper {\tt thr\_create()} misbehave mode
-		in her test case (\sect{\ref{sec:landslide-friendly-misbehave}}).
-	\item {\tt TRUSTED\_THR\_JOIN=0} - if set to 1, forces Landslide to add a happens-before edge (\sect{\ref{sec:landslide-dpor-hb}}) between the exiting of some thread $N$ and the end of any subsequent {\tt thr\_join}$(N)$ call,
+		in her test case (\cref{sec:landslide-friendly-misbehave}).
+	\item {\tt TRUSTED\_THR\_JOIN=0} - if set to 1, forces Landslide to add a happens-before edge (\cref{sec:landslide-dpor-hb}) between the exiting of some thread $N$ and the end of any subsequent {\tt thr\_join}$(N)$ call,
 		even if that {\tt join} would not ordinarily block.
 		This is useful for state space reduction when testing threaded client code;
 		for example,
@@ -625,7 +625,7 @@ The execution tree
 is stored as a chain of preemption point nodes named {\tt struct hax} defined in {\tt tree.h}.
 Although the state space of possible interleavings is exponentially-sized,
 Landslide does not actually need to store any nodes for execution sequences outside the current variation
-(see \sect{\ref{sec:landslide-estimate}} and \sect{\ref{sec:landslide-dpor}} for why),
+(see \cref{sec:landslide-estimate} and \cref{sec:landslide-dpor} for why),
 so the total memory consumption is only $O(n)$ in the number of preemption points in a single program run
 (for the test cases used in this thesis, typically 20-1000).
 Each {\tt hax} stores the following information:
@@ -634,17 +634,17 @@ Each {\tt hax} stores the following information:
 	\item Basic statistics such as the current instruction pointer, thread ID,
 		stack trace of current thread at the moment of preemption,
 		depth in the tree, parent node pointer, etc.;
-	\item Snapshots of the current state of the scheduler (\sect{\ref{sec:landslide-scheduler}})
-		and memory accesses and heaps (\sect{\ref{sec:landslide-memory}});
+	\item Snapshots of the current state of the scheduler (\cref{sec:landslide-scheduler})
+		and memory accesses and heaps (\cref{sec:landslide-memory});
 	\item Simulator-dependent data needed to time travel and resume execution
-		from this checkpoint (\sect{\ref{sec:landslide-timetravel}});
+		from this checkpoint (\cref{sec:landslide-timetravel});
 	\item List of parent/ancestor nodes with memory conflicts and/or happens-before edges to this one
-		for DPOR (\sect{\ref{sec:landslide-dpor}});
+		for DPOR (\cref{sec:landslide-dpor});
 	\item Current estimated state space proportion and execution time for the subtree rooted at this node
-		(not necessarily fully explored yet) for estimation \sect{\ref{sec:landslide-estimate}};
+		(not necessarily fully explored yet) for estimation \cref{sec:landslide-estimate};
 	\item Whether this point is an {\tt xbegin} invocation
 		and if so what {\tt xabort} codes are possible and/or already explored for this transaction
-		(\sect{\ref{chap:tm}}).
+		(\cref{chap:tm}).
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -665,7 +665,7 @@ while per-thread state is stored in {\tt struct agent}s (named after the termino
 It has one main entrypoint, {\tt sched\_update()}, in which both the state machine is updated and scheduling decisions are made.
 The interface also offers helper functions for finding and manipulating {\tt agent}s,
 and {\tt sched\_recover()}, which prepares the scheduler to force a new thread to run
-after a time travel (\sect{\ref{sec:landslide-timetravel}}).
+after a time travel (\cref{sec:landslide-timetravel}).
 
 \subsubsection{State machine}
 
@@ -681,13 +681,13 @@ and locksets, action flags, and runqueue membership are updated accordingly.
 \subsubsection{Interrupt injection}
 
 The second part of {\tt sched\_update()},
-conditional on the arbiter identifying preemption points (\sect{\ref{sec:landslide-arbiter}}),
+conditional on the arbiter identifying preemption points (\cref{sec:landslide-arbiter}),
 manages timer interrupts to switch to a desired thread.
 Whenever a preemption point is reached,
-the scheduler first creates a checkpoint in the execution tree (\sect{\ref{sec:landslide-save}}),
+the scheduler first creates a checkpoint in the execution tree (\cref{sec:landslide-save}),
 asks the arbiter which thread to run next,
 and if that thread is different from the current one,
-forces the kernel into its timer interrupt handler (\sect{\ref{sec:landslide-interrupce}}).
+forces the kernel into its timer interrupt handler (\cref{sec:landslide-interrupce}).
 
 Because the kernel is part of the system being tested, Landslide can't necessarily always switch directly to a specific thread,
 but rather must keep triggering context switches until the desired thread is reached;
@@ -716,8 +716,8 @@ but rather as part of the state machine which updates each time a new instructio
 It tracks heap allocations, checks reads and writes in the heap region against same;
 tracks reads and writes (in any region) from each thread
 and checks them against each other
-for DPOR (\sect{\ref{sec:landslide-dpor}})
-and data race analysis (\sect{\ref{sec:landslide-datarace}}).
+for DPOR (\cref{sec:landslide-dpor})
+and data race analysis (\cref{sec:landslide-datarace}).
 For userspace tests, it also tracks which virtual address space ({\tt cr3}) belongs to the test program
 via a state machine of the test lifecycle,
 which lets it avoid false positive heap errors from other programs which have differently-addressed heaps
@@ -742,9 +742,9 @@ This allows {\tt mem\_shm\_\allowbreak{}intersect()}, called at each preemption 
 ($n^2$ total calls per interleaving),
 to perform a set intersection to find any memory conflicts.
 Any such conflicts which also fail a lockset
-and/or happens-before check (\sect{\ref{sec:landslide-datarace}})
+and/or happens-before check (\cref{sec:landslide-datarace})
 are then reported as data races.
-Regardless, all such conflicts are later used by DPOR (\sect{\ref{sec:landslide-dpor}}) to find dependent transition pairs.
+Regardless, all such conflicts are later used by DPOR (\cref{sec:landslide-dpor}) to find dependent transition pairs.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -757,7 +757,7 @@ The interface to inspect and manipulate the simulated machine state lives in {\t
 {\tt read\_memory()} and {\tt write\_memory()} are both provided (with various wrapper macros in {\tt x86.h}).
 The former is used basically everywhere throughout Landslide to query the machine state;
 the latter is used only by the interrupt manipulation below
-and by the scheduler to force Pintos to skip certain parts of its init sequence (\sect{\ref{sec:landslide-pintosspecifics}}).
+and by the scheduler to force Pintos to skip certain parts of its init sequence (\cref{sec:landslide-pintosspecifics}).
 Both rely on the helper function {\tt mem\_translate()} for virtual address resolution,
 which at present supports only the normal x86 32-bit addressing mode (no PAE, long mode, etc.).
 
@@ -822,8 +822,8 @@ is responsible for checking which code locations during execution should be iden
 ({\tt arbiter\_interested()}),
 and thereupon for choosing whether to keep running the current thread or to preempt and switch to a new one
 ({\tt arbiter\_choose()}).
-Its behaviour in the former case is configured by the options listed in \sect{\ref{sec:landslide-dynamicconfig}},
-and in the latter case by the options listed in \sect{\ref{sec:landslide-staticconfig}}.
+Its behaviour in the former case is configured by the options listed in \cref{sec:landslide-dynamicconfig},
+and in the latter case by the options listed in \cref{sec:landslide-staticconfig}.
 For example, {\tt EXPLORE\_BACKWARDS} is interpreted here;
 if set, it will cause Landslide to always preempt and switch threads the first time it encounters each new preemption point.%
 \footnote{Another secret option, {\tt CHOOSE\_RANDOMLY},
@@ -840,7 +840,7 @@ Landslide invokes the explorer at the end of each execution of the test case,
 which analyzes the current branch of the interleaving state space tree
 to figure out which alternate branch to try executing next.
 Its contents are largely algorithmic rather than architectural
-and hence further described in \sect{\ref{sec:landslide-dpor}} and \sect{\ref{sec:landslide-icb}}.
+and hence further described in \cref{sec:landslide-dpor} and \cref{sec:landslide-icb}.
 
 \subsubsection{Time travel}
 \label{sec:landslide-timetravel}
@@ -956,7 +956,7 @@ The corresponding code lives in {\tt stack\_trace()} in {\tt stack.c}.
 		\footnote{Normally Landslide reports function/line number information for the return address as-is,
 		which indicates the next line of code after the relevant call rather than the call itself.}
 	\item Landslide runs the tortoise/rabbit algorithm to detect cyclic {\tt ebp} chains and terminate after the first time around.
-	\item Two other Pebbles-specifc special cases described in \sect{\ref{sec:landslide-pebblesspecifics}}.
+	\item Two other Pebbles-specifc special cases described in \cref{sec:landslide-pebblesspecifics}.
 \end{itemize}
 
 Also implemented in {\tt stack.c} is the backend of the {\tt within\_function}/{\tt without\_function} configuration command,
@@ -964,7 +964,7 @@ which searches a given stack trace for the presence of a function return address
 
 \subsubsection{Preemption traces}
 
-The preemption traces, described and exemplified in \sect{\ref{sec:landslide-bugreport}}, are generated by {\tt found\_a\_\allowbreak{}bug.c},
+The preemption traces, described and exemplified in \cref{sec:landslide-bugreport}, are generated by {\tt found\_a\_\allowbreak{}bug.c},
 in cooperation with {\tt save.c}.
 Whenever {\tt save.c} creates a preemption point, it captures a stack trace of the current thread at the point it was interrupted, and saves it in the preemption point tree.
 {\tt found\_a\_bug.c} then traverses the current branch of the tree,
@@ -1006,7 +1006,7 @@ This section lists special cases of instrumentation specific to the Pebbles kern
 	\item {\tt stack\_trace} ({\tt stack.c})
 		will, when {\tt ebp} crosses from kernel- to userspace across a system call boundary
 		(a reference kernel feature to allow Simics stack traces to cross same),
-		use {\tt PATHOS\_SYSCALL\_IRET\_DISTANCE} (\sect{\ref{sec:landslide-config-landslide}})
+		use {\tt PATHOS\_SYSCALL\_IRET\_DISTANCE} (\cref{sec:landslide-config-landslide})
 		to track {\tt esp}'s value across the stack switch.
 \end{itemize}
 
@@ -1062,18 +1062,18 @@ This section lists special cases of instrumentation specific to the Pintos kerne
 \subsection{Handy scripts}
 \label{sec:landslide-glue}
 
-The options specified in \sect{\ref{sec:landslide-directly}}
+The options specified in \cref{sec:landslide-directly}
 are handled by a family of \revisionminor{distasteful} shell scripts that live in {\tt pebsim/}.
 
 \begin{itemize}
-	\item {\tt landslide} is the outermost script invoked by Quicksand (or by a \sect{\ref{sec:landslide-directly}} aficionado).
+	\item {\tt landslide} is the outermost script invoked by Quicksand (or by a \cref{sec:landslide-directly} aficionado).
 		It exports several key environment variables used by the other scripts,
 		ensures the instrumentation is up-to-date,
 		and launches the simulator.
 	\item {\tt getfunc.sh} defines several functions commonly used by {\tt build.sh} and {\tt definegen.sh} to extract function or global variable addresses from the program binary.
 	\item {\tt symbols.sh} defines the names of kernel functions that can be instrumented automatically without a corresponding manual annotation (e.g., {\tt malloc} and friends, the names of the {\tt tell\_landslide} family, various library helpers such as {\tt panic}).
 	\item {\tt build.sh} ensures the build of Landslide is up-to-date,
-		and processes any dynamic configuration options which don't require updating the build (\sect{\ref{sec:landslide-dynamicconfig}})
+		and processes any dynamic configuration options which don't require updating the build (\cref{sec:landslide-dynamicconfig})
 		It verifies all required {\tt tell\_landslide} annotations are present,
 		verifies all required {\tt config.\allowbreak{}landslide} options,
 		processes the dynamic config options,
@@ -1090,13 +1090,13 @@ are handled by a family of \revisionminor{distasteful} shell scripts that live i
 	\item {\tt p2-basecode/import-p2.sh} and {\tt pintos/import-pintos.sh}
 		are invoked by their respective setup scripts
 		to copy the student implementation into their respective directories.
-		\sect{\ref{sec:education-pebbles-instrumentation}} and \sect{\ref{sec:education-pintos-instrumentation}}
+		\cref{sec:education-pebbles-instrumentation} and \cref{sec:education-pintos-instrumentation}
 		describe their office in more detail.
 \end{itemize}
 
 The final output of these scripts is an auto-generated header, {\tt student\_specifics.h},
 containing a bunch of {\tt \#define}s of the addresses of important functions in the compiled binary,
-specific features enabled or disabled by the static config options (\sect{\ref{sec:landslide-staticconfig}}),
+specific features enabled or disabled by the static config options (\cref{sec:landslide-staticconfig}),
 and so on.
 The files {\tt kernel\_specifics.c}, {\tt user\_specifics.c}, and {\tt student.c} provide several interface functions
 for interpreting the current program state with respect to these values.
@@ -1131,8 +1131,8 @@ warrants discussion.
 
 Preemption point identification is implemented largely in {\tt pp.c}.
 At startup, {\tt pps\_init()} and {\tt load\_dynamic\_pps()} process the
-statically-configured preemption points (\sect{\ref{sec:landslide-staticconfig}})
-and dynamically-configured preemption points (\sect{\ref{sec:landslide-dynamicconfig}}),
+statically-configured preemption points (\cref{sec:landslide-staticconfig})
+and dynamically-configured preemption points (\cref{sec:landslide-dynamicconfig}),
 respectively.
 Each of these configurations may contain any number of
 {\tt within\_function}, {\tt without\_function}, and {\tt data\_\allowbreak{}race} commands.
@@ -1141,7 +1141,7 @@ Each of these configurations may contain any number of
 
 {\tt check\_withins()} implements the allow/denylist behaviour for the former two of those commands
 (in a similar manner to \revisionminor{prior work's Preemption Sealing} \cite{sealing}).
-It invokes the stack tracer (\sect{\ref{sec:landslide-stacktrace}})
+It invokes the stack tracer (\cref{sec:landslide-stacktrace})
 for a list of which functions are on the call stack
 (hence the importance of the stack tracer's complex logic to not miss any frames
 even when interrupts or system calls are involved).
@@ -1166,7 +1166,7 @@ The same comparison is done for {\tt within\_user\_function} and {\tt without\_u
 
 The {\tt data\_race} command specifies an instruction pointer value to identify as a data race preemption point.
 The point can optionally be qualified by a thread ID, most recent system call number, etc.,
-as described in \sect{\ref{sec:landslide-dynamicconfig}},
+as described in \cref{sec:landslide-dynamicconfig},
 and is queried through {\tt suspected\_data\_race()}.
 
 In Preempt-Everywhere mode, instead Landslide marks all shared memory accesses
@@ -1194,14 +1194,14 @@ The following predicates ignore any {\tt within\_function} settings
 \begin{itemize}
 	\item Voluntary reschedule, e.g. explicit {\tt yield()}
 	\item {\tt hlt} instruction (kernel waiting for interrupt)
-	\item User thread becomes yield- or xchg-blocked (\sect{\ref{sec:landslide-blocking}})
-	\item {\tt \_xbegin()} or {\tt \_xend()}, if testing transactional memory (Chapter~\ref{chap:tm})
+	\item User thread becomes yield- or xchg-blocked (\cref{sec:landslide-blocking})
+	\item {\tt \_xbegin()} or {\tt \_xend()}, if testing transactional memory (\Cref{chap:tm})
 \end{itemize}
 
 Whenever {\tt arbiter\_interested()} returns true,
-Landslide creates a new {\tt struct hax} in the execution tree (\sect{\ref{sec:landslide-save}}),
-creates a checkpoint (\sect{\ref{sec:landslide-timetravel}}),
-and queries {\tt arbiter\_choose()} to decide which thread to run next (\sect{\ref{sec:landslide-arbiter}}).
+Landslide creates a new {\tt struct hax} in the execution tree (\cref{sec:landslide-save}),
+creates a checkpoint (\cref{sec:landslide-timetravel}),
+and queries {\tt arbiter\_choose()} to decide which thread to run next (\cref{sec:landslide-arbiter}).
 
 \subsubsection{Example}
 
@@ -1266,7 +1266,7 @@ The latter is computed at the end of each full interleaving executed, using the 
 and constitutes the bulk of the algorithm.
 
 In this section $t_i$ will denote a transition between two program states during execution,
-with each state being a preemption point as identified in \sect{\ref{sec:landslide-pps}},
+with each state being a preemption point as identified in \cref{sec:landslide-pps},
 and $T(t_i)$ will denote the thread which was scheduled \revisionminor{(switched to)} to produce that transition.
 A visual example will be given at the end to help reinforce the intuition behind the formalism.
 
@@ -1312,8 +1312,8 @@ All pairs of interleavings not included are subject to reordering,
 and hence candidates for new interleavings to test.
 
 Note that DPOR's notion of happens-before differs from the traditional distributed systems definition \cite{lamport-clocks}
-as used in Pure Happens-Before \sect{\ref{sec:background-hb}};
-rather, it coincides with condition 3 of Limited Happens-Before %as defined in \sect{\ref{sec:background-datarace}}
+as used in Pure Happens-Before \cref{sec:background-hb};
+rather, it coincides with condition 3 of Limited Happens-Before %as defined in \cref{sec:background-datarace}
 (in fact, Landslide's Limited HB implementation simply reuses the same result computed for DPOR's purpose).
 
 \subsubsection{Memory conflicts}
@@ -1342,7 +1342,7 @@ then $t_i$ and $t_j$ are said to conflict,
 which I will denote $t_i \leftrightsquigarrow_S t_j$.
 
 Whenever a conflict is identified,
-\revisionminor{Landslide} also invokes the data race analysis (\sect{\ref{sec:landslide-datarace}}).
+\revisionminor{Landslide} also invokes the data race analysis (\cref{sec:landslide-datarace}).
 It checks for {\tt free()}/access conflicts as well as access pairs,
 effectively treating deallocation of a heap block as a ``poisoning'' write to its entire contents,
 which is considered to conflict with accesses to any address therein
@@ -1444,16 +1444,16 @@ the exploration is complete.
 
 Although a superhuman reader may quickly reach intuitive understanding
 of complex algorithms from dense prose and mathematical notation alone,
-mortal readers may prefer the following example of using DPOR on the program from Figure~\ref{fig:concurrency-bug},
-whose original state space is shown in Figure~\ref{fig:tree}.
+mortal readers may prefer the following example of using DPOR on the program from \Cref{fig:concurrency-bug},
+whose original state space is shown in \Cref{fig:tree}.
 In this program both threads are always enabled, imposing no scheduling constraints,
 so memory conflicts alone will drive exploration.
 %Acknowledging that quickly gaining an intuitive understanding for an algorithm
 %is basically impossible from just paragraphs of text,
 %I conclude this section with an example of a single iteration of DPOR
-%on the example state space from Figures~\ref{fig:concurrency-bug} and \ref{fig:tree}.
+%on the example state space from \Cref{fig:concurrency-bug,fig:tree}.
 First, let us consider a single iteration of DPOR, applied after executing the first branch.
-The result is shown in Figure~\ref{fig:dpor-example-0}.
+The result is shown in \Cref{fig:dpor-example-0}.
 
 % TODO: check figure placement (should be exactly in line with text) - same for subsequent 2
 % TODO: maybe it's ok t ohave them not in line?
@@ -1485,8 +1485,8 @@ the reordered \dporTB{{\tt tmp2~<-~x}} is not directly part of the memory confli
 but it must be executed first to reach the conflicting \dporTB{{\tt x~<-~tmp2}}.
 
 Now, let us run multiple iterations of DPOR
-to advance through the first half of the full state space shown in Figure~\ref{fig:tree}(b).
-Figure~\ref{fig:dpor-example-1} shows the outcome
+to advance through the first half of the full state space shown in \Cref{fig:tree}(b).
+\Cref{fig:dpor-example-1} shows the outcome
 (with the previously-marked $\bigstar$2, now re-labeled as $\bigstar$3, having its subtree abbreviated).
 
 \begin{figure}[h]
@@ -1497,7 +1497,7 @@ Figure~\ref{fig:dpor-example-1} shows the outcome
 	\label{fig:dpor-example-1}
 \end{figure}
 
-After marking $\bigstar$1 and $\bigstar$3 from Figure~\ref{fig:dpor-example-0}'s interleaving, now labeled A,
+After marking $\bigstar$1 and $\bigstar$3 from \Cref{fig:dpor-example-0}'s interleaving, now labeled A,
 DPOR advances to interleaving B, preferring to schedule the second thread before switching back to the first
 to ensure the memory access is properly reordered.
 From there, it identifies a new memory conflict, marks $\bigstar$2, and advances to C,
@@ -1514,7 +1514,7 @@ The dashed blue arrows denote such equivalences;
 note the two disjoint equivalence classes \{B,E,G,I\} and \{C,D,F,H,J\},
 distinguished by the order of the two final {\tt x~<-~tmpN}s.
 Note also that
-%(as shown in Figure~\ref{fig:tree}(b)),
+%(as shown in \Cref{fig:tree}(b)),
 although B and C also have the same outcome ({\tt x==1}),
 this depends on the {\em values} written to memory rather than {\em addresses}
 (and would change if one thread's {\tt tmpN++} were a {\tt tmpN+=2}, for example),
@@ -1523,7 +1523,7 @@ Recent work \cite{mcr} has extended DPOR to find such value-based equivalences,
 although is beyond this explanation's scope.
 
 Finally, let us consider the final result after DPOR runs out of remaining unexplored marked branches,
-shown in Figure~\ref{fig:dpor-example-2}.
+shown in \Cref{fig:dpor-example-2}.
 
 \begin{figure}[h]
 	\begin{center}
@@ -1546,7 +1546,7 @@ in this case, ignoring all {\tt tmpN++} reorderings and testing only ${2+2 \choo
 
 In the presence of non-conflicting transitions as well as conflicting ones,
 DPOR's approach as described so far can still end up testing equivalent interleavings.
-As the presence of more equivalence arrows in Figure~\ref{fig:dpor-example-2} hints,
+As the presence of more equivalence arrows in \Cref{fig:dpor-example-2} hints,
 its reduced subset state space still contains redundancy,
 arising from the fact that one pair of those \revisionminor{four} events is two reads, and hence not actually in conflict.
 Visual inspection shows that $\bigstar$4, while locally justified
@@ -1557,7 +1557,7 @@ relative to the first symmetric subtree ($\bigstar$1).
 In other words,
 even though DPOR marked each new branch with the intent only to reorder conflicting accesses,
 $\bigstar$1 and $\bigstar$4 contained interleavings equivalent up to independent reorderings anyway.
-Figure~\ref{fig:sleepsets} summarizes the relevant interleavings to highlight one such equivalence.
+\Cref{fig:sleepsets} summarizes the relevant interleavings to highlight one such equivalence.
 
 \begin{figure}[h]
 	\begin{center}
@@ -1614,7 +1614,7 @@ Figure~\ref{fig:sleepsets} summarizes the relevant interleavings to highlight on
 	\end{center}
 	\caption[Motivating example for the sleep sets optimization.]
 		{Motivating example for the sleep sets optimization.
-	Three of Figure~\ref{fig:dpor-example-2}'s interleavings are highlighted,
+	Three of \Cref{fig:dpor-example-2}'s interleavings are highlighted,
 	with the always-independent {\tt tmpN++}s omitted for brevity.
 	}
 	\label{fig:sleepsets}
@@ -1672,11 +1672,11 @@ To the best of my knowledge,
 they provide further reduction only in cases of 3 or more threads;
 I suspect (without proof) that sleep-set DPOR is optimal for 2 threads.
 
-Chapter~\ref{chap:quicksand}'s experiments and Chapter~\ref{chap:education}'s user studies
+\Cref{chap:quicksand}'s experiments and \Cref{chap:education}'s user studies
 were conducted before this optimization was implemented.
 Note that its absence has no bearing on DPOR's soundness, only its efficiency,
 and that Landslide showed good bug-finding performance even without it.
-Chapter~\ref{chap:tm}'s experiments include this optimization,
+\Cref{chap:tm}'s experiments include this optimization,
 because its presence was required to fairly compare the other reduction strategies presented therein.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1684,14 +1684,14 @@ because its presence was required to fairly compare the other reduction strategi
 \subsection{State space estimation}
 \label{sec:landslide-estimate}
 
-For both the user's convenience and for Quicksand's prioritization algorithm (\sect{\ref{sec:quicksand-id}}),
+For both the user's convenience and for Quicksand's prioritization algorithm (\cref{sec:quicksand-id}),
 Landslide attempts to guess how big partially-explored state spaces will ultimately end up being upon completion.
 Because the backtracking implementation uses checkpointing
-rather than replaying similar interleavings' shared execution prefixes from the beginning \sect{\ref{sec:landslide-timetravel}},
+rather than replaying similar interleavings' shared execution prefixes from the beginning \cref{sec:landslide-timetravel},
 the total number of interleavings (i.e., leaf nodes in the execution tree)
 must be estimated separately from the total runtime (i.e., sum of all edge weights in the tree).
 
-As a concrete example, consider the state space of Figure~\ref{fig:dpor-example-2},
+As a concrete example, consider the state space of \Cref{fig:dpor-example-2},
 and suppose each transition to the next preemption point takes 1 second to execute.
 While the first branch executes in 6 seconds,
 the second branch, sharing the first transition as a common prefix, takes 4 seconds,
@@ -1706,14 +1706,14 @@ Hence, Landslide uses two differently suitable algorithms for each of size and r
 the Weighted Backtrack Estimator (WBE) and the Recursive Estimator (RE), respectively,
 first introduced in \cite{estimating-search-tree-size} and later adapted to DPOR by \cite{estimation}.
 In principle, both calculate the current progress as a proportion of the expected total
-by counting how many branches DPOR has marked for future exploration (\sect{\ref{sec:landslide-explore}})
+by counting how many branches DPOR has marked for future exploration (\cref{sec:landslide-explore})
 and assuming the sizes of their resulting subtrees are predicted by the known sizes of similar already-explored subtrees.
 In practice, the calculation strategy differs between the two approaches,
-which can occasionally result in drastically differing outputs (\sect{\ref{sec:tm-verif}}).
+which can occasionally result in drastically differing outputs (\cref{sec:tm-verif}).
 
 Implementation-wise, Landslide reports size estimates as both the percentage and as a total number of branches,
 and time estimates as an ETA.
-Quicksand's {\tt -v} option (\sect{\ref{sec:landslide-quicksand-options}})
+Quicksand's {\tt -v} option (\cref{sec:landslide-quicksand-options})
 will cause it to print them each time a new interleaving is tested; for example:
 \begin{center}
 	{\tt \small [JOB 1] progress: 66101/94825 brs (69.708252\%), ETA 13m 37s (elapsed 46m 10s)}
@@ -1721,8 +1721,7 @@ will cause it to print them each time a new interleaving is tested; for example:
 Both estimates are computed simultaneously in {\tt \_estimate()} in {\tt estimate.c}
 (which, I might add, is well-commented in case the following prose is insufficient).
 %I summarize their respective implementations here.
-% TODO more specific section reference
-Chapter~\ref{chap:warpzone} will discuss their limitations and some opportunities for future improvement.
+\Cref{chap:warpzone-heuristics} will discuss their limitations and some opportunities for future improvement.
 
 \subsubsection{Size (Weighted Backtrack) estimation}
 
@@ -1805,7 +1804,7 @@ This estimate also takes $O(n)$ time and memory.
 \subsubsection{Example}
 
 To illustrate how the two estimators can under-estimate the total tree size and/or diverge from each other,
-consider the state space from Figure~\ref{fig:dpor-example-2}, of size 6.
+consider the state space from \Cref{fig:dpor-example-2}, of size 6.
 Suppose for RE that each transition takes 1 second to execute.
 
 \begin{enumerate}
@@ -1858,7 +1857,7 @@ Suppose for RE that each transition takes 1 second to execute.
 
 To illustrate how the estimators can over-estimate the total tree size,
 consider the same state space,
-except with the $\bigstar$4 subtree also pruned by DPOR's sleep sets extension (\sect{\ref{sec:landslide-sleepsets}});
+except with the $\bigstar$4 subtree also pruned by DPOR's sleep sets extension (\cref{sec:landslide-sleepsets});
 i.e., only branches A, B, C, and K remain,
 with an 18 second execution time.
 Both estimators' behaviour is identical through branch C,
@@ -1888,12 +1887,12 @@ supposing that a new preemption point were introduced to split one or both trans
 The core of the comparison is in {\tt check\_locksets()} in {\tt memory.c}.
 It checks each DPOR memory conflict's locksets, for limited happens-before,
 and happens-before edges, for pure happens-before
-(\sect{\ref{sec:background-hb}}).
+(\cref{sec:background-hb}).
 
 \subsubsection{Limited Happens-Before}
 \label{sec:landslide-lhb}
 
-Conditions \#1, \#2, and \#4 defined in \sect{\ref{sec:background-hb}},
+Conditions \#1, \#2, and \#4 defined in \cref{sec:background-hb},
 provided the Limited Happens-Before definition for \#4,
 coincide with DPOR's version of happens-before described in the previous section.
 %coincide exactly with the conditions to be considered a memory conflict under DPOR.
@@ -1999,7 +1998,7 @@ ICB's approach could likewise be summarized as follows:
 
 \subsubsection{Implementation}
 
-First of all, note that Algorithm~\ref{alg:icb} is structured in a way that repeats interleavings
+First of all, note that \Cref{alg:icb} is structured in a way that repeats interleavings
 with fewer than $n$ preemptions that have already been checked in previous iterations of the outer loop.
 This is because the number of preemptions in each branch is not known in advance;
 rather, the state space must always be explored in an overall depth-first approach,
@@ -2037,7 +2036,7 @@ allowing exploration to continue until it finally observes all interleavings to 
 
 If the search is terminated early after reaching a predetermined fixed bound for $B$,
 ICB in principle reduces the state space from exponentially-sized%
-\footnote{Combinatorial, to be precise; see \sect{\ref{sec:landslide-dpor-example}}.}
+\footnote{Combinatorial, to be precise; see \cref{sec:landslide-dpor-example}.}
 in both $K$, the number of threads,
 and $N$, the number of events,
 to still exponential in $K$ (typically small) but only polynomial in $N$ (typically large).
@@ -2053,7 +2052,7 @@ so the corresponding state space size is at most ${KN \choose B}(B+K)!$.
 All $N$-related factors therein are bounded above by $N^B$.
 
 Prior work often recommends 2 for such a cutoff \cite{chess-icb,smc-empirical-study,dejafu},
-although \sect{\ref{sec:quicksand-eval}}'s larger dataset suggests 3 would be considerably more thorough.
+although \cref{sec:quicksand-eval}'s larger dataset suggests 3 would be considerably more thorough.
 On the other hand, any finite such bound can provide only a heuristic verification guarantee. %anymore.
 Preserving the full formal verification, i.e., continuing iteration until $B = \mathsf{max}_P(U)$
 not only remains exponential in $N$,
@@ -2131,7 +2130,7 @@ but Landslide has the benefit of knowledge from past iterations to inform its se
 \end{figure}
 
 Landslide checks for two distinct categories of \revisionminor{potentially-infinite} loops,
-visualized in Figure~\ref{fig:heuristic-loop}.
+visualized in \Cref{fig:heuristic-loop}.
 Firstly, it keeps a running average of how many preemption points deep each completed interleaving has been in the past.
 Whenever a new preemption point is reached, Landslide checks
 if its depth is greater than the heuristic constant factor of 20
@@ -2180,7 +2179,7 @@ waiting for another thread to allow it to proceed,
 rather than using the established synchronization API.%
 \footnote{Even when the student doesn't open-code any such synchronization and always uses {\tt deschedule}
 or primitives built thereupon,
-{\tt mutex\_test} (\sect{\ref{sec:education-pebbles-tests}})
+{\tt mutex\_test} (\cref{sec:education-pebbles-tests})
 often relies on this functionality, as data-race preemption points within {\tt mutex\_lock()}
 would otherwise disrupt Landslide's ability to recognize blocking on a contended lock.}
 If Landslide failed to recognize that the thread was in principle blocked,
@@ -2273,7 +2272,7 @@ so the ICB-blocked thread must be forced awake with higher priority,
 disregarding the preemption bound,
 to allow the system to progress.
 Secondly, in programs which use HTM,
-threads blocked by retry sets (\sect{\ref{sec:tm-retrysets}})
+threads blocked by retry sets (\cref{sec:tm-retrysets})
 must be forced awake with priority before yield-blocked threads,
 along similar reasoning.
 

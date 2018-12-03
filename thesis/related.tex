@@ -68,7 +68,7 @@ RacePRO~\cite{racepro} targets multi-process programs using system calls such as
 to find bugs which can corrupt persistent system resources.
 SPIN \cite{spin} tests algorithms defined in the PROMELA domain-specific language,
 instruments every memory access,
-uses explicit state tracking rather than the stateless approach (\sect{\ref{sec:overview-stateless}}),
+uses explicit state tracking rather than the stateless approach (\cref{sec:overview-stateless}),
 and specializes in verifying synchronization primitives such as RCU \cite{rcu}.
 TLC \cite{tlc} checks formal models of concurrent program behaviour
 written in the specification language TLA+ \cite{tlaplus},
@@ -116,8 +116,7 @@ No relaxed-memory MC has yet proposed a satisfactory model for the ``thin-air'' 
 which can cause state space cycles in a way not yet well-understood and remains future work.
 %and notably includes relaxed memory nondeterminism in its concurrency model.
 They also identify all data races
-% TODO check if ther'es not a better section reference
-(under the C++ definition rather than \sect{\ref{sec:quicksand-soundness}}'s)
+(under the C++ definition rather than \cref{sec:quicksand-soundness}'s; see \cref{sec:background-hb})
 as bugs immediately, rather than checking them for benign or buggy outcomes.
 All the tools in this paragraph are notably open-source -- an encouraging recent trend in the field.
 
@@ -149,7 +148,7 @@ and is now considered the baseline for all subsequent state space reduction appr
 That paper includes the {\em sleep sets} extension,
 which Landslide includes in its implementation.
 It is a {\em sound} reduction algorithm, meaning it will never fail to test a possible program behavior, despite skipping many execution sequences.
-\sect{\ref{sec:landslide-dpor}} provides a detailed walk-through of how DPOR works,
+\cref{sec:landslide-dpor} provides a detailed walk-through of how DPOR works,
 as many of this thesis's contributions build directly upon it.
 %
 DPOR has since been extended in several ways to achieve further reduction
@@ -168,7 +167,7 @@ use an SMT solver \cite{z3} to identify additional pruning opportunities.
 Implementing parallelization, wakeup trees, or SMT-driven exploration in Landslide is left to future work.
 
 Several other recent advances extend DPOR to new concurrency models,
-beyond the shared-memory-threading model outlined in \sect{\ref{sec:landslide-dpor}}.
+beyond the shared-memory-threading model outlined in \cref{sec:landslide-dpor}.
 TransDPOR \cite{transdpor} provides extra domain-specific reduction for message-passing actor programs
 by exploiting the fact that the dependency relation is transitive in the absence of shared state.
 The $R^4$ algorithm \cite{r4} (corresponding to the R4 checker mentioned above)
@@ -180,7 +179,7 @@ DPOR for TSO and PSO \cite{tsopso}
 extends the concurrency model
 using {\em shadow threads}, which interleave with traditional threads to represent store buffer nondeterminism,
 which can expose bugs not even possible in the strong consistency model
-such as discussed in \sect{\ref{sec:tm-warpzone-relaxed}}.
+such as discussed in \cref{sec:tm-warpzone-relaxed}.
 It also introduced a heuristic {\em buffer bounding} technique, analogous to ICB,
 to mitigate the corresponding increase in state space size.
 The same year, Nidhugg \cite{nidhugg} proposed a DPOR extension to account for TSO and PSO
@@ -189,7 +188,7 @@ MCR was recently extended to support relaxed memory models likewise \cite{mcr-ts
 Just this year, RCMC \cite{rcmc} proposed to replace the interleaving model entirely with {\em execution graphs},
 which precisely model the executions legal under the RC11 memory model,
 offering further reduction still.
-Somewhat analogously for HTM, this work's Chapter~\ref{chap:tm}
+Somewhat analogously for HTM, this work's \Cref{chap:tm}
 extended DPOR's concurrency model to include failure injection,
 % not "new" -- abstraction reduction is the same as always
 and proposed three reduction strategies, one sound and two heuristic,
@@ -202,16 +201,16 @@ To provide even partial results for state spaces that exceed the testing budget
 various heuristic exploration strategies have been proposed.
 Preemption Sealing \cite{sealing} allows programmers to manually exclude preemption points
 arising from trusted source code modules;
-Landslide implements this as the {\tt without\_function} command (\sect{\ref{sec:landslide-pps}}).
-Iterative Context Bounding (ICB) \cite{chess-icb} (\sect{\ref{sec:landslide-icb}})
+Landslide implements this as the {\tt without\_function} command (\cref{sec:landslide-pps}).
+Iterative Context Bounding (ICB) \cite{chess-icb} (\cref{sec:landslide-icb})
 orders the search space by increasing number of preemptions in each branch,
 which is empirically more likely to expose bugs sooner should they exist;
 BPOR \cite{bpor} extends DPOR to preserve soundness
 thereunder. % what a word
-Landslide implements ICB and BPOR for Chapter~\ref{chap:quicksand}'s control experiments,
+Landslide implements ICB and BPOR for \Cref{chap:quicksand}'s control experiments,
 although does not yet incorporate it into this thesis's own contributions
-(as discussed in Chapter~\ref{chap:warpzone}).
-Chapter~\ref{chap:quicksand}'s Quicksand algorithm is, effectively, another such heuristic search strategy,
+(as discussed in \Cref{chap:warpzone}).
+\Cref{chap:quicksand}'s Quicksand algorithm is, effectively, another such heuristic search strategy,
 focusing on preemption point subsets rather than context switch bounding.
 \revision{Maple \cite{maple} proposed a heuristic metric for measuring the amount of ``concurrency coverage'',
 analogous to line-by-line coverage for sequential programs,
@@ -224,7 +223,7 @@ preemption locality
 and independence of values read/written.}
 DeMeter \cite{demeter} adapted abstraction reduction to distributed systems verification under the name Dynamic Interface Reduction,
 while dBug \cite{dbug-phdthesis} applied abstraction reduction to synchronization primitives,
-and I showed how it could be applied similarly to transactional memory in \sect{\ref{sec:tm-abstraction}}.
+and I showed how it could be applied similarly to transactional memory in \cref{sec:tm-abstraction}.
 Each of these approaches is compatible (and indeed, throughout this thesis used often in concert)
 with the sound reduction analyses listed above.
 % mentioning PCT would disrupt the flow here and it's a dumb technique anyway so i won't bother
@@ -241,9 +240,8 @@ with the sound reduction analyses listed above.
 Data race analysis, originating with the lockset-only analysis of Eraser \cite{eraser},
 has since grown into a mature field in its own right,
 which Landslide more borrows as building blocks for its own methods rather than contributing new techniques to.
-% TODO fix terminology not to conflict with dpor
-Race detectors are largely distinguished by their particular flavour of the Happens-Before (HB) relation,
-as discussed in \sect{\ref{sec:background-hb}}.
+Data race detectors are largely distinguished by their particular flavour of the Happens-Before (HB) relation,
+as discussed in \cref{sec:background-hb}.
 Djit+ \cite{djit} and FastTrack \cite{fasttrack} are among those
 which soundly avoid false positives using ``Pure'' HB,
 tracking Lamport-style vector clocks \cite{lamport-clocks}
@@ -267,10 +265,9 @@ Since these foundational algorithms,
 many more recent works have contributed to make data-race analysis more precise, more performant,
 and/or more domain-specific.
 The Causally-Precedes relation \cite{predictive-dr} is a refinement of Limited HB which avoids the most common cases of false positives,
-% TODO section refrance
-including \sect{\ref{sec:quicksand-soundness}}'s reallocation false positives.
+including \cref{sec:quicksand-realloc}'s reallocation false positives.
 It could strike a middle ground in the bug-finding/verification tradeoff
-between Pure and Limited HB (\sect{\ref{sec:quicksand-eval}})
+between Pure and Limited HB (\cref{sec:quicksand-eval})
 that would be a welcome enhancement in Quicksand.
 IFRit \cite{ifrit}
 improves the performance of Pure HB using an interference analysis,
@@ -301,11 +298,10 @@ including non-failing races which nevertheless cause nondeterministic output
 in addition to obvious failures.
 However, it does not
 test alternate interleavings in advance of knowing any specific data races,
-% TODO more speicifc section refrance
-which \sect{\ref{sec:quicksand-eval}} showed is necessary to find certain bugs.
+which \cref{sec:quicksand-eval-nondets} showed is necessary to find certain bugs.
 Quicksand builds on Portend's approach by introducing a feedback loop between the data-race analysis and model checking,
 which results in a stronger verification property
-when the test can be fully completed (\sect{\ref{sec:quicksand-soundness}}).
+when the test can be fully completed (\cref{sec:quicksand-soundness}).
 Portend also uses symbolic execution to test input nondeterminism as well as schedule nondeterminism,
 while Quicksand remains at the mercy of manual test case design.
 Future work could incorporate Portend's taxonomy to better help the user understand any non-failing data races
@@ -369,8 +365,8 @@ Nevertheless, the authors recommended teaching debugging skills explicitly
 via systematic exposure to different kinds of bugs,
 which suggests future work for even advanced operating systems curricula
 to offer a ``warm up'' Landslide assignment
-(for example, the {\tt atomic\_*} tests from \sect{\ref{sec:education-pebbles-tests}})
-that could ultimately lead to a higher solve rate on Landslide's bug reports during P2 (\sect{\ref{sec:education-eval-bugs-cmu}}).
+(for example, the {\tt atomic\_*} tests from \cref{sec:education-pebbles-tests})
+that could ultimately lead to a higher solve rate on Landslide's bug reports during P2 (\cref{sec:education-eval-bugs-cmu}).
 
 %% this 2nd paper... not freely available.......
 %while Kolikant \cite{learning-concurrency} investigates how students form cognitive patterns about concurrent programming that could either aid or stunt their reasoning.
@@ -398,7 +394,7 @@ to find buggy interleavings.
 %which in some cases requires the use of an ``expand'' button that
 Though itself lacking in scientific analysis of its educational power,
 it demonstrates the kind of user-friendly features and overall approach
-that many students expressed desire for in their survey responses (\sect{\ref{sec:education-eval-survey}}).
+that many students expressed desire for in their survey responses (\cref{sec:education-eval-survey}).
 Future work could extend Landslide's preemption traces to include similar interactivity.}
 
 % TODO: more papers to look up:
@@ -440,12 +436,12 @@ an STM implementation built by Intel,
 verifying}
 up to 2 threads running 1 transaction each with up to 3 memory accesses.
 This kind of verification,
-analogous to \sect{\ref{sec:education-pebbles-tests}}'s {\tt mutex\_test},
+analogous to \cref{sec:education-pebbles-tests}'s {\tt mutex\_test},
 is an important stepping stone for trusting the results Landslide will provide.
 STAMP \cite{stamp} is a benchmark suite transactional programs,
 implemented using the OpenTM interface \cite{opentm},
 used by many papers in the field to evaluate the performance of both STM and HTM implementations alike.
-As discussed in \sect{\ref{sec:tm-eval-exp-setup}},
+As discussed in \cref{sec:tm-eval-exp-setup},
 it focuses more on performance than on interesting concurrency properties.
 % stamp bugfixes - https://github.com/mfs409/transmem/blob/master/benchmarks/stamp_c/VERSIONS.
 % stamp need not be considered harmful put here
@@ -464,14 +460,14 @@ by inserting HTM calls via compiler instrumentation,
 % and that in turn motivates the stuff i did
 % even tho they use a diff way to filter them post hoc (well, they'd still need to, bc of false sharing)
 relying on conflict aborts to point out access pairs that would be unsafe in the original program.
-This citation arguably belongs in \sect{\ref{sec:related-data-race}} as well;
+This citation arguably belongs in \cref{sec:related-data-race} as well;
 I include it here to highlight the importance of Landslide's
-ability to distinguish different abort reasons (\sect{\ref{sec:txn-abort-codes}}).
+ability to distinguish different abort reasons (\cref{sec:txn-abort-codes}).
 
 An article from relatively early in the timeline of TSX \cite{htm-subtleties}
 warns of several false equivalence pitfalls when converting conventionally-locking code to use transactions,
 although these pitfalls depend on multiple existing locks used locally and disjointly,
-so this does not invalidate the equivalence proved in \sect{\ref{sec:tm-design-locks}}.
+so this does not invalidate the equivalence proved in \cref{sec:tm-design-locks}.
 Rather, Landslide could be used to ensure that freshly-converted transactional code avoids the warned-of pitfalls.
 {\em Learning from Mistakes} \cite{learning-from-mistakes},
 a survey of the characteristics of many types of concurrency bugs,

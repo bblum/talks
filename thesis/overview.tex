@@ -81,7 +81,7 @@ After all, many programs use random number generation to intentionally generate 
 We say a {\em concurrency bug} occurs when one or more of a program's nondeterministic behaviours is both {\em unanticipated} and {\em undesired}.
 Most often, a concurrency novice who programs with shared state will consider the possible interleavings where one thread's access sequence occurs entirely before the other's, but neglect to consider intermediate outcomes in which the threads' access sequences are interleaved.
 
-Consider the program in Figure \ref{fig:concurrency-bug}: Any output between 2 and 2000 is possible\footnote{
+Consider the program in \Cref{fig:concurrency-bug}: Any output between 2 and 2000 is possible\footnote{
 	Fun exercise for the reader: Show why 2 is a possible output, but 1 is not!
 },
 but whether this constitutes a bug is a matter of perspective.
@@ -143,7 +143,7 @@ and infinite loops (which must be identified heuristically \cite{entscheidungspr
 \subsection{Concurrency primitives}
 \label{sec:overview-mutex}
 
-To prevent unexpected interleavings such as the example in Figure~\ref{fig:concurrency-bug}(b),
+To prevent unexpected interleavings such as the example in \Cref{fig:concurrency-bug}(b),
 most concurrent programs use {\em concurrency primitives} to control which interleavings are possible.
 Controlling nondeterminism is not typically provided by any features of programming languages themselves;
 rather, it is achieved via special atomicity mechanisms provided by the CPU and/or operating system -- hence the term ``primitive''.
@@ -188,7 +188,7 @@ These include {\em locks}, {\em descheduling}, {\em condition variables}, {\em s
 		\\
 		(a) A simple mutual exclusion lock built using the {\tt xchg} instruction. %(accessed using a GCC compiler intrinsic).
 		&
-		(b) The {\tt count} function from Figure~\ref{fig:concurrency-bug}, adjusted to use a mutex to ensure each increment of {\tt x} is uninterruptible.
+		(b) The {\tt count} function from \Cref{fig:concurrency-bug}, adjusted to use a mutex to ensure each increment of {\tt x} is uninterruptible.
 	\end{tabular}
 	\caption[Using a locking primitive to protect accesses to shared state.]
 		{Using a locking primitive to protect accesses to shared state.}
@@ -201,17 +201,17 @@ one may include some computational understanding of the behaviour of any, or all
 Annotating a certain abstraction's semantics treats it as a trusted concurrency primitive in its own right,
 and allows the testing tool to reduce the possible space of interleavings
 (or the set of false positive data-race candidates reported, etc.;
-\revisionminor{see \sect{\ref{sec:landslide-config-landslide}}})
+\revisionminor{see \cref{sec:landslide-config-landslide}})
 at the cost of increasing the implementation and theoretical complexity of the analysis
-\revisionminor{(\sect{\ref{sec:tm-abstraction}})}.
+\revisionminor{(\cref{sec:tm-abstraction})}.
 This thesis will consider locks, descheduling, and transaction begin/end as the only concurrency primitives,
 and assume the others listed above are implemented using those as building blocks (an exercise for the reader \cite{thrlib}).
 
 Locks (or {\em mutexes}, short for ``mutual exclusion locks'') are objects, shared by multiple threads, which allow the programmer to mark certain {\em critical sections} of code that must not interleave with each other.
 When one thread completes a call to {\tt mutex\_lock(mp)}, all invocations by other threads on the same {\tt mp}
 will \revisionminor{block (i.e., wait)} until the corresponding {\tt mutex\_unlock(mp)}.
-Figure~\ref{fig:mutex}(a) shows how a yielding mutex (not the best implementation, but the simplest) may be implemented using {\tt xchg},
-and (b) shows how a mutex may be used to fix the example from Figure~\ref{fig:concurrency-bug}.
+\Cref{fig:mutex}(a) shows how a yielding mutex (not the best implementation, but the simplest) may be implemented using {\tt xchg},
+and (b) shows how a mutex may be used to fix the example from \Cref{fig:concurrency-bug}.
 
 
 \subsection{Transactional Memory}
@@ -235,8 +235,8 @@ Hardware transactions (HTM) \cite{intel-tsx-overview}
 achieve better performance by reusing existing cache coherence logic to detect conflicts, but require explicit support from the CPU, which is not yet widespread.
 Haswell \cite{htm-haswell} is the first x86 architecture to support HTM,
 offering three new instructions: \texttt{xbegin}, \texttt{xend}, and \texttt{xabort}, to begin, commit, and fail a transaction, respectively.
-The example program in Figure~\ref{fig:htm-example} demonstrates how these primitives can be used to synchronize a simple shared access without locking overhead in the common case\footnote{
-	The solution presented here is actually incomplete; stay tuned until Chapter~\ref{chap:tm} for the surprising twist!
+The example program in \Cref{fig:htm-example} demonstrates how these primitives can be used to synchronize a simple shared access without locking overhead in the common case\footnote{
+	The solution presented here is actually incomplete; stay tuned until \Cref{chap:tm} for the surprising twist!
 },
 using GCC's compiler intrinsics \cite{htm-gcc}.
 
@@ -258,8 +258,8 @@ using GCC's compiler intrinsics \cite{htm-gcc}.
 		\texttt{\}} \\
 		\end{tabular}
 	\end{center}
-	\caption[The example {\tt count} routine from Figure~\ref{fig:mutex}, rewritten to use HTM.]
-		{The example {\tt count} routine from Figure~\ref{fig:mutex}, rewritten to use HTM.
+	\caption[The example {\tt count} routine from \Cref{fig:mutex}, rewritten to use HTM.]
+		{The example {\tt count} routine from \Cref{fig:mutex}, rewritten to use HTM.
 		If the transaction in the top branch aborts,
 		whether from a memory conflict or random system interrupt,
 		%from the programmer's intention,
@@ -274,7 +274,7 @@ Concerning possible execution patterns,
 the main difference between STM and HTM is the circumstances under which a transaction may abort.
 A software-backed transaction will abort if and only if a memory conflict occurs therein with another thread.
 HTM, however, is backed by the CPU's cache, and is therefore subject to other circumstances such as cache capacity or interrupt-triggered cache flushes which may force an abort even when no memory conflict occurs.
-Chapter~\ref{chap:tm} will explore the consequences of this difference further.
+\Cref{chap:tm} will explore the consequences of this difference further.
 %
 This thesis will focus on HTM as my platform for testing transactional programs,
 to highlight the importance of researching advanced testing techniques in anticipation of upcoming hardware features.
@@ -297,9 +297,9 @@ to guarantee a unique interleaving is tested each iteration.
 To understand what it means to exhaustively test all possible thread interleavings,
 one must define the possible execution sequences as a finite {\em state space}.
 To visualize this,
-using a single iteration of the {\tt x++;} loop from Figure~\ref{fig:concurrency-bug} as an example,
+using a single iteration of the {\tt x++;} loop from \Cref{fig:concurrency-bug} as an example,
 with {\tt x++;} expanded into its three corresponding pseudo-assembly instructions,
-Figure~\ref{fig:tree}(a) shows all possible execution interleavings
+\Cref{fig:tree}(a) shows all possible execution interleavings
 %of the compiled code
 between 2 threads.
 
@@ -315,8 +315,8 @@ between 2 threads.
 		(b) Interleavings (same order as in (a)), with common prefixes \\
 		combined as ``preemption points'', forming a tree.
 	\end{tabular}
-	\caption[Visualization of interleaving state space for the program in Figure~\ref{fig:concurrency-bug}.]
-		{Visualization of interleaving state space for the program in Figure~\ref{fig:concurrency-bug}.
+	\caption[Visualization of interleaving state space for the program in \Cref{fig:concurrency-bug}.]
+		{Visualization of interleaving state space for the program in \Cref{fig:concurrency-bug}.
 	Thread~1 is represented by purple ovals, thread~2 by yellow squares, and time flows from top to bottom.
 	As the two threads execute the same code, without loss of generality thread 1 is fixed to run first --
 	the full state space is twice the size, and the other half is symmetric to the one shown.}
@@ -347,7 +347,7 @@ These so-called {\em preemption points} may be identified by any combination of 
 Typical preemption points include the boundaries of synchronization APIs (e.g., {\tt mutex\_lock}) or accesses to shared variables.
 Considering that at each preemption point multiple threads exist as options to run next,
 the set of possible ways to execute the program can be viewed as a tree.
-Figure~\ref{fig:tree}(b) shows a visualization of the corresponding tree from our example program,
+\Cref{fig:tree}(b) shows a visualization of the corresponding tree from our example program,
 using each pseudo-assembly instruction as a preemption point.
 
 The number of preemption points in each execution defines the depth of this tree,
@@ -355,7 +355,7 @@ and the number of threads available to run defines the branching factor.
 Hence, in a program with $n$ preemption points and $k$ threads available to run at each, the state space size is $O(n^k)$.
 Nevertheless, to fully test all of a program's possible behaviours, we must check the executions corresponding to every branch of the tree.
 Addressing the scaling problem in this exponential relation is the central research problem for all model checkers,
-\revisionminor{which this thesis will address in Chapter~\ref{chap:quicksand}}.
+\revisionminor{which this thesis will address in \Cref{chap:quicksand}}.
 
 Some model checkers explicitly store the set of visited program states as a means of identifying equivalent interleavings \cite{spin}.
 From the perspective of such tools, state spaces such as these wherein equivalent states may be reached by multiple paths
@@ -402,7 +402,7 @@ More technically, it identifies equivalent execution sequences according to Mazu
 and tests at least one execution from each equivalence class.
 
 {\bf Concretely speaking:}
-Figure~\ref{fig:dpor} highlights part of an execution tree where the execution ordering of threads 1 and 2 are swapped,
+\Cref{fig:dpor} highlights part of an execution tree where the execution ordering of threads 1 and 2 are swapped,
 and each interleaving has a respective ``subtree'' (i.e., possible interleavings given the fixed execution prefix leading up to it).
 The specifics of execution before the thread 1/thread 2 sequence,
 other possible threads to run instead of threads 1 or 2,
@@ -415,7 +415,7 @@ if the transitions of threads 1 and 2 are {\em independent},
 DPOR deduces that the subsequent program states (indicated by the red arrow) are equivalent.
 Thence, only one of the two interleavings and its respective subtree needs to be executed
 in order to check all possible program states.
-\sect{\ref{sec:landslide-dpor}} explains how DPOR implements such a deduction in more detail.
+\cref{sec:landslide-dpor} explains how DPOR implements such a deduction in more detail.
 
 Over the years, researchers have developed many enhancements to DPOR, such as Optimal DPOR \cite{optimal-dpor}, parallelizable DPOR \cite{parallel-dpor}, SAT-directed model checking \cite{satcheck}, Maximal Causality Reduction \cite{mcr}, and DPOR for relaxed memory architectures \cite{tsopso}.
 
@@ -446,7 +446,7 @@ This heuristic is based on the insight that most bugs require few preemptions to
 Preemption sealing \cite{sealing} is another heuristic strategy which restricts the scope of the search by limiting the model checker to use only preemption points arising from certain functions in the source code.
 This allows developers to vastly reduce state space size by identifying which program modules are already trusted,
 although it requires some human intuition to correctly mark those boundaries.
-Iterative Deepening, presented in Chapter~\ref{chap:quicksand}, is another such search heuristic.
+Iterative Deepening, presented in \Cref{chap:quicksand}, is another such search heuristic.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -465,8 +465,8 @@ Two instructions are said to race if:
 	\item and no synchronization enforces an order on the thread transitions
 		(the {\em Happens-Before} \revisionminor{relation~\cite{lamport-clocks,hybriddatarace}}, described below).
 \end{enumerate}
-%In Figure~\ref{fig:example}, lines 3 and 5 each race with 2 and 6, and line 6 races with 8.
-In Figure~\ref{fig:hb-example}, the pairs of lines marked with comments (A1 and A2, B1 and B2) race.
+%In \Cref{fig:example}, lines 3 and 5 each race with 2 and 6, and line 6 races with 8.
+In \Cref{fig:hb-example}, the pairs of lines marked with comments (A1 and A2, B1 and B2) race.
 
 \begin{figure}[h]
         \small
@@ -531,14 +531,14 @@ Several approaches exist to formally representing this condition.
 	\item Most prior work focuses on {\em Happens-Before} \cite{lamport-clocks} as the order relation between accesses.
 \cite{predictive-dr} and \cite{hybriddatarace} identify a problem with this approach:
 it cannot identify access pairs separated by an unrelated lock operation which could race in an alternate interleaving,
-as shown in the example program in Figure~\ref{fig:hb-example}(a).
+as shown in the example program in \Cref{fig:hb-example}(a).
 We call such unreported access pairs {\em false negatives}.
 
 \item
 \cite{hybriddatarace} introduces the {\em Limited Happens-Before} relation,
 which will report such potential races
 by considering only blocking operations like {\tt cond\_wait} to enforce the order.
-However, consider the similar program in Figure~\ref{fig:hb-example}(b),
+However, consider the similar program in \Cref{fig:hb-example}(b),
 in which the access pair ceases to exist in the alternate interleaving.
 Limited Happens-Before will report all potential races, avoiding false negatives \cite{tsan},
 but at the cost of necessarily reporting some such {\em false positives}.
@@ -548,12 +548,12 @@ In recent work, the {\em Causally-Precedes} relation \cite{predictive-dr} %strik
 extends Happens-Before to additionally report a subset of potential races while soundly avoiding false positives.
 It tracks conflicting accesses in intervening
 critical sections to determine whether lock events are unrelated to a potential race.
-Causally-Precedes will identify the potential race in Figure~\ref{fig:hb-example}(a), as the two critical sections do not conflict,
+Causally-Precedes will identify the potential race in \Cref{fig:hb-example}(a), as the two critical sections do not conflict,
 although it can still miss true potential races in other cases.
 \end{itemize}
 
 Landslide implements both Happens-Before (henceforth referred to as {\em Pure Happens-Before} for clarity) and Limited Happens-Before.
-Chapter~\ref{chap:quicksand} includes a comparison of the two approaches for the purpose of finding new preemption points for model checking.
+\Cref{chap:quicksand} includes a comparison of the two approaches for the purpose of finding new preemption points for model checking.
 %, we use the Limited Happens-Before relation for our analysis.
 %The justification for this is that, while stand-alone data-race analyses must avoid inundating the user with false alarms \cite{racerx},
 %my work incorporates data-race analysis in an internal feedback loop, and reports only directly observed failures to the user.
@@ -578,7 +578,7 @@ I will focus on the third and fourth of these, the thread library and kernel,
 called ``P2'' and ``P3'' respectively (the project numbers start at 0).
 The other three (a stack-crawling backtrace utility, a bare-metal game with device drivers, and a small extension to the P3 kernel) are not of concern in this thesis.
 The course's prerequisite is 15-213, Introduction to Computer Systems \cite{csapp,sigcse01:CSaPP}.
-Both P2 and P3 are built using the {\em Pebbles} system call specification, outlined in Table~\ref{tab:syscalls}.
+Both P2 and P3 are built using the {\em Pebbles} system call specification, outlined in \Cref{tab:syscalls}.
 
 \begin{table}
         \center
@@ -672,7 +672,7 @@ Other than {\tt thr\_init} (which is necessarily single-threaded), several concu
 Finally, students also implement automatic stack growth using the {\tt swexn} system call, which is not relevant to this thesis.
 
 \subsubsection{P3}
-In P3, students implement a kernel which provides the same system calls shown in Table~\ref{tab:syscalls}, previously provided by the reference kernel.
+In P3, students implement a kernel which provides the same system calls shown in \Cref{tab:syscalls}, previously provided by the reference kernel.
 Pebbles adopts the Mach \cite{DBLP:conf/usenix/AccettaBBGRTY86} distinction between {\em tasks}, which are resource containers, and {\em threads}, each of which executes within a single task.
 This requires less implementation complexity than the more featureful
 \revisionminor{{\tt rfork} model, of Plan 9 \cite{Pike90plan9}, or the {\tt clone} model, of Linux}.
@@ -708,7 +708,7 @@ This is driven by a desire to cause students to find, diagnose, and fix these bu
 rather than to be surprised by them afterwards during grading
 \cite{de0u-2018}.
 %
-One such example is the {\tt paraguay} unit test distributed with P2 (\sect{\ref{sec:education-pebbles-tests}}),
+One such example is the {\tt paraguay} unit test distributed with P2 (\cref{sec:education-pebbles-tests}),
 which targets a subtle condition-variable bug.
 The test uses the {\tt misbehave} system call to \revisionminor{amplify the probability of} a particular thread interleaving,
 likely to expose the bug,
@@ -845,7 +845,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		An unsynchronized pair of memory accesses between two threads that can, may, or did execute concurrently.
 		{\em Race} for short \revisionminor{(see also {\em race condition})}.
 		Distinguished further in this thesis as {\em limited happens-before} races and {\em pure happens-before} races;
-		see \sect{\ref{sec:background-datarace}}.
+		see \cref{sec:background-datarace}.
 		Distinct from the more nebulously-defined {\em concurrency bug},
 		in that they are identified precisely by analysis on execution traces of one (or all) thread interleavings.
 		This thesis considers any memory accesses not protected by a known trusted {\em mutex API}
@@ -853,7 +853,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		this may include atomic instructions such as {\tt xchg},
 		which most all-data-races-are-bugs research does not include,
 		but are necessary for {\em Iterative Deepening}'s {\em verification} guarantee
-		(\sect{\ref{sec:quicksand-soundness}}).
+		(\cref{sec:quicksand-soundness}).
 	\item {\bf Deadlock.}
 		An execution state among a set of N {\em threads},
 		where each thread is blocked waiting for an event that can be caused only by another thread in the set
@@ -881,7 +881,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		in reorderings of {\em memory conflicts} observed in the current branch.
 		Runs iteratively upon completion of each branch, tagging one or more sibling branches
 		for future exploration, skipping over ones guaranteed to be {\em independent}.
-		See \sect{\ref{sec:landslide-dpor}}.
+		See \cref{sec:landslide-dpor}.
 	\item {\bf Equivalent.}
 		Said of two {\em interleavings} where one can be transformed into the other using
 		permutations of only {\em independent interleavings}.
@@ -890,7 +890,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		An algorithm whose input is the known structure of a partially-explored {\em state space}
 		and whose output is a guess at the ultimate size of the state space when exploration finish. % subjunctive woo
 		Output may be in units of either time or branches.
-		See \sect{\ref{sec:landslide-estimate}}.
+		See \cref{sec:landslide-estimate}.
 	\item {\bf ETA.}
 		Short for {\em estimation} (or ``state space estimate''),
 		typically with nuance for units of time rather than branches.
@@ -898,7 +898,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 	\item {\bf Execution tree.}
 		Representation of the {\em state space} by joining interleavings with common prefixes
 		into a subtree with a branch at each point they diverge, forming a tree overall.
-		See \sect{\ref{sec:overview-statespace}}; Figure~\ref{fig:tree}.
+		See \cref{sec:overview-statespace}; \Cref{fig:tree}.
 	\item {\bf False negative.}
 		Said of a tool's failure to produce a bug report when a bug does exist after all.
 		In theory this may mean that the {\em test case} might have been insufficient to expose the bug
@@ -914,7 +914,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		In principle, Landslide's bug-detection predicates always indicate something truly wrong,
 		so it cannot produce false positive bug reports;
 		in practice, however, infinite loop detection and deadlock detection in the presence of ad-hoc synchronization
-		are both {\em heuristic} (\sect{\ref{sec:landslide-blocking}}),
+		are both {\em heuristic} (\cref{sec:landslide-blocking}),
 		so may produce false positives after all, although I have never witnessed one to date.
 	\item {\bf Happens-before.}
 		Relation between two events executed by different threads in a single execution trace
@@ -928,7 +928,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		when it has executed at least 4000 times longer than previously-observed ``safe'' executions,
 		based on the observation that no student has ever written correct thread library or kernel code
 		that can exhibit such extreme interleaving-dependent variance.
-	\item {\bf ICB.} Short for ``Iterative Context Bounding''. See \sect{\ref{sec:landslide-icb}}.
+	\item {\bf ICB.} Short for ``Iterative Context Bounding''. See \cref{sec:landslide-icb}.
 	\item {\bf Independent.}
 		Said of two {\em transitions} by different threads,
 		when they share no {\em memory conflicts};
@@ -941,7 +941,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		The {\em heuristic} search ordering strategy and framework for incorporating {\em data race preemption points}
 		used by {\em Quicksand}.
 		One of this thesis's major contributions.
-		See \sect{\ref{sec:quicksand-id}}.
+		See \cref{sec:quicksand-id}.
 	\item {\bf Kernelspace.}
 		Opposite of {\em userspace}.
 		Execution mode in which code has the ability to modify critical system state.
@@ -951,7 +951,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 	\item {\bf Landslide.}
 		Your friendly local {\em stateless model checking} implementation, written by yours truly.
 		The framework upon which all this thesis's contributions are built.
-		Documented in Chapter \ref{chap:landslide}.
+		Documented in \Cref{chap:landslide}.
 	\item {\bf Landslide-friendly.}
 		Said of a {\em test case} that is well-suited for {\em model checking},
 		i.e.,
@@ -969,7 +969,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 	\item {\bf Lock.}
 		A data structure used to ensure {\em atomic} access to shared state
 		with respect to other {\em threads} using the same lock.
-		See \sect{\ref{sec:overview-mutex}}.
+		See \cref{sec:overview-mutex}.
 	\item {\bf Memory conflict.}
 		A pair of memory accesses between two {\em threads}, where at least one is a write,
 		meaning that executing them in a different order from the one observed may produce different program behaviour.
@@ -983,7 +983,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		to amplify the likelihood of specific illustrative low-probability {\em thread interleavings}.
 		Used in several {\em P2} test cases,
 		although exactly how thread scheduling changes according to each specified mode
-		is kept secret to preserve the intended challenge of debugging (see \sect{\ref{sec:410-secrecy}}).}
+		is kept secret to preserve the intended challenge of debugging (see \cref{sec:410-secrecy}).}
 	\item {\bf mutex.}
 		Short for ``mutual exclusion lock''. The name {\em P2} and {\em pthreads} use for their {\em lock API}.
 	\item {\bf Model checking.}
@@ -1000,16 +1000,16 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		{\em API} is very similar to that of {\em pthreads}.
 		Often used here to refer to the same thread library project at both CMU and PSU,
 		even though the latter did not call it by that name.
-		See \sect{\ref{sec:pebbles}}.
+		See \cref{sec:pebbles}.
 	\item \revision{{\bf P3.}
 		Operating systems class project, occuring after {\em P2},
 		in which students implement their own {\em Pebbles} kernel from the ground up.}
 	\item \revision{{\bf Partial store order.} See {\em relaxed memory.}}
 	\item \revision{{\bf Pebbles.}
-		The educational kernel architecture used in 15-410 at CMU. See \sect{\ref{sec:pebbles}}.}
+		The educational kernel architecture used in 15-410 at CMU. See \cref{sec:pebbles}.}
 	\item \revision{{\bf Pintos.}
 		The educational kernel architecture used in \uchos at the University of Chicago,
-		as well as several other universities. See \sect{\ref{sec:overview-pintos}}.}
+		as well as several other universities. See \cref{sec:overview-pintos}.}
 	\item {\bf pthreads.}
 		Thread library for Linux programs provided by POSIX.
 		\revision{The modern pthreads model traces its lineage back to
@@ -1030,7 +1030,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		Often simply ``is it the beginning of {\tt mutex\_lock()} or {\tt mutex\_unlock()}?'',
 		but may be extended to include the program counter values of known {\em data races},
 		or to further restrict by predicates on the current stack trace.
-		See \sect{\ref{sec:landslide-pps}}.
+		See \cref{sec:landslide-pps}.
 		Often called {\em preemption point} for short, with context hopefully making the distinction clear.
 	\item \revision{{\bf PSO.} {\em Partial store order}. See {\em relaxed memory}.}
 	\item {\bf Pure happens-before.}
@@ -1044,7 +1044,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		each configured with a different set of {\em preemption points},
 		using the {\em Iterative Deepening} algorithm.
 		Also supports various other execution modes in which only one Landslide instance is run at a time.
-		See Chapter~\ref{chap:quicksand}.
+		See \Cref{chap:quicksand}.
 		In later chapters, ``Landslide'' will refer to the project as a whole, including Quicksand,
 		while the term ``Quicksand'' will be used only when specific reference to Iterative Deepening is required.
 	\item {\bf Race condition.}
@@ -1085,7 +1085,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		\cite{sully-thesis}.
 		By contrast, {\em sequential consistency} (SC) permits no such reorderings.
 		% TODO: check that quicksand discussion shouldn't perhaps get a more subsection'ed sect reference
-		For further discussion see \sect{\ref{sec:quicksand-discussion}} and \sect{\ref{sec:tm-warpzone-relaxed}}.}
+		For further discussion see \cref{sec:quicksand-discussion} and \cref{sec:tm-warpzone-relaxed}.}
 	\item {\bf Schedule.}
 		Another term for {\em interleaving} with a more theoretical nuance.
 	\item {\bf Scheduler.}
@@ -1111,7 +1111,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 	\item {\bf Stateless model checking.}
 		Concurrency testing {\em dynamic analysis} technique involving controlling a system's {\em nondeterminism}
 		to exhaustively check all possible {\em thread interleavings}.
-		See \sect{\ref{sec:overview-stateless}}.
+		See \cref{sec:overview-stateless}.
 		Often ``MC'' for short in this thesis (to mean either ``model checking'' or ''model checker'' depending on context).
 		This name is potentially confusing for tools which explore {\em state spaces}:
 		the term ``stateless'' refers to the implicit way they use {\em DPOR} to ensure {\em sound} checking

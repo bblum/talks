@@ -25,9 +25,9 @@ Each of the previous three chapters concluded by
 discussing specific limitations,
 listing concrete and immediate ways to address them
 with existing techniques
-(\sect{\ref{sec:quicksand-discussion}},
-\sect{\ref{sec:education-discussion}},
-\sect{\ref{sec:tm-discussion}}).
+(\cref{sec:quicksand-discussion},
+\cref{sec:education-discussion},
+\cref{sec:tm-discussion}).
 Meanwhile, this chapter takes a broader interpretation of ``future work'',
 namely,
 how might future Landslides solve research problems I didn't even pose to begin with.
@@ -38,7 +38,7 @@ how might future Landslides solve research problems I didn't even pose to begin 
 \section{User-friendliness}
 \label{sec:future-friendly}
 
-In the user study survey (\sect{\ref{sec:education-eval-survey}}),
+In the user study survey (\cref{sec:education-eval-survey}),
 students most often complained
 that interpreting Landslide's preemption traces to diagnose and understand their bugs was too difficult.
 While the understanding step of course requires human intuition,
@@ -57,12 +57,12 @@ While Quicksand's professed selling point is that the user need input only a CPU
 at the same time,
 pruning uninteresting branches out of the overall state space
 would allow Quicksand to achieve more meaningful results in that same budget.
-Theoretical advances in state space reduction come out every year (\sect{\ref{sec:related-algs}}),
+Theoretical advances in state space reduction come out every year (\cref{sec:related-algs}),
 but the user's human intuition can also contribute if properly encouraged.
-For the P2 tests (\sect{\ref{sec:education-pebbles-tests}}),
+For the P2 tests (\cref{sec:education-pebbles-tests}),
 I configured Quicksand by hand to issue appropriate {\tt without\_function} commands to Landslide
-(\sect{\ref{sec:landslide-pps}}),
-and even more still for the HTM tests (\sect{\ref{sec:tm-eval-exp-setup}}),
+(\cref{sec:landslide-pps}),
+and even more still for the HTM tests (\cref{sec:tm-eval-exp-setup}),
 but a user writing her own tests would have to configure DPOR by hand.
 A more mature version would coach the user to decide which functions focus the test on,
 using state space estimation to give an idea of expected testing time,
@@ -111,7 +111,7 @@ such as {\tt malloc()} failing,
 the tool could offer to add failure injection with the user's approval,
 or at least prompt her to write a new test with that as a subgoal.
 
-In the case study of submitted P2 bugs (\sect{\ref{sec:education-eval-bug-case-study}}),
+In the case study of submitted P2 bugs (\cref{sec:education-eval-bug-case-study}),
 I noticed several submissions of a common pattern
 in which Landslide overlooked the {\tt thr\_exit()} use-after-free bug:
 they all manually recycled the exited thread's stack using an internal free-list,
@@ -135,9 +135,9 @@ finding a minimum number of threads necessary to expose all behaviours
 % 2 papers rec'd from https://twitter.com/bblum0/status/1018233122750640130
 % although i checked these & couldn't figure out how if at all they were doing generalization
 although I know of no related work which addresses the second half of this problem.
-Likewise, \sect{\ref{sec:tm-abstraction}}'s abstraction reduction requires the user
+Likewise, \cref{sec:tm-abstraction}'s abstraction reduction requires the user
 to believe that {\tt lock}({\tt spinlock}) and friends correctly express the mutual exclusion property in informal code%
-\footnote{In Figure~\ref{fig:htm-lock}(a), the
+\footnote{In \Cref{fig:htm-lock}(a), the
 {\tt \flow{if} (!\call{\_xtest()}) \call{thr\_yield}(\const{-1});}
 part required expert knowledge of HTM semantics to write correctly:
 an unconditional yield there
@@ -151,8 +151,8 @@ to make the abstraction reduction more trustworthy.
 
 %\section{Verification}
 
-As important as Quicksand's convergence theorem (\sect{\ref{sec:quicksand-soundness}}),
-the HTM equivalence proofs (\sect{\ref{sec:tm-design}}),
+As important as Quicksand's convergence theorem (\cref{sec:quicksand-soundness}),
+the HTM equivalence proofs (\cref{sec:tm-design}),
 and other soundness results from prior work are,
 they fall short of fully end-to-end formal verification
 in terms of trusting the output of stateless model checkers in practice.
@@ -162,7 +162,7 @@ there is also currently no guarantee that Landslide's concrete implementation
 matches the theoretical properties.
 My personal faith in Landslide's implementation comes from years of empirical observation:
 inspecting small state spaces
-(such as Figure~\ref{fig:retry-reduction})
+(such as \Cref{fig:retry-reduction})
 by hand
 to check that preemption points show up in the right places
 and that DPOR prunes the expected equivalences;
@@ -172,7 +172,7 @@ or testing the same but one with an additional reduction applied,
 % this first "the" realllly helps disambiguate the sentence
 the one's resulting state space must be smaller than the other's.
 Nevertheless, discrepancies may still lurk undiscovered:
-the failure injection bug described in \sect{\ref{sec:tm-eval-exp-setup}}
+the failure injection bug described in \cref{sec:tm-eval-exp-setup}
 took until implementing retry set reduction to discover,
 well after publishing the first experimental results under it in \cite{sigbovik-htm}.
 As the concurrency model becomes more complex,
@@ -185,6 +185,7 @@ provide important pioneering steps in this direction.%
 but checking unverified (e.g., student) code with such would still be an improvement.}
 
 \section{Heuristics}
+\label{sec:warpzone-heuristics}
 
 % TODO: does this need some estimate progress graphs
 % some RE ones would even need a log scale y axis maybe
@@ -193,12 +194,12 @@ the WBE algorithm (used in Landslide for estimating number of interleavings) con
 being often seen to count (nearly) monotonically up toward the true value as exploration progresses,
 while the RE algorithm (used in Landslide for estimating total execution time) can be unstable and erratic,
 bouncing wildly among orders of magnitude even in the space of ten or fewer adjacent interleavings.
-These flaws are especially visible in the {\tt avl\_fixed} transactional verification results (Table~\ref{tab:tm-verifs}).
+These flaws are especially visible in the {\tt avl\_fixed} transactional verification results (\Cref{tab:tm-verifs}).
 Both estimation algorithms
 use the known structure of the tree as a model for the unknown
-(see \sect{\ref{sec:landslide-estimate}}),
+(see \cref{sec:landslide-estimate}),
 but make no use of domain-specific knowledge such as which threads were chosen to run at each preemption point.
-For example, consider the root of the left subtree in Figure~\ref{fig:tree},
+For example, consider the root of the left subtree in \Cref{fig:tree},
 thread 1's \dporTA{{\tt tmp1++}}.
 At that moment thread 1 has 1 more instruction left to execute, while thread 2 has 3.
 If thread 1's last instruction is chosen to run next,
@@ -211,11 +212,11 @@ WBE and RE could both be relatively easily extended to incorporate this observat
 using knowledge from branches already tested to guess (still heuristically) appropriate values for $N$ and $M$.
 Predicting more advanced aspects of state space structure,
 such as subtrees pruned by sleep set reduction
-(\sect{\ref{sec:landslide-sleepsets}}; $\bigstar$4 in Figure~\ref{fig:dpor-example-2}),
+(\cref{sec:landslide-sleepsets}; $\bigstar$4 in \Cref{fig:dpor-example-2}),
 would likely require analyzing DPOR's memory conflicts as well.
 
 There is much room to expand Landslide's use of heuristics to balance verification with fast bug-finding.
-Landslide's maximal state space mode (\sect{\ref{sec:tm-verif}}) currently requires the user to decide in advance
+Landslide's maximal state space mode (\cref{sec:tm-verif}) currently requires the user to decide in advance
 whether she thinks a full verification is possible within the time limit,
 and supply {\tt -M} if so,
 sacrificing some bug-finding power up front
@@ -286,7 +287,7 @@ for example,
 from the same test program with different $K,N$ parameters.
 For any future researchers who wish to study such patterns,
 % with machine learning... don't feel like i can do justice to discussing its flaws with real citations
-I have made the estimation logs from the HTM experiments (\sect{\ref{sec:tm-eval}})
+I have made the estimation logs from the HTM experiments (\cref{sec:tm-eval})
 freely available at \url{https://github.com/bblum/thesis-htm-logs}.
 %
 Nevertheless,
