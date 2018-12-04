@@ -5,15 +5,101 @@ Please hold on. This thesis will be departing shortly for the Landslide terminal
 \end{tabular}}
 {Pittsburgh International Airport (paraphrased)}
 
+\revision{Pick up any recent concurrency-related research paper, %from the last few decades,
+and chances are its very first sentence will tell you
+%how notoriously difficult concurrency bugs are compared to sequential ones
+that concurrency bugs are notoriously difficult to find, reproduce, diagnose, and fix
+% ,
+%and/or thereafter verify fixed,
+%compared to sequential ones,
+%on account of the multitude of thread interleavings one must test
+\cite{nidhugg,optimal-dpor,coredet,sealing,quicksand,landslide,this-thesis,concuerror,
+cspec, % 2nd sentence in cspec >_>
+bpor,
+parrot, % 2nd sentence in parrot
+peregrine,
+bugtm, % 1st and 2nd sentence
+satcheck,
+racerx,
+ifrit, % 1st para, approx
+datacollider,
+fasttrack,
+mcr-tsopso,
+mcr,
+macemc,
+contessa,
+lvish,
+dthreads,
+taxdc,
+learning-from-mistakes, % sentence 3ish
+% TODO start up again on page 161 (AVIO: Detecting atomicity violations via access interleaving invariants.)
+}.
+%compared to sequential programming.
+%
+%Indeed, just as conditional statements and loops introduce additional possible program behaviours
+%depending on different input,
+%concurrent execution introduces additional possible behaviours even under a fixed input.
+%Unlike input nondeterminism,
+%concurrency nondeterminism typically manifests at the whims of chance,
+%making bug-finding and verification especially challenging.
+%
+%What is a concurrency bug, and
+How could a single programming technique be so troublesome
+as to inspire multiple decades of verification research?
+Allow me to begin this thesis by answering this question
+in layperson's terms,
+using two parables.
+
+My favourite way to explain concurrency to a non-technical audience
+%(e.g., family members)
+is by analogy with unlocking car doors.
+In many %makes and
+models of cars, the door handle and locking mechanism are intertwined
+in such a way that the door cannot unlock while its handle is being pulled~\cite{car-doors}.
+Most car users, then,
+%are familiar with
+have suffered the experience of
+trying to open the passenger door
+at exactly the same moment as the driver turns the key in the lock:
+%not only does the door not open, but
+it fails to unlock, and
+they must beseech the driver to turn the key again!
+If they had pulled the handle any later, it would have opened as normal;
+any earlier, and it would have been as though not having the key at all,
+but would at least have unlocked properly at the first turn of the key later.
+This violation of expected behaviour -- that the key need not be turned twice --
+is a {\em bug},
+and its dependence on the two travelers' actions {\em interleaving}
+%with the driver's actions
+in a particular way
+makes it a {\em concurrency bug}.
+This example involves only three events (pulling the handle, releasing the handle, and turning the key),
+but what of a system with hundreds or thousands of times more?
+Unfortunately, the number of possible interleavings grows {\em exponentially} with the number of events.
+
+%Exponential explosion is easily understood through the tale of Sissa Ibn D\`{a}hir
+The Islamic historian Ibn Khallik\={a}n told perhaps the first cautionary tale of exponential explosion
+\cite{ibn-khallikan,khallikān1868ibn}.
+Sissa Ibn D\`{a}hir,
+credited with the invention of chaturanga (the precursor to modern chess),
+was invited by King Shihr\^{a}m to request any reward he desired.
+Sissa requested that a grain of wheat be placed on the first square of a chessboard,
+two in the second, and so on, doubling the number of grains in each previous square until all 64 be filled.
+The king at first laughed, thinking it a pittance,
+realizing only later that to fulfill this would require
+more than all the wheat in all the cities on Earth.
+Modern programmers will recognize this sum as $2^{64}-1$,
+the largest value representable by an unsigned 64-bit integer,
+or approximately 18 billion billion.
+The number of interleavings in a concurrent system grows at a similarly intractable rate
+(although not necessarily exactly doubling each time),
+with the number of chessboard squares filled with grain corresponding to the number of events in a program's execution.
+And Sissa is the concurrent programmer,
+who always writes software large enough to be far beyond the reach of any exhaustive verification strategy.
+}
+
 \section{Motivation}
 
-% "Concurrency is notoriously difficult to get right." [....]
-% dejafu A Concurrency Testing Library for Haskell (2016 ver.)
-% parrot?
-% TODO more
-
-% TODO: god.........
-Modern computer architectures have turned to increasing CPU core count, rather than clock speed, to improve processing power \cite{mooreslaw}.
 To take advantage of multiple cores for performance, programmers must write software to execute {\em concurrently} --
 using multiple {\em threads} which execute multiple parts of a program's logic simultaneously.
 However, when threads access the same shared data, they may interleave in unexpected ways which change the outcome of their execution.
