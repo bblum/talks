@@ -98,7 +98,7 @@ The following command line arguments are recommended for the common user.
 	\item {\tt -c CPUS}: maximum number of Landslide instances to run in parallel (defaults to half the number of system CPUs)
 	\item {\tt -i INTERVAL}: interval of time between printing progress reports (default 10s)
 	\item {\tt -d TRACEDIR}: directory for resulting bug traces (default current directory)
-	\item {\tt -v}: verbose mode (issues output for each executed interleaving by each instance of landslide, makes progress reports more detailed, etc)
+	\item {\tt -v}: verbose mode (issues output for each executed interleaving by each instance of landslide, makes progress reports more detailed, et cetera)
 	\item {\tt -l}: leave Landslide log files from completed state spaces even when no bug was found (deleted automatically by default)
 	\item {\tt -h}: print help text and exit immediately
 	\item \revision{{\tt -s}: include ``secret'' options when printing help text}
@@ -462,7 +462,7 @@ are implemented as bash functions,
 which the annotation scripts define in advance of processing the configuration to do something more complicated.}
 \begin{itemize}
 	\item {\tt PINTOS\_KERNEL=0} - configure Landslide for Pebbles (0) or Pintos (1) kernel architecture. Normally set automatically by the setup scripts.
-	\item {\tt TESTING\_USERSPACE=1} - configure Landslide whether to test (i.e., focus preemption points, memory analysis, etc. on) the userspace or kernelspace code.
+	\item {\tt TESTING\_USERSPACE=1} - configure Landslide whether to test (i.e., focus preemption points, memory analysis, et cetera on) the userspace or kernelspace code.
 	\item {\tt CURRENT\_THREAD\_LIVES\_ON\_RQ=0} - Landslide infers the list of runnable threads from the {\tt tell\_landslide\_on\_rq()} and {\tt off\_rq()} annotations (described below).
 		Some kernels\footnote{Most, actually.} remove the current thread from their runqueue,
 		such that the abstract set of all runnable threads is actually the runqueue plus the current thread rather than just the runqueue.
@@ -542,7 +542,7 @@ while others serve to improve or otherwise manipulate the state space.
 		(must be called with interrupts and/or scheduler preemption disabled)
 	\item {\tt tell\_landslide\_sched\_init\_done()} - to be called after scheduler initialization,
 		indicating the point after which Landslide should begin analysis.
-		Any threads already initialized before this point (init, idle, etc) should be specified with {\tt starting\_threads} (previous subsection).
+		Any threads already initialized before this point (init, idle, et cetera) should be specified with {\tt starting\_threads} (previous subsection).
 	\item {\tt tell\_landslide\_forking()} - to be called whenever a new thread is created,
 		``immediately'' before the next {\tt thread\_switch()} or {\tt on\_rq()} call for that new thread (i.e., this call sets a flag which the next instance of either of the latter will check to see if the indicated thread is new).
 		Most Pebbles kernels will call this twice; once in {\tt fork} and once in {\tt thread\_fork}.
@@ -633,7 +633,7 @@ Each {\tt hax} stores the following information:
 \begin{itemize}
 	\item Basic statistics such as the current instruction pointer, thread ID,
 		stack trace of current thread at the moment of preemption,
-		depth in the tree, parent node pointer, etc.;
+		depth in the tree, parent node pointer, et cetera;
 	\item Snapshots of the current state of the scheduler (\cref{sec:landslide-scheduler})
 		and memory accesses and heaps (\cref{sec:landslide-memory});
 	\item Simulator-dependent data needed to time travel and resume execution
@@ -759,7 +759,7 @@ The former is used basically everywhere throughout Landslide to query the machin
 the latter is used only by the interrupt manipulation below
 and by the scheduler to force Pintos to skip certain parts of its init sequence (\cref{sec:landslide-pintosspecifics}).
 Both rely on the helper function {\tt mem\_translate()} for virtual address resolution,
-which at present supports only the normal x86 32-bit addressing mode (no PAE, long mode, etc.).
+which at present supports only the normal x86 32-bit addressing mode (no PAE, long mode, et cetera).
 
 \subsubsection{Interrupts}
 \label{sec:landslide-interrupce}
@@ -1165,7 +1165,7 @@ The same comparison is done for {\tt within\_user\_function} and {\tt without\_u
 \subsubsection{Data race predicates}
 
 The {\tt data\_race} command specifies an instruction pointer value to identify as a data race preemption point.
-The point can optionally be qualified by a thread ID, most recent system call number, etc.,
+The point can optionally be qualified by a thread ID, most recent system call number, et cetera,
 as described in \cref{sec:landslide-dynamicconfig},
 and is queried through {\tt suspected\_data\_race()}.
 
@@ -1361,7 +1361,7 @@ where $t_1 \dots t_{i-1}$ is the common execution prefix shared between $S$ and 
 and $T_j$ is the thread ID to be scheduled after $t_{i-1}$, $T_j \ne T(t_i)$.
 %to run {\em instead} of $T(t_i)$.
 \footnote{I describe $T_j$ as a thread ID here, rather than as a thread transition,
-because the nature of the transition (its memory accesses, the subsequent state, etc)
+because the nature of the transition (its memory accesses, the subsequent state, et cetera)
 is unknown until actually executed.}
 Landslide's implementation represents $S$ as a list of {\tt struct hax}es, defined in {\tt tree.h},
 each one representing a preemption point, or intermediate state between two transitions.
@@ -2210,7 +2210,7 @@ and treats it just as if it had invoked {\tt deschedule()} for purposes of DPOR
 % and also refusing to run any other threads while yield is going on - KEEP_RUNNING_YIELDING_THREADS
 %
 In cases where {\tt yield} itself is not involved,
-Landslide also counts the number of atomic instructions ({\tt xchg}, {\tt xadd}, {\tt cmpxchg}, etc),
+Landslide also counts the number of atomic instructions ({\tt xchg}, {\tt xadd}, {\tt cmpxchg}, et cetera),
 and marks the thread blocked if it exceeds 100 such ({\tt TOO\_MANY\_XCHGS\_TIGHT\_LOOP}).%
 \footnote{If preemption points exist in between, instead only 20 such ({\tt TOO\_MANY\_XCHGS\_WITH\_PPS}),
 to avoid stressing DPOR's $O(n)$ independence computation.}
