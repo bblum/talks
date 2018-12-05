@@ -1655,33 +1655,10 @@ shown in \Cref{fig:dpor-example-2}.
 	\label{fig:dpor-example-2}
 \end{figure}
 
-Ultimately, the second half of the state space is pruned symmetrically.
-In general, the number of ways to interleave two threads executing $N$ and $M$ events each is given by ${N+M \choose N}$%
-\footnote{Generalizing to $K$ threads, and simplifying to $N$ events each,
-this formula becomes $\frac{n!k!}{n!^k}$.};
-in this case, the original state space's size was ${3+3 \choose 3} = 20$.
-DPOR's reduction is characterized by replacing $N$ and $M$ with the number of {\em conflicting} events only;
-in this case, ignoring all {\tt tmpN++} reorderings and testing only ${2+2 \choose 2} = 6$ branches.
-
-\subsubsection{Sleep set reduction}
-\label{sec:landslide-sleepsets}
-
-In the presence of non-conflicting transitions as well as conflicting ones,
-DPOR's approach as described so far can still end up testing equivalent interleavings.
-As the presence of more equivalence arrows in \Cref{fig:dpor-example-2} hints,
-its reduced subset state space still contains redundancy,
-arising from the fact that one pair of those \revisionminor{four} events is two reads, and hence not actually in conflict.
-Visual inspection shows that $\bigstar$4, while locally justified
-in trying to reorder \dporTA{{\tt tmp1~<-~x}} before \dporTB{{\tt x~<-~tmp2}},
-effectively serves % oops
-only to reorder it with \dporTB{{\tt tmp2~<-~x}}
-relative to the first symmetric subtree ($\bigstar$1).
-In other words,
-even though DPOR marked each new branch with the intent only to reorder conflicting accesses,
-$\bigstar$1 and $\bigstar$4 contained interleavings equivalent up to independent reorderings anyway.
-\Cref{fig:sleepsets} summarizes the relevant interleavings to highlight one such equivalence.
-
-\begin{figure}[h]
+% TODO: check figure placement
+% should be right below dpor-example-2, on the previous page
+% i had to put ! not just ht to get it to show up correctly
+\begin{figure}[ht!]
 	\begin{center}
 		\begin{tabular}{p{0.30\textwidth}p{0.30\textwidth}p{0.30\textwidth}}
 	\begin{center}
@@ -1741,6 +1718,32 @@ $\bigstar$1 and $\bigstar$4 contained interleavings equivalent up to independent
 	}
 	\label{fig:sleepsets}
 \end{figure}
+
+Ultimately, the second half of the state space is pruned symmetrically.
+In general, the number of ways to interleave two threads executing $N$ and $M$ events each is given by ${N+M \choose N}$%
+\footnote{Generalizing to $K$ threads, and simplifying to $N$ events each,
+this formula becomes $\frac{n!k!}{n!^k}$.};
+in this case, the original state space's size was ${3+3 \choose 3} = 20$.
+DPOR's reduction is characterized by replacing $N$ and $M$ with the number of {\em conflicting} events only;
+in this case, ignoring all {\tt tmpN++} reorderings and testing only ${2+2 \choose 2} = 6$ branches.
+
+\subsubsection{Sleep set reduction}
+\label{sec:landslide-sleepsets}
+
+In the presence of non-conflicting transitions as well as conflicting ones,
+DPOR's approach as described so far can still end up testing equivalent interleavings.
+As the presence of more equivalence arrows in \Cref{fig:dpor-example-2} hints,
+its reduced subset state space still contains redundancy,
+arising from the fact that one pair of those \revisionminor{four} events is two reads, and hence not actually in conflict.
+Visual inspection shows that $\bigstar$4, while locally justified
+in trying to reorder \dporTA{{\tt tmp1~<-~x}} before \dporTB{{\tt x~<-~tmp2}},
+effectively serves % oops
+only to reorder it with \dporTB{{\tt tmp2~<-~x}}
+relative to the first symmetric subtree ($\bigstar$1).
+In other words,
+even though DPOR marked each new branch with the intent only to reorder conflicting accesses,
+$\bigstar$1 and $\bigstar$4 contained interleavings equivalent up to independent reorderings anyway.
+\Cref{fig:sleepsets} summarizes the relevant interleavings to highlight one such equivalence.
 
 Intuitively speaking,
 when DPOR entered the $\bigstar$3 subtree,
