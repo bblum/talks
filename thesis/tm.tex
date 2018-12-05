@@ -818,7 +818,7 @@ as follows.
 % notes to self abour marios tests
 % counter: tests k threads on n iterations, benchmark xchg-aways vs txn. removed benchmarking, added assertion that no counts are lost.
 
-\begin{itemize}
+\begin{enumerate}
 	\item Unit tests and microbenchmarks
 	\begin{itemize}
 		\item {\tt htm1}: The bug from \Cref{fig:htm-example,fig:htm-example-reproduced}.
@@ -853,7 +853,7 @@ as follows.
 		These are each parameterized over implementations {\tt spinlock} (from \cite{spinlock-rtm-github}),
 		{\tt spin\_\allowbreak{}fixed} (spoilers!!),
 		and {\tt mutex} (replaces the spinlock with a Landslide-annotated P2 mutex to reduce state space size).
-\end{itemize}
+\end{enumerate}
 
 The notation {\tt testname}$(K,N)$ will denote a test configuration of $K$ threads, each running $N$ iterations of the test logic.
 All tests were run on an 8-core 2.7GHz Core i7 with 32 GB RAM.

@@ -176,17 +176,17 @@ They are implemented as bash functions defined in {\tt pebsim/build.sh}.
 	\item {\tt without\_user\_function FUNC} - difference to two above same as stated one above.
 	\item {\tt data\_race ADDR TID LAST\_CALL CURRENT\_SYSCALL} - specifies a data-race preemption point.
 		\begin{itemize}
-			\item {\tt ADDR} shall be the code address (in hex) of the racing address,
+			\llitem {\tt ADDR} shall be the code address (in hex) of the racing address,
 			{\em before} the execution of which a preemption will be issued.
-			\item {\tt TID} indicates a thread ID required to be running for this data race.
+			\llitem {\tt TID} indicates a thread ID required to be running for this data race.
 				To specify data race PPs across all threads at once, set {\tt FILTER\_DRS\_BY\_TID=0} (see next section).
-			\item {\tt LAST\_CALL} indicates a code address required to be the site of the last {\tt call} instruction executed
+			\llitem {\tt LAST\_CALL} indicates a code address required to be the site of the last {\tt call} instruction executed
 				(similar to specifying a stack trace, but using a full stack trace here degrades performance too much),
 				or 0 to not use this feature.
 				From personal experience I found this option rather useless and recommend always supplying 0.
 				% TODO: fix this section ref
 				For further discussion see \cref{sec:quicksand-pps}.
-			\item {\tt CURRENT\_SYSCALL} indicates the system call number if a user-space data race comes from within a kernel system call which accesses user memory (Pebbles only).
+			\llitem {\tt CURRENT\_SYSCALL} indicates the system call number if a user-space data race comes from within a kernel system call which accesses user memory (Pebbles only).
 				Usually 0 (i.e., not in kernel code) but {\tt deschedule}'s system call number is common as well.
 		\end{itemize}
 	\item {\tt input\_pipe FILENAME} - FIFO file used for receiving messages from Quicksand (e.g. to suspend or resume execution).
@@ -202,7 +202,7 @@ Next, configuration options which affect an {\tt \#ifdef} in Landslide and will 
 %These span a wide variety of features, sorted below in subsections by roughly how interesting I think they are.
 Unless otherwise specified these are boolean flags (1 or 0) and the example value shown indicates the default used if unspecified.
 
-\begin{itemize}
+\begin{enumerate}
 \item {\bf Search algorithm options}
 \begin{itemize}
 	\item {\tt ICB=0} - enable Iterative Context Bounding (\cref{sec:landslide-icb});
@@ -246,7 +246,7 @@ Unless otherwise specified these are boolean flags (1 or 0) and the example valu
 	\item {\tt PRINT\_DATA\_RACES=0} - as it says on the tin (for stand-alone use; will message them to Quicksand regardless).
 	\item {\tt TABULAR\_TRACE=1} - configure whether to emit bug reports to the console (0) or to an HTML trace file (1)
 \end{itemize}
-\end{itemize}
+\end{enumerate}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -930,12 +930,12 @@ The corresponding code lives in {\tt stack\_trace()} in {\tt stack.c}.
 		because it's the former's stack frame which should enable the debugger
 		to find the pushed return address for the latter.}
 		\begin{itemize}
-			\item If the last pushed return address is at offset 0 into the body of its containing function,
+			\llitem If the last pushed return address is at offset 0 into the body of its containing function,
 				Landslide will find the next pushed return address at {\tt esp+0}.
-			\item If as above but the function is the page fault handler, at {\tt esp+4}.
-			\item If the return address is at offset 1 and the previous instruction was {\tt push ebp},
+			\llitem If as above but the function is the page fault handler, at {\tt esp+4}.
+			\llitem If the return address is at offset 1 and the previous instruction was {\tt push ebp},
 				Landslide will find the next pushed return address at {\tt esp+4}.
-			\item If the return address is a multiple of 4 offset
+			\llitem If the return address is a multiple of 4 offset
 				and all previous instructions are of the form {\tt mov m32,r32},
 				Landslide will find the next pushed return address at {\tt esp+0}.
 				(This is common in student hand-written assembly functions.)
@@ -1036,12 +1036,12 @@ This section lists special cases of instrumentation specific to the Pintos kerne
 	\item {\tt sched\_update\_kern\_state\_machine()} ({\tt schedule.c})
 		will:
 		\begin{itemize}
-			\item track invocations of {\tt timer\_sleep()} and {\tt list\_insert\_ordered()}
+			\llitem track invocations of {\tt timer\_sleep()} and {\tt list\_insert\_ordered()}
 				to infer when a thread is sleeping rather than blocked automatically,
 				rather than relying on the {\tt tell\_landslide\_sleeping()} annotation.
-			\item allow {\tt sema\_up()} to reenter itself,
+			\llitem allow {\tt sema\_up()} to reenter itself,
 				which may happen when an IDE interrupt is taken when interrupts are re-enabled at the end of said function.
-			\item handle interrupt disabling/enabling as an abstract global lock for the purposes of happens-before analysis.
+			\llitem handle interrupt disabling/enabling as an abstract global lock for the purposes of happens-before analysis.
 		\end{itemize}
 	\item {\tt sched\_update()} ({\tt schedule.c})
 		will handle ``lock handoff'' of the abstract disable-interrupts lock
@@ -1920,7 +1920,7 @@ even though they more often incur $O(n)$ runtime in the size of the vector clock
 because Landslide tests should be limited to few threads in order to manage the state space size,
 $n$ is always in the single digits, so I optimize for code simplicity.
 
-\begin{itemize}
+\begin{enumerate}
 	\item Reads and writes ({\tt memory.c})
 	\begin{itemize}
 		\item \textsc{Djit+ read/write same epoch} - {\tt vc\_eq()} case of {\tt add\_lockset\_to\_shm()}
@@ -1930,23 +1930,23 @@ $n$ is always in the single digits, so I optimize for code simplicity.
 	\begin{itemize}
 		\item \textsc{FT acquire}
 			\begin{itemize}
-				\item {\tt kern\_mutex\_\{,try\}locking\_done()} cases of {\tt kern\_update\_state\_\allowbreak{}machine()}
-				\item {\tt user\_mutex\_\{,try\}lock\_exiting()} cases of {\tt user\_update\_state\_\allowbreak{}machine()}
-				\item {\tt cli} case of {\tt kern\_update\_state\_machine()} (Pintos only)
-				\item {\tt cli}/{\tt sti} lock handoff case in {\tt sched\_update()} (Pebbles only)
+				\llitem {\tt kern\_mutex\_\{,try\}locking\_done()} cases of {\tt kern\_update\_state\_\allowbreak{}machine()}
+				\llitem {\tt user\_mutex\_\{,try\}lock\_exiting()} cases of {\tt user\_update\_state\_\allowbreak{}machine()}
+				\llitem {\tt cli} case of {\tt kern\_update\_state\_machine()} (Pintos only)
+				\llitem {\tt cli}/{\tt sti} lock handoff case in {\tt sched\_update()} (Pebbles only)
 			\end{itemize}
 		\item \textsc{FT release}
 			\begin{itemize}
-				\item {\tt kern\_mutex\_unlocking()} case of {\tt kern\_update\_state\_machine()}
-				\item {\tt user\_mutex\_unlock\_entering()} case of {\tt user\_update\_state\_machine()}
-				\item {\tt sti} case of {\tt kern\_update\_state\_machine()} (Pintos only)
-				\item {\tt cli}/{\tt sti} lock handoff case in {\tt sched\_update()} (Pebbles only)
+				\llitem {\tt kern\_mutex\_unlocking()} case of {\tt kern\_update\_state\_machine()}
+				\llitem {\tt user\_mutex\_unlock\_entering()} case of {\tt user\_update\_state\_machine()}
+				\llitem {\tt sti} case of {\tt kern\_update\_state\_machine()} (Pintos only)
+				\llitem {\tt cli}/{\tt sti} lock handoff case in {\tt sched\_update()} (Pebbles only)
 			\end{itemize}
 		\item \textsc{FT fork} - {\tt agent\_fork()}
 		\item \textsc{FT join} - {\tt sched\_unblock()} case of {\tt kern\_update\_state\_machine()}
 			(Pebbles only; Pintos case is handled by above {\tt cli}/{\tt sti} cases in context switch)
 	\end{itemize}
-\end{itemize}
+\end{enumerate}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
