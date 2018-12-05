@@ -346,7 +346,7 @@ to (almost) all variations of commonly-submitted code.
 	\item Adds the new {\tt priority-donate-multiple} test.
 	\item Applies the {\tt annotate-pintos.patch} patch to the imported student implementation, which:
 	\begin{itemize}
-		\item Adds {\tt tell\_landslide\_thread\_on\_rq()}
+		\llitem Adds {\tt tell\_landslide\_thread\_on\_rq()}
 			and {\tt tell\_landslide\_thread\_off\_rq()}
 			annotations
 			to {\tt list\_insert()} and {\tt list\_remove()} respectively
@@ -356,8 +356,8 @@ to (almost) all variations of commonly-submitted code.
 			is the scheduler runqueue
 			using a helper function {\tt is\_runqueue},
 			which in turn uses {\tt get\_rq\_addr()} and {\tt READY\_LIST\_LENGTH} described above.
-		\item Modifies the existing {\tt priority-sema} and {\tt alarm-simultaneous} tests to be more Landslide-friendly.
-		\item Inserts the {\tt tell\_landslide\_sched\_init\_done()},
+		\llitem Modifies the existing {\tt priority-sema} and {\tt alarm-simultaneous} tests to be more Landslide-friendly.
+		\llitem Inserts the {\tt tell\_landslide\_sched\_init\_done()},
 			{\tt tell\_landslide\_vanishing()},
 			and {\tt tell\_landslide\_thread\_switch()}
 			annotations in the appropriate places
