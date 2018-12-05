@@ -7,6 +7,110 @@
 Landslide is a model checker implemented as a plug-in module for x86 full-system simulators.
 The program to be tested runs in a simulated environment,
 and Landslide uses its access to the simulator's internal state to inspect and manipulate the memory and thread scheduling of the program as it executes.
+\revision{\Cref{fig:landslide-architecture} visualizes Landslide in relation to its execution environment,
+showing how it communicates with each of its surrounding and/or simulated programs.
+
+\begin{figure}[h]
+	\begin{center}
+		\includegraphics[width=0.875\textwidth]{landslide-new.pdf}
+	\end{center}
+	\caption{Landslide's execution environment when testing 15-410 student projects.}
+	\label{fig:landslide-architecture}
+\end{figure}
+
+\subsubsection{Design}
+
+From an implementation point of view,
+Landslide's main ``execution loop'' is simply the simulated CPU's own fetch-decode-execute loop:
+each time it simulates an instruction or memory access,
+it invokes Landslide through the simulator's module interface.
+More abstractly speaking, the general sequence of events during a Landslide test runs as follows.
+
+\begin{enumerate}
+	\item Instrument the test program by inspecting its binary,
+		learning the addresses of important functions, global variables, et cetera
+		(\cref{sec:landslide-glue}).
+	\item Execute the program under simulation.
+		\begin{enumerate}
+			\item At each instruction:
+				\begin{enumerate}
+					\item Update the {\em scheduler},
+						a state machine depicting the runnable and/or blocked
+						threads currently existing in the simulated program,
+						as well as a set of action flags to track what each thread is up to,
+						such as waiting to lock a mutex at a given memory address
+						(\cref{sec:landslide-scheduler}).
+					\item Record reads and writes to shared memory (\cref{sec:landslide-memory}).
+					\item Check whether the current program state constitutes a bug,
+						and if so,
+						emit a preemption trace (\cref{sec:landslide-foundabug})
+						and halt Landslide's execution.
+						Bug-detection predicates range from
+						simply checking if the program tripped an assert
+						or accessed invalid memory,
+						to checking the above-mentioned memory accesses against the current
+						heap allocation state for use-after-frees (\cref{sec:landslide-valgrind-mode}),
+						to querying the scheduler for deadlocks (\cref{sec:landslide-fp-deadlock}),
+						to checking heuristically for infinite loops and livelock
+						(\cref{sec:landslide-infloop}).
+					\item Check whether the current program state is a preemption point
+						(\cref{sec:landslide-pps}).
+					\item Query the scheduler to detect when the test has completed successfully,
+						i.e., all threads have finished executing normally
+						(\cref{sec:landslide-scheduler-statemachine}).
+				\end{enumerate}
+			\item At each preemption point, identified as in 2(a)iv above:
+				\begin{enumerate}
+					\item Check the set of memory accesses since the previous preemption point,
+						recorded as in 2(a)ii above,
+						for conflicts with other threads
+						(\cref{sec:landslide-shm}),
+						and further for data races (\cref{sec:landslide-datarace}).
+					\item Select which thread should run next (\cref{sec:landslide-arbiter}),
+						Heuristically detecting yield-blocked threads
+						may inform this decision (\cref{sec:landslide-blocking-yield}).
+					\item Checkpoint the execution state in case future executions
+						should wish to rewind and try a different thread from the one first chosen here
+						(\cref{sec:landslide-save}, \cref{sec:landslide-timetravel}).
+						% may be informed by heuristix/yield blocking
+					\item Force the chosen thread to run by injecting timer interrupts
+						(\cref{sec:landslide-interrupce},
+						\cref{sec:landslide-scheduler-interrupce}).
+				\end{enumerate}
+				Note that Landslide maintains the invariant that each transition between two preemption points
+				consist of instructions executed by exactly one thread;
+				i.e., every thread switch must be punctuated by a preemption point.
+				% preemption point one thread per invariant...
+		\end{enumerate}
+	\item At the end of each execution, identified as in 2(a)v above:
+		\begin{enumerate}
+			\item Analyze the set of memory conflicts,
+				computed as in 2(b)i above,
+				using Dynamic Partial Order Reduction (DPOR)
+				to decide which preemption point to backtrack to and
+				% once there
+				%% once then % lol
+				which new thread to run
+				(\cref{sec:landslide-dpor}).
+				This may be constrained by Iterative Context Bounding (\cref{sec:landslide-icb}).
+			\item Estimate the structure of the resulting state space
+				to predict overall runtime and total interleavings needed to test
+				(\cref{sec:landslide-estimate}).
+			\item If DPOR selected an alternate interleaving to explore,
+				backtrack the simulation state to that preemption point
+				(\cref{sec:landslide-timetravel})
+				force the new thread to run
+				(\cref{sec:landslide-interrupce}, \cref{sec:landslide-scheduler-interrupce}),
+				and repeat from step 2.
+				%If DPOR produced no results,
+				Otherwise, halt Landslide's execution,
+				declaring the explored state space free of bugs.
+		\end{enumerate}
+\end{enumerate}
+}
+
+\subsubsection{Implementation}
+
 As of this thesis's writing, Landslide supports the use of two possible simulators:
 
 \begin{itemize}
@@ -24,6 +128,8 @@ The Simics port uses Simics's proprietary API and is hence unlicensed and availa
 Development on the Simics port is largely frozen,
 as the Bochs port implements all the same features and more,
 and is also roughly 3x faster.
+
+\subsubsection{Disclaimer}
 
 This chapter will discuss Landslide's outer and inner workings in all their gory detail.
 It is intended for the aspiring developer or the ambitious user
@@ -668,6 +774,7 @@ and {\tt sched\_recover()}, which prepares the scheduler to force a new thread t
 after a time travel (\cref{sec:landslide-timetravel}).
 
 \subsubsection{State machine}
+\label{sec:landslide-scheduler-statemachine}
 
 The first part of {\tt sched\_update()} is to update the state machine of thread actions and runnability.
 Much of this functionality is found in
@@ -677,8 +784,13 @@ and
 The current intruction pointer is compared against the known locations of
 the mutex API, system calls, runnable/descheduling {\tt tell\_\allowbreak{}landslide} annotations, and so on,
 and locksets, action flags, and runqueue membership are updated accordingly.
+\revision{Landslide also queries the scheduler state after it updates every instruction,
+via {\tt test\_update\_state()} ({\tt test.c}),
+to check the existence and/or runnability of all the system's threads
+and determine whether or not the test case has completed execution.}
 
 \subsubsection{Interrupt injection}
+\label{sec:landslide-scheduler-interrupce}
 
 The second part of {\tt sched\_update()},
 conditional on the arbiter identifying preemption points (\cref{sec:landslide-arbiter}),
@@ -735,6 +847,7 @@ whether, if in the heap region, the memory is contained in a currently-allocated
 reporting a bug if not.
 
 \subsubsection{Memory conflicts}
+\label{sec:landslide-shm}
 
 {\tt mem\_check\_shared\_access()} also records each such access in a per-thread-transition rbtree,
 which is saved and then cleared at each preemption point.
@@ -881,6 +994,7 @@ Thence the typechecker enforces that all exploration-related state is properly p
 
 % time travel, explore, arbiter
 \subsection{Bug-finding output}
+\label{sec:landslide-foundabug}
 
 The infrastructure for producing the diagnostic output to help users understand their bugs
 can be classified in three parts:
@@ -2104,6 +2218,7 @@ the variety of student implementations inevitably results in many behaviours out
 This section documents the heuristics Landslide uses to approximate a program's formal behaviour in such situations.
 
 \subsubsection{Infinite loop detection}
+\label{sec:landslide-infloop}
 
 All modern presentations of stateless model checking assume finite program length.
 Even though all test cases used in this thesis's experiments are hand-written to ensure runtime
@@ -2172,6 +2287,7 @@ to keep the average relatively stable.
 These checks are both implemented in {\tt check\_infinite\_loop()} in {\tt landslide.c}.
 
 \subsubsection{Yield-loop detection}
+\label{sec:landslide-blocking-yield}
 
 One very common student implementation pattern in P2s and kernels is to open-code
 synchronization between threads using a loop that spins around a condition that the loop itself cannot fulfill,
@@ -2248,6 +2364,7 @@ so that a third thread which could actually make progress may run if it exists.
 % kind of clunky and uninteresting to talk abt tbh
 
 \subsubsection{False-positive deadlock avoidance}
+\label{sec:landslide-fp-deadlock}
 
 In cases where the yield-loop heuristic described above produces false positives,
 i.e., blocking a thread which could make progress on its own after all,
