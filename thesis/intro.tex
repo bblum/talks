@@ -8,32 +8,46 @@ Please hold on. This thesis will be departing shortly for the Landslide terminal
 \revision{Pick up any recent concurrency-related research paper, %from the last few decades,
 and chances are its very first sentence will tell you
 %how notoriously difficult concurrency bugs are compared to sequential ones
-that concurrency bugs are notoriously difficult to find, reproduce, diagnose, and fix
+that concurrency bugs are notoriously difficult to find, reproduce, diagnose, and/or fix
 % ,
 %and/or thereafter verify fixed,
 %compared to sequential ones,
 %on account of the multitude of thread interleavings one must test
 \cite{nidhugg,optimal-dpor,coredet,sealing,quicksand,landslide,this-thesis,concuerror,
-cspec, % 2nd sentence in cspec >_>
+%cspec, % 2nd sentence in cspec >_>
 bpor,
-parrot, % 2nd sentence in parrot
+%parrot, % 2nd sentence in parrot
 peregrine,
-bugtm, % 1st and 2nd sentence
+%bugtm, % 1st and 2nd sentence
 satcheck,
 racerx,
-ifrit, % 1st para, approx
+%ifrit, % 1st para, approx
 datacollider,
 fasttrack,
 mcr-tsopso,
 mcr,
 macemc,
 contessa,
-lvish,
+%lvish, % "it must become easier"
 dthreads,
 taxdc,
-learning-from-mistakes, % sentence 3ish
-% TODO start up again on page 161 (AVIO: Detecting atomicity violations via access interleaving invariants.)
-}.
+%learning-from-mistakes, % sentence 3ish
+avio,
+symbiosis,
+chess-icb,
+chess,
+recordreplaydrs,
+kendo, % first WHOLE PARAGRAPH geez dude
+%hybriddatarace, % 3rd sentence
+parallel-dpor,
+%eraser, % 3rd sentence 2nd paragraph
+%racefuzzer, % 2nd sentence
+%tsan, % 2nd sentence
+sully-thesis,
+%compcerttso, % 2nd sentence
+modist,
+maple,
+simtester}.
 %compared to sequential programming.
 %
 %Indeed, just as conditional statements and loops introduce additional possible program behaviours
@@ -94,8 +108,10 @@ or approximately 18 billion billion.
 The number of interleavings in a concurrent system grows at a similarly intractable rate
 (although not necessarily exactly doubling each time),
 with the number of chessboard squares filled with grain corresponding to the number of events in a program's execution.
-And Sissa is the concurrent programmer,
-who always writes software large enough to be far beyond the reach of any exhaustive verification strategy.
+A concurrency bug, then, is a single poisoned grain of wheat,
+which must be rooted out from the stock before feeding the townspeople.
+And Sissa himself is the programmer,
+whose software is invariably large enough to be far beyond the reach of any exhaustive verification strategy.
 }
 
 \section{Motivation}
