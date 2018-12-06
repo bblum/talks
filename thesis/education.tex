@@ -1,11 +1,15 @@
 \chapter{Education}
 \label{chap:education}
+% TODO: look at this spacing hack again on fresh eyes and see if it rly improves matters or not
+\vspace{1em}
 
 \inspirationalquote{Knowing the students might one day
 %find a way to
 fix their concurrency bugs...
 it fills you with determination.}{Undertale (paraphrased)}
 
+% fix spacing between paragraphs, since sect 5.1 header starts next page
+\vspace{3em}
 Concurrency is taught in as many different ways as there are
 systems programming classes at universities which teach the subject.
 Yet one thing they all have in common is presenting the concurrency bug
@@ -1443,32 +1447,7 @@ can each benefit from the experience in different ways.
 \section{Discussion}
 \label{sec:education-discussion}
 
-Human subjects research is inherently messy.
-Each of the previous section's approaches to evaluating Landslide's educational value
-was accompanied by some drawback which prevented it from being perfectly objective science,
-but many of them presented tentatively positive results nonetheless,
-\revisionminor{and relatively very little negative feedback such as false positives}.
-Landslide helped many students find and fix many bugs (\cref{sec:education-eval-bugfinding}),
-but making a direct comparison to stress testing, the prior state of the art, is not straightforward.
-%and not statistically significant,
-Immediate improvement in students' project grades was observed
-(\cref{sec:education-eval-grades}),
-although statistical significance was lost when attempting to account for selection bias;
-and impact on grades alone is a very narrow measure of pedagogical value anyway.
-Landslide's debugging power was also found to be statistically significant
-for the {\tt thr\_exit\_join} bug in particular.
-Students responded overwhelmingly positively in the survey (\cref{sec:education-eval-survey}),
-although it is easy to imagine students being equally happy with a ``debugging tool'' that just tells them all the answers.
-
-Nevertheless, I believe each of these partial results taken together
-paint an overall picture of success:
-students fixed their own bugs {\em and} were happy about it;
-students were able to ask for help rather than be deterred by inevitable technical difficulties as far as I know;
-students provided intelligent feedback suggesting they truly understood the debugging process;
-% well not the student who said "traces should point to where the bug is" but eh can't win em all c.c
-et cetera.
-%
-The rest of this section will discuss the study's limitations and provide some perspective for the future.
+This section will discuss the study's limitations and offer some perspective for the future.
 
 \subsection{Bias}
 
@@ -1559,8 +1538,8 @@ the following questions could have improved the survey.
 		but it's possible refusing to test any code beyond until that bug was fixed
 		might have made Landslide less useful overall.
 	\item \revision{{\em In addition to finding bugs, did you manage to fully verify your code under
-		any of the tests by letting Landslide complete all state spaces before reaching the specified time out?}
-		This would provide a sense of how thoroughly students understood the underlying research technique,
+		any tests by letting Landslide complete all state spaces before reaching the specified time out?}
+		This would measure how thoroughly students understood the underlying research technique,
 		and serve as a follow-up to the ``how many bug fixes verified'' question
 		(where students often stopped Landslide midway through after a little while).}
 \end{enumerate}
@@ -1613,6 +1592,7 @@ or by offering an autograder-like interface for students to receive bug reports 
 (either way requiring a more rigorous IRB review process).
 
 \subsection{Future educational use}
+\label{sec:education-future-use}
 
 %{\bf Pebbles.}
 Now being done collecting student usage data to publish as research results,
@@ -1659,3 +1639,79 @@ other, more readily automatic model checkers for user-space programs,
 such as dBug \cite{dbug-ssv} or CHESS \cite{chess},
 could easily be used on other thread-library-like programming projects at any university.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Summary}
+
+% report on participation %s
+
+\revision{This chapter has introduced Landslide as an educational tool
+in the undergraduate operating systems classes at CMU, U. Chicago, and PSU.
+I have made the following contributions:
+
+\begin{itemize}
+	\item A lecture, polished over seven semesters,
+		for introducing stateless model checking as a concurrency testing approach
+		in high-level undergraduate classes
+		(with many slides admittedly specific to Landslide as they may be)
+		(\cref{sec:education-pebbles-recruiting}).
+	\item A system for automatically instrumenting student thread library (CMU, PSU) and kernel (U. Chicago)
+		project implementations to be compatible with stateless model checking
+		(\cref{sec:education-pebbles-instrumentation},
+		\cref{sec:education-pintos-instrumentation}).
+	\item An experimental procedure for evaluating debugging and verification tools
+		as student-accessible teaching aids,
+		including a survey for measuring the more intangible human experience
+		(\cref{sec:education-survey-pebbles},
+		\cref{sec:education-survey-pintos}).
+	\item A large evaluation spanning 9 semesters of operating systems classes
+		(\cref{sec:education-eval-bugfinding}),
+		2 of which were held at other universities besides CMU,
+		in which 145 students used Landslide,
+		a majority of which found bugs (\cref{sec:education-eval-bugfinding}),
+		and a vast majority of which expressed via the survey that they had a good experience
+		(\cref{sec:education-eval-survey}).
+	\item A thorough statistical analysis of Landslide's effect on student submission quality
+		(\cref{sec:education-eval-grades}),
+		evaluating both impact on ultimate project grades
+		and student tendency to submit any of four well-known case study bugs.
+		Ultimately, while positive trends were observed,
+		this study concluded that a statistically-significant conclusion could not be drawn
+		while simultaneously compensating for several obvious sources of possible bias.
+		Nevertheless, this level of statistical rigor is not yet widespread in computer science research,
+		so I would hope this study may set a precedent that help mature the field.
+	\item Concrete action taken to establish Landslide
+		as a permanent fixture of 15-410's grading process at CMU,
+		student-oriented user guides should the course staff wish it to remain available as a debugging tool,
+		as well as general recommendations for any Pintos-based OS class
+		at other universities to use it for grading as well
+		(\cref{sec:education-future-use}).
+\end{itemize}
+}
+
+Human subjects research is inherently messy.
+Each %of the previous section's
+\revisionminor{individual}
+approaches to evaluating Landslide's educational value
+was accompanied by some drawback which prevented it from being perfectly objective science,
+but many of them presented tentatively positive results nonetheless,
+\revisionminor{and relatively very little negative feedback such as false positives}.
+Landslide helped many students find and fix many bugs (\cref{sec:education-eval-bugfinding}),
+but making a direct comparison to stress testing, the prior state of the art, is not straightforward.
+%and not statistically significant,
+Immediate improvement in students' project grades was observed
+(\cref{sec:education-eval-grades}),
+although statistical significance was lost when attempting to account for selection bias;
+and impact on grades alone is a very narrow measure of pedagogical value anyway.
+Landslide's debugging power was also found to be statistically significant
+for the {\tt thr\_exit\_join} bug in particular.
+Students responded overwhelmingly positively in the survey (\cref{sec:education-eval-survey}),
+although it is easy to imagine students being equally happy with a ``debugging tool'' that just tells them all the answers.
+%
+Nevertheless, I believe each of these partial results taken together
+paint an overall picture of success:
+students fixed their own bugs {\em and} were happy about it,
+students were able to ask for help rather than be deterred by inevitable technical difficulties, %as far as I know;
+and students provided intelligent feedback suggesting they truly understood the debugging process.
+% well not the student who said "traces should point to where the bug is" but eh can't win em all c.c
+%et cetera.
