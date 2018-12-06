@@ -18,7 +18,7 @@ showing how it communicates with each of its surrounding and/or simulated progra
 	\label{fig:landslide-architecture}
 \end{figure}
 
-\subsubsection{Design}
+\subsubsection{Overview}
 
 From an implementation point of view,
 Landslide's main ``execution loop'' is simply the simulated CPU's own fetch-decode-execute loop:
@@ -1120,7 +1120,9 @@ This section lists special cases of instrumentation specific to the Pebbles kern
 		will read the {\tt esp0} value out of the TSS to support user-to-kernel mode switches
 		in timer interrupts injected during userspace execution.
 	\item {\tt splice\_pre\_vanish\_trace} ({\tt stack.c})
-		will, when a {\tt vanish}ing thread has already deleted its Simics symbol table object,
+		will, when a {\tt vanish}ing thread has already
+		\revisionminor{unmapped all of its user memory,}
+		%deleted its Simics symbol table object,
 		splice in a saved ``pre-vanish'' stack trace
 		(saved previously in {\tt sched\_update\_kern\_state\_machine()})
 		so the user can see the userspace execution sequence preceding the {\tt vanish} invocation.
@@ -2415,3 +2417,77 @@ The cost of a high limit manifests in the length of preemption traces when deadl
 which will display a proportional number of meaningless preemption points,
 although future work could easily truncate them retrospectively.
 This check is implemented in {\tt try\_avoid\_fp\_deadlock()} in {\tt arbiter.c}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Summary}
+
+\revision{This chapter has presented Landslide,
+a stateless model checker for Pebbles and Pintos kernels and Pebbles userspace thread libraries.
+For the most part, Landslide's contribution to the world of concurrency testing is as a feat of engineering
+which combines many existing techniques from prior work in a single implementation.
+These include:
+
+\begin{itemize}
+	\item Uses Dynamic Partial Order Reduction (DPOR) \cite{dpor}
+		to prune equivalent interleavings while exploring the state space (\cref{sec:landslide-dpor}).
+	\item Uses its simulator's memory tracing integration \cite{simics,bochs}
+		to power data race analysis \cite{djit,fasttrack} (\cref{sec:landslide-datarace}).
+		%and DPOR \cite{dpor} (\cref{sec:landslide-dpor}).
+	\item Supports Preemption Sealing \cite{sealing} to configure the set of active preemption points
+		and hence keep state space sizes manageable (\cref{sec:landslide-pps}).
+	\item Extends DPOR with Recursive and Weighted Backtrack Estimation \cite{estimation}
+		to predict overall ultimate state space size and completion time (\cref{sec:landslide-estimate}).
+	\item Extends DPOR (at the user's option) with Iterative Context Bounding \cite{chess-icb}
+		to heuristically uncover bugs faster should they exist,
+		at the expense of overall completion time (\cref{sec:landslide-icb}).
+\end{itemize}
+
+However, over the years Landslide has also grown some convenience and/or accessibility features
+that could be considered contributions in their own right.
+
+\begin{itemize}
+	\item Extends Preemption Sealing for finer-grained control
+		over whether individual functions and/or global variables
+		should be considered for, or excluded from,
+		DPOR and/or data-race analysis
+		(\cref{sec:landslide-config-landslide};
+		{\tt thrlib\_function} and {\tt ignore\_dr\_function}, respectively).
+		This allows a test case author to precisely target the exact subset of code
+		she is interested in testing,
+		avoiding unnecessary state space inflation from trusted code.
+	\item Adds a mutex testing mode to configure whether the
+		data race analysis should consider lock' internal accesses
+		(\cref{sec:landslide-dynamicconfig}; {\tt TESTING\_MUTEXES}).
+		This allows the user to verify that her lock implementation
+		correctly provides mutual exclusion
+		(upcoming in \cref{sec:education-pebbles-tests}; {\tt mutex\_test}),
+		before relying on them as trusted code in subsequent tests.
+	\item Implements the sleep set extension to DPOR \cite{partial-order-methods,dpor,optimal-dpor},
+		which identifies and skips further equivalences based on which memory accesses
+		DPOR intended to reorder,
+		%, rather than just switching threads and seeing what happens
+		in a way that is slightly less optimal compared to prior work,
+		but much simpler to implement
+		and requires less state at runtime (\cref{sec:landslide-sleepsets}).
+	\item Heuristically identifies infinite loops and livelocks
+		by leveraging knowledge of how long the test program should be expected to run
+		obtained during previous executions,
+		uniquely suited to stateless model checking (\cref{sec:landslide-infloop}).
+	\item Provides automatic code instrumentation facilities,
+		beyond just the simple task of identifying important function boundaries,
+		that attempt to understand a wide variety of even the most unusual student implementations
+		(\cref{sec:landslide-pebblesspecifics},
+		\cref{sec:landslide-pintosspecifics}).
+		This includes an advanced heuristic for detecting ad-hoc synchronization loops
+		that Landslide should treat as blocking, %a thread,
+		even if it does not trigger the automatically-inserted blocking annotations
+		(\cref{sec:landslide-blocking-yield}),
+		and a further heuristic to ensure that any inaccuracy on the part of the first heuristic
+		does not result in false-positive bug reports (\cref{sec:landslide-fp-deadlock}).
+\end{itemize}
+
+The following three chapters, \Cref{chap:quicksand,chap:education,chap:tm},
+will each build upon Landslide to present the thesis's main research contributions.}
