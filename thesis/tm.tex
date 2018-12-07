@@ -83,8 +83,44 @@ and ``TSX''
 (when referring to Intel's implementation and/or GCC's intrinsics interface).
 The non-pedantic reader may treat these as interchangeable.
 
-The example TSX program from \Cref{fig:htm-example} (\cref{sec:overview-tm})
-is reproduced here for the reader's convenience.
+% or "Contribution"
+\revision{{\bf Motivation.}
+For the most part,
+existing stateless model checkers
+model interrupt-driven thread switching as the only source of nondeterminism in a program's execution.
+In other words, assuming a fixed test input,%
+\footnote{Input nondeterminism is another research field,
+addressed by symbolic execution \cite{symbolic}; see \cref{related:symbolic}.}
+the only way multiple behaviours can arise is by scheduling different threads at each preemption point.
+Only recently have checkers emerged that extend this model by
+incorporating other nondeterminism sources:
+store buffer reordering arising from relaxed memory models
+\cite{cdschecker,tsopso,rcmc}
+and event-driven application programming models
+\cite{r4,eventracer},
+both of which are especially relevant in mobile programming.
+Under TM, {\sf begin}'s return value is also nondeterministic,
+and moreover may depend on execution events from the future in a parallel universe
+(i.e., subsequent memory conflicts detected and reverted),
+and no model checker yet exists which can model this.
+In this chapter I will develop a concurrency model to incorporate abort nondeterminism
+(\cref{sec:tm-design}),
+including two equivalence proofs to help cope with the consequent state space explosion
+(\cref{sec:tm-design-failure} and \cref{sec:tm-design-locks}),
+extend Landslide to support testing TM programs under a variety of execution semantics
+(\cref{sec:tm-implementation}),
+and demonstrate its practicality
+%\cref{sec:tm-eval}
+both by finding new bugs
+(\cref{sec:tm-eval-bugs})
+and by verifying correctness
+(\cref{sec:tm-verif})
+in a variety of microbenchmarks and real-world HTM programs.}
+
+\revisionminor{The following sections will make heavy reference
+to the example TSX program from \Cref{fig:htm-example} (\cref{sec:overview-tm})
+while defining the new concurrency model,
+so I reproduce it here in \Cref{fig:htm-example-reproduced} for the reader's convenience.}
 
 \begin{figure}[h]
 	\begin{center}
@@ -134,6 +170,7 @@ Note that the C-style {\tt x++} operations, when compiled into assembly, %\cite{
 become multiple memory accesses which can be interleaved with other threads,
 \revisionminor{as shown below in \Cref{fig:htm-example-assemblified}.}
 
+\revision{
 \begin{figure}[h]
 	\begin{center}
 		\begin{tabular}{ll}
@@ -181,12 +218,13 @@ become multiple memory accesses which can be interleaved with other threads,
 			\texttt{\call{\_xend}();} & \\
 		\end{tabular}
 	\end{center}
-	\caption[Impossible hypothetical interleaving within transactions of \Cref{fig:htm-example-reproduced}.]
-		{Impossible hypothetical interleaving within transactions of \Cref{fig:htm-example-reproduced}.
+	\caption[Impossible hypothetical interleaving within transactions of \Cref{fig:htm-example-assemblified}.]
+		{Impossible hypothetical interleaving within transactions of \Cref{fig:htm-example-assemblified}.
 		The effects of $\tiat{2a-2b}$ are never globally visible, as its transasction must abort,
 		and moreover $\tiat{2c-3}$ will not execute at all.}
 	\label{fig:htm-example-interleaving}
 \end{figure}
+}
 
 If these instructions from the {\tt x++} in the transaction are preempted,
 with another thread's access to {\tt x} interleaved in between,
