@@ -44,7 +44,9 @@ urlcolor=urlc,
 \usepackage[linesnumbered,ruled]{algorithm2e}
 \usepackage{algpseudocode}
 \usepackage{microtype}
-\usepackage[nameinlink]{cleveref}
+% "nosort" causes no sort AND no compress of 3+ section references in one;
+% it's "sort" to sort but NOT compress; nothing to.. compress but not sort, i guess? not the greatest naming
+\usepackage[nameinlink,nosort]{cleveref}
 
 %% custom fonts
 

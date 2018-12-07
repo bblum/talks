@@ -377,10 +377,10 @@ by creating a file and adding it to both {\tt tests.c} and {\tt Make.tests}.
 Tests for the most common interactions during the P2 and Pintos projects are of course already supplied,
 as described in \cref{sec:education-pebbles-tests} and \cref{sec:education-pintos-tests}.
 
-Use of {\tt tell\_landslide()} annotations
+Use of the {\tt tell\_landslide()} annotations
 \revisionminor{(\cref{sec:tell-landslide})}
 is not necessary,
-although {\tt tell\_landslide\_\allowbreak{}preempt()} and {\tt tell\_landslide\_dump\_stack()}
+although {\tt tell\_\allowbreak{}landslide\_preempt()} and {\tt tell\_landslide\_dump\_stack()}
 may optionally be used at the user's convenience.
 Additionally, the following ``secret'' annotations
 are occasionally used in the pre-supplied test cases
@@ -1722,9 +1722,9 @@ shown in \Cref{fig:dpor-example-2}.
 \end{figure}
 
 Ultimately, the second half of the state space is pruned symmetrically.
-In general, the number of ways to interleave two threads executing $N$ and $M$ events each is given by ${N+M \choose N}$%
+In general, the number of ways to interleave two threads executing $N$ and $M$ events each is given by ${N+M \choose N}$;%
 \footnote{Generalizing to $K$ threads, and simplifying to $N$ events each,
-this formula becomes $\frac{n!k!}{n!^k}$.};
+this formula becomes $\frac{n!k!}{n!^k}$.}
 in this case, the original state space's size was ${3+3 \choose 3} = 20$.
 DPOR's reduction is characterized by replacing $N$ and $M$ with the number of {\em conflicting} events only;
 in this case, ignoring all {\tt tmpN++} reorderings and testing only ${2+2 \choose 2} = 6$ branches.
@@ -1848,7 +1848,7 @@ will cause it to print them each time a new interleaving is tested; for example:
 Both estimates are computed simultaneously in {\tt \_estimate()} in {\tt estimate.c}
 (which, I might add, is well-commented in case the following prose is insufficient).
 %I summarize their respective implementations here.
-\Cref{chap:warpzone-heuristics} will discuss their limitations and some opportunities for future improvement.
+\cref{sec:warpzone-heuristics} will discuss their limitations and some opportunities for future improvement.
 
 \subsubsection{Size (Weighted Backtrack) estimation}
 
@@ -2239,22 +2239,6 @@ bugs may still cause a program to get stuck in an infinite loop unexpectedly.
 Detecting such loops in general is of course uncomputable \cite{entscheidungsproblem},
 but Landslide has the benefit of knowledge from past iterations to inform its sense of how long the program ``should'' run.
 
-\begin{figure}[h]
-	\begin{center}
-		\begin{tabular}{cc}
-			\includegraphics[width=0.28\textwidth]{heuristic-livelock.pdf}
-			&
-			\includegraphics[width=0.28\textwidth]{heuristic-tightloop.pdf}
-			\\
-			(a) Infinite loop around preemption points.
-			&
-			(b) Stuck between preemption points.
-		\end{tabular}
-	\end{center}
-	\caption{Detecting infinite loops heuristically by comparison to past interleavings.}
-	\label{fig:heuristic-loop}
-\end{figure}
-
 Landslide checks for two distinct categories of \revisionminor{potentially-infinite} loops,
 visualized in \Cref{fig:heuristic-loop}.
 Firstly, it keeps a running average of how many preemption points deep each completed interleaving has been in the past.
@@ -2276,6 +2260,22 @@ to represent its lower confidence
 In the special case of the first branch ever tested,
 Landslide will abort after a fixed preemption point depth limit of 4000 ({\tt TOO\_DEEP\_0TH\_BRANCH})
 -- a program with such $N$ would probably have an impossibly large state space anyway.
+
+\begin{figure}[t]
+	\begin{center}
+		\begin{tabular}{cc}
+			\includegraphics[width=0.28\textwidth]{heuristic-livelock.pdf}
+			&
+			\includegraphics[width=0.28\textwidth]{heuristic-tightloop.pdf}
+			\\
+			(a) Infinite loop around preemption points.
+			&
+			(b) Stuck between preemption points.
+		\end{tabular}
+	\end{center}
+	\caption{Detecting infinite loops heuristically by comparison to past interleavings.}
+	\label{fig:heuristic-loop}
+\end{figure}
 
 Secondly, a program may get stuck in a loop where no preemption points are encountered each new iteration.
 For example, race-induced data corruption may cause a list to end up circularly linked, %oops
