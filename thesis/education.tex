@@ -522,9 +522,10 @@ including command-line options issued, the current version of their project code
 a log of Landslide's output,
 and the preemption traces for any bugs found.
 These I analyzed by hand to determine how many distinct bugs were reported
-(as multiple preemption traces may refer to the same bug; inspecting their code if necessary),
+\revisionminor{(inspecting their code if necessary,
+as multiple traces may refer to the same bug),}
 how many were deterministic
-(i.e., Landslide reported them on the very first interleaving tested, with no need for artificial preemptions),
+(i.e., reported on the very first interleaving tested, with no need for artificial preemptions),
 how many were concurrency bugs,
 whether any were false positives,
 and whether the student was able to fix them thereafter

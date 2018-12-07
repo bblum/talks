@@ -2130,7 +2130,7 @@ rather, the state space must always be explored in an overall depth-first approa
 at best skipping too-preemptful interleavings as they are encountered.
 As simple as it would be to state ``{\bf foreach} $S \in {\mathsf{sort}_P(U)}$'' in pseudocode,
 implementing such an ordering would be much less straightforward.
-\footnote{\revision{Many conference papers' pseudocode algorithms
+\footnote{\revision{The pseudocode algorithms found in many conference papers
 often fail to be straightforward to translate into usable implementations~\cite[Figure 5]{itg2}.}}
 
 Therefore, Landslide's ICB implementation combines with DPOR
@@ -2434,7 +2434,8 @@ These include:
 	\item Uses Dynamic Partial Order Reduction (DPOR) \cite{dpor}
 		to prune equivalent interleavings while exploring the state space (\cref{sec:landslide-dpor}).
 	\item Uses its simulator's memory tracing integration \cite{simics,bochs}
-		to power data race analysis \cite{djit,fasttrack} (\cref{sec:landslide-datarace}).
+		to power data race analysis \cite{djit,fasttrack} (\cref{sec:landslide-datarace}),
+		as well as DPOR.
 		%and DPOR \cite{dpor} (\cref{sec:landslide-dpor}).
 	\item Supports Preemption Sealing \cite{sealing} to configure the set of active preemption points
 		and hence keep state space sizes manageable (\cref{sec:landslide-pps}).
@@ -2445,7 +2446,7 @@ These include:
 		at the expense of overall completion time (\cref{sec:landslide-icb}).
 \end{itemize}
 
-However, over the years Landslide has also grown some convenience and/or accessibility features
+However, over the years Landslide has also grown some convenience, accessibility, and or optimization features
 that could be considered contributions in their own right.
 
 \begin{itemize}
