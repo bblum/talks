@@ -89,8 +89,8 @@ For the most part,
 existing stateless model checkers
 model interrupt-driven thread switching as the only source of nondeterminism in a program's execution.
 In other words, assuming a fixed test input,%
-\footnote{Input nondeterminism is another research field,
-addressed by symbolic execution \cite{symbolic}; see \cref{related:symbolic}.}
+\footnote{Symbolic execution \cite{symbolic}, a neighbouring research area,
+addresses input nondeterminism; see \cref{related:symbolic}.}
 the only way multiple behaviours can arise is by scheduling different threads at each preemption point.
 Only recently have checkers emerged that extend this model by
 incorporating other nondeterminism sources:
@@ -389,7 +389,7 @@ Then, without loss of generality (for any number of other threads \tjj/\tkk, and
 	If so, then the hardware will abort \tii's transaction, discarding the effects of $\tiiat{\beta_1}\dots\tiiat{\beta_n}$
 	and jumping to $\tiiat{\phi_1}$,
 	satisfying case 1.
-	Otherwise, by DPOR's definition of transition dependence (\cite{dpor}, \cref{sec:landslide-dpor-hb}),
+	Otherwise, by DPOR's definition of transition dependence (\cite{dpor}; see also \cref{sec:landslide-dpor-hb}),
 	$\tiiat{\beta_{b+1}}\dots\tiiat{\beta_n}$ is independent with the transitions of \tjj and \tkk,
 	may be successfully executed until transaction commit,
 	and reordering them produces an equivalent interleaving,
@@ -865,7 +865,6 @@ as follows.
 		\item {\tt counter}: Microbenchmark version of {\tt htm2} which replaces the complex locking failure path with an atomic {\tt xadd}, from \cite{tm-benchmark-cmu}.
 		\item {\tt swap}: Microbenchmark that swaps values in an array, from \cite{tm-benchmark-cmu}.
 		\item {\tt swapbug}: {\tt swap} modified to introduce circular locking in the failure path. %(deadlock).
-			% TODO: make sure figure number reference is right
 		\item {\tt fig63}: Generalized version of \Cref{fig:retry-set-example},
 			contrived to induce as much reduction as possible from the retry sets optimization.
 	\end{itemize}
@@ -1541,10 +1540,9 @@ reached among Landslide's verifications
 			% mysteriously had this at 6 at one point but ive no idea where that came from
 			{\tt map\_basicer}	& 1	& 2	& 5	& 32	\\ % 2,2
 
-			% TODO: check these again, will 2,4 even complete on mutex
 			{\tt lock}({\tt spinlock})	& 1	& 2	& 4	& 28	\\ % 2,2
 			{\tt lock}({\tt spin\_fixed})	& 1	& 2	& 4	& 28	\\ % 2,2 or 4,1
-			{\tt lock}({\tt mutex})		& 1	& 2	& 2	& 30	\\ % 2,3 gives 30; 2,4 would give 40
+			{\tt lock}({\tt mutex})		& 1	& 2	& 2	& 40	\\ % 2,4
 			% not putting lock_fast because it like, doesn't have a "state space" per se
 		\end{tabular}
 	\end{center}
