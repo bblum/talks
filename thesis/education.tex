@@ -571,7 +571,6 @@ Note that the tallies of bugs fixed may be undercounting
 \revisionminor{because} some students may have truly fixed them but skipped the verification step thereafter.
 
 \begin{table}[t]
-	% TODO
 	\begin{center}
 		\small
 	\begin{tabular}{r||r|r|r|r|r|r|r||r}
@@ -853,8 +852,6 @@ while the cross-semester comparisons,
 which attempted to do so,
 failed to confidently reject even the null hypothesis.}
 However, the distribution difference being smaller in P3 than in P2
-% TODO: is there a good way to treat this more formally?
-% TODO: run a combined A-D test for each of the two control pairs
 further suggests, albeit informally,
 that the larger impact in P2 is not attributable {\em only} to selection bias,
 or else a similar difference should have been observed in the P3 distributions.
@@ -885,7 +882,6 @@ but this pattern is at least consistent with the ``Landslide helps students subm
 % version 1: 1.552 0.7322           0.1633
 % version 2: 1.640 0.8473           0.1454
 
-% TODO: should i report the T.AD test statistic? i don't even know what it means lol but it's what the p value like, applies to..
 \begin{figure}[h]
 	\begin{center}
 		\small
@@ -1050,7 +1046,6 @@ are one of 15-410 staff's closely-guarded secrets (\cref{sec:410-secrecy}).
 Suffice it to say that the {\tt paraguay} test invokes a custom Pathos {\tt misbehave} mode
 which biases thread scheduling towards the interleaving required to exhibit the bug
 (Landslide, of course, replaces this {\tt misbehav}iour with model checking).
-% TODO: i feel tihs sentence should go somewhere else, like after analysis, not in description
 Hence, despite being a subtle concurrency bug,
 the official course test suite is likely to expose it,
 so comparing how many Landslide users and non-users submitted this bug in particular
@@ -1124,8 +1119,7 @@ or whether heap checking and model checking were both necessary in concert to he
 To isolate the impact of model checking,
 I simulated the students having access to a stand-alone heap checker
 by checking only the first thread interleaving with Landslide
-% TODO - more specific section reference - quicksand det/nondet drpps eval
-(similarly to \cref{sec:quicksand-eval})
+(similarly to \cref{sec:quicksand-eval-nondets})
 and assuming the students would find and fix any such ``deterministic'' use-after-free bugs before the deadline.
 Re-classifying these into the ``correct'' group,
 the 11-10-0-16 distribution becomes
@@ -1215,7 +1209,7 @@ upon further investigation,
 the 6 traces seem to represent 2 distinct bugs among them (\cref{sec:education-eval-bugs-uc}).
 
 The survey responses were very positive:
-% TODO: corroborate this with snapshot data?
+% corroborate this with snapshot data? -- haha, never
 students reported being able both to diagnose and to verify as fixed the vast majority of Landslide's reported bugs,
 compared Landslide favourably to stress testing,
 and found the experience worthwhile and worth recommending.
@@ -1225,8 +1219,8 @@ do the three students who answered 20/80 think stress testing is four times as g
 or that stress testing requires four times as long to reach the same point of diminishing returns?
 On the other extreme, one student said they would spend all 100 CPU-hours on Landslide,
 which probably speaks more to their enthusiasm than to a careful attempt to maximize expected number of bugs found
-% TODO: put a section reference to future work resource exhaustion / malloc failure injection discussion
-(even the author themself recognizes stress testing's advantages for certain types of bugs, such as resource exhaustion).
+(even the author themself recognizes stress testing's advantages for certain types of bugs,
+such as resource exhaustion; see \cref{sec:warpzone-verif}).
 Nevertheless, the responses' overall bias to spending at least half the CPU-time on Landslide
 shows clearly that the students found the experience worthwhile.
 
@@ -1435,13 +1429,9 @@ and reported more often that \revisionminor{it} helped them understand concurren
 %(tempering the difficulty of P2 to make it more accessible (\cref{sec:overview-psu})),
 Considering the higher demand CMU's 15-410 makes for prerequisite concurrency experience
 compared to PSU's relative tempering of P2's difficulty to make it more accessible (\cref{sec:pebbles}),
-% TODO: represent u c in this sentents?
 these trends seem to correlate with the different levels of preparation each course's students had,
 showing that students of various skill levels
 can each benefit from the experience in different ways.
-
-
-% TODO
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1452,7 +1442,8 @@ This section will discuss the study's limitations and offer some perspective for
 
 \subsection{Bias}
 
-% TODO - u can verify the bug just by taking survey graph #1 and comparing to landslide snapshots (sep. by groups who answered survey)
+% u can verify the bug just by taking survey graph #1 and comparing to landslide snapshots (sep. by groups who answered survey)
+% ^ haha, never
 % anything else?
 
 As long as an educational user study is run on a volunteer basis,
@@ -1482,7 +1473,6 @@ meaning I might not hear as much negative feedback as I should.
 % could studence who didn't find bugs also have had a good experience, like enjoying the verification guarantee
 % think of how to say it presentably...
 
-% TODO: is this ok to report without IRB approval? ask dave
 I took no special measures to compensate for bias in gender, race, or being non-natively English-speaking
 during recruitment or the survey.
 Surveying students to measure any differences in these demographics between study participants and the overall class population
