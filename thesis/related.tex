@@ -431,10 +431,10 @@ Although several related works \cite{tm-correctness,tm-completeness,specifying-v
 are building up to formal proofs of the correctness of underlying TM {\em implementations},
 Landslide is the first I know of to verify client programs thereof.
 % TODO: citation as noun - global scan
-\revision{\cite{mc-tm-with-spin} used SPIN \cite{spin} to model check McRT STM \cite{mcrt-stm},
+\revision{McRT STM \cite{mcrt-stm},
 an STM implementation built by Intel,
-verifying}
-up to 2 threads running 1 transaction each with up to 3 memory accesses.
+was checked using SPIN \cite{spin}, verifying
+up to 2 threads running 1 transaction each with up to 3 memory accesses \cite{mc-tm-with-spin}.}
 This kind of verification,
 analogous to \cref{sec:education-pebbles-tests}'s {\tt mutex\_test},
 is an important stepping stone for trusting the results Landslide will provide.
@@ -464,7 +464,9 @@ This citation arguably belongs in \cref{sec:related-data-race} as well;
 I include it here to highlight the importance of Landslide's
 ability to distinguish different abort reasons (\cref{sec:txn-abort-codes}).
 
-An article from relatively early in the timeline of TSX \cite{htm-subtleties}
+%An article from relatively early in the timeline of TSX
+\revisionminor{The paper which originally defined weak and strong atomicity~\cite{htm-subtleties}
+also}
 warns of several false equivalence pitfalls when converting conventionally-locking code to use transactions,
 although these pitfalls depend on multiple existing locks used locally and disjointly,
 so this does not invalidate the equivalence proved in \cref{sec:tm-design-locks}.

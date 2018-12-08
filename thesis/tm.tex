@@ -42,11 +42,12 @@ Transactional memory specifications typically have three API functions, abstract
 		which will appear \revisionminor{as} {\sf begin}'s error code.
 \end{itemize}
 
+\subsubsection{Implementations}
+
 % do they track changes in pthread-style TLS? or?
-{\bf Implementations.}
 Software TM implementations (STM) typically function as a library,
 tracking staged memory accesses in local memory,
-and aborting whenever a conflict is detected between two transactions' tracked accesses \cite{stm-pldi06}.
+and aborting whenever a conflict is detected between two transactions' tracked accesses \cite{stm-pldi06,mcrt-stm,swisstm}.
 Hardware TM implementations (HTM) use processor-level hardware support,
 which stages changes in per-CPU cache lines,
 and may abort for STM's reason above \cite{intel-tsx-overview},
@@ -57,8 +58,9 @@ or in case of any system interrupt or cache overflow.
 Intel's commercial implementation of HTM has a rocky history of hardware bugs \cite{intel-disable-tsx,intel-tsx-update},
 attesting to the feature's complexity and the need for formal verification on both sides of its API.
 
-{\bf Terminology.}
-The world of hardware transactional memory is home to several more confusing acronyms in addition to ``HTM''.
+\subsubsection{Terminology}
+
+The world of transactional memory is home to several more confusing acronyms similar to ``HTM''.
 Transactional Synchronization Extensions (TSX)
 refers to Intel's implementation of HTM on Haswell and more recent microarchitectures
 \cite{htm-haswell}.
@@ -83,9 +85,41 @@ and ``TSX''
 (when referring to Intel's implementation and/or GCC's intrinsics interface).
 The non-pedantic reader may treat these as interchangeable.
 
+\revision{Transactional atomicity comes in two flavours,
+{\em strong} and {\em weak atomicity}~\cite{htm-subtleties}.
+%
+HTM implementations use the processor's cache coherence protocol to detect conflicts,
+and hence any conflicting memory access from another CPU will cause an abort,
+regardless of whether that access was itself transactional.
+Hence, HTM transactions are {\em strongly atomic}, i.e., appear indivisible to all other code.
+%
+STM implementations rely on the programmer to use its interface to access any shared memory
+she intends to protect with its transactions,
+which cannot detect conflicts with non-transactional accesses that bypass it.
+Hence, STM transactions are {\em weakly atomic}, i.e.,
+its transactions will abort only from conflicts with other transactions,
+while other code may interleave with them freely.
+%
+The manner in which non-transactional code may interleave with STM transactions
+further depends on whether the STM uses
+{\em eager versioning},
+wherein transactional updates are immediately visible to non-transactional code,
+or
+{\em lazy versioning},
+wherein such updates are visible only after commit
+\cite[\S{}2]{stm-weak-atomicity}.
+Unless explicitly noted as weak atomicity,
+this chapter assumes strong atomicity,
+and ``STM semantics'' refers to a strongly-atomic HTM program emulating STM with retry loops
+(see \cref{sec:txn-abort-codes}).
+Treatment of weak atomicity in
+\cref{sec:tm-weak-atomicity} and \cref{sec:tm-impl-weak-atomicity}
+assumes eager versioning.}
+
 % or "Contribution"
-\revision{{\bf Motivation.}
-For the most part,
+\subsubsection{Motivation}
+
+\revision{For the most part,
 existing stateless model checkers
 model interrupt-driven thread switching as the only source of nondeterminism in a program's execution.
 In other words, assuming a fixed test input,%
@@ -107,6 +141,7 @@ In this chapter I will develop a concurrency model to incorporate abort nondeter
 (\cref{sec:tm-design}),
 including two equivalence proofs to help cope with the consequent state space explosion
 (\cref{sec:tm-design-failure} and \cref{sec:tm-design-locks}),
+extend the proofs to account for weak atomicity (\cref{sec:tm-weak-atomicity}),
 extend Landslide to support testing TM programs under a variety of execution semantics
 (\cref{sec:tm-implementation}),
 and demonstrate its practicality
@@ -359,7 +394,10 @@ Note that arbitrary code may not be structured to distinguish these as nicely as
 e.g., more code may exist in the success branch after {\tt \_xend()};
 such would be considered part of $\omega$ here.
 
-Then, without loss of generality (for any number of other threads \tjj/\tkk, and for any number of thread switches away from \tii during the transaction):
+Then, without loss of generality (for any number of other threads \tjj/\tkk,
+\revisionminor{WLOG presented here as two threads,}
+and for any number of thread switches away from \tii during the transaction,
+\revisionminor{WLOG presented here as one switch}):
 \vspace{1em}
 
 \begin{lemma}[Equivalence of Aborts]
@@ -429,16 +467,19 @@ with a no-op if $L$ is a transaction abort,
 or with $\tkkat{\mathsf{unlock}(m)}$ if $L$ is an HTM end,
 or no replacement otherwise.
 Finally, let $I' = \exists m. \mathsf{lockify}_m(I)$,
-the execution with the boundaries of all successful transactions replaced by an abstract global lock.
+the execution with the boundaries of all successful transactions replaced by an abstract global lock $m$.
 \Cref{lem:equiv} guarantees mutual exclusion of $m$.
 \vspace{1em}
 
 \begin{theorem}[Transactions are a Global Lock]
+	\label{thm:global-lock}
 	$\tiiat{\mu},\tjjat{\nu}$ is a data race in $I$ iff it is a data race in $I'$.
 \end{theorem}
 
 \begin{proof}
-I prove one case for each variant definiton for data races supported in Landslide \cite{quicksand}.
+I prove one case \revisionminor{for each of the two variant definitons of data races that Landslide supports
+(\cref{sec:landslide-datarace})}.
+%\cite{quicksand}. % wtf no
 For each, I state below what it means to race in an execution with synchronizing HTM instructions.
 
 \begin{itemize}
@@ -491,17 +532,100 @@ For each, I state below what it means to race in an execution with synchronizing
 Hence, data-race analysis is sound when transaction boundaries are replaced by an abstract global lock.
 \end{proof}
 
+\subsection{Weak atomicity}
+\label{sec:tm-weak-atomicity}
+
+\newcommand\weakhilight[1]{{\ul{#1}}\xspace}
+
+\revision{Prior work has highlighted the difference between
+{\em strong} and {\em weak atomicity}
+in TM systems
+\cite{htm-subtleties,stm-weak-atomicity}.
+Thus far we have assumed transactions will abort from any intervening memory conflict,
+whether or not that access is itself transactional.
+This corresponds to strong atomicity, the execution semantics provided by TSX.
+% \cite{bugtm}. % sec 3.1 of that paper, not sure of an earlier citation that also states it in these exact terms
+However, under weakly-atomic STM systems,
+transactions do not abort when
+a non-transactional conflicting access interleaves within them,
+and condition \#1 of the execution semantics from \cref{sec:tm-design-failure} does not hold.
+To model weak atomicity, we must weaken \Cref{lem:equiv} as follows (updated parts underlined for emphasis).
+\vspace{1em}
+
+\begin{lemma}[Equivalence of Aborts \weakhilight{under Weak Atomicity}]
+	\label{lem:equiv-weak}
+	For any interleaving prefix
+	\[
+	\begin{tabular}{c}
+		$\tiiat{\alpha},\tiiat{\beta_1}\dots\tiiat{\beta_b},$\\
+		$\tjjat{\gamma_1}\dots\tjjat{\gamma_j},$ \\
+		$\tkkat{\kappa_1}\dots\tkkat{\kappa_k},$ \\
+		$\tiiat{\beta_{b+1}}$ % $\dots\tiiat{\beta_{n-1}}$ -- excluded bc might abort
+	\end{tabular}
+	\]
+	with $b<n$, $j \ne i$, $k \ne i$, et cetera, either:
+	\begin{enumerate}
+		\item \weakhilight{All events in
+			$\tjjat{\gamma_1}\dots\tjjat{\gamma_j},
+			 \tkkat{\kappa_1}\dots\tkkat{\kappa_k}$
+			 % ehh, bad parallel structure with below regarding the verb 'exists'
+			are non-transactional, and the original interleaving itself exists, or}
+		\item $\tiiat{\alpha},\tjjat{\gamma_1}\dots\tjjat{\gamma_j},\tkkat{\kappa_1}\dots\tkkat{\kappa_k},\tiiat{\phi_1}\dots$
+			(conflicting case), or
+		\item $\tiiat{\alpha},\tiiat{\beta_1}\dots\tiiat{\beta_b}\dots\tiiat{\beta_n},\tjjat{\gamma_1}\dots\tjjat{\gamma_j},\tkkat{\kappa_1}\dots\tkkat{\kappa_k}$
+			(independent case)
+	\end{enumerate}
+	exists and is observationally equivalent.
+\end{lemma}
+
+\begin{proof}
+	As before, \weakhilight{except first case on
+	whether any intervening operations by $\tjj$/$\tkk$ are transactional.%
+	\footnote{If $\tjj$/$\tkk$ already have a transaction active,
+	their {\sf begin} must have occurred before $\tiiat{\alpha}$,
+	and the theorem can apply starting from the earlier {\tt begin} with the thread IDs swapped.}
+	If not, $\tii$ may ultimately proceed with $\tiiat{\beta_{b+1}}$ without aborting,
+	and the new case \#1 applies.}
+\end{proof}
+
+\Cref{thm:atom} must be weakened correspondingly.
+\vspace{1em}
+
+\begin{theorem}[\weakhilight{Weak} Atomicity of Transactions]
+	\label{thm:atom-weak}
+	For any state space $S$ of a transactionally-concurrent program,
+	an equivalent state space exists in which all transactions are either executed atomically
+	\weakhilight{with respect to other transactions only},
+	or aborted immediately.
+\end{theorem}
+
+\begin{proof}
+	As before.
+\end{proof}
+
+Conveniently, in \cref{sec:tm-design-locks}'s formulation of
+$I' = \exists m. \mathsf{lockify}_m(I)$,
+\Cref{thm:atom-weak} still guarantees transaction-transaction atomicity,
+so mutual exclusion of $m$ is preserved,
+%(a global lock does not protect against interleaving by arbitrary other code that never takes the lock either)
+and
+%the proof of
+\Cref{thm:global-lock} applies unmodified.
+\cref{sec:tm-impl-weak-atomicity}
+discusses the implementation consequences of this weakening.}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Implementation}
 \label{sec:tm-implementation}
 
-Support for TSX programs in Landslide is implemented in four parts, broadly speaking:
+Support for TSX programs in Landslide is implemented in \revisionminor{five} parts, broadly speaking:
 the user interface,
 plus one internal part corresponding to each proof above,
 plus a bonus optimization for pruning equivalent interleavings under the new concurrency model.
 
 \subsection{User Interface}
+\label{sec:tm-interface}
 
 Landslide provides its own ``implementation'' of the TSX interface,
 which matches GCC's interface exactly,
@@ -547,6 +671,11 @@ Finally, Quicksand supports the following command-line options to enable various
 		enables state space reduction based on independences between individual {\tt xbegin} results
 		(\cref{sec:tm-retrysets}).
 		Requires {\tt -X} and {\em not} {\tt -A}.
+	\item \revision{{\tt -W} (for ``Weak atomicity'')
+		enables weak atomicity, %for transactions,
+		allowing non-transactional code to interleave within transactions,
+		corresponding to \cref{sec:tm-weak-atomicity}.
+		Requires {\tt -S}.}
 \end{itemize}
 
 \subsection{Failure Injection}
@@ -689,6 +818,30 @@ it is considered a data race only if at least one thread's {\tt user\_txn} was n
 in addition to the usual conditions; % in multiplication to..? && c.c
 under Pure Happens-Before,
 the vector clocks are simply checked as usual.
+
+\subsection{Weak atomicity}
+\label{sec:tm-impl-weak-atomicity}
+
+\revision{If the user supplies the {\tt -W} option (\cref{sec:tm-interface}),
+Landslide will emulate STM's weak atomicity semantics (\cref{sec:tm-weak-atomicity}).
+%to allow non-transactional code
+%to interleave between a {\tt \_xbegin()}/{\tt \_xend()} pair.
+Concretely, it achieves this by
+reporting both halves of data races that occur between transactional and non-transactional code (\cref{sec:landslide-datarace})
+(previously, only the latter half would be reported),
+allowing preemption points to be identified during transactions (\cref{sec:landslide-pps}),
+and allowing system calls during transactions to proceed rather than forcing a {\tt CAPACITY} abort
+(as programmers may now need to nest other synchronization within transactions to protect against non-transactional code).
+%and traversing the interleaving arbitrarily far back from a {\tt \_xend()} to find the appropriate preemption
+%(previously, the xbegin would be at the immediately previous PP)
+Landslide requires the other STM options ({\tt -A -S}) also to be enabled to emulate weak atomicity,
+because I know of no existing HTM system which implements it.
+As one might expect, it inflates state spaces considerably, % TODO: measure it with htm2 or some such?
+and moreover,
+every single HTM benchmark in the upcoming evaluation,
+implemented to rely on strong atomicity,
+exhibits bugs under weak atomicity.
+Commit 68401fc implements this mode.}
 
 \subsection{Retry independence}
 \label{sec:tm-retrysets}
