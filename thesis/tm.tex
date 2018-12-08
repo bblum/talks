@@ -535,67 +535,57 @@ Hence, data-race analysis is sound when transaction boundaries are replaced by a
 \subsection{Weak atomicity}
 \label{sec:tm-weak-atomicity}
 
-\newcommand\weakhilight[1]{{\ul{#1}}\xspace}
-
 \revision{Prior work has highlighted the difference between
 {\em strong} and {\em weak atomicity}
-in TM systems
+of transactions
 \cite{htm-subtleties,stm-weak-atomicity}.
 Thus far we have assumed transactions will abort from any intervening memory conflict,
 whether or not that access is itself transactional.
 This corresponds to strong atomicity, the execution semantics provided by TSX.
 % \cite{bugtm}. % sec 3.1 of that paper, not sure of an earlier citation that also states it in these exact terms
-However, under weakly-atomic STM systems,
-transactions do not abort when
-a non-transactional conflicting access interleaves within them,
+However, weakly-atomic STM systems
+do not abort transactions when
+a non-transactional access conflicts,
 and condition \#1 of the execution semantics from \cref{sec:tm-design-failure} does not hold.
-To model weak atomicity, we must weaken \Cref{lem:equiv} as follows (updated parts underlined for emphasis).
+To model weak atomicity, \Cref{lem:equiv} must be extended with a third possibility:
+%as follows (updated parts underlined for emphasis).
 \vspace{1em}
 
-\begin{lemma}[Equivalence of Aborts \weakhilight{under Weak Atomicity}]
+\begin{lemma}[Weak Equivalence of Aborts]
 	\label{lem:equiv-weak}
-	For any interleaving prefix
-	\[
-	\begin{tabular}{c}
-		$\tiiat{\alpha},\tiiat{\beta_1}\dots\tiiat{\beta_b},$\\
-		$\tjjat{\gamma_1}\dots\tjjat{\gamma_j},$ \\
-		$\tkkat{\kappa_1}\dots\tkkat{\kappa_k},$ \\
-		$\tiiat{\beta_{b+1}}$ % $\dots\tiiat{\beta_{n-1}}$ -- excluded bc might abort
-	\end{tabular}
-	\]
-	with $b<n$, $j \ne i$, $k \ne i$, et cetera, either:
+	For any interleaving prefix such as defined in \Cref{lem:equiv}, either one of the original two conditions hold, or:
 	\begin{enumerate}
-		\item \weakhilight{All events in
+		\setcounter{enumi}{2}
+		\item All events in
 			$\tjjat{\gamma_1}\dots\tjjat{\gamma_j},
 			 \tkkat{\kappa_1}\dots\tkkat{\kappa_k}$
 			 % ehh, bad parallel structure with below regarding the verb 'exists'
-			are non-transactional, and the original interleaving itself exists, or}
-		\item $\tiiat{\alpha},\tjjat{\gamma_1}\dots\tjjat{\gamma_j},\tkkat{\kappa_1}\dots\tkkat{\kappa_k},\tiiat{\phi_1}\dots$
-			(conflicting case), or
-		\item $\tiiat{\alpha},\tiiat{\beta_1}\dots\tiiat{\beta_b}\dots\tiiat{\beta_n},\tjjat{\gamma_1}\dots\tjjat{\gamma_j},\tkkat{\kappa_1}\dots\tkkat{\kappa_k}$
-			(independent case)
+			are non-transactional, and the original interleaving itself is a legal execution.
 	\end{enumerate}
-	exists and is observationally equivalent.
 \end{lemma}
 
 \begin{proof}
-	As before, \weakhilight{except first case on
+	As before, except first case on
 	whether any intervening operations by $\tjj$/$\tkk$ are transactional.%
-	\footnote{If $\tjj$/$\tkk$ already have a transaction active,
+	\footnote{If $\tjj$ or $\tkk$ already have a transaction active,
 	their {\sf begin} must have occurred before $\tiiat{\alpha}$,
 	and the theorem can apply starting from the earlier {\tt begin} with the thread IDs swapped.}
-	If not, $\tii$ may ultimately proceed with $\tiiat{\beta_{b+1}}$ without aborting,
-	and the new case \#1 applies.}
+	If so, either the original case \#1 or \#2 applies.
+	If not, $\tii$ may ultimately proceed with $\tiiat{\beta_{b+1}}$
+	(its preempted next transactional instruction)
+	without aborting,
+	and the new case \#3 applies instead.
 \end{proof}
 
 \Cref{thm:atom} must be weakened correspondingly.
 \vspace{1em}
 
-\begin{theorem}[\weakhilight{Weak} Atomicity of Transactions]
+\begin{theorem}[Weak Atomicity of Transactions]
 	\label{thm:atom-weak}
 	For any state space $S$ of a transactionally-concurrent program,
-	an equivalent state space exists in which all transactions are either executed atomically
-	\weakhilight{with respect to other transactions only},
+	an equivalent state space exists in which all transactions are either executed
+	{\bf atomically
+	with respect to other transactions only},
 	or aborted immediately.
 \end{theorem}
 
@@ -603,10 +593,11 @@ To model weak atomicity, we must weaken \Cref{lem:equiv} as follows (updated par
 	As before.
 \end{proof}
 
-Conveniently, in \cref{sec:tm-design-locks}'s formulation of
-$I' = \exists m. \mathsf{lockify}_m(I)$,
+Conveniently,
 \Cref{thm:atom-weak} still guarantees transaction-transaction atomicity,
-so mutual exclusion of $m$ is preserved,
+so mutual exclusion of $m$ is preserved
+in \cref{sec:tm-design-locks}'s formulation of
+$I' = \exists m. \mathsf{lockify}_m(I)$,
 %(a global lock does not protect against interleaving by arbitrary other code that never takes the lock either)
 and
 %the proof of
