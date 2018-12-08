@@ -327,7 +327,7 @@ which shows that correctly synchronizing even the simplest transactions may be s
 	\label{fig:htm-fixed}
 \end{figure}
 
-\subsection{Modeling Transaction Failure}
+\subsection{Modeling transaction failure}
 \label{sec:tm-design-failure}
 
 In the previous section's examples,
@@ -669,7 +669,7 @@ Finally, Quicksand supports the following command-line options to enable various
 		Requires {\tt -S}.}
 \end{itemize}
 
-\subsection{Failure Injection}
+\subsection{Failure injection}
 \label{sec:txn-failure}
 
 Each preemption point ({\tt struct hax} as defined in {\tt tree.h})
@@ -691,7 +691,7 @@ when computing the number of marked children.
 \subsubsection{Adding possible abort codes}
 \label{sec:txn-abort-codes}
 
-Up to four abort codes are considered depending on the testing options listed in the previous section.
+Up to four abort codes are considered depending on \cref{sec:tm-interface}'s testing options.
 All abort codes are simultaneously added to both lists,
 unless already present on {\tt xabort\_codes\_ever},
 in which case not added to {\tt xabort\_codes\_todo} to avoid duplicate work.
@@ -732,7 +732,7 @@ in which case not added to {\tt xabort\_codes\_todo} to avoid duplicate work.
 		and execution of the transactional path immediately stops.
 		\revision{So called because doing so would trigger a mode switch,
 		which the specification allows to abort for any reason.%
-		\footnote{As far as I know, the reason for syscall aborts is both hardware- and kernel-dependent,
+		\footnote{\revision{As far as I know, the reason for syscall aborts is both hardware- and kernel-dependent,
 		and in fact nondeterministic;
 		on my Haswell Core i7 running Linux 4.19, I observed a majority of {\tt \_XABORT\_CONFLICT}s,
 		a scant few {\tt \_XABORT\_CAPACITY}s,
@@ -740,7 +740,7 @@ in which case not added to {\tt xabort\_codes\_todo} to avoid duplicate work.
 		however, not once did a transaction succeed with even a single {\tt gettid()} call
 		\cite{tsx-syscall}.
 		For simplicity of both implementation and client programs,
-		Landslide always distinguishes system call aborts with {\tt \_XABORT\_CAPACITY}.}
+		Landslide always distinguishes system call aborts with {\tt \_XABORT\_CAPACITY}.}}
 		See below for discussion of other cache capacity concerns.}
 \end{itemize}
 
@@ -791,7 +791,7 @@ to {\tt cause\_transaction\_failure()},
 which edits the simulation state ({\tt \%eip} and {\tt \%eax})
 to force {\tt \_xbegin()} to return the provided code.
 
-\subsection{Data Race Analysis}
+\subsection{Data race analysis}
 \label{sec:txn-datarace}
 
 When a thread returns {\tt \_XBEGIN\_STARTED} from {\tt \_xbegin()}
@@ -1036,7 +1036,8 @@ as follows.
 		and {\tt mutex} (replaces the spinlock with a Landslide-annotated P2 mutex to reduce state space size).
 \end{enumerate}
 
-The notation {\tt testname}$(K,N)$ will denote a test configuration of $K$ threads, each running $N$ iterations of the test logic.
+The notation {\tt testname}$(K,N)$ %will denote
+denotes a test configuration of $K$ threads, each running $N$ iterations of the test logic.
 All tests were run on an 8-core 2.7GHz Core i7 with 32 GB RAM.
 Reported CPU-times include time spent on all state spaces
 Quicksand saw fit to run,
@@ -1251,6 +1252,33 @@ extending its good news to the world of HTM.
 In addition to the bugs I intentionally wrote in {\tt htm1} and {\tt swapbug},
 %to my pleasant surprise % only the former of these is a surprise now
 Landslide also found two bugs in the ``real-world'' transactional algorithms I tested.
+
+\begin{figure}[t]
+	\begin{center}
+		\begin{tabular}{l}
+		\texttt{\flow{while} (\_retry);} \\
+		\texttt{\flow{if} (\call{\_xbegin}() == \const{SUCCESS}) \{} \\
+		\texttt{~~~~\hilight{brickred}{tie}(\_root,inserted) = \call{\_insert}(\_root,n); } \\
+		\texttt{~~~~\call{\_xend}();} \\
+		\texttt{\} \flow{else} \{} \\
+		\texttt{~~~~\call{pthread\_mutex\_lock}(\&\_tree\_lock);} \\
+		\texttt{~~~~\_retry = \const{true};} \\
+		\texttt{~~~~\hilight{brickred}{tie}(\_root,inserted) = \call{\_insert}(\_root,n); } \\
+		\texttt{~~~~\_retry = \const{false};} \\
+		\texttt{~~~~\call{pthread\_mutex\_unlock}(\&\_tree\_lock);} \\
+		\texttt{\}} \\
+		\end{tabular}
+	\end{center}
+	%\caption{mario man had a very large house. or a castle.}
+	\caption[Code from {\tt htmavl.hpp} showing the segfault bug Landslide found.]
+		{Unmodified code from {\tt htmavl.hpp} showing the previously-unknown segfault bug
+		Landslide found in {\tt avl\_insert}.
+		The transaction path fails to check {\tt \_retry},
+		leading to data races and corruption just as in {\tt htm1}.
+		}
+	\label{fig:avlbug}
+\end{figure}
+
 \begin{itemize}
 	\item
 	{\bf Atomicity violation.}
@@ -1294,12 +1322,16 @@ Landslide also found two bugs in the ``real-world'' transactional algorithms I t
 	This ``performance bug'' causes the lock to suffer slow-path spin-locking
 	even in cases where the user's thread transitions are completely independent
 	(for example, locking the root of an AVL tree,
-	then traversing in different directions to make disjoint modifications),
-	which the test case detects with {\tt \_xtest()}.
+	then traversing in different directions to make disjoint modifications).
+	The test case detects this with {\tt \_xtest()}.
 	\Cref{fig:spinlockbug} shows the root cause:
 	the {\tt isfree()} routine (corresponding to the AVL's {\tt \_retry})
 	used an atomic compare-and-swap that would always write to memory even without modifying it.
-	I corrected this in the {\tt spin\_fixed} implementation by replacing it
+	I corrected this in
+	% the
+	{\tt spin\_fixed}
+	%implementation
+	by replacing it
 	with a normal read
 	(being used only in the transactional path, no barriers are required to protect it).
 	A cursory search on Github found one user of this code,
@@ -1320,32 +1352,6 @@ Landslide also found two bugs in the ``real-world'' transactional algorithms I t
 \end{itemize}
 
 \begin{figure}[t]
-	\begin{center}
-		\begin{tabular}{l}
-		\texttt{\flow{while} (\_retry);} \\
-		\texttt{\flow{if} (\call{\_xbegin}() == \const{SUCCESS}) \{} \\
-		\texttt{~~~~\hilight{brickred}{tie}(\_root,inserted) = \call{\_insert}(\_root,n); } \\
-		\texttt{~~~~\call{\_xend}();} \\
-		\texttt{\} \flow{else} \{} \\
-		\texttt{~~~~\call{pthread\_mutex\_lock}(\&\_tree\_lock);} \\
-		\texttt{~~~~\_retry = \const{true};} \\
-		\texttt{~~~~\hilight{brickred}{tie}(\_root,inserted) = \call{\_insert}(\_root,n); } \\
-		\texttt{~~~~\_retry = \const{false};} \\
-		\texttt{~~~~\call{pthread\_mutex\_unlock}(\&\_tree\_lock);} \\
-		\texttt{\}} \\
-		\end{tabular}
-	\end{center}
-	%\caption{mario man had a very large house. or a castle.}
-	\caption[Code from {\tt htmavl.hpp} showing the segfault bug Landslide found.]
-		{Unmodified code from {\tt htmavl.hpp} showing the previously-unknown segfault bug
-		Landslide found in {\tt avl\_insert}.
-		The transaction path fails to check {\tt \_retry},
-		leading to data races and corruption just as in {\tt htm1}.
-		}
-	\label{fig:avlbug}
-\end{figure}
-
-\begin{figure}[h]
 	\begin{center}
 		\begin{tabular}{l}
 		\texttt{\ctype{bool} \call{hle\_spinlock\_isfree}(\ctype{spinlock\_t} *lock) \{} \\
@@ -1666,7 +1672,8 @@ reached among Landslide's verifications
 % % abort sets could theoretically push them above half but probably not in any test case here
 % }).
 
-\begin{table}[h]
+% TODO: check figure placement
+\begin{table}[t]
 	\begin{center}
 		\small
 		\begin{tabular}{c||c|c|c||c}
