@@ -122,8 +122,8 @@ All the tools in this paragraph are notably open-source -- an encouraging recent
 
 If I might indulge by listing Landslide in its own related work section \cite{this-thesis},
 I would distinguish it by its ability to find shared memory preemption points via dynamic tracing,
-rather than relying on user annotations or imprecise compiler instrumentation
-as other tools do.
+rather than relying on user annotations or imprecise compiler instrumentation.
+%as other tools do.
 Compared to all other tools I know of,
 it implements a wider range of exponential explosion coping techniques,
 some theoretical and some heuristic,
@@ -137,7 +137,9 @@ and its recent extension to HTM adds support for more modern concurrency pattern
 
 To date a number of techniques have been proposed to mitigate exponential explosion,
 the Sisyphean rock of stateless MC.
-The notion that some interleavings of concurrent threads could lead to indistinguishable program states and be therefore redundant,
+The notion that some interleavings
+%of concurrent threads
+could lead to indistinguishable program states and be therefore redundant,
 known as {\em partial order reduction} (POR),
 was first proposed in \cite{partial-model-checking}
 and explored in detail in \cite{partial-order-methods}.
@@ -327,7 +329,7 @@ such as multicore scheduling let alone transactions or relaxed memory
 (all relegated to lecture material not reinforced by the assignments).
 
 Pintos \cite{pintos} has recently emerged as the most popular educational kernel
-(by count of top CS schools in the United States who teach by it);
+(by count of top CS schools in the United States who use it);
 it trades off the prevalence of its concurrency challenges to cover various OS topics more broadly,
 especially advanced scheduling algorithms and filesystems.
 Pintos is the stand-alone evolution of its predecessor, Nachos \cite{nachos},
@@ -353,7 +355,8 @@ testing and debugging during a concurrent programming project,
 finding that unguided, students often approach testing haphazardly,
 not understanding the goal of good concurrency coverage,
 and also had difficulty understanding single failing executions.
-In fact, the study explicitly recommended tool support for testing many thread interleavings automatically (model checking)
+In fact, the study explicitly recommended tool support
+for testing many interleavings automatically (model checking)
 and for execution traces to communicate sequences of important events (preemption traces),
 which I dare say I have achieved in this thesis.
 A more recent study \cite{novices-programmers}
@@ -366,7 +369,17 @@ via systematic exposure to different kinds of bugs,
 which suggests future work for even advanced operating systems curricula
 to offer a ``warm up'' Landslide assignment
 (for example, the {\tt atomic\_*} tests from \cref{sec:education-pebbles-tests})
-that could ultimately lead to a higher solve rate on Landslide's bug reports during P2 (\cref{sec:education-eval-bugs-cmu}).
+that could ultimately lead to a higher solve rate on Landslide's bug reports during P2~(\cref{sec:education-eval-bugs-cmu}).
+%
+\revision{The Deadlock Empire~\cite{deadlockempire} is an educational introduction to concurrent programming and debugging,
+presented as an online puzzle-hunt of sorts, backed up by a fantasy-themed narrative.
+Each puzzle requires the user to manually step through the execution of multiple threads
+to find buggy interleavings.
+%which in some cases requires the use of an ``expand'' button that
+Though itself lacking in scientific analysis of its educational power,
+it demonstrates the kind of user-friendly features and overall approach
+that many students expressed desire for in their survey responses (\cref{sec:education-eval-survey}).
+Future work could extend Landslide's preemption traces to include similar interactivity.}
 
 %% this 2nd paper... not freely available.......
 %while Kolikant \cite{learning-concurrency} investigates how students form cognitive patterns about concurrent programming that could either aid or stunt their reasoning.
@@ -386,16 +399,6 @@ This suggests motivating students with Landslide's verification guarantee,
 although it is tricky to avoid accientally encouraging % oops
 them to limit possible interleavings by just using one global lock for everything,
 which is counter to 15-410's educational goals.
-
-\revision{The Deadlock Empire~\cite{deadlockempire} is an educational introduction to concurrent programming and debugging,
-presented as an online puzzle-hunt of sorts, backed up by a fantasy-themed narrative.
-Each puzzle requires the user to manually step through the execution of multiple threads
-to find buggy interleavings.
-%which in some cases requires the use of an ``expand'' button that
-Though itself lacking in scientific analysis of its educational power,
-it demonstrates the kind of user-friendly features and overall approach
-that many students expressed desire for in their survey responses (\cref{sec:education-eval-survey}).
-Future work could extend Landslide's preemption traces to include similar interactivity.}
 
 % TODO: more papers to look up:
 % Tool Design and Student Testing Behavior in an Introductory Java Course
