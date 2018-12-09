@@ -529,19 +529,19 @@ but at the (garbage-collected) execution level all data is immutable once create
 which preserves type soundness and data-race freedom.
 The aforementioned D\'{e}j\`{a} Fu \cite{dejafu} checks concurrent Haskell programs.
 %
-Rust \cite{rust-language}
+Rust %\cite{rust-language}
 presents a type system with more explicit memory management,
 in-place mutation,
 and mutable references
 to appear familiar and approachable to those already versed in C++.
 It proposes a borrow-check analysis to ensure memory and type safety
-despite mutable references,
-and a trait system to ensure no shared state between threads by default.
+despite mutable references \cite[\S{}4.2,\S{}10.3]{rust-book},
+and a trait system to ensure no shared state between threads by default \cite[\S{}10.2,\S{}16.4]{rust-book}.
 Its concurrency libraries then offer interfaces which relax this restriction,
 allowing threads even to simultaneously reference shared mutable state,
 using the type system to enforce sound locking discipline across such accesses,
-again preserving type soundness and data-race freedom.%
-\footnote{The author themself contributed the original design for this latter feature.}
+again preserving type soundness and data-race freedom \cite[\S{}16.2]{rust-book}.%
+\footnote{The author themself contributed the original design for this latter feature \cite{rust-rwarc}.}
 I know of no existing model checker for Rust as of yet.
 %
 The Relaxed Memory Calculus \cite{sully-thesis}
