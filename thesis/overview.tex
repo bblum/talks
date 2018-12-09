@@ -68,7 +68,7 @@ deferring these exceptions beyond the scope of this work.
 We refer to an execution trace depicting the global sequence of events as a {\em thread interleaving} or {\em schedule}.
 
 \subsubsection{Shared state}
-When a programming language offers multithreaded parallelism but forbids access to any shared state between threads \cite{rust-language},
+When a programming language offers multithreaded parallelism but forbids access to any shared state between threads \cite{rust-book},
 the simultaneity of threads is largely irrelevant to the program's behaviour.
 However, ``thread-unsafe'' languages such as C, C++, Java, and so on remain popular,
 in which threads may access global or heap-allocated variables and data structures with no enforced access discipline.
