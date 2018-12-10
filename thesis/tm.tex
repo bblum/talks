@@ -176,7 +176,7 @@ so I reproduce it here in \Cref{fig:htm-example-reproduced} for the reader's con
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Concurrency Model}
+\section{Concurrency model}
 \label{sec:tm-design}
 
 While up to now Landslide's tested programs' concurrency has been limited to timer-driven thread scheduling,
@@ -449,7 +449,7 @@ The claim's second part follows naturally.
 	The resulting $S'$ can then be MCed without ever simulating HTM rollbacks.
 \end{proof}
 
-\subsection{Memory Access Analysis}
+\subsection{Memory access analysis}
 \label{sec:tm-design-locks}
 
 Next comes the issue of memory accesses within transactions with regard to data-race analysis (\cref{sec:background-datarace}).
@@ -615,7 +615,7 @@ the user interface,
 plus one internal part corresponding to each proof above,
 plus a bonus optimization for pruning equivalent interleavings under the new concurrency model.
 
-\subsection{User Interface}
+\subsection{User interface}
 \label{sec:tm-interface}
 
 Landslide provides its own ``implementation'' of the TSX interface,
