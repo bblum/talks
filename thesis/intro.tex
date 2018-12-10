@@ -116,36 +116,42 @@ whose software is invariably large enough to be far beyond the reach of any exha
 
 \section{Motivation}
 
-To take advantage of multiple cores for performance, programmers must write software to execute {\em concurrently} --
-using multiple {\em threads} which execute multiple parts of a program's logic simultaneously.
-However, when threads access the same shared data, they may interleave in unexpected ways which change the outcome of their execution.
+To take advantage of multiple cores for performance, programmers must write software to execute concurrently,
+i.e.,
+using multiple threads to run several parts of a program's logic simultaneously.
+However, when threads access the same shared data,
+they may interleave in unexpected ways which change the outcome of their execution,
+\revisionminor{just as when multiple travelers interact with car doors at the same time.}
 When an unexpected interleaving produces undesirable program behaviour,
 for example, by corrupting shared data structures,
+\revisionminor{or by leaving the door locked as in the car example,}
 we call it a {\em concurrency bug}.
-Concurrency bugs are notoriously hard for programmers to find and debug
-because the specific thread interleaving required to trigger them arises at random during normal execution,
+\revisionminor{The specific interleaving required to expose such a bug}
+arises at random during normal execution,
 and often with very low probability.
-%Concurrency bugs are notoriously hard to find and reproduce because they only appear in specific thread interleavings, which arise at random during normal program execution.
-% TODO(LAYMAN): give example of trying to open car door at same time as friend turns key to unlock it.
-
+%
 Most commonly, a programmer searches for concurrency bugs in her code by running it many times (in parallel, in serial, or both),
-hoping that eventually, it will run according to the particular interleaving required to expose a hypothetical bug.
+hoping that eventually,
+\revisionminor{she will chance upon such an interleaving should one exist.}
+%it will run according to the particular interleaving required to expose a hypothetical bug.
 This technique, known as {\em stress testing}, is unreliable,
 providing no guarantee of finding the failing interleaving in any finite amount of time.
 It also provides no assurance of correctness:
 when finished, there is no way of knowing how many distinct thread interleavings were actually tested.
 Nevertheless, stress testing remains popular because of how easily a programmer can use it:
-she simply wraps her program in a loop, sets it to run overnight, and kills it if her patience runs out before it finds a bug.
+she simply wraps her program in a loop, sets it to run overnight, and \revisionminor{interrupts} it if her patience runs out before it finds a bug.
 
 {\em Stateless model checking} \cite{verisoft} is an alternative way to test for concurrency bugs,
 or to verify their absence,
-which provides more reliable coverage, progress, and verification than stress testing.
-A stateless model checker tests a program by forcing it to execute a new unique thread interleaving on each iteration of the test,
-capturing and controlling the randomness in a finite state space of all possible interleavings.
-
-Unfortunately, the size of these state spaces is exponentially proportional to the size of the tested program.
-% TODO(LAYMAN): explain exponential explosion by relating the parable of grains of rice on a chessboard.
-For even moderately-sized programs, there may be more possible ways to interleave every thread's every instruction
+which provides more reliable coverage, \revisionminor{reproducibility}, and verification than stress testing.
+A stateless model checker tests programs by forcing them to execute a new unique thread interleaving on each iteration,
+%of the test,
+capturing and controlling the randomness in a finite {\em state space} of all possible interleavings.
+%
+%Unfortunately,
+%the size of these state spaces is exponentially proportional to the size of the tested program.
+\revisionminor{However, attempting to exhaustively check the entirety of such state spaces is akin to Sissa's reward:}
+for even moderately-sized programs, there may be more possible ways to interleave every thread's every instruction
 than particles in the universe.
 Accordingly, a programmer who wants her test to make reasonable progress through the state space must choose a subset of ways that her threads could interleave,
 focusing on fully testing that subset, while ignoring other possibilities she doesn't \revisionminor{think she cares} about.
@@ -156,16 +162,52 @@ programmers will continue to fall back to the random approach of stress testing.
 Another problem stateless model checking suffers is that certain types of programs cannot be tested without the programmer putting forth some manual instrumentation effort.
 For example, operating system kernels implement their own sources of concurrency and their own synchronization primitives,
 so \revisionminor{a checker must} be told how to identify and control the execution of each thread.
-Some expert concurrency research wizards may be willing to add manual annotations to their code,
-but required manual effort is a serious downside for anyone with a looming deadline,
-and especially so for students who are still learning basic concurrency principles.
+\revision{Many undergraduate computer science curricula
+culminate in project-oriented systems classes
+\cite{thrlib,kspec,pintos}
+in which
+students implement these very types of programs,
+but are left to their own devices when it comes time to root out bugs.}
+Some expert concurrency research wizards may be willing to add manual annotations to their code
+\revisionminor{for the sake of verification},
+but requiring manual effort is a serious downside for anyone with a looming deadline,
+and especially so for students who are still learning basic concurrency principles \revisionminor{in the first place}.
 %We should not expect programmers to add effortful manual annotations to their code,
 %or they will abandon our fancy technique to instead simply run stress tests until their deadline tomorrow evening.
 
+\revision{Finally,
+in the struggle to meet ever-increasing performance demands,
+hardware and software alike has grown more and more complicated features for fine-grained concurrency control.
+Recent stateless model checking research is already beginning
+to address some such cases,
+allowing for new sources of nondeterminism beyond simply the ability to interleave threads arbitrarily.
+For example,
+relaxed memory consistency allows for multicore systems to
+reorder accesses to main memory \cite{memory-consistency-models},
+which introduces store buffer nondeterminism in addition to thread nondeterminism \cite{tsopso},
+and event-driven programming models,
+useful especially in mobile applications to improve responsiveness and reduce power consumption,
+allow for threads to reenter themselves via event handlers \cite{r4}.
+Transactional memory,
+which allows the programmer to specify arbitrary atomic execution sequences,
+has been supported by software libraries for decades \cite{transactional-memory},
+but only recently have processor manufacturers introduced hardware-backed transactions~\cite{htm-haswell},
+replete with new complexity,
+and no verification tool which can
+%model the complex concurrent interactions that arise in programs that use them.
+accurately model the concurrency of programs that use them yet exists.}
+
 \section{Contributions}
 
-This thesis will solve both problems discussed above.
-My thesis statement is as follows:
+\revision{This thesis will address each of the problems introduced above,
+%establishing stateless model checking
+%as a testing technique that
+%you might come away from this actually wanting to use,
+%instead of as a mere curiosity appearing in obscure conference papers.
+establishing stateless model checking
+as a modern verification technique
+that can meet realistic human needs.
+My thesis statement is as follows:}
 
 \begin{center}
 \begin{tabular}{p{0.8\textwidth}}
@@ -179,63 +221,89 @@ My thesis statement is as follows:
 
 \vspace{0.75em}
 
-I have built Landslide \cite{landslide}, a stateless model checker for thread libraries and kernels,
-and I have developed some techniques for automatically choosing the best thread interleavings to test
-and for automatically instrumenting operating system kernels in an educational setting.
-This thesis will comprise three major contributions:
+\revision{The foundation of this work is Landslide, a stateless model checker
+%for thread libraries and kernels that
+I have built over the last seven years, first debuting in my M.S. thesis~\cite{landslide}.
+Since then, I have extended it with a wide array of features and algorithms,
+some from prior work and some of my own devising,
+some which work behind the scenes and others which rely on human feedback to be effective,
+in pursuit of this thesis statement.
+
+The first half of the statement will serve as the overarching theme of this work:
+that as impossible a problem as perfect formal verification may be,
+one may still hope to achieve meaningful test results
+using an algorithm that knows its own limits,
+and compensates for them with heuristics informed by user's own human intuition.
+The second half of the statement can be broken down into three parts,
+coping with exponential explosion,
+helping students,
+and addressing modern concurrency models,
+which correspond to the three major contributions of this thesis, as follows:}
 
 \begin{enumerate}
-	\item {\bf Meaningful state spaces (\Cref{chap:quicksand}).}
-		I will present {\em Iterative Deepening}, a new algorithm for navigating the trade-off in how many preemption points to test at once.
-		Iterative Deepening incorporates state space estimation \cite{estimation} to decide on-the-fly whether each state space is worth pursuing, and uses data race analysis \cite{tsan} to find new preemption point candidates based on a program's dynamic behaviour.
-		This section will include a large evaluation of the technique, comparing its performance to three \revisionminor{prior-work} approaches across 600+ unique tests.
-		I will show that Iterative Deepening of preemption points outperforms prior work in terms \revisionminor{of both} finding bugs quickly and completely verifying correctness when no bug exists.
+	\item \revisionminor{{\bf Data-race preemption points and Iterative Deepening (\Cref{chap:quicksand}).}
+		I will present Quicksand, a stateless model checking execution framework
+		that manages multiple simultaneous Landslide instances
+		to automatically cope with exponential explosion.
+		Quicksand is powered by {\em Iterative Deepening},}
+		a new algorithm for navigating the trade-off in how many preemption points to test at once.
+		Iterative Deepening incorporates state space estimation \cite{estimation}
+		to decide on-the-fly whether each state space is worth pursuing,
+		and uses data race analysis \cite{tsan,fasttrack}
+		to find new preemption point candidates based on a program's dynamic behaviour.
+		\revision{This chapter will include a soundness proof,
+		showing that testing only synchronization and data-race preemption points
+		still constitutes a full formal verification of the test,
+		and}
+		a large evaluation, comparing its performance to three \revisionminor{prior-work} approaches
+		across 600+ unique tests.
+		I will show that \revisionminor{Quicksand}
+		outperforms prior work in terms \revisionminor{of both} finding bugs quickly
+		and verifying correctness when no bug exists.
 	\item {\bf Educational use (\Cref{chap:education}).}
-		For the past five semesters, I have offered a fully-automated version of Landslide to students in 15-410, CMU's undergraduate Operating System Design and Implementation class \cite{kspec,thrlib}, for use as a debugging aid during the thread library project.
-		Recently I have also extended Landslide to handle Pintos kernel projects from other universities \cite{pintos}.
-		In the two most recent semesters, I collaborated with Operating Systems course staff at two such schools, the University of Chicago and University of California at Berkeley,
-		to provide debugging feedback to their students.
-
+		For the past \revisionminor{seven} semesters,
+		I have offered a fully-automated version of Landslide to students in 15-410,
+		CMU's undergraduate Operating System Design and Implementation class,
+		for use as a debugging aid during the thread library project \cite{thrlib}.
+		%Recently
+		I have also extended Landslide to handle Pintos kernel projects from other universities \cite{pintos}.
+		In the two most recent semesters, I collaborated with Operating Systems course staff at the University of Chicago,
+		\revisionminor{which uses Pintos,
+		and at The Pennsylvania State University,
+		which has recently adopted CMU's thread library project,}
+		to provide
+		%debugging feedback to their students.
+		\revisionminor{their students an opportunity to benefit from Landslide as well.}
 		At all three universities I then collected statistics on the numbers and types of bugs found,
 		and surveyed students to understand the human experience.
 		This section will present the study's results
-		to evaluate the suitability of stateless model checking in an educational setting.
-	\item {\bf Hardware Transactional Memory (HTM) (\Cref{chap:tm}).}
-		HTM is a relatively new concurrent programming technique \cite{htm-haswell,htm-experience}
-		which is not yet addressed by modern model checkers.
-		I have extended Landslide's concurrency model to support
-		HTM's execution semantics and several advanced features, % abort codes p much
-		%both hardware (HTM) and software (STM) variants of TM,
-		and tested several ``real-world'' HTM programs and benchmarks.
-		This section will discuss the theoretical techniques I used to model the new form of concurrency,
-		present associated correctness proofs of my approach,
-		and show the verification results.
+		\revisionminor{and prove that stateless model checking is suitable for use} in an educational setting.
+	\item {\bf Hardware transactional memory (HTM) (\Cref{chap:tm}).}
+		\revision{I will introduce a new concurrency model
+		for stateless model checkers to emulate HTM's execution semantics
+		in terms of existing concurrency primitives.
+		This model is accompanied by a soundness proof
+		which allows checkers to avoid simulating conflict abort rollbacks,
+		reducing the state space substantially,
+		while preserving the formal verification guarantee.
+		I have implemented a new transactional testing mode in Landslide,
+		with support for the many different abort reasons HTM introduces,
+		optional weak atomicity semantics for simulating software TM instead,
+		and a ``retry set'' reduction algorithm to identify and prune new types of equivalences.
+		The evaluation includes several real-world HTM programs and benchmarks,
+		and shows that Landslide can both find bugs and verify correctness
+		using the new model with reasonable performance.}
 \end{enumerate}
 
-\section{Organization}
+\section{Meta}
 
-The rest of this dissertation is organized as follows.
-
-\begin{itemize}
-	\item {\bf Background:} \Cref{chap:background} will present the requisite background material on concurrent programming, stateless model checking, and the various types of programs targeted by Landslide.
-	\item {\bf Landslide:} \Cref{chap:landslide} explains the design and implementation of Landslide
-		%the core of my stateless model checking framework,
-		and all the special features it's been equipped with over the years.
-		It is the foundation upon which all three contributions above build.
-	\item {\bf Quicksand:} \Cref{chap:quicksand} presents the Iterative Deepening framework which more intelligently chooses which state spaces to test, corresponding to contribution 1 above.
-	\item {\bf Education:} \Cref{chap:education} discusses my evaluation of Landslide
-		in CMU's 15-410 class environment using the Pebbles kernel,
-		and in the University of Chicago's and Berkeley's OS class environments using the Pintos kernel,
-		corresponding to contribution 2 above.
-	%\item {\bf Pebbles:} \Cref{chap:410} discusses my evaluation of Landslide in CMU's 15-410 class environment using the Pebbles kernel, corresponding to contribution 2 above.
-	%\item {\bf Pintos:} \Cref{chap:410} discusses my evaluation of Landslide in the University of Chicago's and Berkeley's OS class environments using the Pintos kernel, corresponding to contribution 2 above.
-	\item {\bf Transactions:} \Cref{chap:tm} presents my extension of Landslide's concurrency model to handle transactional concurrency and the evaluation thereof, corresponding to contribution 3 above.
-	\item {\bf Related Work:} \Cref{chap:relatedwork} honors my neighbours and ancestors in research spirit.
-	\item {\bf Future Work:} \Cref{chap:warpzone} lists stateless model checking's remaining shortcomings and how new research might address them.
-	\item {\bf Conclusion:} \Cref{chap:conclusion} provides some thoughts on the future of the field.
-\end{itemize}
-
-\section{Notes on reading this thesis}
+\revision{Dear reader, whether you have come to read this whole document,
+to pick and choose whichever sections interest you,
+or just to skim the figures and footnotes looking for easter eggs,
+it is truly an honor to have you here.
+Before we get underway,
+allow me to present some notes on reading this thesis
+that may soften the blow of these 200+ pages.}
 
 \subsubsection{Experience}
 
@@ -275,15 +343,15 @@ while the royal ``we'' should be taken to include the reader,
 such as when surveying background material or related work,
 to which the author and reader share more similar relationships.
 The impersonal ``the programmer'' will be referred to as she/her
-to challenge readers' unconscious bias about gender in computer science,
-as well as to highlight her role as the intended user, separate from the underlying research.
-%to distinguish her from the thesis audience concerned with the underlying research,
+to highlight her role as the intended user, separate from the underlying research,
+as well as to challenge readers' unconscious bias about gender in computer science.
 Gender-neutral pronouns will be used to refer to
 individual students who participated in the user studies,
 %will be given the more inclusive they/them.
 %Gender-neutral pronouns will also be used
 as well as
-on the author themself.
+on the author themself,
+who would also prefer them for any third-person reference by you.
 
 \subsubsection{Code}
 
@@ -302,6 +370,37 @@ therein which implement a feature under discussion.
 
 % TODO:
 % Finally, this thesis also contains a small puzzle-hunt to reward dedicated readers who make it all the way through.
+
+\section{Organization}
+
+The rest of this dissertation is organized as follows.
+
+\begin{itemize}
+	\item {\bf Background:} \Cref{chap:background} will present the requisite background material on concurrent programming, stateless model checking, and the various types of programs targeted by Landslide,
+		\revisionminor{concluding with a glossary of terminology for the reader's convenient reference.}
+		%(\cref{sec:glossary})
+	\item {\bf Landslide:} \Cref{chap:landslide} explains the design and implementation of Landslide
+		%the core of my stateless model checking framework,
+		and all the special features it's been equipped with over the years.
+		It is the foundation upon which all three contributions above build.
+	\item {\bf Quicksand:} \Cref{chap:quicksand} introduces
+		\revisionminor{Quicksand,
+		a wrapper framework for Landslide
+		which incorporates data-race analysis at run-time to find new preemption points
+		and uses the new Iterative Deepening algorithm to}
+		more intelligently choose which state spaces to test, corresponding to contribution 1 above.
+	\item {\bf Education:} \Cref{chap:education} discusses my evaluation of Landslide
+		in CMU's
+		\revisionminor{and The Pennsylvania State University's
+		class environment using thread libraries based on the Pebbles kernel},
+		and in the University of Chicago's
+		OS class environment using the Pintos kernel,
+		corresponding to contribution 2 above.
+	\item {\bf Transactions:} \Cref{chap:tm} presents my extension of Landslide's concurrency model to handle transactional concurrency and the evaluation thereof, corresponding to contribution 3 above.
+	\item {\bf Related Work:} \Cref{chap:relatedwork} honors my neighbours and ancestors in research spirit.
+	\item {\bf Future Work:} \Cref{chap:warpzone} identifies stateless model checking's remaining shortcomings and how new research might address them.
+	\item {\bf Conclusion:} \Cref{chap:conclusion} offers some thoughts on the future of the field.
+\end{itemize}
 
 \newpage
 \thispagestyle{empty}
