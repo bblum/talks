@@ -931,7 +931,7 @@ Traversal of the state space is implemented in three parts:
 first, identifying preemption points when first encountered and selecting which thread to run for its first execution, in {\tt arbiter.c},
 second, selecting which preemption point to backtrack to after completing an execution
 and which thread to ``have switched to''
-\footnote{\revision{willan on-having switched to \cite{hhgg-reu}}}
+\footnote{\revisionminor{willan on-having switched to \cite{hhgg-reu}}}
 instead, in {\tt explore.c},
 and third, rewinding the machine state to implement said backtracking,
 in {\tt timetravel.c} (Bochs version) and {\tt timetravel-simics.c} (Simics version).
@@ -2130,7 +2130,7 @@ rather, the state space must always be explored in an overall depth-first approa
 at best skipping too-preemptful interleavings as they are encountered.
 As simple as it would be to state ``{\bf foreach} $S \in {\mathsf{sort}_P(U)}$'' in pseudocode,
 implementing such an ordering would be much less straightforward.
-\footnote{\revision{The pseudocode algorithms found in many conference papers
+\footnote{\revisionminor{The pseudocode algorithms found in many conference papers
 often fail to be straightforward to translate into usable implementations~\cite[Figure 5]{itg2}.}}
 
 Therefore, Landslide's ICB implementation combines with DPOR
@@ -2460,7 +2460,7 @@ that could be considered contributions in their own right.
 		she is interested in testing,
 		avoiding unnecessary state space inflation from trusted code.
 	\item Adds a mutex testing mode to configure whether the
-		data race analysis should consider lock' internal accesses
+		data race analysis should consider locks' internal accesses
 		(\cref{sec:landslide-dynamicconfig}; {\tt TESTING\_MUTEXES}).
 		This allows the user to verify that her lock implementation
 		correctly provides mutual exclusion
