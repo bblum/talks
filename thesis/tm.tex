@@ -826,7 +826,8 @@ and allowing system calls during transactions to proceed rather than forcing a {
 %and traversing the interleaving arbitrarily far back from a {\tt \_xend()} to find the appropriate preemption
 %(previously, the xbegin would be at the immediately previous PP)
 Landslide requires the other STM options ({\tt -A -S}) also to be enabled to emulate weak atomicity,
-because I know of no existing HTM system which implements it.
+partly because I know of no existing HTM system which implements it,
+but mostly to keep the implementation simple.
 As one might expect, it inflates state spaces considerably, % TODO: measure it with htm2 or some such?
 and moreover,
 every single HTM benchmark in the upcoming evaluation,
@@ -841,7 +842,8 @@ Finally, I identified a specific pattern of transactional code where existing st
 will fail to identify and prune equivalent thread interleavings.
 \Cref{fig:retry-set-example} shows a minimal example program which exhibits this problem.
 In this program, each thread's transactional path conflicts with the other thread's abort path,
-while the two transactional paths (disjoint memory accesses) and the two abort paths (reads only) are pairwise independent.
+while the two transactional paths (disjoint memory accesses) and the two abort paths (reads only) are
+independent with each other.
 
 \begin{figure}[h]
         \begin{center}
@@ -2135,11 +2137,10 @@ Accordingly, I implemented the optimization as conservatively as possible in the
 ({\tt update\_hax\_abort\_set()} and
 {\tt update\_hax\_abandon\_abort\_set()}, respectively).
 
-% TODO: is this true? at all? htm2 is bigger in STM only because it's got a separate expliit abort
 Likewise, the cases of {\tt htm2}(2,3), (2,4), and (4,1),
 in which retry sets achieved better reduction than STM mode,
-show that the latter does not necessarily subsume the former,
-and that combining the two could in theory achieve further reduction still.
+\revisionminor{suggest} that the latter does not necessarily subsume the former,
+and that combining the two could in theory achieve further reduction still,
 However, {\tt xbegin} results other than {\tt \_XABORT\_RETRY}
 may depend on the execution logic
 (explicit aborts may be conditional on some change by a conflicting thread,
@@ -2147,9 +2148,10 @@ and conflict aborts cannot occur before their conflicting transaction to begin w
 \footnote{See {\tt 410user/progs/htm\_causality.c}; that was a fun realization to have
 already halfway into implementing retry sets the wrong way at first.}%
 ),
-so how to soundly prune either success paths or retry aborts
-while other abort codes are in play
-remains an open problem.
+so \revisionminor{it remains an open problem}
+to soundly prune either success paths or retry aborts
+while other abort codes are in play,
+\revisionminor{and preserve the reduction achieved with the baseline configuration}.
 
 While
 %the basic idea is
@@ -2275,3 +2277,66 @@ Visual inspection of \cite{tm-benchmark-cmu}'s HTM data structures found no barr
 I would urge any reader interested in using those to add them in by hand first.
 The test case {\tt lock}({\tt mutex}) ({\tt 410user/progs/htm\_mutex.c} in the repository)
 provides an example of how to use compiler intrinsics to emit the necessary barriers.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Summary}
+
+\revision{This chapter has extended the concurrency model of stateless model checking to support transactional memory,
+and proposed several new reduction strategies for coping with the concomitant % hi william
+state space explosion.
+I have made the following contributions:
+
+\begin{itemize}
+	\item Three equivalence proofs,
+		demonstrating that model checkers can soundly emulate strongly-atomic HTM execution semantics by
+		treating transactions as globally-uninterruptible atomic sections
+		and injecting failure without simulating rollback
+		(\cref{sec:tm-design-failure})
+		and applying conventional data race analysis with all transactions treated as a global lock
+		(\cref{sec:tm-design-locks}),
+		and can emulate weakly-atomic STM systems by relaxing the above atomicity to apply to other transactions only
+		(\cref{sec:tm-weak-atomicity}).
+	\item An implementation of both forms of transactional memory in Landslide,
+		with further options to configure the variety of abort codes injected
+		(\cref{sec:tm-implementation}).
+	\item A suite of transactional benchmark programs,
+		designed to produce interesting state spaces of varying size, bugginess, and reducibility
+		(\cref{sec:tm-eval-exp-setup}).
+		This test suite is more appropriate for evaluating model checkers
+		% get rekt STAMP :triumph:
+		than prior work, which to date has focused on testing the raw performance of TM backend implementations,
+		with little focus on the interactions of abort paths.
+	\item Two previously-unknown bugs found in transactional programs from prior work
+		(\cref{sec:tm-eval-bugs}).
+	\item Retry set reduction,
+		a new state space reduction algorithm
+		(\cref{sec:tm-retrysets})
+		which the evaluation shows identifies and skips equivalent interleavings
+		compared to standard DPOR, even when transactional and abort paths are fully mutually conflicting
+		(\cref{sec:tm-eval-retrysets}).
+	\item Demonstration of two further heuristic reduction strategies on HTM programs,
+		abort code reduction (\cref{sec:tm-eval-stm})
+		and abstraction reduction (\cref{sec:tm-abstraction})
+		which rely on human intuition to ensure their soundness
+		to tackle even larger state spaces still.
+	\item Verifications of \Cref{fig:htm-fixed}'s atomicity protocol %(with retry set reduction)
+		and the {\tt lock}({\tt mutex}) transactional lock %(with abort code reduction)
+		up to 2 threads, 4 iterations and 4 threads, 1 iteration for each
+		(\cref{sec:tm-verif}).
+		%$(K,N)$=$(2,4)$ and $(4,1)$ for each.
+		% verified htm atomicity protocol (htm2) and mutex (lock mutex) up to (2,4), (4,1)
+\end{itemize}
+
+As concurrent systems grow in complexity to meet modern performance demands,
+they grow ever more fraught with opportunity for subtle bugs,
+and the programmer likewise faces ever more difficulty in verifying her programs.
+Following in the footsteps of related work for relaxed memory concurrency,
+this chapter has enabled stateless model checking to address yet another new technique,
+and concludes this thesis's contributions to the field.
+The upcoming chapters will offer a tour of related research problems,
+solved and unsolved,
+practical and philosophical,
+past and future.
+
+}
