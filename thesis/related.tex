@@ -87,12 +87,12 @@ to check for deadlocks or nondeterministic behaviour in general,
 which either may arise despite the static no-data-race guarantee.
 
 The problem of relaxed memory nondeterminism alone has inspired the creation of several new tools in the past few years.
-Relacy \cite{relacy}, a header-only C++ model checking library for checking synchronization primitives,
+Relacy \cite{relacy}, a header-only C++ model checking library for synchronization primitives,
 was the first to broach this field,
 although \revisionminor{it} requires custom annotations for non-atomic memory accesses
 and
 %(according to later citing papers) % cdschecker
-does not fully model all possible relaxed memory behaviours.
+does not fully model all memory reorderingss.
 %designed for verifying synchronization primitives,
 CDSChecker \cite{cdschecker} extends DPOR with a {\em reads-from} relation
 to capture most of the C++11 memory model's new behaviours.
@@ -170,9 +170,9 @@ Implementing parallelization, wakeup trees, or SMT-driven exploration in Landsli
 
 Several other recent advances extend DPOR to new concurrency models,
 beyond the shared-memory-threading model outlined in \cref{sec:landslide-dpor}.
-TransDPOR \cite{transdpor} provides extra domain-specific reduction for message-passing actor programs
+TransDPOR \cite{transdpor} provides additional domain-specific reduction for message-passing actor programs
 by exploiting the fact that the dependency relation is transitive in the absence of shared state.
-The $R^4$ algorithm \cite{r4} (corresponding to the R4 checker mentioned above)
+The $R^4$ algorithm \cite{r4}, used by the R4 checker mentioned above,
 extends DPOR to event-driven programs by separating the notion of enabled events from that of multiple threads.
 TaxDC \cite{taxdc}, a taxonomy study of distributed systems concurrency bugs,
 showed that for completeness distributed model checkers must incorporate many forms of nondeterminism,
@@ -279,8 +279,6 @@ DroidRacer \cite{droidracer} and CAFA \cite{cafa} find data races in Android app
 using domain-specific heuristics (orthogonal to Quicksand's method) to reduce false positives.
 DataCollider \cite{datacollider} finds data races in kernel code
 by using hardware breakpoints and random sampling to achieve high performance.
-% TODO: read some more recent confs for data race shit since thesprop
-% probably like weak memory c.c
 
 Although many MCs listed in the previous section are content to report any data races as outright bugs,
 RacerX \cite{racerx} showed that tools must be careful not to overwhelm users with benign warnings
@@ -395,7 +393,6 @@ and its user survey found that students appreciated detailed debugging info espe
 but also that students had little patience for even a 5-minute stress test
 when no assurance against false negatives could be provided.
 This suggests motivating students with Landslide's verification guarantee,
-% TODO fix this explanation its too roundabout
 although it is tricky to avoid accientally encouraging % oops
 them to limit possible interleavings by just using one global lock for everything,
 which is counter to 15-410's educational goals.
@@ -409,8 +406,9 @@ which is counter to 15-410's educational goals.
 \section{Transactional memory}
 
 Transactional memory (TM), first introduced in 1993 \cite{transactional-memory},
-% TODO expand this to talk about some stm implementations?
-has received renewed attention in recent years with the announcement of Intel's Haswell architecture \cite{htm-haswell},
+has received renewed attention in recent years
+%with the announcement of
+since the launch of Intel's Haswell architecture \cite{htm-haswell},
 which supports hardware transactions (HTM) using new x86 instructions.
 Since then, many studies have evaluated the increased performance it offers over traditional locking and/or STM
 \cite{htm-experience,htm-performance,tm-benchmark-cmu}.
@@ -479,9 +477,9 @@ a survey of the characteristics of many types of concurrency bugs,
 found that TM could potentially fix some, but not all, of the studied bugs,
 while in other cases it must be combined with other concurrency primitives to be fully correct.
 A subsequent paper \cite{applying-tm-bugs}
-found a majority of bugs in their study to be easily fixable with hand-written transactions,
+found a majority of bugs to be easily fixable with hand-written transactions,
 while others remained out of scope due to blocking {\tt cond\_wait()} operations and the like;
-more recently, the tool BugTM \cite{bugtm} aims to deploy such repairs in production code fully automatically.
+more recently, the tool BugTM~\cite{bugtm} aims to deploy such repairs in production code fully automatically.
 However, these studies all optimize for empirical correctness at best,
 as well as maintaining good performance,
 which motivates the use of tools like Landslide to ensure these rewrites
@@ -529,8 +527,9 @@ but at the (garbage-collected) execution level all data is immutable once create
 which preserves type soundness and data-race freedom.
 The aforementioned D\'{e}j\`{a} Fu \cite{dejafu} checks concurrent Haskell programs.
 %
-Rust %\cite{rust-language}
-presents a type system with more explicit memory management,
+Rust's
+%\cite{rust-language}
+type system supports more explicit memory management,
 in-place mutation,
 and mutable references
 to appear familiar and approachable to those already versed in C++.
@@ -594,9 +593,9 @@ As Parrot demonstrated, the two approaches are compatible in cases where either 
 \label{related:symbolic}
 
 Analogous to stateless MC,
-which seeks good coverage of possible thread execution paths under schedule nondeterminism,
+which tests many possible thread execution paths under schedule nondeterminism,
 another popular testing approach is symbolic execution \cite{symbolic},
-which seeks good coverage of possible flow control paths under input nondeterminism.
+which tests many possible flow control paths under input nondeterminism.
 Symbolic executors
 abstract a program's variables and use constraint solvers such as Z3~\cite{z3}
 to work backwards and synthesize combinations of test inputs which can lead to a failure.
