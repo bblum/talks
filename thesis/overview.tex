@@ -39,11 +39,41 @@ And from laughter, comes wisdom.
 \end{tabular}}
 {G'Kar, Babylon 5}
 
-This chapter introduces the necessary background material on concurrency, stateless model checking, data-race analysis, and the relevant undergraduate operating systems classes.
+\revisionminor{This chapter introduces the necessary background material on concurrency
+(\cref{sec:overview-concurrency}),
+stateless model checking,
+(\cref{sec:overview-stateless}),
+data-race analysis
+(\cref{sec:background-datarace}),
+and the relevant undergraduate operating systems classes
+(\cref{sec:overview-edu}).
+It concludes with a glossary of terminology
+(\cref{sec:glossary})
+that I hope the reader may find convenient as a quick reference
+while reading later chapters as well.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Concurrency}
+\label{sec:overview-concurrency}
 
-\subsection{The Basics}
+\revision{This section presents an elementary introduction to
+%the fundamentals of
+concurrent programming.
+I have taken care to make it accessible to readers with even only basic programming experience,
+familiar with flow control, functions, memory, and objects at most,
+although I cannot avoid the inherent difficulty of multiple layers of abstraction building upon one another.
+For an explanation to be ``elementary''
+means that it requires very little be known ahead of time to approach it,
+not necessarily that it be easy
+\cite{lost-lecture}.
+%\footnote{``Elementary'' does not mean easy to understand.
+%``Elementary'' means that very little is required to know ahead of time in order to understand it,
+%except to have an infinite amount of intelligence
+%\cite{lost-lecture}.}
+}
+
+\subsection{The basics}
 
 Modern software often turns to multithreading to improve performance.
 In a multithreaded program, multiple execution units (or {\em threads}) execute the same or different sections of code simultaneously.
@@ -214,7 +244,7 @@ will \revisionminor{block (i.e., wait)} until the corresponding {\tt mutex\_unlo
 and (b) shows how a mutex may be used to fix the example from \Cref{fig:concurrency-bug}.
 
 
-\subsection{Transactional Memory}
+\subsection{Transactional memory}
 \label{sec:overview-tm}
 
 Critical sections of code must be protected from concurrent access, even when it's not known in advance whether the shared memory accesses between threads will actually conflict on the same memory addresses.
@@ -360,10 +390,10 @@ Addressing the scaling problem in this exponential relation is the central resea
 Some model checkers explicitly store the set of visited program states as a means of identifying equivalent interleavings \cite{spin}.
 From the perspective of such tools, state spaces such as these wherein equivalent states may be reached by multiple paths
 are represented as a directed acyclic graph (DAG) instead of as a tree.
-This approach is called \revisionminor{{\em stateful} model checking \cite{spin}}.
+This approach is called \revisionminor{{\em stateful} model checking.} %\cite{spin}.
 This thesis focuses on {\em stateless} model checking (and execution trees, not DAGs),
 which instead analyzes the sequence of execution events to avoid a prohibitive memory footprint.
-Henceforth ``stateless model checking'' will be abbreviated simply as ``model checking'' for brevity.
+Henceforth ``stateless model checking'' will often be abbreviated simply as ``model checking'' for brevity.
 Also, the term ``state space'' was originally coined to refer to the stateful approach's emphasis on the DAG's nodes
 (i.e., program states);
 while stateless checkers emphasize the tree's branches (i.e., execution sequences) instead,
@@ -389,8 +419,9 @@ in case we are unable to exhaustively test all interleavings after all.
 
 Dynamic Partial Order Reduction \cite{dpor} (henceforth, DPOR) is the most popular algorithm for mitigating the exponential explosion that arises as program size increases.
 
-{\bf Abstractly speaking:}
-Let {\em independent transitions} denote a pair of executions of two threads, each from one preemption point to the next,
+%{\bf Abstractly speaking:}
+\revisionminor{To define it abstractly, let}
+{\em independent transitions} denote a pair of executions of two threads, each from one preemption point to the next,
 in which there are no read/write or write/write access pairs to the same memory between threads.
 DPOR reduces a state space, originally exponentially-sized in the number of thread transitions,
 to an equivalent one
@@ -401,11 +432,13 @@ exponentially-sized in the number of {\em dependent} thread transitions.
 More technically, it identifies equivalent execution sequences according to Mazurkiewicz trace theory \cite{mazurkiewicz},
 and tests at least one execution from each equivalence class.
 
-{\bf Concretely speaking:}
-\Cref{fig:dpor} highlights part of an execution tree where the execution ordering of threads 1 and 2 are swapped,
-and each interleaving has a respective ``subtree'' (i.e., possible interleavings given the fixed execution prefix leading up to it).
-The specifics of execution before the thread 1/thread 2 sequence,
-other possible threads to run instead of threads 1 or 2,
+%{\bf Concretely speaking:}
+\revisionminor{For a friendlier, more concrete example, consider \Cref{fig:dpor}, which}
+highlights part of an execution tree where the execution ordering of threads 1 and 2 are swapped,
+and each interleaving has a respective subtree (i.e., possible interleavings given the fixed execution prefix leading up to it).
+\revisionminor{Any events executed}
+before the thread 1/thread 2 sequence,
+any other runnable threads besides these two, %threads 1 or 2,
 and what logic the program executes in those subtrees
 are all presumably arbitrary.
 In these two highlighted branches,
@@ -421,7 +454,7 @@ Over the years, researchers have developed many enhancements to DPOR, such as Op
 
 \begin{figure}[t]
 	\begin{center}
-	\includegraphics[width=0.6\textwidth]{dpor-new-colors.pdf}
+	\includegraphics[width=0.55\textwidth]{dpor-new-colors.pdf}
 	\end{center}
 	\caption[DPOR identifies independent transitions by different threads.]
 		{DPOR identifies independent transitions by different threads which can commute
@@ -450,7 +483,7 @@ Iterative Deepening, presented in \Cref{chap:quicksand}, is another such search 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Data Race Analysis}
+\section{Data race analysis}
 \label{sec:background-datarace}
 
 Data race analysis \cite{eraser} identifies pairs of unsynchronized memory accesses between threads.
@@ -687,7 +720,7 @@ Although the interfaces are not mandated \revisionminor{as} they were in P2, all
 	\item Lifecycle management code for creation and destruction of \revisionminor{threads and tasks};
 	\item Other miscellany such as a suite of fault handlers to ensure no user program can cause the kernel itself to crash.
 \end{itemize}
-Because any combination of system calls or fault handlers can be invoked by user programs simultaneously,
+Because user programs can invoke any combination of system calls or fault handlers simultaneously,
 concurrency bugs can arise from the interaction of any subset of kernel components with each other.
 The most common bugs students face arise from the interaction of some component with itself (e.g., concurrent invocations of {\tt new\_pages}/{\tt remove\_pages} in the same process),
 or from the interaction between an exiting thread and some other thread trying to communicate with it ({\tt vanish} versus, well, anything else, really).
@@ -740,8 +773,8 @@ Otherwise, the project is identical to CMU 15-410's P2.
 
 \newcommand\uchos{CMSC 23000\xspace}
 
-The Pintos kernel architecture \cite{pintos} is used at several universities, including Berkeley, Stanford, and the University of Chicago.
-The Pintos basecode implements a rudimentary kernel, consisting of a context switcher, round-robin scheduler, locking primitives, and program loader,
+The Pintos kernel architecture \cite{pintos} is used at several universities, including the University of Chicago, Berkeley, and Stanford.
+Its basecode implements a rudimentary kernel, consisting of a context switcher, round-robin scheduler, locking primitives, and program loader,
 upon which students add more features in several projects.
 Most relevant to this thesis, the basecode provides the following functions/libraries, among others:
 \begin{itemize}
