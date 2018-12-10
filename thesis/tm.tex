@@ -339,7 +339,8 @@ how such a sequence of operations would be carried out under HTM.
 For example, \ti's write during $2c$ is not actually visible to \tj,
 although it would be under a thread-scheduling-only concurrency model.
 
-Intel's official TSX documentation summarizes its interface and behaviour in prose \cite{intel-tsx-overview}.
+Intel's official TSX documentation \cite{intel-tsx-overview}
+summarizes its interface and behaviour in prose.
 Recent work has used proof assistants to formalize some of the execution semantics
 of x86 in general \cite{x86-semantics}
 and of transactions in particular (at both hardware- and language-level) \cite{relaxed-transactions-pldi}.
@@ -2273,7 +2274,8 @@ as well as proposed formal execution semantics for HTM on these architectures
 \cite{relaxed-transactions-popl,relaxed-transactions-pldi};
 if both of these advances were incorporated into Landslide's concurrency model,
 it could find or verify the absence of such bugs.
-Visual inspection of \cite{tm-benchmark-cmu}'s HTM data structures found no barriers used in this implementation pattern;
+Visual inspection of the transactional AVL tree and hashmap
+\cite{tm-benchmark-cmu} found no barriers used in this implementation pattern;
 I would urge any reader interested in using those to add them in by hand first.
 The test case {\tt lock}({\tt mutex}) ({\tt 410user/progs/htm\_mutex.c} in the repository)
 provides an example of how to use compiler intrinsics to emit the necessary barriers.

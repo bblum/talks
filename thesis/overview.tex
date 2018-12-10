@@ -568,8 +568,8 @@ as shown in the example program in \Cref{fig:hb-example}(a).
 We call such unreported access pairs {\em false negatives}.
 
 \item
-\cite{hybriddatarace} introduces the {\em Limited Happens-Before} relation,
-which will report such potential races
+The {\em Limited Happens-Before} relation \cite{hybriddatarace}
+reports such potential races
 by considering only blocking operations like {\tt cond\_wait} to enforce the order.
 However, consider the similar program in \Cref{fig:hb-example}(b),
 in which the access pair ceases to exist in the alternate interleaving.
