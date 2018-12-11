@@ -602,16 +602,85 @@ I speak of course literally on one side of this analogy, figuratively on the oth
 This thesis has demonstrated such meaning for stateless model checking,
 choosing perhaps one of the most challenging demographics of programmers in need of concurrency testing,
 the undergraduate operating systems student,
-as its target audience.
-Along the way, it justified its techniques' applicability to problems beyond CMU's walls as well
-by showing positive results at other universities
-and by addressing new concurrency models developed by industry in just the last decade.
+as its target audience,
+\revision{ultimately helping 73\% of participating students to find bugs in their code,
+56\% to fix any such bugs,
+and 34\% to fix all such bugs,
+before their project deadline.}
+Along the way, I justified \revisionminor{Landslide's} applicability to problems beyond CMU's walls as well
+by showing positive results at other universities,
+and by addressing a new concurrency model developed by \revisionminor{the hardware} industry in just the last decade.
 % also by comparing the preemption bounds of quicksand eval's bugs to prior work in ICB
 % and finding them to actually be skewed to DEEPER bugs than in the "real" "world", so take that
 As I write this I am also collaborating with 15-410 staff
 to integrate Landslide as an official part of the course grading infrastructure,
 so in some sense the na\"{i}ve wish to make an ``automatic TA'' that drew my attention to grad school to begin with
 has also been fulfilled.
+
+\revision{Let us revisit the first half of the thesis statement,
+which in \cref{sec:thestatement} I mentioned would serve as the work's overarching theme:
+that by
+{\em combining theoretically-founded automatic reduction techniques and user-informed heuristic ones,}
+stateless model checking can meet human testing needs.
+How have each of the major contributions of this work embodied this theme?
+%Let me also opine briefly on which of this work's contributions constitute lasting lessons
+%that any future research building hereupon should heed.
+Let me also briefly address:
+What lasting lessons have we learned from each,
+which any future research building hereupon would be wise to heed?
+
+\begin{itemize}
+	\item In \Cref{chap:quicksand},
+		the soundness of data-race-driven Iterative Deepening
+		combined with Quicksand's reliance on state space estimation
+		to effectively balance formal verification with heuristic bug-finding speed
+		better than any prior work.
+		% 未来は、
+		Even as modern programming languages such as Rust \cite{rust-book}
+		threaten to obsolete the data-race preemption point proof
+		by statically forbidding data races to begin with,
+		Iterative Deepening's general approach remains relevant alongside ICB \cite{chess-icb},
+		each providing a different tradeoff between bug-finding and completion time,
+		and future model checkers should offer a mixture of different kinds of partial verification results
+		depending on the user's wishes.
+	\item In \Cref{chap:education},
+		the behind-the-scenes yield-loop blocking algorithm
+		(itself admittedly heuristic)
+		allowed Landslide to automatically instrument all student implementations
+		with very few false positives,
+		and exposing partial results such as data race reports
+		was shown to sometimes help students reach deeper understanding.
+		% 未来は、
+		Although high-level undergraduate operating systems courses represent
+		a very small fraction of all the world's programmers,
+		let alone all those in higher education,
+		Landslide's adventures in 15-410 argue that computer science classes
+		should more intentionally teach principled debugging techniques and tools
+		rather than let students struggle to reach correctness independently. %on their own.
+		Also, any future debugging tool should heed my students' survey feedback
+		and take friendly user interface design more seriously than I did with Landslide.
+	\item In \Cref{chap:tm},
+		the equivalence of HTM's interface to failure injection and global locks
+		allowed Landslide to avoid both performance overhead and state space explosion when simulating aborts,
+		and the heuristic use of abort code reduction and abstraction reduction
+		allowed verifying algorithms and data structures up to thread/iteration counts previously infeasible.
+		% retry set reduction, obv; it also applies to failure injection as well
+		% even when synch is complicated, defining abstraction boundaries and verifying your shit separately
+		% is ,,good
+		% - even if you have to be careful that you're "proving the right thing"
+		% 未来は、
+		Emulating complex execution semantics with simpler, already-understood primitives,
+		and the retry set reduction,
+		both allowing substantial yet sound state space reduction,
+		are the obvious take-aways for any future model checker wishing to tackle HTM.
+		I expect the latter should easily apply to other opportunities for failure-injection beyond transactions as well,
+		such as memory allocation, filesystems, and distributed systems.
+		More in general,
+		the verification section demonstrated the value of compartmentalizing one's verification efforts,
+		checking modules separately against a common, well-understood interface
+		to reach yet further up the exponential cliff.
+\end{itemize}
+}
 
 For as long as people have written science fiction books,
 we have fantasized about robots that can make any complex intuitive decision a human can
@@ -631,6 +700,9 @@ knowing its limits and asking for help when it gets confused.
 % - test case design incl. preemption sealing
 % - abstraction reduction
 % - manual inspection of data races
+\revision{Here I have demonstrated that stateless model checking can realistically fulfill this ideal,
+and I envision a future of concurrency verification where % when
+human and program may cooperate to debug and verify even more complex software than ever before.}
 
 It's become fashionable among my peers lately,
 whenever a new exploit is announced in the news,
@@ -647,7 +719,7 @@ written in the old unsafe ways, grow ever more powerful.
 Landslide's ability to reach impressionable student minds is my little contribution in this long battle.
 I have hope that we may one day live in peace with our silicon creations,
 understanding and respecting their limitations just as they complement ours.
-This thesis has been a profoundly meaningful journey for me and I hope you enjoyed reading it.
+%This thesis has been a profoundly meaningful journey for me and I hope you enjoyed reading it.
 
 % TODO TODO TODO
 % update this before you turn in duh
