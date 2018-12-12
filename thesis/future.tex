@@ -261,10 +261,22 @@ which would in turn allow Quicksand to make more informed decisions about when t
 %As a matter of personal philosophy,
 %I would strongly caution against using machine learning to try to expose bugs faster.
 Machine learning has become popular recently as a magic cure-all for many programming problems,
-but is also notorious for amplifying any biases in its training set in often unpredictable ways
-\cite{conceptnet-bias,amazon-ai}.
-In the domain of concurrency testing, this would translate to being able to find only types of bugs
-already seen in the training data, abandoning any novel bug patterns to further obscurity.
+but is also notorious for amplifying any biases in its training set
+(or in the minds of its developers)
+in unpredictable ways
+that can harm people of color \cite{conceptnet-bias,gender-shades},
+women \cite{gender-bias-ai,amazon-ai},
+and transgender people \cite{misgendering-machines}.
+In the domain of concurrency testing,
+%careless application of
+such bias would be unlikely to result in interpersonal discrimination,
+but
+%I believe
+it would translate to
+%being able to find
+finding only types of bugs
+already seen in the training data,
+abandoning any novel bug patterns to further obscurity.
 Granted,
 Iterative Deepening and
 ICB also deprioritize ``deeper'' bugs,
@@ -275,7 +287,7 @@ as measured by number of unique or total preemptions, respectively,
 %\cite{chess-icb},
 %and
 but when a bug is not found
-these strategies are also transparent enough that the user can understand the nature of the partial verification.
+these strategies also enable the user to understand the nature of the partial verification.
 %
 Machine learning would be more appropriate for improving state space estimation,
 whose output is already a black-box oracle from the user's perspective,
@@ -292,8 +304,12 @@ I have made the estimation logs from the HTM experiments (\cref{sec:tm-eval})
 freely available at \url{https://github.com/bblum/thesis-htm-logs}.
 %
 Nevertheless,
-any overall search heuristic for concurrency testing
-must be designed to support the human user's agency first and foremost,
+I firmly believe that using machine learning as a bug-finding heuristic
+without compensating extremely carefully for its inherent biases
+would run counter to this thesis's central tenets of transparency and user agency.
+Any overall search heuristic
+%for concurrency testing
+must be designed to support the human user first and foremost,
 that she may readily understand partial verification results
 and participate effectively in the test case refinement strategies discussed
 upchapter. % this is a word now.
