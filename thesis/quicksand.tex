@@ -206,7 +206,7 @@ For kernel-level testing, interrupt-disabling is analogous to locking,
 so preemptions must also be introduced
 just before a disable-interrupt opcode (on x86, {\tt cli})
 and just after interrupts are re-enabled (on x86, {\tt sti}).
-During data-race detection, {\tt cli} and {\tt sti} are treated as a single global lock
+During data race analysis, {\tt cli} and {\tt sti} are treated as a single global lock
 (note that {\tt cli}'d memory accesses can still race with others that have interrupts on).%
 \footnote{Some kernels disable preemption without disabling interrupts,
 which can be communicated to the MC using manual annotations,
@@ -527,14 +527,19 @@ However, the upcoming evaluation will show that Limited Happens-Before retains s
 (\cref{sec:quicksand-eval-bugs}),
 so it is useful to be able to automatically suppress data-race candidates
 that are certain to end up being false positives when reordered.
+Such collisions could instead be avoided with a hacked allocator which never recycles memory,
+but this could unacceptably impact performance in {\tt malloc}-heavy tests.
 
 The ability to disregard reallocation false positives is unique to Iterative Deepening.
 When limited to a single test execution, suppressing any data race candidate matching this pattern is unsound.
 Consider the more unusual program in Figure~\ref{fig:recycle-bug},
 in which the memory is recycled the same way, but the racing access's address is not tied to {\tt malloc}'s return value.
 Here, reordering lines~6-7 before line~3 will allow {\tt x} and {\tt x2} to race.
-Such collisions could instead be avoided with a hacked allocator which never recycles memory,
-but this could unacceptably impact performance in {\tt malloc}-heavy tests.
+Discarding the data race report as a false positive after checking just this one execution
+would overlook such a bug,
+but Iterative Deepening is guaranteed to explore the alternate interleaving,
+in which the true data race will show up without {\tt free()} and {\tt malloc()} interposing,
+so it is safe to suppress at first, as I will prove in \cref{sec:quicksand-realloc}.
 Moreover,
 in the context of Iterative Deepening, being able to discard certain data race candidates
 allows Quicksand to skip exploring some entire state spaces,
@@ -605,7 +610,8 @@ Limited Happens-Before reports in a given execution,
 that Pure Happens-Before does not,
 either it will be a false positive,
 or the latter will find it in an alternate execution within the same state space,
-or the latter will find a different data race that ultimately leads to a bigger state space in which the first one may be found.
+or the latter will find a different data race that ultimately leads to a bigger state space in which the first one may be found,
+much like a generalization of \cref{sec:quicksand-realloc}.
 
 \subsection{Convergence to total verification}
 \label{sec:quicksand-convergence}
@@ -676,8 +682,8 @@ Reachability of data-race preemption points is transitive.
 \begin{proof}
 Induct on the preemption points according to the order of their preemptions during an execution sequence.
 Given that the interleaving prefix preceding some point $p$ is reachable,
-either $p$ must be reachable,
-or a new data race among $\ppothers{p}$ will be newly reachable. %, not previously reachable, is now reachable.
+the proof goal is that either $p$ be reachable,
+or a new data race among $\ppothers{p}$, not previously reachable, be newly reachable.
 The latter condition suffices because in a finitely-sized codebase,
 there must be finitely many unique racing instruction pairs.
 %, so induction on the number of new data-race preemption points among $\ppothers{p}$ will make $p$ itself reachable.
@@ -731,12 +737,74 @@ at full verification strength.
 	Hence, Iterative Deepening will eventually test a state space containing the equivalent buggy interleaving.
 \end{proof}
 
-And thus Iterative Deepening is sound. % :)
+% And thus Iterative Deepening is sound. % :)
+This spells QED so we are done \cite{vargomax}. % even more :)))
 
 \subsection{Suppressing reallocation false positives}
 \label{sec:quicksand-realloc}
 
-% todo rename "malloc recycle" to "reallocation false positives"
+Next I prove that \cref{sec:quicksand-id-realloc}'s optimization
+of discarding reallocation false positives is sound under Iterative Deepening.
+
+\begin{theorem}[Soundness of eliminating reallocation data-race candidates]
+        If a reallocation candidate is not a false positive,
+DPOR will reorder threads such that
+%DPOR will test an alternate thread interleaving in which
+either
+the accesses can race without fitting the reallocation pattern,
+or a use-after-free bug will be reported immediately.
+\end{theorem}
+
+\begin{proof}
+Any such program must contain an access $a_1$ by one thread T1,
+followed by a {\tt free} and a {\tt malloc} possibly by either thread,
+followed by an access $a_2$ by the other thread T2,
+not depending on the result of the middle malloc.
+Without loss of generality, fix T1 to perform the {\tt free} and T2 the subsequent {\tt malloc},
+as shown in \Cref{fig:recycle-bug}.
+The other cases are similar,
+although note that if T2 performs the {\tt free},
+and the {\tt malloc} is reordered before it,
+T2's final access will be a use-after-free immediately.
+Let us also assume the only way for the program to get pointers to heap memory is through {\tt malloc};
+hence, there must also be some ``publish'' action $p$ by T1 which communicates the address to T2.
+Because this is a true potential data race,
+$p$ must occur before $a_1$, as $a_2$ cannot be reordered before $p$.
+
+The proof goal is that a preemption point be identified during T1 between $p$ and $a_1$.
+The publish action must involve some thread communication,
+whether through a shared data structure or message-passing API.
+If locking or message-passing is used, the set of static synchronization preemption points
+(\cref{sec:quicksand-initial-pps})
+suffices to provide one.
+Otherwise, $p$ (and the corresponding read by T2) will be a potential data race,
+although that may itself be another reallocation candidate.
+In this case, apply induction on the chain of pointers, if any, leading to the shared address containing $p$:
+in the base case, $p$ is communicated via global data or message-passing,
+and in the inductive step, DPOR will reorder threads sufficiently to identify a preemption point on $p$.
+% the below feels kinda shaky :\ don't remember exactly how this works
+% but if someone doubts, they can check out the TR
+Note that this induction may result in several possible intermediate preemption points,
+each requiring a new state space to be tested,
+of course, \Cref{thm:convergence} guarantees this under Iterative Deepening.
+Hence there will be a preemption point between $p$ and $a_1$ no matter the mode of communication.
+
+With this preemption point,
+DPOR will reorder $a_2$ before $a_1$, while not changing $a_2$'s location.
+As T2's {\tt malloc} now occurs before T1's {\tt free}, it will allocate different memory.
+Hence $a_1$ and $a_2$ %will be in the same allocation;
+can race without appearing to fall under the reallocation pattern.
+\end{proof}
+
+Note that this proof does not require PPs on
+the internal lock of {\tt malloc} or {\tt free},
+which is an ideal candidate to ignore via {\tt without\_function} (\cref{sec:landslide-pps})
+to reduce state space size.
+Future work may generalize this proof structure to not rely on specific knowledge
+of {\tt malloc()}'s and {\tt free()}'s behaviour,
+but instead to require only any intervening synchronization event,
+thereby extending the overall soundness proof to accomodate Pure Happens-Before as well as Limited Happens-Before.
+The experiments in future chapters of this thesis will assume that this holds.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -763,6 +831,15 @@ And thus Iterative Deepening is sound. % :)
 % cant swap x100 % cite [Inf09] ?
 
 % how is free re malloc implemented in landslide?
+
+Landslide includes a generation counter in its heap allocation tracking (\cref{sec:landslide-memory})
+to recognize the reallocation pattern during data race analysis (\cref{sec:quicksand-id-realloc}).
+Each heap allocation is given a unique ID,
+and when evaluating whether two heap accesses can race,
+the IDs of their containing blocks must match
+({\tt was\_freed\_remalloced()} in {\tt memory.c}).
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
