@@ -555,7 +555,7 @@ will show how many redundant state spaces Quicksand is able to prune with this t
 		6 & & \texttt{y~=~\hilight{olivegreen}{malloc}(sizeof *y);} \\
 		7 & & \texttt{\hilight{brickred}{x2->foo = ...;}} \\
 	\end{tabular}
-	\caption{If a single-pass \revision{Limited HB analysis}~discarded candidates matching the malloc-recycle pattern,
+	\caption{If a single-pass Limited HB analysis discarded candidates matching the malloc-recycle pattern,
 it would miss the bug in this adversarial program.}
 	\label{fig:recycle-bug}
 \end{figure}
