@@ -44,6 +44,15 @@ in OOPSLA 2016 \cite{quicksand}.
 
 % TODO: define "data race" (pure hb) vs "data race candidate" (limited); also do scane of this chapater for conisstencey
 
+% TODO: use this somehow
+Committing in advance to
+preempt on every instruction is certain to expose any possible bug under the given test case,
+but invites massive state space explosion.
+Even as DPOR helps to skip equivalent interleavings of non-conflicting transitions,
+DPOR itself is $O(n^2)$ in the number of preemption points in a single execution,
+which is not compatible with such an approach.
+Accordingly, stateless model checkers must find more efficient ways to be able to uncover bugs such as these.
+
 In related work,
 Portend \cite{portend} has already suggested combining data race analysis with preemption-driven artificial scheduling,
 although it obtains its data-race candidates from a stand-alone, single-pass analysis.
@@ -113,14 +122,14 @@ this suffices to provide at least as strong verification guarantees as any other
 \subsection{Changing state spaces}
 
 To introduce the Iterative Deepening algorithm,
-I will first show a simple approach for handling new PPs in the absence of any CPU budget restriction.
+I will first show a simple approach for handling new preemption points in the absence of any CPU budget restriction.
 
 Given unlimited CPU time for testing,
 one would always want to switch to the new maximal state space whenever adding a new preemption point.
 The maximal state space is guaranteed to subsume all execution sequences reachable in any subset state space,
-so considering any incomplete subset of the known PPs would be duplicate work.
+so considering any incomplete subset of the known preemption points would be duplicate work.
 \Cref{alg:algorithm0} demonstrates this na\"ive approach.
-It is seeded with the set of all statically-known synchronization API PPs,
+It is seeded with the set of all statically-known synchronization API preemption points,
 and invoked whenever a new data-race candidate is found.
 %
 The upcoming proofs in \cref{sec:quicksand-soundness},
@@ -163,7 +172,7 @@ The overall goal is to decide automatically when to defer testing a state space,
 so an inexpert user can provide only her total CPU budget as a test parameter,
 and to enable completing appropriately-sized jobs within that budget.
 Quicksand seeks to maximize completed state spaces,
-as each one serves as a guarantee that all interleavings possible with its PPs were tested;
+as each one serves as a guarantee that all possible interleavings therein were tested;
 \cref{sec:quicksand-discussion} discusses some limitations of this approach.
 The next three subsections will show how to schedule these smaller jobs
 based on their preemption points and ETAs.
@@ -171,6 +180,7 @@ based on their preemption points and ETAs.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Initial preemption points}
+\label{sec:quicksand-initial-pps}
 
 Iterative Deepening must be seeded with a set of initial state spaces,
 which can be any number of subsets of the statically-available preemption points
@@ -263,7 +273,7 @@ but should of course be tested only once.
 	\If{$\forall j \in \AllJobs,$ \GetPPSet{$j$} $\neq \{yield, \alpha\}$}{
 		AddNewJob($\{yield, \alpha\}$, HeuristicPriority($\alpha$))
 	}
-	\caption{Adding new jobs with data-race PPs.}
+	\caption{Adding new jobs with data-race preemption points.}
 	\label{alg:handledatarace}
 \end{algorithm}
 
@@ -287,7 +297,7 @@ see {\tt handle\_data\_race()} in {\tt messaging.c}.}
 %
 The rationale of spawning multiple jobs is that one cannot know in advance which will be most fruitful:
 while the big job risks not completing in time,
-the small job risks missing the data race entirely if the original PPs were required to expose it.
+the small job risks missing the data race entirely if the original preemption points were required to expose it.
 In practice, I have observed many bugs found quickly by these small jobs,
 and many other bugs missed by the small jobs found eventually by the big jobs.
 This phenomenon motivates Iterative Deepening to prioritize jobs at run-time.
@@ -460,7 +470,7 @@ Hence, Quicskand add preemption points for both types of candidates,
 and heuristically prioritizes jobs with both-order data races
 over those with only single-order data races.
 The HeuristicPriority($\alpha$) call in \Cref{alg:handledatarace} corresponds to this strategy.
-For single-order races, Quicksand does not initially add a PP for the later access at all:
+For single-order races, Quicksand does not initially add a preemption point for the later access at all:
 if preempting on the first access is capable of reordering the race,
 it will be updated to both-order in the new state space, and the second preemption point will be added then.
 \cref{sec:warpzone-heuristics} will discuss opportunities for future work to expand
@@ -560,7 +570,7 @@ not previously reachable by preempting on synchronization APIs alone,
 as some prior model checkers do \cite{dbug-ssv},
 but how does it compare to the other extreme end of the trade-off,
 that is,
-committing in advance to preempt on every single shared memory access \cite{inspect}?
+committing in advance to preempt on every single shared memory access \cite{spin,inspect}?
 It turns out,
 assuming sufficient CPU budget,
 Iterative Deepening can in principle expose every possible program behaviour that
@@ -597,15 +607,133 @@ either it will be a false positive,
 or the latter will find it in an alternate execution within the same state space,
 or the latter will find a different data race that ultimately leads to a bigger state space in which the first one may be found.
 
-\subsection{Convergence}
+\subsection{Convergence to total verification}
 \label{sec:quicksand-convergence}
 
+The proof of Iterative Deepening's soundness is in two parts.
+In the first part, I prove that for any possible interleaving
+one could execute with preemptions anywhere,
+an equivalent interleaving must exist using only data-race and synchronization preemption points.
+In the second, I prove that starting from synchronization preemption points only,
+Iterative Deepening must eventually reach a state space containing such an interleaving,
+no matter how many data races are involved.
+
+\newcommand\ppnext[1]{\ensuremath{\mathsf{next}(#1)}}
+\newcommand\ppinstr[1]{\ensuremath{\mathsf{instr}(#1)}}
+\newcommand\ppothers[1]{\ensuremath{\mathsf{others}(#1)}}
+
+Given a preemption point $p$,
+let $\ppnext{p}$ denote the next transition after $p$ executed by the thread which ran immediately before $p$,
+let $\ppinstr{p}$ denote the first instruction of $\ppnext{p}$,
+and let $\ppothers{p}$ denote the transitions by other threads between $p$ and $\ppnext{p}$.
+
+% TODO: decide if these subsection headers are good, or, not
 \subsubsection{Equivalence}
 
-% TODO: decide if this shouldn't be reordered befor econvergence?
+\begin{lemma}[Equivalence of non-data-race preemption points]
+	For any thread interleaving possible by preempting on any instruction,
+	there exists an equivalent interleaving which uses only data-race and synchronization API preemption points.
+        \label{lem:relevant}
+\end{lemma}
+
+\begin{proof}
+Let $p$ be the first preemption point in the given interleaving
+such that $\ppinstr{p}$ is not a data race with $\ppothers{p}$ nor is a synchronization API boundary.
+Because $\ppinstr{p}$ is not a synchronization boundary,
+no lock can be held during $\ppothers{p}$ that was also held by the first thread across $p$.
+Hence, because $\ppinstr{p}$ is not a data race, it cannot be a shared memory conflict with $\ppothers{p}$ at all.
+Let $i$ be the first instruction among $\ppnext{p}$ which is such a conflict, or a synchronization boundary.
+If $i$ is a shared memory conflict, it must be a data race, for the same reasoning as above.
+Modify the input interleaving by reordering $\ppinstr{p}$ until $i$, not including $i$, to before $\ppothers{p}$.
+% TODO: fix this handwavey citation to at least point to something that says what soundness of dpor means
+By the soundness of DPOR \cite{dpor}, this is equivalent to the input interleaving.
+In other words, $p$ has been transformed into $p'$ such that $\ppnext{p'} = i$,
+which is a data race or synchronization boundary.
+All other preemption points in the input trace can be inductively converted in the same manner.
+\end{proof}
+
 \subsubsection{Saturation}
 
-\subsection{Reallocation false positives}
+For Iterative Deepening to ``eventually'' reach a certain state space,
+all data-race preemption points involved must be {\em reachable} during the test.
+
+\begin{definition}[Reachability]
+	A data race candidate, and its associated preemption point(s),
+	are reachable if it will be identified by a model checker
+	configured to preempt only on already-reachable preemption points.
+\end{definition}
+
+Initially, the statically-available synchronization API preemption points (\cref{sec:quicksand-initial-pps})
+are reachable.
+Reachability of data-race preemption points is transitive.
+
+\begin{lemma}[Saturation of data races]
+        Given any interleaving comprising only data-race and synchronization API preemption points,
+        all involved preemption points are reachable.
+        \label{lem:saturation}
+\end{lemma}
+
+\begin{proof}
+Induct on the preemption points according to the order of their preemptions during an execution sequence.
+Given that the interleaving prefix preceding some point $p$ is reachable,
+either $p$ must be reachable,
+or a new data race among $\ppothers{p}$ will be newly reachable. %, not previously reachable, is now reachable.
+The latter condition suffices because in a finitely-sized codebase,
+there must be finitely many unique racing instruction pairs.
+%, so induction on the number of new data-race preemption points among $\ppothers{p}$ will make $p$ itself reachable.
+
+First, $p$ must be ``coalesced'' away, as well as any other not-yet-reachable points in $\ppothers{p}$.
+Consider the alternate interleaving in which the first thread executes past $p$ until the first already-reachable point,
+then the other threads among $\ppothers{p}$ execute the same way.
+This interleaving's preemption points are all reachable,
+so a state space $\mathcal{S}$ containing it will be tested.
+
+If $p$ is a not-yet-reachable data-race preemption point,
+it must be possible for some other thread to execute a data-racing instruction with $\ppinstr{p}$.
+If this conflict was observed in the state space containing our coalesced interleaving, $p$ is reached.
+Otherwise, appeal to the soundness property of DPOR:
+%(\cref{sec:landslide-dpor}): % FIXME ugh, this section reference is so handwavy/imprecise
+If a program behaviour is possible by interleaving threads at the boundaries of the given transitions,
+it will be tested in the containing state space.
+By contrapositive, to expose this behaviour,
+one or more preemptions must occur in the middle of some transition, rather than at the boundaries.
+
+Let us now see by contradiction that there cannot be {\em multiple} data-race preemption points
+which must all be enabled before either data race can be identified;
+i.e., a circular dependency.
+Assume there does not exist a single transition $t_1 \in \mathcal{S}$
+which alone can be split into $\{t_1',t_1''\}$ by a point $q$,
+such that another thread's concurrent transition $t_2$ conflicts with $t_1''$.
+By the soundness of DPOR, because all $t_2$s are independent with $t_1''$, $\mathcal{S} \equiv \mathcal{S} \cup q$.
+Replacing $\mathcal{S}$ with $\mathcal{S} \cup q$ in the above assumption shows that no {\em pair} of new $q$s would expose new program behaviour, and inductively, no set of $q$s of any size, which contradicts the previous paragraph.
+
+Hence, a single new not-yet-reachable data race is reachable in $\mathcal{S}$. Hence $p$ will be reached.
+\end{proof}
+
+\subsubsection{Convergence}
+
+I name the overall soundness property ``convergence''
+in reference to the way it must eventually arrive,
+after potentially many iterated state spaces,
+at full verification strength.
+
+\begin{theorem}[Convergence]
+	If a bug can be exposed by any thread interleaving possible
+	by preempting on all instructions during a specific test,
+	Iterative Deepening will eventually test an equivalent interleaving which exposes the same bug.
+        \label{thm:convergence}
+\end{theorem}
+
+\begin{proof}
+	For any possible interleaving,
+	Lemma \ref{lem:relevant} provides an equivalent one with only data-race and synchronization preemption points,
+	and Lemma \ref{lem:saturation} proves all involved preemption points are reachable.
+	Hence, Iterative Deepening will eventually test a state space containing the equivalent buggy interleaving.
+\end{proof}
+
+And thus Iterative Deepening is sound. % :)
+
+\subsection{Suppressing reallocation false positives}
 \label{sec:quicksand-realloc}
 
 % todo rename "malloc recycle" to "reallocation false positives"
