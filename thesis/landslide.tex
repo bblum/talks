@@ -227,7 +227,8 @@ The following ``secret'' arguments also exist, primarily for my own use in runni
 	\item {\tt -I}: enable Iterative Context Bounding (requires {\tt -C}, although future work may relax this restriction);
 		this generally causes bugs to be found faster should they exist, but degrades completion time
 		(\cref{sec:landslide-icb})
-	\item {\tt -0}: enable Preempt-Everywhere mode (\cref{sec:quicksand-eval}, requires {\tt -C})
+	\item {\tt -0} (numeral zero): enable Preempt-Everywhere mode
+		(\cref{sec:quicksand-impl-modes}, \cref{sec:quicksand-impl-landslide}, requires {\tt -C})
 	\item {\tt -M}: enable Maximal State Space mode,
 		which prioritizes the maximal state space to optimize for fast verification,
 		abandoning all subset jobs even if they might find bugs faster

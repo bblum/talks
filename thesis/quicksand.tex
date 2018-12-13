@@ -1,4 +1,4 @@
-% TODO: scan for abbrs like PP, MC, SSS-MC
+% TODO: scan for abbrs like PP, MC, SSS-MC - well mc is ok but rephrase if necessary anyway
 \chapter{Quicksand}
 \label{chap:quicksand}
 \inspirationalquote{
@@ -37,7 +37,7 @@ in OOPSLA 2016 \cite{quicksand}.
 % for larger test cases, this is not practical
 % consider the example program of so and so (show mx/yield prog)
 % here is a resulting state space
-% this needs a DR PP to FAB
+% this needs a DR preemption point to FAB
 % qs example (take from thesis slides)
 
 % TODO make sure to define maximal and mminnimal
@@ -226,6 +226,7 @@ although this could potentially be improved in future work (\cref{sec:quicksand-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Data-race preemption points}
+\label{sec:quicksand-dr-pps}
 
 As discussed in \cref{sec:quicksand-pps},
 %runtime data race detection (\cref{sec:background-datarace})
@@ -344,6 +345,7 @@ to find a bug that Quicksand was not able to find alone (\cref{sec:education-rea
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Choosing the best job}
+\label{sec:quicksand-choosing}
 
 With a limited CPU budget, many larger tests are likely to be fail to complete in time,
 and smaller tests are likely to be more fruitful at finding bugs quickly.
@@ -439,6 +441,7 @@ in order to avoid repeatedly resuming larger jobs briefly only to find that thei
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Heuristics}
+\label{sec:quicksand-heuristics}
 
 As predicting the ETAs of state spaces of unknown size
 and using that plus size of a set of preemption points as a proxy for how likely a job is to find bugs or complete
@@ -712,7 +715,7 @@ which alone can be split into $\{t_1',t_1''\}$ by a point $q$,
 such that another thread's concurrent transition $t_2$ conflicts with $t_1''$.
 By the soundness of DPOR, because all $t_2$s are independent with $t_1''$, $\mathcal{S} \equiv \mathcal{S} \cup q$.
 Replacing $\mathcal{S}$ with $\mathcal{S} \cup q$ in the above assumption shows that no {\em pair} of new $q$s would expose new program behaviour, and inductively, no set of $q$s of any size, which contradicts the previous paragraph.
-
+%
 Hence, a single new not-yet-reachable data race is reachable in $\mathcal{S}$. Hence $p$ will be reached.
 \end{proof}
 
@@ -737,8 +740,7 @@ at full verification strength.
 	Hence, Iterative Deepening will eventually test a state space containing the equivalent buggy interleaving.
 \end{proof}
 
-% And thus Iterative Deepening is sound. % :)
-This spells QED so we are done \cite{vargomax}. % even more :)))
+And thus Iterative Deepening is sound. % :)
 
 \subsection{Suppressing reallocation false positives}
 \label{sec:quicksand-realloc}
@@ -796,7 +798,8 @@ Hence $a_1$ and $a_2$ %will be in the same allocation;
 can race without appearing to fall under the reallocation pattern.
 \end{proof}
 
-Note that this proof does not require PPs on
+This spells QED so we are done \cite{vargomax}. % even more :)))
+Note that this proof does not rely on the existence of preemption points on
 the internal lock of {\tt malloc} or {\tt free},
 which is an ideal candidate to ignore via {\tt without\_function} (\cref{sec:landslide-pps})
 to reduce state space size.
@@ -813,33 +816,333 @@ The experiments in future chapters of this thesis will assume that this holds.
 \section{Implementation}
 \label{sec:quicksand-implementation}
 
-% TODO: add -M flag discussion
+Quicksand is an independent program that wraps the execution of several stateless model checker instances.
+It is expected that Landslide be this checker,
+but any other tool which implements the same messaging interface would be compatible as well.
+The implementation is roughly 3000 lines of C.
+All source files mentioned in this section live in the {\tt id/} subdirectory of the Landslide repository,
+with the exception of the Landslide extensions listed last.
+As \Cref{chap:landslide} was in some sense a developer's guide to Landslide,
+this section will serve similarly for Quicksand.
 
-% TODO: cant swap x100
+\subsection{User interface}
 
-% TODO: put a code snippet of what ap rogress report looks like (take from some htm log)
+The available command-line options for configuring its
+CPU-time budget, exploration modes, and so on
+are listed in \cref{sec:landslide-quicksand-options}.
+Additionally, Quicksand periodically issues a progress report
+at fixed intervals to inform the user on the completion, bug-finding, and/or estimated progress of each job.
+\Cref{fig:quicksand-progress} shows an example.
+I highlight a few notable features of the jobs therein
+to serve as a concrete example that may cement the reader's intuition
+of \cref{sec:quicksand-id}'s more abstract algorithm descriptions:
+\begin{itemize}
+	\item Jobs 0, 1, 2, and 3 are the initially-seeded state spaces (\cref{sec:quicksand-initial-pps}).
+	\item Job 2 reports a bug found, and shows the filename of the HTML preemption trace
+		(\cref{sec:landslide-bugreport}, \Cref{fig:bugreport})
+		which the user should examine to diagnose it.%
+		\footnote{I actually cheated by copy/pasting this job alone from a different run of Quicksand;
+		the other jobs come from a test with the bug already fixed,
+		in order that exploration progress far enough to defer some jobs for the sake of example.
+		In a real execution, jobs 3, 5, 7, 8, 9, and 11 would be cancelled.}
+	\item Jobs 4 and 6 are the ``small'' jobs added to test the two data races in isolation;
+		5 and 7 are the corresponding ``large'' jobs (\cref{sec:quicksand-dr-pps}).
+	\item Job 11 is the maximal state space, containing all synchronization preemption points
+		and both currently-known data races.
+	\item The intermediate jobs 8, 9, and 10 have been suspended for having ETAs
+		at least twice as large as the provided CPU budget (1 hour),
+		according to the ETA scaling factor heuristic (\cref{sec:quicksand-heuristics}).
+	\item Note that job 11's ETA is currently lower than 8's, 9's, and 10's, despite being a strict superset of each.
+		This corresponds to the surprising ETA inversion situation discussed in \cref{sec:quicksand-choosing}:
+		Quicksand simply hasn't made as much progress into job 11 (compare their percentage estimates rather than ETAs)
+		for its ETA to be accurate enough yet.
+\end{itemize}
+Future work could extend these progress reports to be more interactive,
+allowing the user to reprioritize state spaces at her whim
+or to disable certain data-race preemption points after checking them by hand,
+as discussed in \cref{sec:future-friendly}.
 
-% this section developers guide to quicksand
+% TODO: syn hi
+\begin{figure}[t]
+	\begin{center}
+		\footnotesize
+	\begin{tabular}{l}
+			% version from buggy run
+		%\texttt{==== PROGRESS REPORT ====} \\
+		%\texttt{total time elapsed: 40s} \\
+		%\texttt{[JOB 0] COMPLETE (4 interleavings tested; 7s elapsed)} \\
+		%\texttt{       PPs: \{ \}} \\
+		%\texttt{[JOB 1] Running (10.677083\%; ETA 2m 15s)} \\
+		%\texttt{       Log: id/ls-output.log.ujrk9U -- PPs: \{ 'mutex\_lock' \}} \\
+		%\texttt{[JOB 2] BUG FOUND: landslide-trace-1544661430.29.html (51 interleavings tested; 1 preemptions)} \\
+		%\texttt{       Log of lprintf()s: id/ls-setup.log.7UMGLr} \\
+		%\texttt{       Log: id/ls-output.log.3Ol8rG -- PPs: \{ 'mutex\_unlock' \}} \\
+		%\texttt{[JOB 3] CANCELLED} \\
+		%\texttt{       PPs: \{ 'mutex\_lock' 'mutex\_unlock' \}} \\
+		%\texttt{[JOB 5] COMPLETE (4 interleavings tested; 7s elapsed)} \\
+		%\texttt{       PPs: \{ 'data race 5@ 0x1000ec5' \}} \\
+		%\texttt{[JOB 13] Setting up...} \\
+		%\texttt{       PPs: \{ 'data race 6@ 0x1000ec5' \}} \\
+		%\texttt{[JOB 14] Pending...} \\
+		%\texttt{       PPs: \{ 'mutex\_unlock' 'data race 6@ 0x1000ec5' \}} \\
+		%\texttt{=========================} \\
 
-% job
-% messaging
-% work
-% option
-% pp
+		\texttt{==== PROGRESS REPORT ====} \\
+		\texttt{total time elapsed: 2m 52s} \\
+		\texttt{[JOB 0] COMPLETE (4 interleavings tested; 7s elapsed)} \\
+		\texttt{~~~~PPs: \{ \}} \\
+		\texttt{[JOB 1] Running (21.932870\%; ETA 8m 14s)} \\
+		\texttt{~~~~ PPs: \{ 'mutex\_lock' \}} \\
+		% version that came from the actual test
+		%\texttt{[JOB 2] Running (46.373457\%; ETA 4m 35s)} \\
+		%\texttt{~~~~ PPs: \{ 'mutex\_unlock' \}} \\
+		\texttt{[JOB 2] BUG FOUND: landslide-trace-1544661430.29.html (51 interleavings tested)} \\
+		%\texttt{~~~~Log of lprintf()s: id/ls-setup.log.7UMGLr} \\
+		\texttt{~~~~ PPs: \{ 'mutex\_unlock' \}} \\
+		\texttt{[JOB 3] Running (9.852431\%; ETA 24m 32s)} \\
+		\texttt{~~~~ PPs: \{ 'mutex\_lock' 'mutex\_unlock' \}} \\
+		\texttt{[JOB 4] COMPLETE (6 interleavings tested; 9s elapsed)} \\
+		\texttt{~~~~PPs: \{ 'data race @ 0x102917' \}} \\
+		\texttt{[JOB 5] Running (3.710938\%; ETA 1h 2m 14s)} \\
+		\texttt{~~~~ PPs: \{ 'mutex\_lock' 'mutex\_unlock' 'data race @ 0x102917' \}} \\
+		\texttt{[JOB 6] COMPLETE (4 interleavings tested; 8s elapsed)} \\
+		\texttt{~~~~PPs: \{ 'data race @ 0x1000ecf' \}} \\
+		\texttt{[JOB 7] Running (6.119792\%; ETA 33m 14s)} \\
+		\texttt{~~~~ PPs: \{ 'mutex\_lock' 'mutex\_unlock' 'data race @ 0x1000ecf' \}} \\
+		\texttt{[JOB 11] Running (3.670247\%; ETA 50m 16s)} \\
+		\texttt{~~~~ PPs: \{ 'mutex\_lock' 'mutex\_unlock' 'data race @ 0x102917' 'data race @ 0x1000ecf' \}} \\
+		\texttt{[JOB 8] Deferred... (33.340567\%; ETA 2h 6m 3s)} \\
+		\texttt{~~~~ PPs: \{ 'mutex\_unlock' 'data race @ 0x102917' \}} \\
+		\texttt{[JOB 9] Deferred... (34.466226\%; ETA 2h 35m 37s)} \\
+		\texttt{~~~~ PPs: \{ 'mutex\_unlock' 'data race @ 0x1000ecf' \}} \\
+		\texttt{[JOB 10] Deferred... (11.113790\%; ETA 4h 20m 31s)} \\
+		\texttt{~~~~ PPs: \{ 'mutex\_lock' 'data race @ 0x102917' \}} \\
+		% no, i deleted all of them pretending the other data races dont exist
+		%\texttt{And 63 more pending jobs should time allow.} \\
+		\texttt{=========================} \\
+	\end{tabular}
+	\end{center}
+	\caption{Example Quicksand progress report showing the various possible job states.}
+	\label{fig:quicksand-progress}
+\end{figure}
 
-% cool tricks
-% cant swap x100 % cite [Inf09] ?
+Besides the progress reports, Quicksand also prints a notice for each new data race that Landslide detects,
+like so, corresponding to the above progress report, for example:
+\begin{center}
+	%{\tt Found a racy access at 0x0100006f in txn (410user/progs/htm2.c:47)}
+	\begin{tabular}{l}
+	{\tt Found a racy access at 0x00102917 in deschedule <unknown>} \\
+	{\tt Found a racy access at 0x01000ecf in cond\_signal (cond.c:101)}
+	\end{tabular}
+\end{center}
+If using Limited Happens-Before instead of Pure,
+it prints ``potentially-racy access'' instead.
+This is implemented in {\tt pp\_new()} in {\tt pp.c}.
+If the CPU budget runs out and Quicksand must stop exploring prematurely
+(or the user's patience runs out and she interrupts it with ctrl-C),
+it prints a final report of all data races it was not able to finish classifying as either buggy or benign,
+and urges the user to finish checking them with visual inspection
+({\tt print\_live\_data\_race\_pps()} in {\tt pp.c}).
+It is this feature which one respondent in the student user survey (\cref{sec:education-reasons-worthwhile})
+credited for finding an extra bug.
 
-% how is free re malloc implemented in landslide?
+If the verbose option ({\tt -v}) is supplied,
+Quicksand will also print one line per interleaving tested by all its Landslide instances,
+showing the number of branches tested so far, the estimated percent progress, and the ETA,
+as shown earlier in \cref{sec:landslide-estimate}.
+This produces a lot more output, and can make progress reports hard to read as they scroll off the screen quickly,
+but the author personally finds this mode less disorienting than ten seconds of pure silence between each progress report.
+Of course, future work could improve this with a GUI, or at least a split-screen console view.
+It will also cause the progress reports to report more detailed information,
+such as which preemption points are nondeterministic data-races (\cref{sec:quicksand-pps})
+and number of reallocation false positives suppressed (\cref{sec:quicksand-id-realloc}).
 
-Landslide includes a generation counter in its heap allocation tracking (\cref{sec:landslide-memory})
-to recognize the reallocation pattern during data race analysis (\cref{sec:quicksand-id-realloc}).
+\subsection{Model checker interface}
+\label{sec:quicksand-impl-mc}
+
+The interface with the model checker has two parts.
+First, when starting each job, Quicksand creates a configuration file declaring which preemption points to use,
+plus other test-case-specific options such as
+which preemption points to suppress (\cref{sec:landslide-pps}),
+especially those arising from the {\tt malloc} lock (\cref{sec:quicksand-realloc}),
+which functions DPOR and data-race analysis should treat as trusted code (\cref{sec:landslide-config-landslide}),
+whether to enable mutex-testing mode (\cref{sec:landslide-dynamicconfig}),
+transactional memory (\cref{sec:tm-implementation}),
+and so on.
+This is done by {\tt run\_job()} in {\tt job.c}.
+
+Then, a dedicated Quicksand thread
+({\tt start\_job()} in {\tt job.c})
+communicates with the MC process via message-passing
+over a FIFO pipe % not gonna cite io.c c.c
+({\tt talk\_to\_child()} in {\tt messaging.c}).
+Landslide messages after testing each interleaving to report updated progress and ETAs
+as well as whenever a new data-race candidate or bug is found.
+Quicksand in turn replies whether to resume/suspend (due to too high ETA) or quit (due to timeout)
+({\tt handle\_should\_continue()} in {\tt messaging.c}).
+It suspends jobs simply by making Landslide wait on a message-passing reply.
+Should Quicksand later re-schedule a suspended job, it sends a message to continue,
+resuming Landslide right where it left off;
+otherwise, it wakes it up only after time runs out, causing it to exit immediately.
+The message-passing format is defined at the top of {\tt messaging.c},
+and a matching definition appears in Landslide's source file of the same name.
+
+\subsection{Architecture}
+
+Quicksand's overall architecture is a thread pool of workers,
+one for each CPU it was configured to use with {\tt -c} (\cref{sec:landslide-quicksand-options}).
+These threads do not correspond directly to each active instance of Landslide,
+as some may be deferred;
+rather, each worker thread links up temporarily to a job thread, whose duties the previous paragraph describes,
+and process them as the overall work-queue of state spaces to be tested demands.
+Following is a brief description of each of Quicksand's major modules.
+
+\begin{itemize}
+	\item {\bf Job management} ({\tt job.c}):
+		Contains the lifecycle code for job threads,
+		generation of Landslide configuration files,
+		and Linux process management code to launch child Landslide instances ({\tt run\_job()}).
+	\item {\bf Messaging} ({\tt messaging.c}):
+		Manages communication with child Landslides ({\tt talk\_to\_child()},
+		implementing certain aspects of Iterative Deepening,
+		creating new jobs in response to data race reports ({\tt handle\_data\_race()})
+		and deferring too-big jobs in reponse to ETA updates  ({\tt handle\_estimate()}).
+	\item {\bf Preemption point registry} ({\tt pp.c}):
+		Tracks the set of known synchronization primitives (initialized by main)
+		and data races ({\tt pp\_new()}),
+		including set comparison routines ({\tt pp\_subset()})
+		and computing a job's priority based on the types of included preemption points ({\tt unexplored\_priority()}).
+	\item {\bf Workqueue} ({\tt work.c}):
+		Implements the per-CPU worker threads,
+		including the check for whether to switch priority from one job to another
+		(\Cref{alg:shouldworkblock}, {\tt should\_work\_block()} and {\tt get\_job()}),
+		as well as managing the shared workqueue of jobs overall ({\tt workqueue\_thread()}).
+		Also implements the fixed-interval progress reporting ({\tt progress\_report\_thread()}).
+	\item {\bf Bugs} ({\tt bug.c}):
+		Tracks a list of found bugs for main to repeat at program exit,
+		and implements the check for superset state spaces to be cancelled if a subset already found a bug
+		({\tt bug\_already\_found()}).
+	\item {\bf Options} ({\tt option.c}):
+		Processes command-line options,
+		checking for legality of various combinations of exploration modes.
+		New options may be added with the convenient, if scarily-implemented,
+		macros {\tt DEF\_CMDLINE\_FLAG()} and {\tt DEF\_CMDLINE\_OPTION()}.
+	\item {\bf Main} ({\tt main.c}):
+		Initializes the default state spaces,
+		waits for worker threads to terminate after either completion or time-out,
+		and issues a final list of bug reports, data race reports, or congratulations as appropriate.
+\end{itemize}
+
+Finally, because in very large tests,
+the number of suspended Landslide instances may grow without abatement,
+Quicksand checks every progress report interval whether the memory footprint of these inactive Landslides
+pose a threat to the system's total memory.
+Implemented in {\tt cant\_swap()} \cite{cant-stop} in {\tt work.c},
+it checks if the system's memory usage exceeds a fixed percentage of its total
+({\tt RAM\_USAGE\_DANGERZONE}, default 90),
+and if so,
+abandons a fixed percentage of suspended Landslides
+({\tt KILL\_DEFERRED\_JOBS}, default 50).
+%
+Generally, the currently-running Landslide instances should never threaten to hit swap,
+as there can only be as many of those as CPUs,
+but this also accounts for memory used by other processes,
+so this is not guaranteed to avoid swapping on a heavily-stressed system
+(such as running multiple Quicksands at once).
+Naturally, if Quicksand ever needs to invoke this protocol,
+any hope at a total verification is compromised.
+
+\subsection{Exploration modes}
+\label{sec:quicksand-impl-modes}
+
+In addition to Iterative Deepening,
+which Quicksand defaults to if no options are given to specify otherwise,
+Quicksand also supports several alternate exploration strategies, as follows.
+
+\begin{itemize}
+	\item {\bf Single state space, basic DPOR} ({\tt -C}):
+		Runs a single instance of Landslide configured to preempt on all statically-known synchronization PPs.
+		Corresponds to dBug's approach \cite{dbug-ssv}.
+		Never adds any new preemption points based on data race reports.
+	\item {\bf Single state space, ICB} ({\tt -I}):
+		Runs a single instance of Landslide with preemption points as above,
+		but running Iterative Context Bounding with BPOR (\cref{sec:landslide-icb})
+		instead of plain DPOR.
+		Corresponds to Chess's approach \cite{chess}.
+		Requires either {\tt -C} or {\tt -M} (see below).
+	\item {\bf Single state space, preempt-everywhere} ({\tt -0}, i.e., numeral zero):
+		Runs a single instance of Landslide as above,
+		but preempting on every shared memory access, not just synchronization.
+		Corresponds to the approach of SPIN \cite{spin} and Inspect \cite{inspect}.
+		May optionally be combined with {\tt -I}.
+	\item {\bf Maximal state space mode} ({\tt -M})
+		Runs the na\"{i}ve version of Iterative Deepening shown in \Cref{alg:algorithm0},
+		i.e.,
+		immediately abandons any state space whenever a superset of it exists.
+		This results in always testing the maximal state space only, with no inherent parallelism,
+		and optimizes for the fastest verification when the user has reason to believe no bugs will exist.
+		No prior work implements this approach.
+		Note that this mode was implemented after \cite{quicksand}'s publication,
+		and I will feature it in the evaluation of transactional memory
+		(\cref{sec:tm-eval}) rather than in this chapter.
+\end{itemize}
+
+Note that Quicksand restricts ICB to be usable only in modes when it is running only one Landslide at a time.
+ICB is itself a heuristic search ordering strategy to uncover bugs faster,
+so while technically easy to run Iterative Deepening with all jobs thereunder running ICB,
+that would suffer both approaches' repeated work compounded.
+\cref{sec:warpzone-heuristics} discusses integrating the two approaches to hopefully reap the benefits of both.
+However, maximal state space mode does support ICB,
+as the former focuses on verification only,
+but if the result is a time-out,
+the user may find an ICB-style preemption-bounded partial verification useful.
+
+\subsection{Landslide extensions}
+\label{sec:quicksand-impl-landslide}
+
+I have added several features to Landslide specifically for use under Quicksand.
+Source files mentioned in this subsection live under the usual Landslide source directory.
+
+The other end of the messaging protocol (\cref{sec:quicksand-impl-mc})
+is implemented in {\tt messaging.c}.
+When Quicksand suspends Landslide,
+it detects how much time it spent asleep,
+and corrects for that amount during its next ETA computation ({\tt fudge\_time()} in {\tt estimate.c}).
+Landslide's data race analysis also includes a heuristic to avoid reporting ``too suspicious''
+data-race candidates which it believes arise from the initialization pattern \cite{eraser}:
+if a conflicting access pair is single-order (\cref{sec:quicksand-heuristics})
+and also arose during a known synchronization API's {\tt init()} or {\tt destroy()} function,
+Landslide will not message it to Quicksand,
+at least not until it is reclassified as both-order.
+
+To recognize the reallocation pattern
+discussed in \cref{sec:quicksand-id-realloc}
+during data race analysis,
+Landslide includes a generation counter in its heap allocation tracking (\cref{sec:landslide-memory}).
 Each heap allocation is given a unique ID,
 and when evaluating whether two heap accesses can race,
 the IDs of their containing blocks must match
-({\tt was\_freed\_remalloced()} in {\tt memory.c}).
+({\tt was\_freed\_remalloced()} in {\tt memory.c}),
+in addition to the other requirements of Happens-Before.
 
-
+Preempt-everywhere mode (\cref{sec:quicksand-impl-modes})
+imposes a heavy burden on Landslide on account of the sheer number of preemption points involved.
+First of all, because there are separate tracing entrypoints for memory accesses and instructions ({\tt instrument.c}),
+it cannot simply invoke the checkpointing routine (\cref{sec:landslide-timetravel}) immediately.
+Also, we must still exclude thread-local and kernel (if testing userspace) or user (if testing kernelspace) accesses.
+Rather,
+the memory analysis (\cref{sec:landslide-memory}) invokes
+{\tt maybe\_preempt\_here()} in {\tt pp.c}
+for every access it would ordinary record for DPOR.
+If the access is outside of the current stack frame,
+and not part of the mutexes (unless {\tt TESTING\_MUTEXES}),
+this sets a scheduler action flag {\tt preempt\_for\_shm\_here}
+which makes preemption point identification treat it the same as a data race (\cref{sec:landslide-pps}).
+{\tt check\_withins()} is also modified to never switch to allowlist mode.
+Finally,
+Landslide increases its heuristic constant for infinite loop detection (\cref{sec:landslide-infloop})
+on the first interleaving from 4000 to $2^{20}$,
+to account for the increased orders of magnitude in state space size.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
