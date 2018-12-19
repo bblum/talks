@@ -81,8 +81,10 @@ they must beseech the driver to turn the key again!
 If they had pulled the handle any later, it would have opened as normal;
 any earlier, and it would have been as though not having the key at all,
 but would at least have unlocked properly at the first turn of the key later.
-This violation of expected behaviour -- that the key need not be turned twice --
-is a {\em bug},
+One would reasonably expect to never have to turn the key more than once,
+so this violation of expected behaviour is a {\em bug},
+% more ambiguous version pointed out by garth
+%This violation of expected behaviour -- that the key need not be turned twice -- is a {\em bug},
 and its dependence on the two travelers' actions {\em interleaving}
 %with the driver's actions
 in a particular way
@@ -210,6 +212,8 @@ as a modern verification technique
 that can meet realistic human needs.
 My thesis statement is as follows:}
 
+\vspace{0.75em}
+
 \begin{center}
 \begin{tabular}{p{0.8\textwidth}}
 	\revisionminor{{\em Combining %both
@@ -235,11 +239,11 @@ The first half of the statement will serve as the overarching theme of this work
 that as impossible a problem as perfect formal verification may be,
 one may still hope to achieve meaningful test results
 using an algorithm that knows its own limits,
-and compensates for them with heuristics informed by user's own human intuition.
-The second half of the statement can be broken down into three parts,
+and compensates for them with heuristics informed by the user's own human intuition.
+The second half of the statement can be broken down into three parts:
 coping with exponential explosion,
 helping students,
-and addressing modern concurrency models,
+and addressing modern concurrency models;
 which correspond to the three major contributions of this thesis, as follows:}
 
 \begin{enumerate}
@@ -272,7 +276,7 @@ which correspond to the three major contributions of this thesis, as follows:}
 		In the two most recent semesters, I collaborated with Operating Systems course staff at the University of Chicago,
 		\revisionminor{which uses Pintos,
 		and at The Pennsylvania State University,
-		which has recently adopted CMU's thread library project,}
+		which recently adopted CMU's thread library project,}
 		to provide
 		%debugging feedback to their students.
 		\revisionminor{their students an opportunity to benefit from Landslide as well.}
@@ -311,7 +315,7 @@ that may soften the blow of these 200+ pages.}
 
 I have tried to make this document accessible to readers of all programming experience levels,
 although some of the research being theoretical and several layers of abstractions deep,
-I cannot promise all easy reading.
+I cannot promise easy reading to all.
 \Cref{chap:background}, Background, provides what I hope are friendly concrete examples
 to help the reader feel comfortable with each level of intuition that upcoming algorithms will build upon.
 These should suffice for the experiments and overall contributions,
@@ -354,6 +358,16 @@ individual students who participated in the user studies,
 as well as
 on the author themself,
 who would also prefer them for any third-person reference by you.
+
+\subsubsection{Fonts}
+
+The body of this thesis is set in Bitstream Charter,
+the monospace font is Inconsolata,
+the epigraph font is Alexa, %Std.
+the Japanese font is Heisei Mincho, %Std W5.
+and
+the Arabic font is Amiri. %Regular.
+%The SIGBOVIK font is Birbaslo.
 
 \subsubsection{Code}
 
