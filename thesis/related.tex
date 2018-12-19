@@ -75,7 +75,8 @@ written in the specification language TLA+ \cite{tlaplus},
 and is arguably one of the only true concurrency {\em model checkers}
 as it checks specifications separate from the programs themselves
 %using explicit state tracking,
-rather than attempting to exhaustively exercise every thread interleaving directly.
+rather than attempting to exhaustively exercise every thread interleaving directly
+(see \cref{sec:glossary}).
 %
 D\'{e}j\`{a} Fu \cite{dejafu} is a model checker
 for the Haskell language,
@@ -396,10 +397,6 @@ This suggests motivating students with Landslide's verification guarantee,
 although it is tricky to avoid accientally encouraging % oops
 them to limit possible interleavings by just using one global lock for everything,
 which is counter to 15-410's educational goals.
-
-% TODO: more papers to look up:
-% Tool Design and Student Testing Behavior in an Introductory Java Course
-% Testing Strategies for the Automated Grading of Student Programs
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
