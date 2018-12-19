@@ -98,7 +98,8 @@ deferring these exceptions beyond the scope of this work.
 We refer to an execution trace depicting the global sequence of events as a {\em thread interleaving} or {\em schedule}.
 
 \subsubsection{Shared state}
-When a programming language offers multithreaded parallelism but forbids access to any shared state between threads \cite{rust-book},
+When a programming language offers multithreaded parallelism but forbids access to any shared state between threads
+\cite{erlang,rust-book},
 the simultaneity of threads is largely irrelevant to the program's behaviour.
 However, ``thread-unsafe'' languages such as C, C++, Java, and so on remain popular,
 in which threads may access global or heap-allocated variables and data structures with no enforced access discipline.
@@ -131,7 +132,7 @@ and infinite loops (which must be identified heuristically \cite{entscheidungspr
 		\begin{tabular}{p{0.45\textwidth}p{0.5\textwidth}}
 			{\small
 			\begin{tabular}{l}
-				\texttt{\ctype{int} x;} \\
+				\texttt{\ctype{int} x = \const{0};} \\
 				\texttt{\ctype{void} \call{count}() \{} \\
 				\texttt{~~~~\call{for} (\ctype{int} i = \const{0}; i < \const{1000}; i++)} \\
 				\texttt{~~~~~~~~x++;} \\
@@ -506,6 +507,7 @@ In \Cref{fig:hb-example}, the pairs of lines marked with comments (A1 and A2, B1
 	\begin{center}
 \begin{tabular}{c}
 \begin{tabular}{rll}
+	\\
 	& \multicolumn{2}{c}{\texttt{\ctype{int} x = \const{0}; \ctype{bool} y = \const{false}; \ctype{mutex\_t} mx;}} \\
         \\
         & {\bf Thread 1} & {\bf Thread 2} \\
@@ -610,7 +612,7 @@ the first two are individual, and the remaining three are the products of two-pe
 I will focus on the third and fourth of these, the thread library and kernel,
 called ``P2'' and ``P3'' respectively (the project numbers start at 0).
 The other three (a stack-crawling backtrace utility, a bare-metal game with device drivers, and a small extension to the P3 kernel) are not of concern in this thesis.
-The course's prerequisite is 15-213, Introduction to Computer Systems \cite{csapp,sigcse01:CSaPP}.
+The course's prerequisite is 15-213, Introduction to Computer Systems \cite{sigcse01:CSaPP,csapp}.
 Both P2 and P3 are built using the {\em Pebbles} system call specification, outlined in \Cref{tab:syscalls}.
 
 \begin{table}
@@ -672,8 +674,8 @@ which is distributed as an obfuscated binary to protect the subsequent challenge
 The required concurrency primitives \revisionminor{for P2} are as follows:
 \begin{itemize}
 	\item Mutexes, with the interface {\tt mutex\_lock(mp)} and {\tt mutex\_unlock(mp)}, whose functionality is described earlier this chapter. Students may use any x86 atomic instruction(s) they desire, such as {\tt xchg}, {\tt xadd}, or {\tt cmpxchg}, and/or the {\tt deschedule}/ {\tt make\_runnable} system calls offered by the reference kernel.
-	\item Condition variables, with the interface {\tt cond\_wait(cvp, mp)}, {\tt cond\_signal} {\tt (cvp)}, and {\tt cond\_broadcast(cvp)}. {\tt cond\_wait} blocks the invoking thread, ``simultaneously'' releasing a mutex which protects some associated state (atomically, with respect to other calls to signal or broadcast under that mutex).
-		{\tt cond\_signal} and {\tt cond\_broadcast} wake one or all waiting threads.
+	\item Condition variables, with the interface {\tt cond\_wait(cvp, mp)}, {\tt cond\_signal(cvp)}, and {\tt cond\_broadcast(cvp)}. {\tt cond\_wait()} blocks the invoking thread, ``simultaneously'' releasing a mutex which protects some associated state (atomically, with respect to other calls under the same mutex).
+		{\tt cond\_signal()} and {\tt cond\_broadcast()} wake one or all waiting threads.
 		Students must use the {\tt deschedule} and {\tt make\_runnable} system calls to implement blocking (busy-waiting is forbidden), and typically include an internal mutex to protect the condition variable's state as well.
 		The primary challenge of this exercise is ensuring the aforementioned atomicity between {\tt cond\_wait}'s unlock and deschedule, with respect to the rest of the interface.
 	\item Semaphores, with the interface {\tt sem\_wait(sp)} and {\tt sem\_signal(sp)}
@@ -683,7 +685,7 @@ The required concurrency primitives \revisionminor{for P2} are as follows:
 		later often explained as {\em proberen} and {\em verhogen}}).
 		The semaphore can be initialized to any integer value; if initialized to 1, it behaves like a mutex.
 		Students typically implement semaphores using mutexes and condition variables, not using atomic instructions or system calls directly.
-	\item Reader-writer locks (rwlocks), with the interface {\tt rwlock\_lock(rwp, mode)} and {\tt rwlock\_unlock(rwp)}. {\tt mode} may be either {\tt RWLOCK\_READ} or {\tt RWLOCK\_\allowbreak{}WRITE}.
+	\item Reader-writer locks (also R/W-locks or rwlocks), with the interface {\tt rwlock\_lock(rwp, mode)} and {\tt rwlock\_unlock(rwp)}. {\tt mode} may be either {\tt RWLOCK\_READ} or {\tt RWLOCK\_\allowbreak{}WRITE}.
 		Behaves as mutexes, but multiple readers may access the critical section simultaneously.
 		Students typically implement rwlocks using mutexes and condition variables, not using atomic instructions or system calls directly.
 \end{itemize}
@@ -708,7 +710,7 @@ Finally, students also implement automatic stack growth using the {\tt swexn} sy
 In P3, students implement a kernel which provides the same system calls shown in \Cref{tab:syscalls}, previously provided by the reference kernel.
 Pebbles adopts the Mach \cite{DBLP:conf/usenix/AccettaBBGRTY86} distinction between {\em tasks}, which are resource containers, and {\em threads}, each of which executes within a single task.
 This requires less implementation complexity than the more featureful
-\revisionminor{{\tt rfork} model, of Plan 9 \cite{Pike90plan9}, or the {\tt clone} model, of Linux}.
+\revisionminor{{\tt rfork} model of Plan 9 \cite{Pike90plan9}, or the {\tt clone} model of Linux}.
 
 Although the interfaces are not mandated \revisionminor{as} they were in P2, all Pebbles kernels must necessarily contain the same abstract components. These include:
 \begin{itemize}
@@ -819,7 +821,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		In distributed systems, each machine is an actor.
 	\item {\bf API.}
 		\revisionminor{Short for ``application programming interface'' (which nobody ever says).}
-		The set of function signatures which comprise the interface to a body of code.
+		A set of function signatures which comprise the interface to a body of code.
 		For example, the standard {\em mutex} API consists of
 		{\tt mutex\_init()}, {\tt mutex\_lock()}, {\tt mutex\_unlock()},
 		and optionally {\tt mutex\_trylock()} and {\tt mutex\_destroy()}.
@@ -842,7 +844,9 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		however, this thesis checks programs at the executable level and assumes {\em sequential consistency},
 		so all data races that still result in bugs (e.g., unprotected {\tt x++})
 		must technically also be atomicity violations.
-		Also, this thesis is focused on identifying failures, not root causes,
+		Also, this thesis is focused on identifying failures,
+		leaving root cause diagnosis to the user,
+		%not root causes,
 		so will simply avoid the term entirely.
 	\item {\bf Benign.}
 		Said of a {\em data race}, or of {\em nondeterministic} behaviour in general,
@@ -889,7 +893,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		(\cref{sec:quicksand-soundness}).
 	\item {\bf Deadlock.}
 		An execution state among a set of N {\em threads},
-		where each thread is blocked waiting for an event that can be caused only by another thread in the set
+		where each is blocked waiting for an event that can be caused only by another thread in the set
 		\cite{deadlock}.
 		May arise either deterministically or concurrently; {\em Landslide} considers it a bug in any case.
 	\item {\bf Deterministic bug.}
@@ -1044,10 +1048,10 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		The educational kernel architecture used in \uchos at the University of Chicago,
 		as well as several other universities. See \cref{sec:overview-pintos}.}
 	\item {\bf pthreads.}
-		Thread library for Linux programs provided by POSIX.
+		POSIX thread library for Linux programs. %provided by POSIX.
 		\revision{The modern pthreads model traces its lineage back to
-		Mach's C threads \cite{mach-c-threads}
-		and DEC's Systems Research Center threads \cite{src-threads},
+		DEC's Systems Research Center threads \cite{src-threads}
+		and Mach's C threads \cite{mach-c-threads},
 		and is now specified by ISO/IEC/IEEE \cite{iso-posix}.}
 	\item {\bf Preemption.}
 		The act of interrupting one thread's execution to force a context switch to another.
