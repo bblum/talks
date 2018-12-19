@@ -68,7 +68,7 @@ I will refer to data races that require model checking to expose to begin with a
 In the next section,
 \cref{sec:quicksand-id} will show how I achieve this in Quicksand, and
 \cref{sec:quicksand-soundness} will justify the technique's formal verification power.
-In the evaluation (\cref{sec:quicksand-eval}),
+In the evaluation, %(\cref{sec:quicksand-eval}),
 \cref{sec:quicksand-eval-nondets} in particular will justify the need
 for this feedback loop between model checking and data race analysis
 by showing that many bugs require nondeterministic data races to expose.
@@ -85,8 +85,8 @@ I have developed an algorithm called {\em Iterative Deepening},
 implemented in a wrapper program specific to Landslide called {\em Quicksand}.
 Named after the analogous technique in chess artificial intelligence \cite{iterative-deepening-chess-ai},
 Iterative Deepening
-is a search strategy,
-for exponentially-sized state spaces in general,
+is a search strategy
+for exponentially-sized state spaces, in general,
 which
 makes progressively deeper searches of the state space until the CPU budget is exhausted.
 In this context, the depth roughly corresponds to the subset of preemption points used.
@@ -105,7 +105,7 @@ I will also henceforth refer to each unique set of preemption points as a {\em j
 
 % TODO: put fig:id here, explain generally multiple state spaces
 
-Note that Iterative Deepening is a {\em wrapper} algorithm around stateless MC.
+Note that Iterative Deepening is a wrapper algorithm around stateless MC.
 A model checker is still used to test each state space, and other reduction techniques such as DPOR
 are still applicable in each.
 Moreover, because Iterative Deepening treats the set of preemption points as mutable,
@@ -127,7 +127,7 @@ I will first show a simple approach for handling new preemption points in the ab
 Given unlimited CPU time for testing,
 one would always want to switch to the new maximal state space whenever adding a new preemption point.
 The maximal state space is guaranteed to subsume all execution sequences reachable in any subset state space,
-so considering any incomplete subset of the known preemption points would be duplicate work.
+so considering any incomplete subset of the known preemption points would be redundant work.
 \Cref{alg:algorithm0} demonstrates this na\"ive approach.
 It is seeded with the set of all statically-known synchronization API preemption points,
 and invoked whenever a new data-race candidate is found.
@@ -307,8 +307,8 @@ This phenomenon motivates Iterative Deepening to prioritize jobs at run-time.
         %\includegraphics[width=0.48\textwidth]{dr-jobs-v2.pdf}
         asdfsaf
         % TODO: put the figure form yr snake fight
-	\caption[Quicksand incorporates data race reports as new preemption points at run-time.]
-		{Quicksand incorporates data race reports as new preemption points at run-time,
+	\caption[Quicksand incorporates data races as new preemption points at run-time.]
+		{Quicksand incorporates data races as new preemption points at run-time,
 		by managing the exploration of multiple state spaces,
 		communicating with each MC instance to receive ETAs, data race candidates, and bug reports.
                 %When an access pair is reported as a data race candidate,
@@ -518,6 +518,7 @@ but for generality I have added an arbitrary {\tt publish} action to the example
 		7 & & \texttt{\hilight{brickred}{y->bar = ...;}} \\
 	\end{tabular}
 	\end{center}
+	% TODO: short ver
 	\caption{A common execution pattern with {\tt malloc()} that produces false positive data race candidates.}
 	\label{fig:recycle}
 \end{figure}
@@ -563,6 +564,7 @@ will show how many redundant state spaces Quicksand is able to prune with this t
 		6 & & \texttt{y~=~\hilight{olivegreen}{malloc}(sizeof *y);} \\
 		7 & & \texttt{\hilight{brickred}{x2->foo = ...;}} \\
 	\end{tabular}
+	% TODO: shortver
 	\caption{If a single-pass Limited HB analysis discarded candidates matching the malloc-recycle pattern,
 it would miss the bug in this adversarial program.}
 	\label{fig:recycle-bug}
@@ -666,6 +668,7 @@ All other preemption points in the input trace can be inductively converted in t
 For Iterative Deepening to ``eventually'' reach a certain state space,
 all data-race preemption points involved must be {\em reachable} during the test.
 
+% TODO: check spcaing between defs/lemmas/etc and surrounding text
 \begin{definition}[Reachability]
 	A data race candidate, and its associated preemption point(s),
 	are reachable if it will be identified by a model checker
@@ -1068,14 +1071,15 @@ Quicksand also supports several alternate exploration strategies, as follows.
 		Runs a single instance of Landslide with preemption points as above,
 		but running Iterative Context Bounding with BPOR (\cref{sec:landslide-icb})
 		instead of plain DPOR.
-		Corresponds to Chess's approach \cite{chess}.
+		Corresponds to CHESS's approach \cite{chess}.
 		Requires either {\tt -C} or {\tt -M} (see below).
-	\item {\bf Single state space, preempt-everywhere} ({\tt -0}, i.e., numeral zero):
+	\item {\bf Single state space, preempt-everywhere} ({\tt -0}):
 		Runs a single instance of Landslide as above,
 		but preempting on every shared memory access, not just synchronization.
-		Corresponds to the approach of SPIN \cite{spin} and Inspect \cite{inspect}.
-		May optionally be combined with {\tt -I}.
-	\item {\bf Maximal state space mode} ({\tt -M})
+		Corresponds to the approach of SPIN \cite{spin} and Inspect \cite{inspect};
+		CHESS supports this mode as well with optional compiler instrumentation.
+		Requires {\tt -C}; may optionally be combined with {\tt -I}.
+	\item {\bf Maximal state space mode} ({\tt -M}):
 		Runs the na\"{i}ve version of Iterative Deepening shown in \Cref{alg:algorithm0},
 		i.e.,
 		immediately abandons any state space whenever a superset of it exists.
@@ -1142,7 +1146,7 @@ which makes preemption point identification treat it the same as a data race (\c
 Finally,
 Landslide increases its heuristic constant for infinite loop detection (\cref{sec:landslide-infloop})
 on the first interleaving from 4000 to $2^{20}$,
-to account for the increased orders of magnitude in state space size.
+to account for the increased orders of magnitude in preemptible events.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1150,6 +1154,142 @@ to account for the increased orders of magnitude in state space size.
 
 \section{Evaluation}
 \label{sec:quicksand-eval}
+
+% TODO: introd this
+
+I pose the following evaluation questions.
+
+\begin{enumerate}
+	\item Does integrating data-race preemption points improve the accuracy of model checking?
+		\begin{enumerate}
+			\item Do data-race preemption points expose new bugs that couldn't be found with
+				synchronization ones alone?
+			\item Do data-race preemption points expose the same bugs
+				the preempt-everywhere approach could find, faster?
+			\item Does Quicksand provide more full verifications %of bug-free programs
+				more quickly than the preempt-everywhere approach?
+			% not related to new phrasing of Q1, and also the answer is "kinda sorta not really sometimes" anyway
+			%\item Does Iterative Deepening find bugs faster in subset state spaces,
+			%	even without data-race preemption points?
+			\item How does the choice between Pure and Limited Happens-Before
+				affect bug-finding and verification performance?
+		\end{enumerate}
+	\item Does testing alternate interleavings with model checking improve the accuracy of data race analysis?
+		\begin{enumerate}
+			\item Does Quicksand avoid false positives compared to single-execution Limited Happens-Before?
+			\item Does Quicksand find data-race bugs that single-execution Pure or Limited Happens-Before would miss?
+		\end{enumerate}
+\end{enumerate}
+
+\subsubsection{Test suite}
+
+The test suite consists of 79 P2 student thread libraries (\cref{sec:pebbles}),
+submitted in 15-410 during the Spring 2014, Fall 2014, and Spring 2015 semesters,%
+\footnote{The 2014 semesters were before \Cref{chap:education}'s user study experiments,
+and for Spring 2015 (the first semester thereof),
+students who used Landslide during the project were excluded from this dataset.}
+and 78 Pintos student kernels (\cref{sec:overview-pintos}),
+submitted in Berkeley's CS162 and U. Chicago's CMSC 23000 during Spring 2015.
+The P2s in this dataset average 1807 lines of C and x86 assembly code,
+%, with a standard deviation of 489.5, % i don't know where hte pintos stdev went and i don't wanna recalc it
+and the Pintoses average 718 lines (by {\tt diff} to the provided basecode),
+for a total of 198,772 lines of code tested for this evaluation.
+
+I chose P2s and Pintoses for this test suite because of the relative ease of generating hundreds of unique state spaces,
+varied in size and correctness, and with a diverse set of bug types.
+In addition to concurrency bugs,
+many of the codebases exhibited {\em deterministic} bugs (i.e., encountered on the first interleaving tested),
+which I fixed by hand before running these tests to ensure that every bug in this study required meaningful work by the model checker.
+While many prior work stateless model checking papers
+% TODO: cite some
+publish studies of single-digit or low-double-digit numbers of
+bugs found in ``real-world'' programs, often confirmed by the upstream developers as severe,
+to motivate stateless model checking to be used in production settings,
+I believe this approach to be too anecdotal for comparing several model checking strategies {\em against each other},
+and opt for this approach instead for better statistical significance.%
+\footnote{Not to mention -- as I couldn't say in a conference paper, but can say now --
+that extending Landslide to support native Linux programs,
+complete with filesystem and network nondeterminism,
+would have been an engineering burden beyond my ability to do alone and still graduate on time.}
+
+\newcommand\mxtest{\texttt{mx\_test}}
+\newcommand\tej{\texttt{join\_test}}
+\newcommand\bct{\texttt{bcast\_test}}
+\newcommand\paraguay{\texttt{signal\_test}}
+\newcommand\paradise{\texttt{sem\_test}}
+\newcommand\rwldgr{\texttt{rwlock\_test}}
+\newcommand\prisema{\texttt{sched\_test}}
+\newcommand\waitsimple{\texttt{wait\_test}}
+\newcommand\alarmsimul{\texttt{alarm\_test}}
+
+I tested P2s with 6 multithreaded programs:
+\mxtest, for locking algorithm correctness,
+\tej, a test of thread lifecycle,
+\bct~and \paraguay~for condition variables,
+\paradise~for semaphores,
+% nb: there used to be a "f u latex" comment here with a \\ after dgr, prob for margins
+and \rwldgr for r/w locks.
+These are the same tests I distributed Landslide with in \Cref{chap:education};
+\cref{sec:education-pebbles-tests} describes them in further detail.
+For \mxtest, \paradise, and \paraguay,
+I used the {\tt without\_function} command to exclude {\tt thr\_create}, {\tt thr\_exit}, and {\tt thr\_join} preemption points,
+and for \mxtest I enabled {\tt TESTING\_MUTEXES} (\cref{sec:landslide-dynamicconfig}).
+I tested Pintoses with 3 programs from the class's provided test suite:
+\prisema, a test of the kernel scheduling algorithm,
+\alarmsimul, for the timer sleep routine,
+and \waitsimple, for process lifecycle system calls.
+These are a subset of those used in \Cref{chap:education}; see \cref{sec:education-pintos-tests}.
+Some of the Pintoses were partially implemented,
+so each test could only be run on a subset of the 78 submissions;
+see the ``Number tested'' column in \Cref{tab:drbugs}.
+For all tests,
+I also excluded preemption points on {\tt malloc}'s internal lock using {\tt without\_function}.
+In total, the evaluation comprises 629 unique tests (i.e., pairs of a test program and a Pintos or P2),
+at least 181 of which will be seen to expose bugs.
+
+\subsubsection{Experimental setup}
+
+To evaluate the benefits of data-race preemption points and Iterative Deepening separately,
+I ran the test suite under Quicksand in three different experimental configurations,
+each of which was given a 1-hour budget and 10 CPUs for each test.
+
+\begin{itemize}
+	\item {\bf QS-Limited-HB}: Quicksand with Landslide configured to use Limited Happens-Before for its data race analysis ({\tt -H}),
+	\item {\bf QS-Pure-HB}: Quicksand using Pure Happens-Before instead ({\tt -V}), and
+	\item {\bf QS-Sync-Only}: Quicksand with initial preemption points only \cref{sec:quicksand-initial-pps},
+		but never adding new ones from reported data races.
+\end{itemize}
+
+I represented the MC State of the Art%
+\footnote{The author's DJ name.}
+with three configurations of stand-alone Landslide on the same test suite,
+corresponding to the search strategies discussed in \cref{sec:quicksand-impl-modes} and \cref{sec:quicksand-impl-landslide}.
+
+\begin{itemize}
+	\item {\bf SSS-MC-DPOR}: Single state space mode ({\tt -C})
+		using the maximal preemption point set from \cref{sec:quicksand-initial-pps},
+		explored with DPOR (\cref{sec:landslide-dpor}),
+		%From prior work, dBug \cite{dbug-ssv} implements this approach, among others. %% nb -- already discussed above
+        \item {\bf SSS-MC-ICB}: With preemption points as above,
+		but instead using ICB \cite{chess-icb} with BPOR \cite{bpor} to find bugs faster
+		({\tt -I}, \cref{sec:landslide-icb}), and
+		%From prior work, CHESS \cite{chess} implements this approach.
+        \item {\bf SSS-MC-Shared-Mem}:
+		Using ICB+BPOR, configured to preempt on any shared memory access ({\tt -0}).
+                (decided at runtime, excluding threads' accesses to their own stacks),
+                which in principle includes all possible data races.
+		%From prior work, Inspect \cite{inspect} implements this approach,
+		%and CHESS also supports this mode with optional compiler instrumentation.
+\end{itemize}
+
+Prior work has shown how to parallelize DPOR of a single state space across multiple processors \cite{parallel-dpor},
+but it remains an open research problem how to extend the algorithm to ICB.
+Hence, I optimistically gave control experiments a linear speedup of 10 hours per test with 1 CPU;
+i.e., assuming it could parallelize with 100\% efficiency.
+To match this,
+Quicksand reports the CPU-time spent in addition to the wall-clock time for a resource-fair comparison,
+although Quicksand's inherent parallelism is a convenient benefit unto itself.
+All tests ran on 12-core 3.2 GHz Xeon W3670 machines with 12GB of RAM.
 
 \subsection{Finding bugs}
 \label{sec:quicksand-eval-bugs}
