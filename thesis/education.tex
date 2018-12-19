@@ -72,7 +72,9 @@ and the external user study under STUDY2017\_00000429.
 \subsection{Recruiting}
 \label{sec:education-pebbles-recruiting}
 
-Since the Spring 2015 semester I have given a guest lecture in 15-410
+%Since the Spring 2015 semester
+From the Spring 2015 semester through Spring 2018,
+I have given a guest lecture in 15-410
 to recruit students to participate in the user study.
 The 50-minute lecture is given 1 week into the 2.5-week-long P2 project,
 approximately when the students should be getting child threads running in {\tt thr\_create()}
@@ -83,7 +85,7 @@ explains how Landslide works concretely,
 shows a short demo of effortlessly using Landslide to find the example bug,
 and provides the necessary IRB legalese about the risks and benefits of participation.
 The most recent lecture slides are available on the course website at
-\url{http://www.cs.cmu.edu/~410-s18/lectures/L14_Landslide.pdf},
+\url{https://www.cs.cmu.edu/~410-s18/lectures/L14_Landslide.pdf},
 and all semesters' editions at
 \url{https://github.com/bblum/talks/tree/master/landslide-lecture}.
 
@@ -108,10 +110,10 @@ which upon completion linked them to the Landslide user guide,
 which is available at
 \url{http://www.contrib.andrew.cmu.edu/~bblum/landslide-guide-p2.pdf}
 (CMU version)
-and
+and at % these "at"s can optionally be adjusted to make url line breaks better
 \url{http://www.contrib.andrew.cmu.edu/~bblum/landslide-guide-psu.pdf}
 (PSU version)
-and
+and at
 \url{https://github.com/bblum/talks/tree/master/irb}
 (both versions).
 
@@ -217,9 +219,9 @@ The following tests were released to CMU students:
 		Written by Michael J. Sullivan.
 	\item {\tt rwlock\_downgrade\_read\_test}:
 		Copied directly from the P2 test suite;
-		tests for mutually-exclusive and deadlock-free {\tt rwlock\_downgrade()}
-		\revisionminor{(a function which atomically converts a lock held in exclusive write mode to shared read mode)}.
-		Written by me (as a TA).
+		tests R/W locks for mutually-exclusive and deadlock-free {\tt rwlock\_downgrade()},
+		\revisionminor{which should atomically convert a lock held in exclusive write mode to shared read mode}.
+		Written by me (during my time as a TA).
 	\item {\tt thr\_exit\_join}:
 		Copied directly from the P2 test suite;
 		tests for a variety of problems between {\tt thr\_exit()} and {\tt thr\_join()},
@@ -410,8 +412,8 @@ The following tests are approved to be Landslide-friendly:
 The (unpatched versions of) the first four tests are available at
 \url{https://github.com/bblum/pintos} (a fork of the main Pintos basecode repository).
 %\url{https://github.com/Berkeley-CS162/group0/tree/master/pintos/src/tests}.
-The fifth test is available at
-\url{https://github.com/bblum/landslide/blob/master/pebsim/pintos/priority-donate-multiple.c}.
+The fifth test is available in the Landslide repository at {\tt pebsim/pintos/priority-donate-multiple.c}.
+%\url{https://github.com/bblum/landslide/blob/master/pebsim/pintos/priority-donate-multiple.c}.
 
 \subsection{Survey}
 \label{sec:education-survey-pintos}
@@ -453,13 +455,14 @@ the questions here focus more on the debugging experience than on using Landslid
 
 I pose the following evaluation questions.
 
-\begin{itemize}
+\vspace{0.5em}
+\begin{enumerate}
 	\item How many bugs, and of what severities, does Landslide help students find and fix before submitting their code?
 	\item Does Landslide use result in higher quality submissions, whether directly for P2, or for subsequent projects as well?
 	\item Do students feel the experience is worthwhile, as compared to stress testing?
 	\item How well does Landslide apply to operating systems projects outside of CMU?
-\end{itemize}
-\vspace{1em}
+\end{enumerate}
+\vspace{0.5em}
 
 The data set \revisionminor{comprises} Landslide's automatically-generated usage snapshots
 from CMU students from semesters Spring 2015 to Spring 2018 inclusive,
@@ -838,7 +841,7 @@ for its better sensitivity both to repeated deviations and to tail differences \
 I deem the difference in grade distributions significant when $p < 0.05$%
 % FIXME: is this legit?
 % should you be using the combined/grouped AD test instead?
-\footnote{I choose not to correct for multiplicity among these 4 comparsons \revisionminor{as} I do in the next section
+\footnote{I choose not to correct for multiplicity among these four comparsons \revisionminor{as} I do in the next section
 because each tests a different hypothesis.
 },
 although as in all $p$-value calculations,
@@ -946,7 +949,7 @@ as non-users.
 		\hline
 		% calculated in R with (rest done similarly)
 		% fisher.test(rbind(c(11,10),c(0,16)))$p.value --> 0.0006143355
-		Exit UAF  & 11	& 10	& 0	& 16	& $+52.4\%$	& 0.00061	& 0.0125 \\
+		Exit UAF  & 11	& 10	& 0	& 16	& $+52.4$\%	& 0.00061	& 0.0125 \\
 		% I spent more hours than I should have looking at this landslide-user-submitted-bug group.
 		% Can't name the group here, but if you're me and have the analysis file,
 		% it's the one from f17 with 3 mutex_test logs in their "u" snapshot.
@@ -956,14 +959,14 @@ as non-users.
 		% data races and so on in the id-log don't line up to the "u" mutex.c source code).
 		% That version was correct, then they updated it (introducing the bug) and ran a bunch of other tests,
 		% but didn't rerun mutex_test to check their update.
-		Mutex     & 17	& 1	& 19	& 0	& $-05.6\%$	& 0.49 & 0.0125 \\
-		Paraguay  & 20	& 1	& 14	& 2	& $+07.7\%$	& 0.57	& 0.0125 \\
+		Mutex     & 17	& 1	& 19	& 0	& $-05.6$\%	& 0.49 & 0.0125 \\
+		Paraguay  & 20	& 1	& 14	& 2	& $+07.7$\%	& 0.57	& 0.0125 \\
 		% nb this is any downgrade related ding not just dgr tested ones
 		% nb 1 is msising bc didn't impl rwlock at all
 		% nice p value
-		Downgrade & 10	& 3	& 19	& 4	& $-05.7\%$	& 0.69	& 0.0125 \\ % TODO verify these buggers by eye
+		Downgrade & 10	& 3	& 19	& 4	& $-05.7$\%	& 0.69	& 0.0125 \\ % TODO verify these buggers by eye
 		\hline
-		\bf Total & 58	& 15	& 52	& 22	& $+09.2\%$	& 0.26 & 0.05 \\
+		\bf Total & 58	& 15	& 52	& 22	& $+09.2$\%	& 0.26 & 0.05 \\
 	\end{tabular}
 	\end{center}
 	\caption[Correlation of student Landslide use with solving certain bugs.]
@@ -1646,7 +1649,7 @@ I have made the following contributions:
 	\item A lecture, polished over seven semesters,
 		for introducing stateless model checking as a concurrency testing approach
 		in high-level undergraduate classes
-		(with many slides admittedly specific to Landslide as they may be)
+		(with many slides admittedly specific to Landslide)
 		(\cref{sec:education-pebbles-recruiting}).
 	\item A system for automatically instrumenting student thread library (CMU, PSU) and kernel (U. Chicago)
 		project implementations to be compatible with stateless model checking
