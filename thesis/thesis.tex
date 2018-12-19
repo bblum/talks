@@ -101,7 +101,7 @@ urlcolor=urlc,
 {\em or: How I Learned to Stop Worrying and Love the Exponential Explosion}
 \end{tabular}}
 \author{Ben Blum}
-\date{October 2018}
+\date{December 2018}
 \Year{2018}
 \trnumber{}
 
@@ -112,8 +112,13 @@ Brandon Lucia \\
 Haryadi Gunawi, University of Chicago
 }
 
-\support{}
+\support{This research was sponsored by the U.S. Army Research Office under grant
+number W911NF0910273 and by Intel ISTC-CC.
+The views and conclusions contained in this document are those of the author
+and should not be interpreted as representing the official policies,
+either expressed or implied, of any sponsoring institution, the U.S. government, or any other entity.}
 \disclaimer{}
+
 
 % copyright notice generated automatically from Year and author.
 % permission added if \permission{} given.
@@ -176,7 +181,7 @@ to explain difficult concepts approachably,
 to appreciate related work as charitably as possible,
 and to seek guidance from industry people with relevant experience,
 despite my often stubborn refusal to leave my own little comfort zone.
-So, even when it took me sending 10+ email reminders to get your attention,
+So, despite the times I needed to send 10+ email reminders to get your attention:
 truly,
 thanks for everything, Garth.
 
@@ -211,7 +216,7 @@ Michael J. Sullivan and Nathaniel Wesley Filardo were Landslide's first other us
 back in its prototype days.
 Joshua Wise, Miriam Zimmerman, and Glenn Willen helped revise my explanation of DPOR in \Cref{chap:landslide}.
 Professor Brandon Lucia provided valuable revisions to \Cref{chap:quicksand}'s content
-that ultimately led to its publication at OOPSLA 2016.
+	that ultimately led to its publication at \mbox{OOPSLA}~2016.
 Michael J. Sullivan double-checked the proofs therein.
 Professor Timothy Zhu from Penn State University
 and Professor Haryadi Gunawi and TA Kevin Zhao from the University of Chicago
@@ -239,7 +244,7 @@ that make up about half of \Cref{chap:tm}'s evaluation suite.
 Carlo Angiuli, Evan Cavallo, Ziv Scully, Jim McCann,
 Matthew Maurer, Stefan Muller, Guillaume Didier,
 Sol Boucher, and Michael J. Sullivan
-helped me rehearse and polish the snake fight talk.
+helped me rehearse and polish the snake-fight talk.
 
 Most importantly of all, I thank every student who ever used Landslide.
 Though the introduction section may say differently,
@@ -294,8 +299,8 @@ do likewise for CSD as a whole.
 %(the lack of any stronger criticism a silent vote of confidence for their overall correctness).
 Thanks to Nicholas D. Matsakis for the mentorship %and collaboration
 during my two summers as a Rust research intern at Mozilla,
-and to the rest of the Rust community as well for their %extremely important
-work
+and to the rest of the Rust community as well for
+%their extremely important work
 bringing better concurrent programs into the world. %from a different angle.
 And to everyone at large who
 %outside my %immediate
@@ -314,7 +319,7 @@ Chris Martens,
 Jason Reed,
 Jim McCann,
 Rob Simmons,
-Tom Murphy 7,
+Tom 7,
 and
 William Lovas:
 you each have been role models to me
@@ -331,7 +336,7 @@ to all future organizers who'll keep those ``mainstream'' conferences on their t
 \subsubsection{Life}
 
 My parents, Eve and David Blum, and my grandparents, Margie Granach and Elsie Blum,
-provided bottomless emotional support throughout my education.
+provided bottomless emotional support throughout my career as a student. %education.
 I appreciate beyond words for the privileged life they provided
 that allowed me the opportunity to pursue higher education.
 
@@ -339,7 +344,7 @@ Looking back on my 11 years at CMU,
 I am especially grateful for the friendships made early on %in my undergrad years
 that continued well past first graduation.
 From those who stayed in Pittsburgh %with me
-to those who %moved away but
+to those who moved away but % can comment 'moved away but'
 kept in touch,
 from my regular tabletop, board, and/or dance gaming partners
 to those who %inexhaustibly
@@ -633,7 +638,7 @@ which any future research building hereupon would be wise to heed?
 	\item In \Cref{chap:quicksand},
 		the soundness of data-race-driven Iterative Deepening
 		combined with Quicksand's reliance on state space estimation
-		to effectively balance formal verification with heuristic bug-finding speed
+		effectively balanced formal verification with heuristic bug-finding speed
 		better than any prior work.
 		% 未来は、
 		Even as modern programming languages such as Rust \cite{rust-book}
@@ -644,16 +649,18 @@ which any future research building hereupon would be wise to heed?
 		and future model checkers should offer a mixture of different kinds of partial verification results
 		depending on the user's wishes.
 	\item In \Cref{chap:education},
-		the behind-the-scenes yield-loop blocking algorithm
-		(itself admittedly heuristic)
-		allowed Landslide to automatically instrument all student implementations
-		with very few false positives,
+		Landslide's behind-the-scenes yield-loop blocking algorithm
+		%(itself admittedly heuristic)
+		allowed it to automatically instrument all student implementations
+		with no false positives
+		(what false positives did exist were minor unrelated Landslide bugs,
+		all fixed quickly whenever reported),
 		and exposing partial results such as data race reports
 		was shown to sometimes help students reach deeper understanding.
 		% 未来は、
 		Although high-level undergraduate operating systems courses represent
-		a very small fraction of all the world's programmers,
-		let alone all those in higher education,
+		a very small fraction of all programmers in higher education,
+		let alone all those in the world,
 		Landslide's adventures in 15-410 argue that computer science classes
 		should more intentionally teach principled debugging techniques and tools
 		rather than let students struggle to reach correctness independently. %on their own.
@@ -662,7 +669,7 @@ which any future research building hereupon would be wise to heed?
 	\item In \Cref{chap:tm},
 		the equivalence of HTM's interface to failure injection and global locks
 		allowed Landslide to avoid both performance overhead and state space explosion when simulating aborts,
-		and the heuristic use of abort code reduction and abstraction reduction
+		and heuristic use of abort code reduction and abstraction reduction
 		allowed verifying algorithms and data structures up to thread/iteration counts previously infeasible.
 		% retry set reduction, obv; it also applies to failure injection as well
 		% even when synch is complicated, defining abstraction boundaries and verifying your shit separately
