@@ -50,7 +50,8 @@ More abstractly speaking, the general sequence of events during a Landslide test
 					\item Check whether the current program state constitutes a bug,
 						and if so,
 						emit a preemption trace
-						(\cref{sec:landslide-foundabug}, \cref{sec:landslide-bugreport})
+						(\cref{sec:landslide-bugreport},
+						\cref{sec:landslide-foundabug})
 						and halt Landslide's execution.
 						Bug-detection predicates range from
 						simply checking if the program tripped an assert
@@ -73,15 +74,15 @@ More abstractly speaking, the general sequence of events during a Landslide test
 						for conflicts with other threads
 						(\cref{sec:landslide-shm}),
 						and further for data races (\cref{sec:landslide-datarace}).
-					\item Select which thread should run next (\cref{sec:landslide-arbiter}),
+					\item Select which thread should run next (\cref{sec:landslide-arbiter}).
 						Heuristically detecting yield-blocked threads
 						may inform this decision (\cref{sec:landslide-blocking-yield}).
 					\item Checkpoint the execution state in case future executions
 						should wish to rewind and try a different thread from the one first chosen here
 						(\cref{sec:landslide-save}, \cref{sec:landslide-timetravel}).
 					\item Force the chosen thread to run by injecting timer interrupts
-						(\cref{sec:landslide-interrupce},
-						\cref{sec:landslide-scheduler-interrupce}).
+						(\cref{sec:landslide-scheduler-interrupce},
+						\cref{sec:landslide-interrupce}).
 				\end{enumerate}
 				Note that Landslide maintains the invariant that each transition between two preemption points
 				consist of instructions executed by exactly one thread;
@@ -106,7 +107,8 @@ More abstractly speaking, the general sequence of events during a Landslide test
 				backtrack the simulation state to that preemption point
 				(\cref{sec:landslide-timetravel})
 				force the new thread to run
-				(\cref{sec:landslide-interrupce}, \cref{sec:landslide-scheduler-interrupce}),
+				(\cref{sec:landslide-scheduler-interrupce},
+				\cref{sec:landslide-interrupce}),
 				and repeat from step 2.
 				%If DPOR produced no results,
 				Otherwise, halt Landslide's execution,
@@ -227,7 +229,7 @@ The following ``secret'' arguments also exist, primarily for my own use in runni
 	\item {\tt -I}: enable Iterative Context Bounding (requires {\tt -C}, although future work may relax this restriction);
 		this generally causes bugs to be found faster should they exist, but degrades completion time
 		(\cref{sec:landslide-icb})
-	\item {\tt -0} (numeral zero): enable Preempt-Everywhere mode
+	\item {\tt -0}: enable Preempt-Everywhere mode
 		(\cref{sec:quicksand-impl-modes}, \cref{sec:quicksand-impl-landslide}, requires {\tt -C})
 	\item {\tt -M}: enable Maximal State Space mode,
 		which prioritizes the maximal state space to optimize for fast verification,
@@ -1120,14 +1122,14 @@ This section lists special cases of instrumentation specific to the Pebbles kern
 	\item {\tt cause\_timer\_interrupt\_immediately()} ({\tt x86.c})
 		will read the {\tt esp0} value out of the TSS to support user-to-kernel mode switches
 		in timer interrupts injected during userspace execution.
-	\item {\tt splice\_pre\_vanish\_trace} ({\tt stack.c})
+	\item {\tt splice\_pre\_vanish\_trace()} ({\tt stack.c})
 		will, when a {\tt vanish}ing thread has already
 		\revisionminor{unmapped all of its user memory,}
 		%deleted its Simics symbol table object,
 		splice in a saved ``pre-vanish'' stack trace
 		(saved previously in {\tt sched\_update\_kern\_state\_machine()})
-		so the user can see the userspace execution sequence preceding the {\tt vanish} invocation.
-	\item {\tt stack\_trace} ({\tt stack.c})
+		so that the user can see the userspace execution sequence preceding the {\tt vanish} invocation.
+	\item {\tt stack\_trace()} ({\tt stack.c})
 		will, when {\tt ebp} crosses from kernel- to userspace across a system call boundary
 		(a reference kernel feature to allow Simics stack traces to cross same),
 		use {\tt PATHOS\_SYSCALL\_IRET\_DISTANCE} (\cref{sec:landslide-config-landslide})
@@ -1308,8 +1310,8 @@ The following predicates are constrained by {\tt check\_withins()}:
 \begin{itemize}
 	\item {\tt suspected\_data\_race()}
 	\item User or kernel {\tt mutex\_lock()} or {\tt mutex\_unlock()} call
-	\item Custom kernel preemption point using {\tt tell\_landslide\_preempt()}
-		(relic of \cite{landslide}, largely obsoleted by data-race preemption pooints)
+	\item Custom preemption point requested by the user with {\tt tell\_landslide\_preempt()}
+		(relic of \cite{landslide}, largely obsoleted by data-race preemption points (\cref{sec:quicksand-dr-pps}))
 \end{itemize}
 
 The following predicates ignore any {\tt within\_function} settings
@@ -2321,7 +2323,7 @@ assuming progress is being made on another CPU,
 which is not possible under Landslide as it serializes execution.
 
 Landslide detects such ad-hoc {\em yield-loop blocking}
-by keeping a counter for each thread to track how many {\tt yield}s it has invoked since the last ``interesting'' activity.
+by keeping a counter for each thread to track how many {\tt yield}s it has invoked since the last interesting activity.
 % nb. not system calls, not even d/mr, as some student mutexes may use those and you don't want to count them
 ``Interesting'' here is defined heuristically as any other known P2 API call,
 with the exception of {\tt mutex\_lock()} and {\tt mutex\_unlock()}.%
