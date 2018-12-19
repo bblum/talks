@@ -15,10 +15,10 @@ Yet we still build sand castles.
 
 Transactional memory \revisionminor{(TM)~\cite{transactional-memory}} is a concurrency primitive
 by which programmers may attempt an arbitrary sequence of shared memory accesses,
-which will either be committed (made visible to other processors/threads) atomically,
+which will either be entirely committed (i.e., made visible to other processors/threads) atomically,
 such that no intermediate state modification is ever visible,
 or, in the case of a conflict which would prevent such,
-discarded with an error code returned to allow the programmer to \revisionminor{invoke} a synchronized backup path.
+entirely discarded with an error code returned to allow the programmer to \revisionminor{invoke} a synchronized backup path.
 %
 Transactional memory specifications typically have three API functions, abstractly speaking:
 \begin{itemize}
@@ -34,7 +34,8 @@ Transactional memory specifications typically have three API functions, abstract
 		reads or writes from other concurrently-executing code.
 		If any of those accesses conflict (i.e., read/write or write/write)
 		with any other access to the same memory since the transaction started,
-		they are instead discarded and execution state reverts to the {\sf begin} with an error code as described above.
+		they are instead discarded and execution state reverts to the {\sf begin} point
+		with an error code as described above.
 	\item {\sf \revisionminor{abort}} explicitly aborts a transaction,
 		regardless of any memory conflicts,
 		discarding changes and reverting execution as described above.
@@ -128,7 +129,7 @@ addresses input nondeterminism; see \cref{related:symbolic}.}
 the only way multiple behaviours can arise is by scheduling different threads at each preemption point.
 Only recently have checkers emerged that extend this model by
 incorporating other nondeterminism sources:
-store buffer reordering arising from relaxed memory models
+store-buffer reordering arising from relaxed memory models
 \cite{cdschecker,tsopso,rcmc}
 and event-driven application programming models
 \cite{r4,eventracer},
@@ -255,7 +256,7 @@ become multiple memory accesses which can be interleaved with other threads,
 	\end{center}
 	\caption[Impossible hypothetical interleaving within transactions of \Cref{fig:htm-example-assemblified}.]
 		{Impossible hypothetical interleaving within transactions of \Cref{fig:htm-example-assemblified}.
-		The effects of $\tiat{2a-2b}$ are never globally visible, as its transasction must abort,
+		The effects of $\tiat{2a-2b}$ are never globally visible, as its transaction must abort,
 		and moreover $\tiat{2c-3}$ will not execute at all.}
 	\label{fig:htm-example-interleaving}
 \end{figure}
@@ -578,7 +579,7 @@ To model weak atomicity, \Cref{lem:equiv} must be extended with a third possibil
 	and the new case \#3 applies instead.
 \end{proof}
 
-\Cref{thm:atom} must be weakened correspondingly.
+\Cref{thm:atom} must be weakened correspondingly, yielding \Cref{thm:atom-weak}.
 \vspace{1em}
 
 \begin{theorem}[Weak Atomicity of Transactions]
@@ -2293,15 +2294,16 @@ state space explosion.
 I have made the following contributions:
 
 \begin{itemize}
-	\item Three equivalence proofs,
-		demonstrating that model checkers can soundly emulate strongly-atomic HTM execution semantics by
-		treating transactions as globally-uninterruptible atomic sections
+	\item An approach for model checkers to emulate strongly-atomic HTM
+		by treating transactions as globally-uninterruptible atomic sections
 		and injecting failure without simulating rollback
 		(\cref{sec:tm-design-failure})
 		and applying conventional data race analysis with all transactions treated as a global lock
 		(\cref{sec:tm-design-locks}),
-		and can emulate weakly-atomic STM systems by relaxing the above atomicity to apply to other transactions only
-		(\cref{sec:tm-weak-atomicity}).
+		plus an extension to also emulate weakly-atomic STM systems
+		by relaxing the above atomicity to apply to other transactions only
+		(\cref{sec:tm-weak-atomicity}),
+		each section with a corresponding soundness proof of equivalence to existing systems' semantics.
 	\item An implementation of both forms of transactional memory in Landslide,
 		with further options to configure the variety of abort codes injected
 		(\cref{sec:tm-implementation}).
