@@ -105,7 +105,7 @@ I will also henceforth refer to each unique set of preemption points as a {\em j
 
 % TODO: put fig:id here, explain generally multiple state spaces
 
-Note that Iterative Deepening is a wrapper algorithm around stateless MC.
+Note that Iterative Deepening is a wrapper algorithm around stateless model checking.
 A model checker is still used to test each state space, and other reduction techniques such as DPOR
 are still applicable in each.
 Moreover, because Iterative Deepening treats the set of preemption points as mutable,
@@ -173,7 +173,7 @@ so an inexpert user can provide only her total CPU budget as a test parameter,
 and to enable completing appropriately-sized jobs within that budget.
 Quicksand seeks to maximize completed state spaces,
 as each one serves as a guarantee that all possible interleavings therein were tested;
-\cref{sec:quicksand-discussion} discusses some limitations of this approach.
+\cref{sec:quicksand-discussion-partial} discusses some limitations of this approach.
 The next three subsections will show how to schedule these smaller jobs
 based on their preemption points and ETAs.
 
@@ -209,7 +209,7 @@ and just after interrupts are re-enabled (on x86, {\tt sti}).
 During data race analysis, {\tt cli} and {\tt sti} are treated as a single global lock
 (note that {\tt cli}'d memory accesses can still race with others that have interrupts on).%
 \footnote{Some kernels disable preemption without disabling interrupts,
-which can be communicated to the MC using manual annotations,
+which can be communicated to the model checker using manual annotations,
 and must be treated similarly.
 This also assumes uni-processor scheduling; for SMP kernels, replace {\tt cli}/{\tt sti} with spinlocks.}
 Quicksand is configured to begin with
@@ -221,7 +221,7 @@ $\{yield,sti\}$,
 and $\{yield,lock,$ $unlock,cli,sti\}$.
 As a heuristic, it doesn't test every intermediate subset such as $\{lock,sti\}$,
 which would result in $2^p$ jobs right off the bat,
-although this could potentially be improved in future work (\cref{sec:quicksand-discussion}).
+although this could potentially be improved in future work (\cref{sec:quicksand-discussion-subsets}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -304,13 +304,13 @@ and many other bugs missed by the small jobs found eventually by the big jobs.
 This phenomenon motivates Iterative Deepening to prioritize jobs at run-time.
 
 \begin{figure}[t]
-        %\includegraphics[width=0.48\textwidth]{dr-jobs-v2.pdf}
-        asdfsaf
-        % TODO: put the figure form yr snake fight
+	\begin{center}
+        \includegraphics[width=0.8\textwidth]{dr-jobs-v2.pdf}
+	\end{center}
 	\caption[Quicksand incorporates data races as new preemption points at run-time.]
 		{Quicksand incorporates data races as new preemption points at run-time,
 		by managing the exploration of multiple state spaces,
-		communicating with each MC instance to receive ETAs, data race candidates, and bug reports.
+		communicating with each Landslide instance to receive ETAs, data races, and bug reports.
                 %When an access pair is reported as a data race candidate,
                 When a data race is reported,
                 a new preemption point is added for each involved access,
@@ -332,9 +332,7 @@ in which case the data race remains neither confirmed nor refuted.
 In such cases, Quicksand elects to impose some burden on the user
 by reporting it as a potential false positive
 and recommend that she investigate it by hand to judge for herself whether it be a bug.
-% TODO: fix this to point to partial verif
-% TODO (also) make sure that all other quicksand-discussion references get updated if appropriate
-\cref{sec:quicksand-discussion} will discuss future opportunities for improving
+\cref{sec:quicksand-discussion-partial} will discuss future opportunities for improving
 debugging output in cases of such {\em partial verification}.
 However, experience shows that this interactivity pays off:
 in the next chapter's educational user study (\cref{sec:education-eval}),
@@ -435,8 +433,8 @@ and $j_1$ perhaps ran much longer, on account of being overall smaller,
 before becoming suspended.
 In such scenarios,
 the algorithm heuristically assumes the smaller job's ETA is more accurate,
-in order to avoid repeatedly resuming larger jobs briefly only to find that their ETAs keep getting worse and worse
-(in other words, it lets us avoid thrashing in Quicksand). % ¯\_(ツ)_/¯
+in order to avoid repeatedly resuming larger jobs briefly only to find that their ETAs keep getting worse and worse.%
+\footnote{In other words, it lets us avoid thrashing in Quicksand.} % ¯\_(ツ)_/¯
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -525,14 +523,16 @@ but for generality I have added an arbitrary {\tt publish} action to the example
 
 As long as the allocation heap is properly synchronized,
 a Pure Happens-Before analysis should identify a happens-before edge
-between line~2's {\tt free} and line~4's {\tt malloc},
-and it would report no race.
+between line~2's {\tt free()} and line~4's {\tt malloc()},
+and report no race.
 However, the upcoming evaluation will show that Limited Happens-Before retains some advantages over Pure
 (\cref{sec:quicksand-eval-bugs}),
-so it is useful to be able to automatically suppress data-race candidates
+so it is useful to
+%be able to
+automatically suppress data-race candidates
 that are certain to end up being false positives when reordered.
 Such collisions could instead be avoided with a hacked allocator which never recycles memory,
-but this could unacceptably impact performance in {\tt malloc}-heavy tests.
+but that could unacceptably impact performance in {\tt malloc()}-heavy tests.
 
 The ability to disregard reallocation false positives is unique to Iterative Deepening.
 When limited to a single test execution, suppressing any data race candidate matching this pattern is unsound.
@@ -549,11 +549,12 @@ in the context of Iterative Deepening, being able to discard certain data race c
 allows Quicksand to skip exploring some entire state spaces,
 and hence run fewer Landslides overall;
 this is analogous to DPOR's ability to skip equivalent interleavings within a single Landslide instance.
-Upcoming in the evaluation, \cref{sec:quicksand-eval-verif}'s \Cref{tab:drstatistics}
+Upcoming in the evaluation, \cref{sec:quicksand-eval-verif}'s \Cref{tab:drstatistix}
 will show how many redundant state spaces Quicksand is able to prune with this technique.
 
 % TODO smae as above
 \begin{figure}[t]
+	\begin{center}
 	\begin{tabular}{rll}
 		& {\bf Thread 1} & {\bf Thread 2} \\
 		1 & \texttt{publish(x);} & \\
@@ -564,6 +565,7 @@ will show how many redundant state spaces Quicksand is able to prune with this t
 		6 & & \texttt{y~=~\hilight{olivegreen}{malloc}(sizeof *y);} \\
 		7 & & \texttt{\hilight{brickred}{x2->foo = ...;}} \\
 	\end{tabular}
+	\end{center}
 	% TODO: shortver
 	\caption{If a single-pass Limited HB analysis discarded candidates matching the malloc-recycle pattern,
 it would miss the bug in this adversarial program.}
@@ -604,8 +606,8 @@ is available in the tech report which accompanied the conference paper \cite{qui
 The proofs are built on a DPOR definition which assumes sequentially-consistent memory hardware.
 All algorithms involved are assumed to operate on a machine model of a single globally-consistent execution trace,
 which fundamentally cannot account for memory reordering nondeterminism.
-\cref{sec:quicksand-discussion} discusses this limitation further;
-for existing work on combining DPOR with relaxed memory, I refer the reader to \cite{tsopso}.
+%\cref{sec:quicksand-discussion} discusses this limitation further; % that's a lie..
+For existing work on combining DPOR with relaxed memory, I refer the reader to \cite{tsopso}.
 They also assume the Limited Happens-Before definition
 for the data-race analysis.
 I leave the case for Pure Happens-Before to future work,
@@ -1064,7 +1066,8 @@ Quicksand also supports several alternate exploration strategies, as follows.
 
 \begin{itemize}
 	\item {\bf Single state space, basic DPOR} ({\tt -C}):
-		Runs a single instance of Landslide configured to preempt on all statically-known synchronization PPs.
+		Runs a single instance of Landslide configured to preempt
+		on all statically-known synchronization preemption points.
 		Corresponds to dBug's approach \cite{dbug-ssv}.
 		Never adds any new preemption points based on data race reports.
 	\item {\bf Single state space, ICB} ({\tt -I}):
@@ -1365,7 +1368,7 @@ the same experiments, measured by wall-clock time until each bug was found inste
 %	{Bug-finding performance comparison between
 %        by several configurations of Quicksand and the single-state-space approaches.
 %	Quicksand finds 125\% as many bugs
-%        with data-race PPs
+%        with data-race preemption points
 %	at the 10-hour mark, compared to the best prior work approach.}
 %        \label{fig:dowefindbugsfaster}
 %\end{figure}
@@ -1677,7 +1680,7 @@ or be reachable only under a superset combination of preemption points not yet r
 \subsection{Data race analysis}
 \label{sec:quicksand-eval-nondets}
 
-Beyond finding new bugs and completing full verifications with data-race PPs,
+Beyond finding new bugs and completing full verifications with data-race preemption points,
 I evaluated Quicksand's performance for classifying data-race candidates in two ways:
 its ability to check nondeterministic data races not reachable under a single-pass analysis (\cref{sec:quicksand-pps})
 and its ability to suppress reallocation false positives (\cref{sec:quicksand-id-realloc}).
@@ -1775,8 +1778,8 @@ which includes the former type as well as new bugs involving nondeterministic ra
 QS-Limited-HB found a nice 69 data-race bugs in total, % nice
 15 of which %could not be found with single-pass data-race candidates alone.
 required nondeterministic data-race preemption points to expose.
-QS-Pure-HB is even more dependent thereupon, %on nondeterministic data-race PPs,
-%requiring nondeterministic data-race PPs
+QS-Pure-HB is even more dependent thereupon, %on nondeterministic data-race preemption points,
+%requiring nondeterministic data-race preemption points
 requiring them in 21 cases among its 44 total data-race bugs.
 Moreover, although the frequency
 of these nondeterministic races varies across the different test cases
@@ -1847,7 +1850,7 @@ and fall back to classifying them with DPOR.
 This section will list the current limitations of Quicksand and Iterative Deepening
 and discuss opportunities for future improvement.
 
-\subsubsection{Avoiding redundant work}
+\subsection{Avoiding redundant work}
 
 When Quicksand extends a small state space with more preemption points,
 the new state space is guaranteed to test a superset of interleavings compared to the old one.
@@ -1884,7 +1887,8 @@ When full verification is infeasible,
 completing even an intermediate-sized job would allow immediately pruning all subset jobs thereof,
 perhaps using a form of binary search (on the preemption point set size) to find an appropriately-sized intermediate job.
 
-\subsubsection{Preemption point subsets}
+\subsection{Preemption point subsets}
+\label{sec:quicksand-discussion-subsets}
 
 Quicksand was able to partially guarantee safety for some preemption points
 in 93\% of tests with too-large maximal state spaces (\cref{sec:quicksand-eval-partial}).
@@ -1913,36 +1917,22 @@ This introduced hundreds of new preemption points on each new test execution,
 with a prohibitive performance impact.
 While this performance could be improved by
 relaxing the preemption strategy,
-instead using a static or single-pass analysis to find data-race candidate PPs in advance \cite{portend},
+instead using a static or single-pass analysis to find data-race candidates in advance \cite{portend},
 that would sacrifice soundness of the verification guarantee, as I showed in \cref{sec:quicksand-eval-nondets}.
 However, Quicksand itself could employ static data-race analysis such as RacerX \cite{racerx},
 or single-pass dynamic analysis such as ThreadSanitizer \cite{tsan} in future work.
 % These tools tend to err on the side of false positives,
 % but also include .....
-Any data-race candidates identified in advance could heuristically be included in Quicksand's initial seed PP sets
+Any data-race candidates identified in advance could heuristically be included in Quicksand's initial seed preemption point sets
 (\cref{sec:quicksand-initial-pps}),
 enabling it to focus on the most suspicious races immediately,
 rather than waiting for them to be identified after potentially many iterations of model checking.
 
-\subsubsection{Partial verification}
+\subsection{Partial verification}
+\label{sec:quicksand-discussion-partial}
 
-Quicksand is not the first concurrency tester to provide a partial verification guarantee
-when it times out on too-large tests.
-Probabilistic Concurrency Testing %(PCT)
-\cite{randomized-scheduler}
-proposes to use random exploration of the state space and quantify the probability
-that a bug may remain in some untested interleaving after a time-out,
-although it is opaque to the user about which parts of her code were actually tested.
-Meanwhile, ICB proposes to inform the user
-of the maximum number of preemptions that were used to test any individual interleaving,
-under the assurance that most bugs are likely to be found with fewer preemptions (\Cref{tab:icb-bounds}).
-These guarantees could each be useful to developers in different scenarios,
-and future work could combine the two approaches to provide both at once.
-Iterative Deepening offers a clear benefit to the expert user
-via the {\tt within\_function} command,
-which enables her to restrict a test's scope to only the modules of a codebase she wishes to test.
-
-Likewise, when full verification is not computationally feasible,
+% Likewise,
+When full verification is not computationally feasible,
 some jobs with data-race preemption points will inevitably time out,
 and Quicksand cannot guarantee those races are
 false positives or
@@ -1955,7 +1945,7 @@ Portend introduced the {\em k-witness harmless} metric \cite{portend}
 for heuristically classifying the likelihood that each data race lead to a failure or be benign.
 Quicksand could incorporate this metric to guide the user's attention
 to the unverified data races most likely to be worth her time.
-
+%
 In \cref{sec:quicksand-eval-partial} I presented partial verification results
 measured in tens or hundreds of subset state spaces completed on average per test case.
 However,
@@ -1971,10 +1961,34 @@ user studies could help to determine the most effective interface for presenting
 from a software development perspective,
 which I discuss further in \cref{sec:future-friendly}.
 
+Quicksand is not the first concurrency tester to provide a partial verification guarantee
+when it times out on too-large tests.
+Probabilistic Concurrency Testing (PCT)
+\cite{randomized-scheduler}
+proposes to use random exploration of the state space and quantify the probability
+that a bug may remain in some untested interleaving after a time-out,
+eschewing DPOR's depth-first search model to
+instead sample broad cross-sections of large state spaces.
+However, it proposes no alternate reduction strategy, making full verification impractical,
+and furthermore is opaque to the user about which parts of her code were actually tested.
+Meanwhile, ICB proposes to inform the user
+of the maximum number of preemptions used to test any individual interleaving,
+under the assurance that most bugs are likely to be found with fewer preemptions (\Cref{tab:icb-bounds}).
+Iterative Deepening
+%offers a clear benefit to the expert user
+%via the {\tt within\_function} command,
+%which enables her
+allows the expert user
+to restrict a test's scope via the {\tt within\_function} command to only the modules of a codebase she wishes to test.
+These guarantees could each be useful to developers in different scenarios,
+and future work could combine the three approaches to provide all benefits at once,
+for example, using ETAs to heuristically decide when to switch between DPOR, ICB, and/or PCT in large state spaces,
+as discussed further in \cref{sec:warpzone-heuristics}.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Summary}
 
-quicksand is gr9
+quicksand is gr8
