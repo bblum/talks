@@ -1310,45 +1310,65 @@ All tests ran on 12-core 3.2 GHz Xeon W3670 machines with 12GB of RAM.
 \subsection{Bug-finding}
 \label{sec:quicksand-eval-bugs}
 
-\Cref{fig:dowefindbugsfaster}
+\Cref{fig:dowefindbugsfaster-cpu}
 plots the bug-finding performance of Quicksand's three experimental trials
 against the three control approaches
-in a cumulative distribution of total bugs found against elapsed time.
+in a cumulative distribution of total bugs found against elapsed CPU-time.
 The farthest-right point on each series indicates in how many total test cases that trial found a bug
 after the 10 CPU-hour timeout.
-\Cref{fig:dowefindbugsfaster}(a)
-is the main, resource-fair comparison by CPU-time,
-while \Cref{fig:dowefindbugsfaster}(b) shows
-the wall-clock time until each bug was found.
+\Cref{fig:dowefindbugsfaster-wall} shows
+the same experiments, measured by wall-clock time until each bug was found instead.
 
-\begin{figure}[p]
-	\begin{tabular}{c}
-        \includegraphics[width=0.71\textwidth]{../proposal/dowefindbugsfaster-v2.pdf} \\
-		\begin{tabular}{p{\textwidth}}
-                (a) Bugs found by Quicksand versus control experiments, measured in CPU time.
-                %as a function of elapsed CPU time.
-                Overall,
-                a more resource-fair comparison than (b),
-                although Quicksand's start-up overhead is exaggerated, as the SSS-MC tests are not parallelized. \\
-		\end{tabular}
-                \\
-                \\
-        \includegraphics[width=0.71\textwidth]{../proposal/dowefindbugsfaster-wallclock-v2.pdf} \\
-                %(b) Bugs found by elapsed wall-clock time.
-		\begin{tabular}{p{\textwidth}}
-                (b) Bugs found by Quicksand versus control experiments, measured in wall-clock time.
-                Quicksand is parallelized tenfold; the vertical line indicates its 1 hour limit. \\
-		\end{tabular}
-        \end{tabular}
-	\caption[Bug-finding performance comparison
-	between Quicksand and prior work.]
-	{Bug-finding performance comparison between
-        by several configurations of Quicksand and the single-state-space approaches.
-	Quicksand finds 125\% as many bugs
-        with data-race PPs
-	at the 10-hour mark, compared to the best prior work approach.}
-        \label{fig:dowefindbugsfaster}
+\begin{figure}[h]
+	\begin{center}
+        \includegraphics[width=0.9\textwidth]{../proposal/dowefindbugsfaster-v2.pdf} \\
+	\end{center}
+	\caption[Quicksand's bug-finding performance measured in CPU time.]
+		{Quicksand's bug-finding performance measured in CPU time.
+		Quicksand finds 125\% as many bugs with data-race preemption points at the 10-hour mark,
+		compared to the best prior work approach.
+		Quicksand's startup overhead is exaggerated, as the control experiments are not parallelized.}
+        \label{fig:dowefindbugsfaster-cpu}
 \end{figure}
+% TODO: fix placement of the legend in this graph so that it's not awful page back and forthing
+\begin{figure}[h]
+	\begin{center}
+        \includegraphics[width=0.9\textwidth]{../proposal/dowefindbugsfaster-wallclock-v2.pdf} \\
+	\end{center}
+	\caption[Quicksand's bug-finding performance measured in wall-clock time.]
+		{Quicksand's bug-finding performance measured in wall-clock time.
+		Quicksand is parallelized tenfold; the vertical line indicates its 1 hour limit.}
+        \label{fig:dowefindbugsfaster-wall}
+\end{figure}
+
+%\begin{figure}[p]
+%	\begin{tabular}{c}
+%        \includegraphics[width=0.71\textwidth]{../proposal/dowefindbugsfaster-v2.pdf} \\
+%		\begin{tabular}{p{\textwidth}}
+%                (a) Bugs found by Quicksand versus control experiments, measured in CPU time.
+%                %as a function of elapsed CPU time.
+%                Overall,
+%                a more resource-fair comparison than (b),
+%                although Quicksand's start-up overhead is exaggerated, as the SSS-MC tests are not parallelized. \\
+%		\end{tabular}
+%                \\
+%                \\
+%        \includegraphics[width=0.71\textwidth]{../proposal/dowefindbugsfaster-wallclock-v2.pdf} \\
+%                %(b) Bugs found by elapsed wall-clock time.
+%		\begin{tabular}{p{\textwidth}}
+%                (b) Bugs found by Quicksand versus control experiments, measured in wall-clock time.
+%                Quicksand is parallelized tenfold; the vertical line indicates its 1 hour limit. \\
+%		\end{tabular}
+%        \end{tabular}
+%	\caption[Bug-finding performance comparison
+%	between Quicksand and prior work.]
+%	{Bug-finding performance comparison between
+%        by several configurations of Quicksand and the single-state-space approaches.
+%	Quicksand finds 125\% as many bugs
+%        with data-race PPs
+%	at the 10-hour mark, compared to the best prior work approach.}
+%        \label{fig:dowefindbugsfaster}
+%\end{figure}
 
 \subsubsection{Performance comparison}
 
@@ -1369,7 +1389,7 @@ it lags behind SSS-MC-ICB due to the additional start-up overhead
 of testing many state spaces at once even though the easy bugs may be found extremely quickly in any of them.
 However, converting ICB's early CPU-time advantage
 into faster wall-clock performance remains an open research problem \cite{parallel-dpor}.
-\Cref{fig:dowefindbugsfaster}(b) gives Quicksand full credit for its inherent parallelism,
+\Cref{fig:dowefindbugsfaster-wall} gives Quicksand full credit for its inherent parallelism,
 which ICB cannot yet practically match:
 with a processor allocation of 10 CPUs, it outperforms all prior work approaches
 for any fixed budget of wall-clock time
@@ -1415,10 +1435,10 @@ and is hence more suitable for model checking when data races are involved.
 
 \subsubsection{Types of bugs}
 
-\Cref{tab:drbugs} provides more detail on each of the bugs shown in \Cref{fig:dowefindbugsfaster},
+\Cref{tab:drbugs} provides more detail on each of the bugs shown in \Cref{fig:dowefindbugsfaster-cpu},
 broken down by test case.
 The left half shows the number found by each experimental approach,
-with the totals of each column corresponding to the values at $x=10$ hours in \Cref{fig:dowefindbugsfaster}.
+with the totals of each column corresponding to the values at $x=10$ hours in \Cref{fig:dowefindbugsfaster-cpu}.
 In \mxtest, which checks the lock implementation for correctly providing mutual exclusion
 (rather than trusting its correctness, as all other tests do),
 SSS-MC-ICB and SSS-MC-DPOR
@@ -1435,10 +1455,10 @@ whether combined with Iterative Deepening or ICB.
 \begin{table}[t]
 	\begin{center}
 	\small
-	\begin{tabular}{r|c||c|c||c|c|c}
+	\begin{tabular}{r|c||c|c|c|c|c}
 		%\multicolumn{2}{c||}{} & \multicolumn{5}{c||}{\bf {Total bugs}} & \multicolumn{4}{c||}{\bf {Data-race bugs}} \\
 		% ---
-		& {\bf Num.} & \multicolumn{2}{c||}{\bf Quicksand} & \multicolumn{3}{c}{\bf {Single-state-space MC}}
+		& {\bf Num.} & \multicolumn{2}{c|}{\bf Quicksand} & \multicolumn{3}{c}{\bf {Single-state-space MC}}
 		%& \multicolumn{2}{c|}{\bf {Limited HB}} & \multicolumn{2}{c||}{\bf {Pure HB}} &
 		%{\bf Mutual} & {\bf Avg. tested}
 		\\
@@ -1489,7 +1509,7 @@ my test suite is even friendlier still to ICB than that of prior work.
 	\begin{center}
 		\small
 	\begin{tabular}{r||c|c||c}
-		{\bf Bound} & {\bf SSS-MC-ICB} & {\bf SSS-MC-Shared-Mem} & Prior work \cite{chess-icb} \\
+		{\bf Bound} & {\bf SSS-MC-ICB} & {\bf SSS-MC-Shared-Mem} & {\bf Prior work ICB} \cite{chess-icb} \\
 		\hline
 		0         & 2     & 1     & 3 \\
 		1         & 82    & 86    & 7 \\
@@ -1516,7 +1536,7 @@ my test suite is even friendlier still to ICB than that of prior work.
 \subsubsection{Full verification}
 
 \Cref{fig:totalverif} plots the cumulative distribution of total verifications provided by each approach,
-in the same style of graph as \Cref{fig:dowefindbugsfaster}.
+in the same style of graph as \Cref{fig:dowefindbugsfaster-cpu} and \Cref{fig:dowefindbugsfaster-wall}.
 For 167 of the 629 tests,
 QS-Pure-HB was able to reach and complete the maximal state space with no bugs found,
 hence providing the total verification guarantee justified by the proofs in \cref{sec:quicksand-soundness}.
@@ -1527,7 +1547,7 @@ The next best approach for verifications was SSS-MC-Shared-Mem, which completed 
 
 \begin{figure}[t]
 	\begin{center}
-	\includegraphics[width=0.71\textwidth]{../proposal/totalverifs-v2.pdf}
+	\includegraphics[width=0.9\textwidth]{../proposal/totalverifs-v2.pdf}
 	\end{center}
 	\caption[Verification performance comparison
 	between Quicksand and prior work.]
@@ -1585,19 +1605,15 @@ for a model checker to make simplifying assumptions such as ``no data races'',
 justifying this chapter's claim that data-race preemption points are essential to model checking.
 
 \subsubsection{Partial verification}
+\label{sec:quicksand-eval-partial}
 
 When a model checking job times out,
 the user would more likely prefer a summary of what parts of the test were verified
 rather than to write off all the CPU time spent as wasted.
-Prior work has proposed Probabilistic Concurrency Testing %(PCT)
-\cite{randomized-scheduler},
-which attempts to quantify the probability
-that a bug may remain in some untested interleaving after a time-out,
-although is opaque to the user about which parts of her code were actually tested.
-Meanwhile, ICB proposes to inform the user
-of the maximum number of preemptions that were used to test any individual interleaving,
-under the assurance that most bugs are likely to be found with fewer preemptions (\cref{tab:icb-bounds}).
-Quicksand instead reports which subsets of preemption points resulted in state spaces that did complete in time,
+To this end,
+Quicksand
+%instead
+reports which subsets of preemption points resulted in state spaces that did complete in time,
 in hopes that the user can supplement such a result with her own intuition
 by inspecting the code corresponding to the preemption points not tested (especially data races).
 From prior work, Preemption Sealing \cite{sealing}
@@ -1633,7 +1649,7 @@ deferring to the user's expertise to judge the value of each subset of preemptio
 	{Summary of partial verification results on timed-out tests.
 	``Mutual timeouts'' counts how often both QS-Limited-HB and SSS-MC-ICB
 	(the best bug-finding approach from each group)
-	timed out with no bug found.
+	timed out. %with no bug found.
 	Among those, ``Average tested subset SSes'' counts how many partial verifications
 	QS-Limited-HB provided on average for each test. %(\sect{\ref{sec:eval-sssmc}}). % ???
 	}
@@ -1655,14 +1671,6 @@ I show the number of state spaces Quicksand was able to complete in the
 These completions guarantee that, if the test program could expose a bug,
 it would depend on a data race not discovered yet,
 or be reachable only under a superset combination of preemption points not yet reached.
-
-On the other hand, attempting to maximize the raw number of completed state spaces
-may not be the most user-friendly way to present partial verification results.
-For example, included in these numbers are small state spaces which are subsets of other state spaces also completed;
-the user need not examine both subset and superset separately.
-Future work could conduct user studies to determine the most effective way to present these partial results
-from a software development perspective,
-such as described in \cref{sec:future-friendly}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1722,8 +1730,8 @@ and its ability to suppress reallocation false positives (\cref{sec:quicksand-id
 	%
 	``Total DR PPs'' counts how many unique data-racing instructions
 	QS-Pure-HB identified among tests where it found no bugs.
-	Among those, ``Benign DRs'' counts how many were refuted as non-failing,
-	while ``Untested DR PPs'' counts how many could not be checked in the time limit.
+	Among those, ``Benign'' counts how many were refuted as non-failing,
+	while ``Untested'' counts how many could not be checked in the time limit.
 	Finally, ``Realloc. FPs'' counts how many reallocation false positives QS-Limited-HB suppressed.
 	}
 	\label{tab:drstatistix}
@@ -1778,7 +1786,7 @@ meaning it is not just an issue of writing ``better'' test cases to avoid them.
 
 \begin{figure}[t]
 	\begin{center}
-	\includegraphics[width=0.85\textwidth]{../proposal/nondets.pdf} % TODO: get some gf colors on here
+	\includegraphics[width=0.9\textwidth]{../proposal/nondets.pdf} % TODO: get some gf colors on here
 	\end{center}
 	\caption[Nondeterministic data-race preemption points are required to find some bugs.]
 	{Nondeterministic data-race preemption points are required to find some bugs.
@@ -1836,7 +1844,132 @@ and fall back to classifying them with DPOR.
 \section{Discussion}
 \label{sec:quicksand-discussion}
 
-% identifying & skipping redundancies in smaller ID state spaces via memoization (same applies to ICB!)
+This section will list the current limitations of Quicksand and Iterative Deepening
+and discuss opportunities for future improvement.
+
+\subsubsection{Avoiding redundant work}
+
+When Quicksand extends a small state space with more preemption points,
+the new state space is guaranteed to test a superset of interleavings compared to the old one.
+Because Quicksand prioritizes completing small state spaces before their descendants,
+the superset state spaces we run later will repeat each branch of their already-completed subsets,
+and any interleaving which does not preempt threads on any of the new preemption points will be repeated work.
+%
+% lol i never did this
+%We measured the proportion of repeated work among completed state spaces across our test suite;
+%on average, {\bf \large 999\%} of the interleavings in each test were repeated, with some tests as high as {\bf \large 9999\%}.
+This may make Quicksand slower than the single-state-space approach to find certain bugs,
+for example, if both {\tt mutex\_lock()} and {\tt mutex\_unlock()} preemption points
+together expose a bug, but not either alone.
+Predicting whether an upcoming interleaving has already been tested is not straightforward,
+but future implementations
+of Iterative Deepening and/or ICB
+could incorporate cross-job memoization
+to prune some or all such repeated work.
+
+Similarly, when pursuing total verification,
+if the state space resulting from preempting on every instruction
+(or equivalently, the maximal state space, thanks to \cref{sec:quicksand-soundness})
+could be completed in time,
+a model checker which immediately jumped to that state space,
+abandoning all smaller subsets would certainly achieve verification faster.
+Quicksand's maximal state space mode ({\tt -M}, see \cref{sec:quicksand-impl-modes})
+can strike a middle ground between Iterative Deepening and single-state-space preempt-everywhere,%
+\footnote{Thesis note: {\tt -M} mode was implemented after the conference paper's publication \cite{quicksand},
+and will be evaluated alongside transactional memory later in \cref{sec:tm-eval}.}
+but future implementations of Iterative Deepening could prioritize the maximal state space more flexibly still.
+For example, pinning its job to one of the available processors regardless of the status of any smaller jobs
+would avoid getting too flooded with smaller jobs to even begin the maximal job before time runs out.
+When full verification is infeasible,
+completing even an intermediate-sized job would allow immediately pruning all subset jobs thereof,
+perhaps using a form of binary search (on the preemption point set size) to find an appropriately-sized intermediate job.
+
+\subsubsection{Preemption point subsets}
+
+Quicksand was able to partially guarantee safety for some preemption points
+in 93\% of tests with too-large maximal state spaces (\cref{sec:quicksand-eval-partial}).
+However, in 6 cases, no more than the minimal state space could be verified,
+and in 18 others, no state spaces were completed at all.
+Larger state spaces often result from finer-grained locking,
+which can indicate a more intricate concurrent algorithm or an unnecessarily complicated design (or both).
+Such programs may require even more rigorous verification than a program with a single global lock,
+making them important to consider for future work.
+While Quicksand uses {\tt within\_function} (\cref{sec:quicksand-impl-mc})
+{\em statically} to restrict where preemption points could arise in advance of the test,
+future
+Iterative Deepening
+implementations could use this mechanism to {\em dynamically} subset preemption points further,
+making partial verification of larger tests possible,
+potentially even involving the user with interface options
+to enable and disable preemption points of her choosing at run-time.
+\cref{sec:warpzone-heuristics} discusses this possibility further.
+
+\subsubsection{Static data race analysis}
+
+In \cref{sec:quicksand-eval-bugs}, I evaluated the state-of-the-art approach's ability to find data-race-induced failures
+by configuring a static predicate to preempt on any non-stack memory access
+({\tt -0}, see \cref{sec:quicksand-impl-modes}).
+This introduced hundreds of new preemption points on each new test execution,
+with a prohibitive performance impact.
+While this performance could be improved by
+relaxing the preemption strategy,
+instead using a static or single-pass analysis to find data-race candidate PPs in advance \cite{portend},
+that would sacrifice soundness of the verification guarantee, as I showed in \cref{sec:quicksand-eval-nondets}.
+However, Quicksand itself could employ static data-race analysis such as RacerX \cite{racerx},
+or single-pass dynamic analysis such as ThreadSanitizer \cite{tsan} in future work.
+% These tools tend to err on the side of false positives,
+% but also include .....
+Any data-race candidates identified in advance could heuristically be included in Quicksand's initial seed PP sets
+(\cref{sec:quicksand-initial-pps}),
+enabling it to focus on the most suspicious races immediately,
+rather than waiting for them to be identified after potentially many iterations of model checking.
+
+\subsubsection{Partial verification}
+
+Quicksand is not the first concurrency tester to provide a partial verification guarantee
+when it times out on too-large tests.
+Probabilistic Concurrency Testing %(PCT)
+\cite{randomized-scheduler}
+proposes to use random exploration of the state space and quantify the probability
+that a bug may remain in some untested interleaving after a time-out,
+although it is opaque to the user about which parts of her code were actually tested.
+Meanwhile, ICB proposes to inform the user
+of the maximum number of preemptions that were used to test any individual interleaving,
+under the assurance that most bugs are likely to be found with fewer preemptions (\Cref{tab:icb-bounds}).
+These guarantees could each be useful to developers in different scenarios,
+and future work could combine the two approaches to provide both at once.
+Iterative Deepening offers a clear benefit to the expert user
+via the {\tt within\_function} command,
+which enables her to restrict a test's scope to only the modules of a codebase she wishes to test.
+
+Likewise, when full verification is not computationally feasible,
+some jobs with data-race preemption points will inevitably time out,
+and Quicksand cannot guarantee those races are
+false positives or
+benign, even though no bug was found.
+In the ``Untested DR PPs'' column of \Cref{tab:drstatistix},
+I show how many such candidates Quicksand (with Pure Happens-Before) could not verify in each test,
+ultimately totaling 38\% of all data races in tests which timed out.
+In prior work,
+Portend introduced the {\em k-witness harmless} metric \cite{portend}
+for heuristically classifying the likelihood that each data race lead to a failure or be benign.
+Quicksand could incorporate this metric to guide the user's attention
+to the unverified data races most likely to be worth her time.
+
+In \cref{sec:quicksand-eval-partial} I presented partial verification results
+measured in tens or hundreds of subset state spaces completed on average per test case.
+However,
+%On the other hand,
+attempting to maximize the raw number of completed state spaces
+is not necessarily the most user-friendly way to present partial verifications.
+For starters, those numbers included small state spaces which were subsets of other state spaces also completed;
+the user need not examine both subset and superset separately to understand what was tested.
+Future work should at least perform basic set comparisons
+to present only the non-redundant state spaces completed when time runs out.
+For a further research challenge,
+user studies could help to determine the most effective interface for presenting these partial results
+from a software development perspective,
+which I discuss further in \cref{sec:future-friendly}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
