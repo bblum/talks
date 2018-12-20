@@ -375,7 +375,8 @@ although a checker may also include arbitrary program-specific predicates.
 During execution, a model checker identifies a subset of the program's operations as ``interesting'', i.e.,
 where interrupting the current thread to run a different one is likely to produce different behaviour.
 These so-called {\em preemption points} may be identified by any combination of human intuition and machine analysis.
-Typical preemption points include the boundaries of synchronization APIs (e.g., {\tt mutex\_lock}) or accesses to shared variables.
+Typical preemption points include synchronization API boundaries (e.g., {\tt mutex\_lock()})
+or accesses to shared variables.
 Considering that at each preemption point multiple threads exist as options to run next,
 the set of possible ways to execute the program can be viewed as a tree.
 \Cref{fig:tree}(b) shows a visualization of the corresponding tree from our example program,
@@ -384,11 +385,13 @@ using each pseudo-assembly instruction as a preemption point.
 The number of preemption points in each execution defines the depth of this tree,
 and the number of threads available to run defines the branching factor.
 Hence, in a program with $n$ preemption points and $k$ threads available to run at each, the state space size is $O(n^k)$.
-Nevertheless, to fully test all of a program's possible behaviours, we must check the executions corresponding to every branch of the tree.
+Nevertheless, to fully test all possible behaviours of a program, we must check the executions corresponding to every branch of the tree.
 Addressing the scaling problem in this exponential relation is the central research problem for all model checkers,
 \revisionminor{which this thesis will address in \Cref{chap:quicksand}}.
 
-Some model checkers explicitly store the set of visited program states as a means of identifying equivalent interleavings \cite{spin}.
+Some model checkers,
+such as SPIN \cite{spin},
+explicitly store the set of visited program states as a means of identifying equivalent interleavings.
 From the perspective of such tools, state spaces such as these wherein equivalent states may be reached by multiple paths
 are represented as a directed acyclic graph (DAG) instead of as a tree.
 This approach is called \revisionminor{{\em stateful} model checking.} %\cite{spin}.
@@ -674,7 +677,7 @@ which is distributed as an obfuscated binary to protect the subsequent challenge
 The required concurrency primitives \revisionminor{for P2} are as follows:
 \begin{itemize}
 	\item Mutexes, with the interface {\tt mutex\_lock(mp)} and {\tt mutex\_unlock(mp)}, whose functionality is described earlier this chapter. Students may use any x86 atomic instruction(s) they desire, such as {\tt xchg}, {\tt xadd}, or {\tt cmpxchg}, and/or the {\tt deschedule}/ {\tt make\_runnable} system calls offered by the reference kernel.
-	\item Condition variables, with the interface {\tt cond\_wait(cvp, mp)}, {\tt cond\_signal(cvp)}, and {\tt cond\_broadcast(cvp)}. {\tt cond\_wait()} blocks the invoking thread, ``simultaneously'' releasing a mutex which protects some associated state (atomically, with respect to other calls under the same mutex).
+	\item Condition variables, with the interface {\tt cond\_wait(cvp, mp)}, {\tt cond\_signal(cvp)}, and {\tt cond\_broadcast(cvp)}. {\tt cond\_wait()} blocks the invoking thread, ``simultaneously'' releasing a mutex which protects some associated state (atomically, with respect to other calls under that mutex).
 		{\tt cond\_signal()} and {\tt cond\_broadcast()} wake one or all waiting threads.
 		Students must use the {\tt deschedule} and {\tt make\_runnable} system calls to implement blocking (busy-waiting is forbidden), and typically include an internal mutex to protect the condition variable's state as well.
 		The primary challenge of this exercise is ensuring the aforementioned atomicity between {\tt cond\_wait}'s unlock and deschedule, with respect to the rest of the interface.

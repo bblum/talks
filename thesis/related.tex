@@ -26,7 +26,7 @@ While previous chapters cited prior work as necessary in background discussions,
 this chapter aims to comprehensively tour the field,
 orienting the reader's understanding of Landslide in the space of said tradeoffs.
 
-\section{Stateless Model Checking}
+\section{Stateless model checking}
 
 Equal partners in concurrency testing are the practical and the theoretical:
 %the former meaning
@@ -39,7 +39,7 @@ and algorithmic advances to make ever-larger state spaces computationally feasib
 The following two subsections discuss the most closely related prior work accordingly.
 %I discuss my most closely related works split in two sections accordingly.
 
-\subsubsection{Tools}
+\subsection{Tools}
 
 Stateless model checking dates back to Verisoft \cite{verisoft},
 the 1997 tool which first attempted to exhaustively explore the \revisionminor{possible} ways to interleave threads.
@@ -133,7 +133,7 @@ to help the user receive meaningful results as promptly as possible.
 Its choice of a familiar pthread-like synchronization API makes it suitable for inexpert users,
 and its recent extension to HTM adds support for more modern concurrency patterns as well.
 
-\subsubsection{Algorithms}
+\subsection{Algorithms}
 \label{sec:related-algs}
 
 To date a number of techniques have been proposed to mitigate exponential explosion,
@@ -201,21 +201,21 @@ to keep state spaces manageable.
 Of course, no matter how \revisionminor{powerful} a sound reduction, there will always be programs too large to test.
 To provide even partial results for state spaces that exceed the testing budget
 (whether as predicted by automatic estimation \cite{estimation} or by a human's wild guess),
-various heuristic exploration strategies have been proposed.
-Preemption Sealing \cite{sealing} allows programmers to manually exclude preemption points
+various heuristic strategies have been proposed.
+Preemption Sealing~\cite{sealing} allows programmers to manually exclude preemption points
 arising from trusted source code modules;
 Landslide implements this as the {\tt without\_function} command (\cref{sec:landslide-pps}).
 Iterative Context Bounding (ICB) \cite{chess-icb} (\cref{sec:landslide-icb})
 orders the search space by increasing number of preemptions in each branch,
 which is empirically more likely to expose bugs sooner should they exist;
-BPOR \cite{bpor} extends DPOR to preserve soundness
+BPOR~\cite{bpor} extends DPOR to preserve soundness
 thereunder. % what a word
 Landslide implements ICB and BPOR for \Cref{chap:quicksand}'s control experiments,
 although does not yet incorporate it into this thesis's own contributions
 (as discussed in \Cref{chap:warpzone}).
 \Cref{chap:quicksand}'s Quicksand algorithm is, effectively, another such heuristic search strategy,
 focusing on preemption point subsets rather than context switch bounding.
-\revision{Maple \cite{maple} proposed a heuristic metric for measuring the amount of ``concurrency coverage'',
+\revision{Maple~\cite{maple} proposed a heuristic metric for measuring the amount of ``concurrency coverage'',
 analogous to line-by-line coverage for sequential programs,
 and prioritizes testing interleavings which increase the coverage metric,
 although it makes several limiting assumptions such as
@@ -224,7 +224,7 @@ preemption locality
 % this is like, TOTAL bs, completely results-oriented empiricism
 % and at worst, intentionally blinding yourself to the actually difficult bugs
 and independence of values read/written.}
-DeMeter \cite{demeter} adapted abstraction reduction to distributed systems verification under the name Dynamic Interface Reduction,
+DeMeter~\cite{demeter} adapted abstraction reduction to distributed systems verification under the name Dynamic Interface Reduction,
 while dBug \cite{dbug-phdthesis} applied abstraction reduction to synchronization primitives,
 and I showed how it could be applied similarly to transactional memory in \cref{sec:tm-abstraction}.
 Each of these approaches is compatible (and indeed, throughout this thesis used often in concert)

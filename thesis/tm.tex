@@ -2131,7 +2131,7 @@ the evaluation's results in a broader context,
 list the current limitations of Landslide's implementation,
 and discuss open problems for future work.
 
-\subsubsection{Retry set optimality}
+\subsection{Retry set optimality}
 
 For all the reduction retry sets demonstrated in \Cref{tab:tm-verifs},
 some inefficiencies remain in its strategy.
@@ -2172,7 +2172,7 @@ while constructing \Cref{fig:retry-set-example}
 and from inspecting state spaces arising from larger test parameters as well; %while implementing it;
 nevertheless, this falls well short of formal proof, which I must leave to future work.
 
-\subsubsection{STM reduction soundness}
+\subsection{STM reduction soundness}
 
 In \cref{sec:tm-eval-stm} I showed that state spaces could be reduced even further than with retry sets
 by assuming an HTM interface which abstracts away {\tt \_XABORT\_RETRY} behind a loop.
@@ -2213,7 +2213,7 @@ Future work could automatically identify a program's retry loops
 and give up on {\tt \_XABORT\_RETRY} by switching to STM mode on-the-fly,
 much like Landslide's heuristic synchronization detection does for yield loops (\cref{sec:landslide-blocking}).
 
-\subsubsection{Nested transactions}
+\subsection{Nested transactions}
 \label{sec:tm-warpzone-nested}
 
 Whenever {\tt \_xbegin()} is called with a transaction already active, or {\tt \_xend()} while not,
@@ -2229,7 +2229,7 @@ separately against their APIs
 with abstraction reduction (\cref{sec:tm-abstraction}),
 then check the rest of the program with (for example) traditional mutexes that can nest safely.
 
-\subsubsection{Relaxed memory orderings}
+\subsection{Relaxed memory orderings}
 \label{sec:tm-warpzone-relaxed}
 
 \cref{sec:tm-design}'s formalization of thread interleavings does not account for read/write reorderings
