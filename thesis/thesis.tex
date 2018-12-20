@@ -134,10 +134,13 @@ For my family, my teachers, and my students.
 
 \pagestyle{plain} % for toc, was empty
 
-%\newcommand\revision[1]{#1\xspace}
-\newcommand\revision[1]{\cbstart[0.5em]{}#1\cbend\xspace}
-%\newcommand\revisionminor[1]{#1\xspace}
-\newcommand\revisionminor[1]{\cbstart{}#1\cbend\xspace}
+\newcommand\revision[1]{#1\xspace}
+%\newcommand\revision[1]{\cbstart[0.5em]{}#1\cbend\xspace}
+\newcommand\revisionminor[1]{#1\xspace}
+%\newcommand\revisionminor[1]{\cbstart{}#1\cbend\xspace}
+% quicksand chapter revisions only
+\newcommand\qrevision[1]{\cbstart[0.5em]{}#1\cbend\xspace}
+\newcommand\qrevisionminor[1]{\cbstart{}#1\cbend\xspace}
 
 \begin{abstract}
 Concurrent programming presents a challenge to students and experts alike because of the complexity of multithreaded interactions and the difficulty \revisionminor{of reproducing and reasoning} about bugs.
