@@ -1128,6 +1128,15 @@ and when evaluating whether two heap accesses can race,
 the IDs of their containing blocks must match
 ({\tt was\_freed\_remalloced()} in {\tt memory.c}),
 in addition to the other requirements of Happens-Before.
+If the generations do not match,
+Landslide sets the {\tt free\_re\_malloc} flag in the messaging protocol to Quicksand.
+If the race is later observed in a reordering which avoids the reallocation pattern
+(such as in \Cref{fig:recycle-bug}),
+Landslide will report it as normal,
+and Quicksand will promote it to a normal preemption point in the registry
+({\tt pp\_new()} in {\tt pp.c}, ``{\tt for realsies}'' case).
+Also included in this message is a flag to indicate whether a data race was found
+nondeterministically (i.e., not on the first interleaving), such as described in \cref{sec:quicksand-pps}.
 
 Preempt-everywhere mode (\cref{sec:quicksand-impl-modes})
 imposes a heavy burden on Landslide on account of the sheer number of preemption points involved.
@@ -1177,7 +1186,7 @@ I pose the following evaluation questions.
 	\item Does testing alternate interleavings with model checking improve the accuracy of data race analysis?
 		\begin{enumerate}
 			\item Does Quicksand avoid false positives compared to single-execution Limited Happens-Before?
-			\item Does Quicksand find data-race bugs that single-execution Pure or Limited Happens-Before would miss?
+			\item Does Quicksand find data-race bugs that single-execution Pure Happens-Before or Limited Happens-Before alone would miss?
 		\end{enumerate}
 \end{enumerate}
 
@@ -1212,29 +1221,30 @@ that extending Landslide to support native Linux programs,
 complete with filesystem and network nondeterminism,
 would have been an engineering burden beyond my ability to do alone and still graduate on time.}
 
-\newcommand\mxtest{\texttt{mx\_test}}
-\newcommand\tej{\texttt{join\_test}}
-\newcommand\bct{\texttt{bcast\_test}}
-\newcommand\paraguay{\texttt{signal\_test}}
-\newcommand\paradise{\texttt{sem\_test}}
-\newcommand\rwldgr{\texttt{rwlock\_test}}
-\newcommand\prisema{\texttt{sched\_test}}
-\newcommand\waitsimple{\texttt{wait\_test}}
-\newcommand\alarmsimul{\texttt{alarm\_test}}
+\newcommand\mxtest{\texttt{mutex\_test}\xspace}
+\newcommand\tej{\texttt{thr\_exit\_join}\xspace}
+\newcommand\bct{\texttt{broadcast\_test}\xspace}
+\newcommand\paraguay{\texttt{paraguay}\xspace}
+\newcommand\paradise{\texttt{paradise\_lost}\xspace}
+\newcommand\rwldgr{\texttt{rwlock\_downgrade\_read\_test}\xspace}
+\newcommand\prisema{\texttt{priority-sema}\xspace}
+\newcommand\waitsimple{\texttt{wait-test}\xspace}
+\newcommand\alarmsimul{\texttt{alarm-simultaneous}\xspace}
 
-I tested P2s with 6 multithreaded programs:
+I tested P2s with six multithreaded programs:
 \mxtest, for locking algorithm correctness,
 \tej, a test of thread lifecycle,
-\bct~and \paraguay~for condition variables,
-\paradise~for semaphores,
+\bct and \paraguay for condition variables,
+\paradise for semaphores,
 % nb: there used to be a "f u latex" comment here with a \\ after dgr, prob for margins
-and \rwldgr for r/w locks.
+and \rwldgr for R/W locks.
 These are the same tests I distributed Landslide with in \Cref{chap:education};
 \cref{sec:education-pebbles-tests} describes them in further detail.
 For \mxtest, \paradise, and \paraguay,
-I used the {\tt without\_function} command to exclude {\tt thr\_create}, {\tt thr\_exit}, and {\tt thr\_join} preemption points,
+I used the {\tt without\_function} command to exclude
+{\tt thr\_create()}, {\tt thr\_exit()}, and {\tt thr\_join()} preemption points,
 and for \mxtest I enabled {\tt TESTING\_MUTEXES} (\cref{sec:landslide-dynamicconfig}).
-I tested Pintoses with 3 programs from the class's provided test suite:
+I tested Pintoses with three programs from the class's provided test suite:
 \prisema, a test of the kernel scheduling algorithm,
 \alarmsimul, for the timer sleep routine,
 and \waitsimple, for process lifecycle system calls.
@@ -1243,11 +1253,12 @@ Some of the Pintoses were partially implemented,
 so each test could only be run on a subset of the 78 submissions;
 see the ``Number tested'' column in \Cref{tab:drbugs}.
 For all tests,
-I also excluded preemption points on {\tt malloc}'s internal lock using {\tt without\_function}.
+I also excluded preemption points on {\tt malloc()}'s internal lock using {\tt without\_function}.
 In total, the evaluation comprises 629 unique tests (i.e., pairs of a test program and a Pintos or P2),
 at least 181 of which will be seen to expose bugs.
 
 \subsubsection{Experimental setup}
+\label{sec:quicksand-expt-setup}
 
 To evaluate the benefits of data-race preemption points and Iterative Deepening separately,
 I ran the test suite under Quicksand in three different experimental configurations,
@@ -1256,7 +1267,8 @@ each of which was given a 1-hour budget and 10 CPUs for each test.
 \begin{itemize}
 	\item {\bf QS-Limited-HB}: Quicksand with Landslide configured to use Limited Happens-Before for its data race analysis ({\tt -H}),
 	\item {\bf QS-Pure-HB}: Quicksand using Pure Happens-Before instead ({\tt -V}), and
-	\item {\bf QS-Sync-Only}: Quicksand with initial preemption points only \cref{sec:quicksand-initial-pps},
+	\item {\bf QS-Sync-Only}: Quicksand with initial preemption points only,
+		as described in \cref{sec:quicksand-initial-pps},
 		but never adding new ones from reported data races.
 \end{itemize}
 
@@ -1275,7 +1287,7 @@ corresponding to the search strategies discussed in \cref{sec:quicksand-impl-mod
 		({\tt -I}, \cref{sec:landslide-icb}), and
 		%From prior work, CHESS \cite{chess} implements this approach.
         \item {\bf SSS-MC-Shared-Mem}:
-		Using ICB+BPOR, configured to preempt on any shared memory access ({\tt -0}).
+		Using ICB+BPOR, configured to preempt on any shared memory access ({\tt -0})
                 (decided at runtime, excluding threads' accesses to their own stacks),
                 which in principle includes all possible data races.
 		%From prior work, Inspect \cite{inspect} implements this approach,
@@ -1284,21 +1296,538 @@ corresponding to the search strategies discussed in \cref{sec:quicksand-impl-mod
 
 Prior work has shown how to parallelize DPOR of a single state space across multiple processors \cite{parallel-dpor},
 but it remains an open research problem how to extend the algorithm to ICB.
-Hence, I optimistically gave control experiments a linear speedup of 10 hours per test with 1 CPU;
+Hence, I optimistically gave all control experiments a linear speedup of 10 hours per test with 1 CPU;
 i.e., assuming it could parallelize with 100\% efficiency.
 To match this,
-Quicksand reports the CPU-time spent in addition to the wall-clock time for a resource-fair comparison,
-although Quicksand's inherent parallelism is a convenient benefit unto itself.
+Quicksand reports both the CPU-time and wall-clock time spent during its execution.
+Comparing CPU-time leads to a more fair comparison,
+although Quicksand's inherent parallelism, which only a wall-clock time comparison would show,
+is also a convenient benefit unto itself.
 All tests ran on 12-core 3.2 GHz Xeon W3670 machines with 12GB of RAM.
 
-\subsection{Finding bugs}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Bug-finding}
 \label{sec:quicksand-eval-bugs}
+
+\Cref{fig:dowefindbugsfaster}
+plots the bug-finding performance of Quicksand's three experimental trials
+against the three control approaches
+in a cumulative distribution of total bugs found against elapsed time.
+The farthest-right point on each series indicates in how many total test cases that trial found a bug
+after the 10 CPU-hour timeout.
+\Cref{fig:dowefindbugsfaster}(a)
+is the main, resource-fair comparison by CPU-time,
+while \Cref{fig:dowefindbugsfaster}(b) shows
+the wall-clock time until each bug was found.
+
+\begin{figure}[p]
+	\begin{tabular}{c}
+        \includegraphics[width=0.71\textwidth]{../proposal/dowefindbugsfaster-v2.pdf} \\
+		\begin{tabular}{p{\textwidth}}
+                (a) Bugs found by Quicksand versus control experiments, measured in CPU time.
+                %as a function of elapsed CPU time.
+                Overall,
+                a more resource-fair comparison than (b),
+                although Quicksand's start-up overhead is exaggerated, as the SSS-MC tests are not parallelized. \\
+		\end{tabular}
+                \\
+                \\
+        \includegraphics[width=0.71\textwidth]{../proposal/dowefindbugsfaster-wallclock-v2.pdf} \\
+                %(b) Bugs found by elapsed wall-clock time.
+		\begin{tabular}{p{\textwidth}}
+                (b) Bugs found by Quicksand versus control experiments, measured in wall-clock time.
+                Quicksand is parallelized tenfold; the vertical line indicates its 1 hour limit. \\
+		\end{tabular}
+        \end{tabular}
+	\caption[Bug-finding performance comparison
+	between Quicksand and prior work.]
+	{Bug-finding performance comparison between
+        by several configurations of Quicksand and the single-state-space approaches.
+	Quicksand finds 125\% as many bugs
+        with data-race PPs
+	at the 10-hour mark, compared to the best prior work approach.}
+        \label{fig:dowefindbugsfaster}
+\end{figure}
+
+\subsubsection{Performance comparison}
+
+Compared to SSS-MC-ICB (the fastest among the control experiments),
+Quicksand finds more bugs within any fixed CPU budget greater than 200 seconds.
+In other words, draw a vertical line at $x=N$ for any $N>200$ to represent timing out each test after $y$ seconds elapsed,
+and Quicksand's bug total will exceed that of ICB.
+SSS-MC-Shared-Mem initially suffers a substantial performance penalty from the sheer number of preemption points it must analyze,
+but ultimately outstrips SSS-MC-ICB, which fundamentally cannot find data-race bugs,
+after 135 CPU-minutes with its 100th bug found,
+ultimately finishing the 10 CPU-hours as the best prior work approach in the long term.
+Compared to SSS-MC-Shared-Mem, Quicksand's Limited HB version
+finishes with 125\% as many bugs in total.
+
+Regarding Quicksand's tenfold parallelism,
+before the break-even point at 200 seconds,
+it lags behind SSS-MC-ICB due to the additional start-up overhead
+of testing many state spaces at once even though the easy bugs may be found extremely quickly in any of them.
+However, converting ICB's early CPU-time advantage
+into faster wall-clock performance remains an open research problem \cite{parallel-dpor}.
+\Cref{fig:dowefindbugsfaster}(b) gives Quicksand full credit for its inherent parallelism,
+which ICB cannot yet practically match:
+with a processor allocation of 10 CPUs, it outperforms all prior work approaches
+for any fixed budget of wall-clock time
+(i.e., comparing across a vertical line at $x=N$ for any $N$).
+% After 1 hour of wall-clock time, tenfold Quicksand performs 158\% as well as SSS-MC-ICB. % totally meaningless
+
+The QS-Sync-Only experiment tests whether Iterative Deepening would be effective
+even for model checking domains without data races,
+such as distributed systems \cite{macemc,modist,samc,dbug-retreat,concuerror}
+and programming languages whose type systems statically reject concurrent mutable shared state
+\cite{erlang,haskell,rust-book}.
+When Quicksand ignores all data-race candidates,
+its results are competitive with SSS-MC-DPOR, although SSS-MC-ICB outperforms it slightly.
+This is unsurprising: the seed subsets of preemption points
+that QS-Sync-Only is limited to
+(\cref{sec:quicksand-initial-pps})
+are much less flexible than ICB's preemption strategy.
+This result suggests that in future work,
+Quicksand should consider using ICB in parallel with its default configuration when it finds no data-race candidates to test.
+I discuss this possibility further in \cref{sec:warpzone-heuristics}.
+
+On the other hand,
+comparing QS-Limited-HB to SSS-MC-Shared-Mem
+shows that Iterative Deepening thoroughly outperforms ICB when shared-memory preemptions come into play.
+%We attribute this to the fact that
+Statically configuring a preemption point for every shared memory access in advance
+produces orders of magnitude more points than
+waiting for an access to be identified as part of a data race at runtime.
+%
+In principle, DPOR and ICB+BPOR should suffice to identify and prune any equivalent thread interleavings
+arising from extraneous preemption points on non-conflicting accesses.
+However, in practice,
+%we found that
+the sheer number of accesses during each new execution
+(often thousands)
+added significant performance overhead to
+%the MC when computing DPOR and backtracking.
+DPOR's $O(n^2)$ memory independence computation (\cref{sec:landslide-dpor-conflix}),
+as well as the $O(n)$ overhead of checkpointing the execution state at each preemption point (\cref{sec:landslide-timetravel}).
+Iterative Deepening avoids this overhead by waiting until runtime
+to identify fewer, more relevant preemption points dynamically,
+and is hence more suitable for model checking when data races are involved.
+
+\subsubsection{Types of bugs}
+
+\Cref{tab:drbugs} provides more detail on each of the bugs shown in \Cref{fig:dowefindbugsfaster},
+broken down by test case.
+The left half shows the number found by each experimental approach,
+with the totals of each column corresponding to the values at $x=10$ hours in \Cref{fig:dowefindbugsfaster}.
+In \mxtest, which checks the lock implementation for correctly providing mutual exclusion
+(rather than trusting its correctness, as all other tests do),
+SSS-MC-ICB and SSS-MC-DPOR
+found dramatically fewer bugs (just 1).
+Prior work has proposed {\em abstraction reduction} \cite{dbug-phdthesis},
+in which verifying correctness properties of synchronization primitives
+allows subsequently trusting them in other tests which use them to mitigate state space explosion;
+\cref{sec:tm-abstraction} will explore this technique further.
+By contrast, QS-Limited-HB found 10 mutex bugs, and SSS-MC-Shared-Mem found 12.
+In the scope of this chapter,
+this serves as strong evidence that new low-level synchronization code must be verified with data-race preemption points,
+whether combined with Iterative Deepening or ICB.
+
+\begin{table}[t]
+	\begin{center}
+	\small
+	\begin{tabular}{r|c||c|c||c|c|c}
+		%\multicolumn{2}{c||}{} & \multicolumn{5}{c||}{\bf {Total bugs}} & \multicolumn{4}{c||}{\bf {Data-race bugs}} \\
+		% ---
+		& {\bf Num.} & \multicolumn{2}{c||}{\bf Quicksand} & \multicolumn{3}{c}{\bf {Single-state-space MC}}
+		%& \multicolumn{2}{c|}{\bf {Limited HB}} & \multicolumn{2}{c||}{\bf {Pure HB}} &
+		%{\bf Mutual} & {\bf Avg. tested}
+		\\
+		% ---
+		{\bf Test} & {\bf tested} & {\bf LHB} & {\bf PHB} & {\bf ICB} & {\bf DPOR} & {\bf ShMem}
+		%& {\bf All} & {\bf Nondet.} & {\bf {All}} & {\bf {Nondet.}}
+		%& {\bf timeouts} & {\bf subset SSes}
+		\\
+		% ---
+		\hline
+		%         #test qs-lhb qs-phb icb dpor every dronly nondets(LHB) dronly(PHB) nondets(LHB) mutual-TO comp.SSes
+		{\tt broadcast\_test}    & 79  & 8   & 8   & 5   & 6   & 7   \\ % & 2 & 1 & {2} & {1} & 7    & 112.3 \\
+		{\tt thr\_exit\_join}    & 79  & 23  & 20  & 13  & 13  & 14  \\ % & 11& 4 & {7} & {3} & {12} & {69.7} \\
+		{\tt mutex\_test}        & 79  & 10  & 9   & 1   & 1   & 12  \\ % & 9 & 1 & {8} & {1} & 0    & -     \\
+		{\tt paradise\_lost}     & 79  & 17  & 16  & 12  & 11  & 12  \\ % & 7 & 3 & {6} & {2} & {50} & {77.4} \\
+		{\tt paraguay}           & 79  & 10  & 8   & 5   & 5   & 11  \\ % & 6 & 1 & {3} & {2} & 45   & {59.6} \\
+		{\tt rwlock\_downgrade}  & 79  & 27  & 26  & 25  & 23  & 28  \\ % & 4 & 1 & {3} & {0} & {44} & {86.3} \\
+		\hline
+		{\tt priority-sema}      & 59  & 7   & 7   & 1   & 1   & 8   \\ % & 6 & 4 & {6} & {6} & 2    & 13.0  \\
+		{\tt alarm-simultaneous} & 44  & 21  & 12  & 16  & 5   & 29  \\ % & 17& 1 & {7} & {6} & {17} & {7.8}  \\
+		{\tt wait-simple}        & 52  & 30  & 26  & 24  & 23  & 1   \\ % & 7 & 2 & {2} & {0} & {15} & {33.8} \\
+		\hline
+		{\bf Total} & 629 & 153 & 132 & 102 & 88  & 122 \\ % 69& 15& {44}& {21}& {192}& {65.8} \\
+	\end{tabular}
+	\end{center}
+	\caption[Summary of bugs found by each test program.]
+	{Summary of bugs
+	%and data races
+	found by each test program.
+	QS-LHB and QS-PHB are Quicksand; ICB/DPOR/ShMem are the controls (\cref{sec:quicksand-expt-setup}).
+	}
+	\label{tab:drbugs}
+\end{table}
+
+To ensure that the corpus of P2 and Pintos bugs gives an unbiased comparison between Quicksand and ICB,
+I also counted the preemption bounds at which ICB found each of its bugs,
+i.e., the minimum number of involuntary thread switches each bug required to expose.
+Table~\ref{tab:icb-bounds} shows the distribution of these bounds,
+which is consistent with the results of \cite[Table 2]{chess-icb},
+reproduced in the rightmost column
+(obtained under a different test suite, of course, of only 5 programs).
+This shows no bias towards bugs that would be harder for ICB to find.
+In fact, this evaluation's preemption bound distribution is {\em more} heavily biased towards fewer preemptions,
+suggesting that if anything,
+my test suite is even friendlier still to ICB than that of prior work.
+
+\begin{table}[h]
+	\begin{center}
+		\small
+	\begin{tabular}{r||c|c||c}
+		{\bf Bound} & {\bf SSS-MC-ICB} & {\bf SSS-MC-Shared-Mem} & Prior work \cite{chess-icb} \\
+		\hline
+		0         & 2     & 1     & 3 \\
+		1         & 82    & 86    & 7 \\
+		2         & 16    & 32    & 5 \\
+		3         & 2     & 3     & 1 \\
+		4+        & 0     & 0     & 0 \\
+		\hline
+		\bf Total & 102   & 122   & 16 \\
+	\end{tabular}
+	\end{center}
+	\caption[Distribution preemption bounds among bugs found by ICB.]
+	{Distribution of preemption bounds among bugs found by ICB control experiments.
+	Bound 0 means the bug was found by switching threads only on {\tt yield} calls.}
+	\label{tab:icb-bounds}
+\end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Verification}
 \label{sec:quicksand-eval-verif}
 
-\subsection{Nondeterministic data races}
+% TODO: put some txt here
+
+\subsubsection{Full verification}
+
+\Cref{fig:totalverif} plots the cumulative distribution of total verifications provided by each approach,
+in the same style of graph as \Cref{fig:dowefindbugsfaster}.
+For 167 of the 629 tests,
+QS-Pure-HB was able to reach and complete the maximal state space with no bugs found,
+hence providing the total verification guarantee justified by the proofs in \cref{sec:quicksand-soundness}.
+QS-Limited-HB completed a verification for 153 of 629 tests,
+slightly slower on account of Limited Happens-Before's higher false positive rate.
+%(which Quicksand must confirm each time by running an extra instance of Landslide). % explained below
+The next best approach for verifications was SSS-MC-Shared-Mem, which completed its search in only 39 cases.
+
+\begin{figure}[t]
+	\begin{center}
+	\includegraphics[width=0.71\textwidth]{../proposal/totalverifs-v2.pdf}
+	\end{center}
+	\caption[Verification performance comparison
+	between Quicksand and prior work.]
+	{Verification performance comparison between
+	Quicksand and single-state-space approaches.
+	Among the latter, only SSS-MC-Shared-Mem is theoretically capable of verifying any test with data races;
+	the others' series include only tests with no data races whatsoever,
+	in which case synchronization preemption points alone suffice for a full verification.}
+	\label{fig:totalverif}
+\end{figure}
+
+Ultimately, using Limited Happens-Before for finding data-race candidates allowed Quicksand to find more bugs,
+while Pure Happens-Before allowed for reaching full verification faster.
+I attribute this trade-off to the fact that
+Limited Happens-Before need not wait to test many alternate thread interleavings before
+finding a data-race candidate to begin with;
+%a potential data-race candidate is confirmed;
+rather, it can add new jobs to start testing potential races immediately.%
+\footnote{Upcoming, \Cref{tab:drstatistix} will corroborate this conclusion:
+the difference is most dramatic in {\tt alarm-\allowbreak{}simultaneous},
+the test where Quicksand struggled most to finish even small subset jobs.}
+%
+On the other hand, Limited Happens-Before can get overwhelmed by too many false positives,
+needing to refute such candidates by testing new state spaces for each one,
+while Pure Happens-Before can refute false positives {\em en passant}
+by testing alternate interleavings in its original state spaces.
+%In both cases, the performance differences seem to become significant only after about 10 minutes of CPU time,
+%which suggests... I don't actually know!
+This suggests that
+%each approach has merit, and that
+model checkers which incorporate data-race analysis should implement both modes
+and offer the user to choose based on their desired and/or expected testing outcome.
+
+The only testing modes which are theoretically capable of verifying any test with data races
+were QS-Pure-HB, QS-Limited-HB, and SSS-MC-Shared-Mem (i.e., preempt-everywhere mode).
+When QS-Sync-Only, SSS-MC-DPOR, and SSS-MC-ICB
+complete their respective maximal state spaces (i.e., all synchronization preemption points),
+that constitutes a full verification only in the case where no data races were identified at all,
+meaning Iterative Deepening would search no deeper than that anyway.
+Therefore, in \Cref{fig:totalverif},
+the data series for these latter three configurations
+represent only completed tests with no data races.
+Even though SSS-MC-Shared-Mem tends to hang out in the same neighbourhood as them,
+note that SSS-MC-Shared-Mem is still steadily increasing in verifications provided at the 10-hour cutoff
+(let alone the Quicksand ones),
+while the other three seem to reach a plateau of around 20-30 tests relatively soon.
+
+Overall, including data-race preemption points increases verification capacity by 4.25x.
+Assuming sequentially-consistent hardware,
+QS-Pure-HB classified many true data races as benign,
+while the SSS-MC-ICB approach could at best report such races to the user.
+This graph's results show that code written in a natural environment by inexpert users (students)
+generally does not obey the sort of strict coding discipline necessary
+for a model checker to make simplifying assumptions such as ``no data races'',
+justifying this chapter's claim that data-race preemption points are essential to model checking.
+
+\subsubsection{Partial verification}
+
+When a model checking job times out,
+the user would more likely prefer a summary of what parts of the test were verified
+rather than to write off all the CPU time spent as wasted.
+Prior work has proposed Probabilistic Concurrency Testing %(PCT)
+\cite{randomized-scheduler},
+which attempts to quantify the probability
+that a bug may remain in some untested interleaving after a time-out,
+although is opaque to the user about which parts of her code were actually tested.
+Meanwhile, ICB proposes to inform the user
+of the maximum number of preemptions that were used to test any individual interleaving,
+under the assurance that most bugs are likely to be found with fewer preemptions (\cref{tab:icb-bounds}).
+Quicksand instead reports which subsets of preemption points resulted in state spaces that did complete in time,
+in hopes that the user can supplement such a result with her own intuition
+by inspecting the code corresponding to the preemption points not tested (especially data races).
+From prior work, Preemption Sealing \cite{sealing}
+has argued the value of similar {\em compositional testing} when full verification is intractable,
+deferring to the user's expertise to judge the value of each subset of preemption points verified.
+\Cref{tab:partialverifs} shows Quicksand's partial verification results on timed-out tests.
+
+\begin{table}[h]
+	\begin{center}
+	\small
+	\begin{tabular}{r|c||c|c}
+		% ---
+		& {\bf Num.} & {\bf Mutual} & {\bf Avg. tested} \\
+		{\bf Test} & {\bf tested} & {\bf timeouts} & {\bf subset SSes} \\
+		% ---
+		\hline
+		%                        #test mutual-TO comp.SSes
+		{\tt broadcast\_test}    & 79  & 7    & 112.3 \\
+		{\tt thr\_exit\_join}    & 79  & {12} & {69.7} \\
+		{\tt mutex\_test}        & 79  & 0    & -     \\
+		{\tt paradise\_lost}     & 79  & {50} & {77.4} \\
+		{\tt paraguay}           & 79  & 45   & {59.6} \\
+		{\tt rwlock\_downgrade}  & 79  & {44} & {86.3} \\
+		\hline
+		{\tt priority-sema}      & 59  & 2    & 13.0  \\
+		{\tt alarm-simultaneous} & 44  & {17} & {7.8}  \\
+		{\tt wait-simple}        & 52  & {15} & {33.8} \\
+		\hline
+		{\bf Total}              & 629 & {192}& {65.8} \\
+	\end{tabular}
+	\end{center}
+	\caption[Summary of partial verification results on timed-out tests.]
+	{Summary of partial verification results on timed-out tests.
+	``Mutual timeouts'' counts how often both QS-Limited-HB and SSS-MC-ICB
+	(the best bug-finding approach from each group)
+	timed out with no bug found.
+	Among those, ``Average tested subset SSes'' counts how many partial verifications
+	QS-Limited-HB provided on average for each test. %(\sect{\ref{sec:eval-sssmc}}). % ???
+	}
+	\label{tab:partialverifs}
+\end{table}
+
+On 229 tests, SSS-MC-ICB timed out after 10 hours with no bugs found. % thesis note - pretty sure this *isn't* preempt-everywhere
+Among these tests, QS-Limited-HB % thesis note -- i think that's what past-me meant. they just wrote, 'quicksand' but.
+found bugs in 37.
+The other 192 represent cases where neither Quicksand nor ICB were able to provide a conclusive result either way.
+\footnote{Thesis note: SSS-MC-Shared-Mem was added in a subsequent revision to \cite{quicksand}
+from when this analysis was conducted, at which time SSS-MC-ICB was the best-performing approach among control experiments.
+Nevertheless, mutual timeouts among all six testing approaches constituted roughly one third of the test suite.}
+For these 192,
+I show the number of state spaces Quicksand was able to complete in the
+``Average tested subset SSes'' column.
+% of Table~\ref{tab:drbugs}. % thesis - now split into sep table
+%While obviously not as strong as full verification,
+These completions guarantee that, if the test program could expose a bug,
+it would depend on a data race not discovered yet,
+or be reachable only under a superset combination of preemption points not yet reached.
+
+On the other hand, attempting to maximize the raw number of completed state spaces
+may not be the most user-friendly way to present partial verification results.
+For example, included in these numbers are small state spaces which are subsets of other state spaces also completed;
+the user need not examine both subset and superset separately.
+Future work could conduct user studies to determine the most effective way to present these partial results
+from a software development perspective,
+such as described in \cref{sec:future-friendly}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Data race analysis}
 \label{sec:quicksand-eval-nondets}
+
+Beyond finding new bugs and completing full verifications with data-race PPs,
+I evaluated Quicksand's performance for classifying data-race candidates in two ways:
+its ability to check nondeterministic data races not reachable under a single-pass analysis (\cref{sec:quicksand-pps})
+and its ability to suppress reallocation false positives (\cref{sec:quicksand-id-realloc}).
+\Cref{tab:drstatistix} presents the results for this section.
+
+\begin{table}[t]
+	\begin{center}
+	\footnotesize
+	\begin{tabular}{r|c||c|c|c|c||c|c|c||c}
+		\multicolumn{2}{c||}{} & \multicolumn{4}{c||}{\bf {Data-race bugs}}
+		& \multicolumn{3}{c||}{\bf {Verifications}} \\
+		% ---
+		& {\bf Num.}
+		%& \multicolumn{2}{c|}{\bf Quicksand} & \multicolumn{3}{c||}{\bf {State-of-the-art}}
+		& \multicolumn{2}{c|}{\bf {Limited HB}}
+		& \multicolumn{2}{c||}{\bf {Pure HB}}
+		& \multicolumn{3}{c||}{\bf {Pure HB}}
+		& \multicolumn{1}{c}{\bf {Realloc.}}
+		\\
+		% ---
+		{\bf Test} & {\bf tested}
+		%& {\bf LHB} & {\bf PHB} & {\bf ICB} & {\bf DPOR} & {\bf ShMem}
+		& {\bf All} & {\bf N.D.} & {\bf {All}} & {\bf {N.D.}}
+		& {\bf DR PPs} & {\bf Benign} & {\bf Untested} & {\bf FPs} \\
+		% ---
+		\hline
+		%                      #test dronly nond dronly nond
+		%                                                   drpps benign untest FRMs
+		{\tt broadcast\_test}    & 79  & 2 & 1 & {2} & {1} & 655  & 97  & 150 & 52  \\
+		{\tt thr\_exit\_join}    & 79  & 11& 4 & {7} & {3} & 566  & 68  & 249 & 338 \\
+		{\tt mutex\_test}        & 79  & 9 & 1 & {8} & {1} & 911  & 127 & 44  & 7   \\
+		{\tt paradise\_lost}     & 79  & 7 & 3 & {6} & {2} & 783  & 2   & 414 & 166 \\
+		{\tt paraguay}           & 79  & 6 & 1 & {3} & {2} & 936  & 9   & 510 & 180 \\
+		{\tt rwlock\_downgrade}  & 79  & 4 & 1 & {3} & {0} & 543  & 1   & 310 & 156 \\
+		\hline
+		{\tt priority-sema}      & 59  & 6 & 4 & {6} & {6} & 65   & 51  & 3   & 0   \\
+		{\tt alarm-simultaneous} & 44  & 17& 1 & {7} & {6} & 35   & 0   & 29  & 35  \\
+		{\tt wait-simple}        & 52  & 7 & 2 & {2} & {0} & 71   & 1   & 28  & 31  \\
+		\hline
+		{\bf Total}              & 629 & 69& 15& {44}& {21}& 4565 & 356 & 1737& 965 \\
+	\end{tabular}
+	\end{center}
+	\caption[Data race statistics among Quicksand experiments.]
+	{Data race statistics among Quicksand experiments.
+	``Data-race bugs'' counts, among Quicksand's bugs, how many required data-race preemption points to expose;
+	among those, the ``N.D.'' (``nondeterministic'') columns show how many candidates
+	required model checking to identify
+	in the first place
+	(\cref{sec:quicksand-eval-nondets}).
+	%
+	``Total DR PPs'' counts how many unique data-racing instructions
+	QS-Pure-HB identified among tests where it found no bugs.
+	Among those, ``Benign DRs'' counts how many were refuted as non-failing,
+	while ``Untested DR PPs'' counts how many could not be checked in the time limit.
+	Finally, ``Realloc. FPs'' counts how many reallocation false positives QS-Limited-HB suppressed.
+	}
+	\label{tab:drstatistix}
+\end{table}
+
+\subsubsection{Nondeterministic data races}
+
+Some memory accesses may be hidden in a control flow path that requires a nondeterministic preemption to be executed
+(\cref{sec:quicksand-pps}).
+In such cases, a single-pass dynamic data-race detector
+might not achieve the coverage necessary
+to identify a racing access pair as a candidate at all,
+let alone check the resulting behaviour with such as Landslide.
+I instrumented Landslide to report these to Quicksand
+and counted how many such led to Quicksand finding new bugs when used as preemption points.
+Such bugs could be considered {\em false negatives} of the single-pass approach.
+The left half of \Cref{tab:drstatistix}
+breaks down the types of bugs
+found in each test case,
+showing both the total number of data-race bugs
+and the number among those that required such nondeterministic data races to expose.
+% I denote these data race reports as {\em nondeterministic},
+% while those that could be found on the first interleaving .....
+%
+To ensure a fair comparison, I disabled Quicksand's reallocation false positive suppression
+(\cref{sec:quicksand-id-realloc}, itself evaluated in the next section)
+for this experiment.
+This prevents Landslide from suppressing an observed reallocation data-race candidate on the first interleaving,
+which would falsely classify it as nondeterministic,
+even though a single-pass would not (indeed, should not) suppress such candidates.
+
+\Cref{fig:dr-falsenegs}
+%compares the types of data-race candidates necessary to expose each data-race bug in the test suite.
+visualizes the difference between single-pass and model-checking-enabled data race analysis.
+The first and third series represent the bugs found using preemption points from single-pass data-race candidates only,
+% not entirely true, as portend could be given data-race traces from an MC
+%but they don't do it in their paper, so i feel comfortable making this claim
+i.e., the state-of-the-art approach used by RaceFuzzer \cite{racefuzzer} and Portend \cite{portend}.
+The second and fourth series show all data-race bugs Quicksand found,
+which includes the former type as well as new bugs involving nondeterministic races.
+QS-Limited-HB found a nice 69 data-race bugs in total, % nice
+15 of which %could not be found with single-pass data-race candidates alone.
+required nondeterministic data-race preemption points to expose.
+QS-Pure-HB is even more dependent thereupon, %on nondeterministic data-race PPs,
+%requiring nondeterministic data-race PPs
+requiring them in 21 cases among its 44 total data-race bugs.
+Moreover, although the frequency
+of these nondeterministic races varies across the different test cases
+(for example, almost all in {\tt broadcast\_test} were nondeterministic; almost none in {\tt mutex\_test}),
+they are still at least present in all tests,
+meaning it is not just an issue of writing ``better'' test cases to avoid them.
+
+\begin{figure}[t]
+	\begin{center}
+	\includegraphics[width=0.85\textwidth]{../proposal/nondets.pdf} % TODO: get some gf colors on here
+	\end{center}
+	\caption[Nondeterministic data-race preemption points are required to find some bugs.]
+	{Nondeterministic data-race preemption points are required to find some bugs.
+	Requiring stateless model checking integration to identify to begin with,
+	incorporating these races as new preemption points
+	allowed Quicksand to find
+	% lhb: 127.77%
+	% phb: 191.30%
+	128\% (Limited HB) to 191\% (Pure HB) as many data-race bugs
+	compared to using single-pass candidates alone.
+	}
+	\label{fig:dr-falsenegs}
+\end{figure}
+
+Note that I am not comparing how much testing time is required before identifying the data-race candidates involved in each bug.
+Single-pass data races can all be found after a single program execution,
+while Quicksand may potentially take up to all 10 CPU-hours before identifying a nondeterministic data race.
+However, prior work data-race tools \cite{tsan,fasttrack},
+being not integrated with a model checker,
+are not intended to discover new candidates under subsequent runs.
+Running a single-pass data-race tool repeatedly for 10 CPU-hours could potentially uncover some nondeterministic candidates,
+but stress testing's comparative problem with achieving reliable coverage is already well-understood
+\cite{chess-icb,gambit},
+so I hope the reader will consider this experiment enough evidence for model checking already.
+Likewise, replay-based tools such as RaceFuzzer \cite{racefuzzer} and Portend \cite{portend}
+depend upon the data-race detector to provide an execution trace leading to each candidate.
+This result suggests that
+such tools could benefit from a similar feedback loop as is used in Iterative Deepening,
+for example, to discover new transitively-reachable data races while testing initial ones,
+even if full verification not necessarily be their goal.
+
+\subsubsection{Reallocation false positive suppression}
+
+In \cref{sec:quicksand-realloc} I showed the soundness of
+suppressing data race reports between two heap accesses when the surrounding memory was re-allocated in between.
+\Cref{tab:drstatistix}'s ``Realloc FPs'' column shows the total number of such data-race candidates for each test program,
+totaling 965 across all tests.
+% NB. Calculated this by grepping QS-LHB id-logs for "for realsies" (see quicksand pp.c).
+Among these, only 64 were observed to avoid the reallocation in an alternate interleaving,
+thereupon being promoted to real data-race preemption points.
+\cref{sec:quicksand-realloc}'s proof guarantees the safety of pruning all state spaces resulting from the 901 others.
+%
+Among the 64 true data-races, %which initially fit the malloc-recycle pattern,
+none exposed a new bug when used as a preemption point.
+This suggests that for other data-race tools,
+suppressing reallocation candidates may be a productive heuristic,
+even if unsound without Iterative Deepening.
+However, Quicksand was able to correctly identify the 64 violations of that heuristic (among 26 distinct tests),
+and fall back to classifying them with DPOR.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

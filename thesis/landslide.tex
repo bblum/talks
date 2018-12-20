@@ -726,7 +726,7 @@ as the names of the mutex interface are mandated by the project specification.)
 This section documents the organization of code within Landslide.
 Unless otherwise specified, Landslide's code lives in
 %C files live in
-{\tt work/modules/landslide/} (Simics implemenation) or {\tt src/bochs-2.6.8/instrument/landslide/} (Bochs implementation)
+{\tt work/modules/landslide/} (Simics implementation) or {\tt src/bochs-2.6.8/instrument/landslide/} (Bochs implementation)
 relative to the repository root.
 
 Both simulators invoke Landslide once per instruction and once per memory read or write.
@@ -1443,6 +1443,7 @@ rather, it coincides with condition 3 of Limited Happens-Before %as defined in \
 (in fact, Landslide's Limited HB implementation simply reuses the same result computed for DPOR's purpose).
 
 \subsubsection{Memory conflicts}
+\label{sec:landslide-dpor-conflix}
 
 The memory conflict relation expresses when two transitions are dependent,
 or in other words, when their behaviour could potentially vary depending which executes first.
