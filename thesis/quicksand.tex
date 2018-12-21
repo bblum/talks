@@ -146,18 +146,18 @@ a {\em data-race preemption point} is required to find this bug.
 			\\
 			\\
 			\begin{center}
-			\begin{tabular}{ll}
-				{\bf Thread 1} & {\bf Thread 2} \\
+			\begin{tabular}{llc}
+				{\bf Thread 1} & {\bf Thread 2} & {\bf Value of {\tt count}} \\
 				\hline
-				\texttt{\hilight{darkorange}{mutex\_lock}(\&m);} \\
-				\texttt{int tmp = count;} \\
-							& \texttt{atomic\_xadd(\&count, \const{1});} \\
-							& \texttt{\hilight{olivegreen}{yield}();} \\
-							& \texttt{atomic\_xadd(\&count, \const{1});} \\
-				\texttt{count = tmp + 1;} \\
-							& \texttt{\hilight{assertfail}{assert(count >= 2);}} \\
-				\texttt{\hilight{darkblue}{mutex\_unlock}(\&m);} \\
-				\texttt{assert(count >= \const{1});}
+				\texttt{\hilight{darkorange}{mutex\_lock}(\&m);} & & 0 \\
+				\texttt{int tmp = count;} & & 0 \\
+							& \texttt{atomic\_xadd(\&count, \const{1});} & 1 \\
+							& \texttt{\hilight{olivegreen}{yield}();} & 1 \\
+							& \texttt{atomic\_xadd(\&count, \const{1});} & 2 \\
+				\texttt{count = tmp + 1;} & & 1 \\
+							& \texttt{\hilight{assertfail}{assert(count >= 2);}} & 1 \\
+				\texttt{\hilight{darkblue}{mutex\_unlock}(\&m);} & & 1 \\
+				\texttt{assert(count >= \const{1});} & & 1 \\
 			\end{tabular}
 			\end{center}
 			\\
