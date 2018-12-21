@@ -1,6 +1,14 @@
 % TODO: scan for abbrs like PP, MC, SSS-MC - well mc is ok but rephrase if necessary anyway
 \chapter{Quicksand}
 \label{chap:quicksand}
+
+% https://tex.stackexchange.com/questions/186746/define-shearbox-with-rotatebox-and-scalebox
+\newcommand\xshearbox[2]{%
+  \FPeval{\sheark}{(root(2,(#1)*(#1)+4)+#1)/2}\FPeval{\shearl}{1/\sheark}%
+  \FPeval{\sheara}{arctan(-\sheark)*180/pi}\FPeval{\shearb}{90+\sheara}%
+  \rotatebox{\shearb}{\scalebox{\sheark}[\shearl]{{\rotatebox{\sheara}{\smash{#2}}}}}%
+}
+
 \inspirationalquote{
 % original - on second thought, i'm not actually gonna put this in
 % the nuance in japanese is more desperate, more disorganized, and less generally heroic-seeming
@@ -10,9 +18,7 @@ There are awful, sad things in this world.
 But there are a lot of things worth protecting, too.
 }
 %{Kaname Madoka, Mahou Shoujo Madoka{\raisebox{0.1em}{$\scriptstyle \bigstar$}}Magica}
-% TODO: make the star italic
-% TODO: see https://tex.stackexchange.com/questions/63179/shear-transform-a-box/63188#63188
-{Kaname Madoka, Puella Magi Madoka{\raisebox{0.1em}{$\scriptstyle \bigstar$}}Magica}
+{Kaname Madoka, Puella Magi Madoka{\raisebox{0.1em}{\scalebox{0.65}{\xshearbox{0.25}{$\bigstar$}}}}Magica}
 %\inspirationalquote{Always, somewhere, someone is fighting for you.
 %As long as you remember her, you are not alone.}
 %{Mahou Shoujo Madoka{\raisebox{0.1em}{$\scriptstyle \bigstar$}}Magica}
