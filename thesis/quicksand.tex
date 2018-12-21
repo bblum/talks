@@ -23,9 +23,50 @@ But there are a lot of things worth protecting, too.
 %As long as you remember her, you are not alone.}
 %{Mahou Shoujo Madoka{\raisebox{0.1em}{$\scriptstyle \bigstar$}}Magica}
 
-% TODO: intro
+\vspace{2em}
+\qrevision{There is a fundamental disconnect between existing stateless model checkers
+and human users
+when it comes to testing concurrent code meaningfully within a fixed CPU budget.
+Existing tools
+%are configured to
+test systems according to a fixed preemption strategy,
+leading to runtime dependent entirely on the complexity of the test program,
+which may range from minutes to tens of thousands of years.
+Meanwhile, users approach testing with a finite amount of patience,
+%usually in the rough order of magnitude of a day:
+usually not varying from one test cycle to another as their code changes and evolves:
+students frantically testing last-minute changes facing a project deadline
+will likely wait no longer than an hour for test results,
+while a company preparing its product for production deployment % its, not their. companies arent people :triumph:
+may spend upwards of weeks on rigorous stability testing.
+Regardless of the use case,
+a stateless model checker committing in advance to test whichever single state space arises from its fixed strategy
+is certain to either under- or over-shoot its user's needs.
+A model checker which preempts the system too often will fail to complete the test in time,
+and one which preempts infrequently enough to complete with time to spare will leave the user wondering if it overlooked any bugs.
 
-% TODO: mention that all source files in this chapter are relative to id/ subdir in the repo
+This chapter presents Quicksand,
+an execution framework for model checking to manage this trade-off at run-time.
+Given a fixed CPU budget,
+representing the user's patience for testing,
+Quicksand dynamically alters its preemption strategy based on data race analysis
+(\cite{tsan,fasttrack}, \cref{sec:landslide-datarace})
+and optimizes the size of state spaces on-the-fly,
+guided by state space estimation
+(\cite{estimation}, \cref{sec:landslide-estimate}),
+to best match that budget.
+I will discuss the trade-off inherent in number of preemption points used (\cref{sec:quicksand-pps}),
+introduce {\em Iterative Deepening},
+the algorithm that Quicksand uses to automatically navigate that trade-off
+(\cref{sec:quicksand-id}),
+prove its soundness relative to the more expensive full verification approach
+(\cref{sec:quicksand-soundness}),
+and present a large evaluation of Quicksand against several
+state-of-the-art approaches % implemented under Landslide
+in which Quicksand performs best on both bug-finding and verification
+(\cref{sec:quicksand-eval}).
+% justifying the claim that model checkers should navigate said tradeoff at runtime
+}
 
 The contributions of this chapter were published as
 {\em Stateless Model Checking with Data-Race Preemption Points}
@@ -38,46 +79,188 @@ in OOPSLA 2016 \cite{quicksand}.
 \section{Preemption points}
 \label{sec:quicksand-pps}
 
-% reference figure (nb color scheme tree)
-% its pps were drawn on every instruction
-% for larger test cases, this is not practical
-% consider the example program of so and so (show mx/yield prog)
-% here is a resulting state space
-% this needs a DR preemption point to FAB
-% qs example (take from thesis slides)
+\qrevision{When configuring a model checker's preemption strategy,
+or indeed,
+choosing a model checker to begin with,
+the resulting state space is {\em parameterized} by the set of preemption points.
+%
+In the first example of \Cref{fig:tree}
+I constructed the state space by expanding both threads' {\tt x++;} operations into three pseudo-assembly instructions,
+then designating every instruction as a possible preemption point,
+yielding ${3+3 \choose 3} = 20$ total interleavings.
+Later, \cref{sec:landslide-dpor} showed DPOR prune 16 of those as equivalent,
+although the reduced state space size is still combinatorial
+in the number of {\em conflicting} events, rather than the total number.
+For larger tests, %with hundreds or thousands of conflicting events in any given execution,
+committing in advance to test all possible interleavings quickly becomes impractical.
+Accordingly, many existing model checkers opt for preempting on only a subset of execution events,
+such as synchronization API boundaries.
 
-% TODO make sure to define maximal and mminnimal
+\subsection{Types of preemption points} % TODO: find better name for sec'n
 
-% TODO: define "data race" (pure hb) vs "data race candidate" (limited); also do scane of this chapater for conisstencey
+Consider the new example program in \Cref{fig:pps-example}(a),
+in which one thread protects its accesses to {\tt count} with a mutex,
+while the other protects its accesses with atomic increment instructions.
+Assuming {\tt count} is only ever incremented, never decremented,
+the assertion in Thread 2 expects both of its preceding increments to be visible,
+no matter how many other threads come incrementing % incrementしてくる
+{\tt count} simultaneously.
+However, this assumes any other accesses to {\tt count} use the same protection mechanism,
+i.e., {\tt atomic\_xadd()},
+but since Thread 1 uses a mutex (which Thread 2 never touches),
+the threads can interleave to cause the assert to fail,
+as shown in \Cref{fig:pps-example}(b).
+%
+\Cref{fig:pps-statespace} shows the resulting state space
+supposing the model checker preempts only on synchronization APIs.%
+\footnote{Most modern C/C++ programs invoke atomic memory instructions by using compiler intrinsics,
+which could themselves be instrumented as a known synchronization API.
+However, not all programs are guaranteed to use well-understood interfaces;
+in fact, in the 15-410 class projects to be tested in the upcoming evaluation (\cref{sec:quicksand-eval-suite}),
+students are encouraged to roll their own atomics to get more experience writing x86 assembly.
+For the sake of this example, I leave {\tt atomic\_xadd()} uninstrumented.}
+However, \Cref{fig:pps-example}(b)'s interleaving involves
+preempting Thread 1 between its load and store of {\tt count},
+which is not a known synchronization call, but rather a data race.
+Hence, none of the interleavings in \Cref{fig:pps-statespace}'s state space
+will expose the failure;
+a {\em data-race preemption point} is required to find this bug.
 
-% TODO: use this somehow
+\begin{figure}[t]
+	\begin{center}
+		\begin{tabular}{p{0.8\textwidth}}
+			\begin{center}
+			\begin{tabular}{ll}
+				\multicolumn{2}{c}{Initially {\tt int count = \const{0}; mutex\_t m;}} \\
+				\\
+				{\bf Thread 1} & {\bf Thread 2} \\
+				\hline
+				\texttt{\hilight{darkorange}{mutex\_lock}(\&m);} & \texttt{atomic\_xadd(\&count, \const{1});} \\
+				\texttt{count++;}                                & \texttt{\hilight{olivegreen}{yield}();} \\
+				\texttt{\hilight{darkblue}{mutex\_unlock}(\&m);} & \texttt{atomic\_xadd(\&count, \const{1});} \\
+				\texttt{assert(count >= \const{1});}      & \texttt{assert(count >= \const{2});} \\
+			\end{tabular}
+			\end{center}
+			\\
+			(a) Example program with synchronization API calls highlighted.
+			\\
+			\\
+			\begin{center}
+			\begin{tabular}{ll}
+				{\bf Thread 1} & {\bf Thread 2} \\
+				\hline
+				\texttt{\hilight{darkorange}{mutex\_lock}(\&m);} \\
+				\texttt{int tmp = count;} \\
+							& \texttt{atomic\_xadd(\&count, \const{1});} \\
+							& \texttt{\hilight{olivegreen}{yield}();} \\
+							& \texttt{atomic\_xadd(\&count, \const{1});} \\
+				\texttt{count = tmp + 1;} \\
+							& \texttt{\hilight{assertfail}{assert(count >= 2);}} \\
+				\texttt{\hilight{darkblue}{mutex\_unlock}(\&m);} \\
+				\texttt{assert(count >= \const{1});}
+			\end{tabular}
+			\end{center}
+			\\
+			(b) Interleaving of (a) in which Thread 2's assertion fails,
+			as the single increment of Thread 1 overwrites both those of Thread 2.
+		\end{tabular}
+	\end{center}
+	\caption[Example bug requiring data-race preemption points to expose.]
+	{Example bug requiring data-race preemption points to expose.
+	Because the two threads use different modes of synchronization to protect their respective accesses to {\tt count},
+	preempting on synchronization calls alone is insufficient to expose the bug.
+	Rather, Thread 1 must be preempted between its non-atomic load and store of {\tt count}.
+	}
+	\label{fig:pps-example}
+\end{figure}
+
+\begin{figure}[ht!] % TODO: check placement
+	\begin{center}
+		% FIXME: fix it to be a real tree
+		\includegraphics[width=0.9\textwidth]{../oopsla/tree-maximal-only.pdf}
+	\end{center}
+	\caption[State space of \Cref{fig:pps-example} with synchronization preemption points only.]
+	{State space of \Cref{fig:pps-example} with synchronization preemption points only.
+	Note that none of these interleavings preempt Thread 1 at the necessary place
+	to trigger Thread 2's assertion failure..}
+	\label{fig:pps-statespace}
+\end{figure}
+}
+
+\qrevisionminor{How should a model checker know to instrument this particular data race for preemption
+in order to find the assertion failure lurking underneath?}
 Committing in advance to
-preempt on every instruction is certain to expose any possible bug under the given test case,
+preempt on every instruction is certain to include this data race,
 but invites massive state space explosion.
 Even as DPOR helps to skip equivalent interleavings of non-conflicting transitions,
 DPOR itself is $O(n^2)$ in the number of preemption points in a single execution,
 which is not compatible with such an approach.
 Accordingly, stateless model checkers must find more efficient ways to be able to uncover bugs such as these.
-
+%
 In related work,
-Portend \cite{portend} has already suggested combining data race analysis with preemption-driven artificial scheduling,
+Portend~\cite{portend} proposed to combine data race analysis with preemption-driven artificial scheduling,
 although it obtains its data-race candidates from a stand-alone, single-pass analysis.
-In order to make sure we identify every one of a program's data races that could possibly arise under the given test case,
-we must check many different interleavings to begin with,
-perform the Portend approach for every data race we find,
+In order to
+%make sure we
+identify every
+%one of a program's
+data race that could possibly arise under the given test case,
+a model checker must check many different interleavings to begin with,
+perform the Portend approach for every data race it finds,
 which may in turn uncover more data races
 (hidden in flow control paths reachable only through interleavings of the first race, perhaps),
-and then continue model checking the multiple data races together
-in a sort of bidirectional feedback loop between the two algorithms.
-I will refer to data races that require model checking to expose to begin with as
-{\em nondeterministic data races}. % TODO: rename, this name is awful
-In the next section,
+and then continue model checking those multiple races together
+in a
+%sort of
+bidirectional feedback loop between the two algorithms.
+Upcoming,
 \cref{sec:quicksand-id} will show how I achieve this in Quicksand, and
 \cref{sec:quicksand-soundness} will justify the technique's formal verification power.
 In the evaluation, %(\cref{sec:quicksand-eval}),
-\cref{sec:quicksand-eval-nondets} in particular will justify the need
-for this feedback loop between model checking and data race analysis
-by showing that many bugs require nondeterministic data races to expose.
+\qrevisionminor{\cref{sec:quicksand-eval-bugs} and \cref{sec:quicksand-eval-verif}
+will show that Quicksand strikes a healthy balance between fast bug-finding and full verification,
+and
+\cref{sec:quicksand-eval-nondets}
+%in particular
+will justify the need
+for such a feedback loop %between model checking and data race analysis.
+by showing that many
+data races require model checking to reliably detect.
+%bugs require nondeterministic data races to expose.
+}
+
+\subsection{Terminology}
+
+% TODO: add section refs to this para
+\qrevision{For the rest of this chapter, I will use the following terminology as shorthand for the concepts explained above.
+
+\begin{itemize}
+	\item {\bf Single-state-space model checking} refers to the state-of-the-art model checking strategy,
+		i.e., approaching each test with preemption points fixed in advance.
+	\item {\bf Maximal state space} refers to the set of thread interleavings possible
+		by preempting on all currently-known preemption points,
+		whether synchronization or data-race,
+		i.e., the singular state space tested by {\em single-state-space model checking}.
+	\item {\bf Minimal state space} indicates the opposite:
+		those thread interleavings requiring no more than Landslide's mandatory preemptions on voluntary context switches.
+	\item {\bf Data-race bug}
+		will refer to a concrete failure, such as \Cref{fig:pps-example}'s assertion failure above, whereas
+	\item {\bf Data race} refers to the racing access pair itself (\cref{sec:landslide-datarace}).
+		% TODO: scan this chapter for consistency of dis
+	\item {\bf Data-race candidate} shall refer specifically to
+		potentially-racing accesses identified by Limited Happens-Before, %(\cref{sec:landslide-lhb}), % sub sub sec
+		when disambiguation with {\em data races} is necessary.
+	\item {\bf Benign data races} are those that, when reordered in an alternate interleaving,
+		do not lead to a {\em data-race bug}, while
+	\item {\bf False positives} are {\em data-race candidates} that,
+		upon trying to reorder them,
+		turn out not to exist in the alternate interleaving at all,
+		such as in \Cref{fig:hb-example}(b).
+	\item {\bf Nondeterministic data race}
+		will refer to data races that cannot be exposed on the first thread interleaving,
+		but require model checking to expose to begin with.
+\end{itemize}
+}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1200,6 +1383,7 @@ I pose the following evaluation questions.
 \end{enumerate}
 
 \subsubsection{Test suite}
+\label{sec:quicksand-eval-suite}
 
 The test suite consists of 79 P2 student thread libraries (\cref{sec:pebbles}),
 submitted in 15-410 during the Spring 2014, Fall 2014, and Spring 2015 semesters,%
