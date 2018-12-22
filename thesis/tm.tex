@@ -595,6 +595,17 @@ To model weak atomicity, \Cref{lem:equiv} must be extended with a third possibil
 	As before.
 \end{proof}
 
+\qrevision{This proof assumes that all operations $\tiiat{\beta}$
+%within $\tii$'s
+are in fact executed transactionally.
+In STM systems, the user must annotate all shared memory accesses she wishes to be protected,
+so an incorrectly-annotated program could mix transactional and non-transactional operations
+in $\tii$.
+To emulate the interactions thereof with other threads would require fully simulating failure rollback after all,
+which I must leave to future work.
+I believe this assumption to be justified for the sake of any future weakly-atomic HTM systems,
+in which the user would not have the mixed blessing of such fine-grained annotations.}
+
 Conveniently,
 \Cref{thm:atom-weak} still guarantees transaction-transaction atomicity,
 so mutual exclusion of $m$ is preserved
@@ -955,12 +966,12 @@ Upcoming in the evaluation, \Cref{fig:retry-reduction} will visualize the reduct
 \section{Evaluation}
 \label{sec:tm-eval}
 
-While prior work has focused on verifying implementations of transactional memory themselves
+While prior work has focused on verifying transactional memory implementations themselves
 \cite{specifying-verifying-tm,tm-correctness,tm-completeness,mc-tm-with-spin},
 Landslide is to the best of my knowledge the first model checker to support transactional client code.
 % mumble smth new concurrency model
-Accordingly, there is no baseline against which to compare Landslide's performance.
-Likewise, since Landslide's HTM semantics emulation relies on the equivalences proved in \cref{sec:tm-design},
+Accordingly, there is no baseline against which to compare its performance.
+Likewise, since Landslide's HTM emulation relies on the equivalences proved in \cref{sec:tm-design},
 I did not actually implement an HTM-style speculative-execution-and-rollback simulation mode.
 % so have no basis to measure how much it saves, or smth like that
 On this count, at least,
@@ -1021,7 +1032,7 @@ as follows.
 		\item {\tt avl\_insert}: AVL tree concurrent insertion test \cite{tm-benchmark-cmu}.
 		\item {\tt avl\_fixed}: {\tt avl\_insert} with the AVL bug fixed (spoilers!!).
 		\item {\tt map\_basic}: Separate-chaining hashmap concurrent insertion test \cite{tm-benchmark-cmu}.
-		\item {\tt map\_basicer}: {\tt map\_basic} modified with a larger initial size to skip the resizing step.
+		\item {\tt map\_basicer}: {\tt map\_basic} configured with a larger initial map size to skip the resizing step.
 		\item {\tt avl\_mutex}: {\tt avl\_fixed} with transactional sections simplified by abstraction into a mutex.
 		\item {\tt map\_mutex}: {\tt map\_basic} simplified likewise.
 		\item {\tt map\_basicer\_mutex}: {\tt map\_basicer} simplified likewise.
@@ -1035,7 +1046,7 @@ as follows.
 			if its client threads' critical sections are independent.
 			% htm_spinlock_fastpath and htm_mutex_fastpath
 	\end{itemize}
-		These are each parameterized over implementations {\tt spinlock} (from \cite{spinlock-rtm-github}),
+		These are each parameterized over the implementations {\tt spinlock} (from \cite{spinlock-rtm-github}),
 		{\tt spin\_\allowbreak{}fixed} (spoilers!!),
 		and {\tt mutex} (replaces the spinlock with a Landslide-annotated P2 mutex to reduce state space size).
 \end{enumerate}
@@ -1709,7 +1720,7 @@ reached among Landslide's verifications
 	and so does not contribute to state space size).
 	Also note that ``\#race'' means the number of unique accesses identified as racy,
 	rather than racing pairs
-	(the other half of a pair might well be within a transaction, which cannot be preempted on).
+	(the other half of a pair might well be within a transaction, which cannot be preempted within).
 	}
 	\label{tab:tm-test-case-evence}
 \end{table}
