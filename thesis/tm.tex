@@ -1963,25 +1963,10 @@ and {\tt mutex}, using Landslide-annotated P2 mutexes (as the AVL and map implem
 	\label{fig:htm-lock}
 \end{figure}
 
-\Cref{tab:tm-verifs2} shows the new resulting levels of verification
-Landslide reached before the same 10-hour timeout.
-Provided that one trusts the {\tt lock} tests correctly check the desired properties,
-and that open-coding hadn't introduced any new bugs (such as \Cref{fig:avlbug}'s),
-the benefit is clear:
-the data structure tests' state spaces become much more tractable,
-%the data structure tests suddenly reach unprecedented thread/iteration counts with ease,
-% 'so on' here includes free/re-malloc mem conflicts; see comment in avl_mutex.cpp
-their state space growth now defined only by internal conflicts from tree rebalancing, map resizing, and so on.
-In total,
-summing the testing times of {\tt lock}({\tt mutex})$(K,N)$ and {\tt avl\_mutex}$(K,N)$
-produces the same verification as {\tt avl\_fixed}$(K,N)$ far more cheaply.
-Furthermore, {\tt lock}'s verification can be reused,
-whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex verification between them.
-
-\begin{table}[t]
+\begin{table}[hb!] % ugh... this placement directive... (be on same page as above figure)
 	\begin{center}
-		\footnotesize
 		\begin{tabular}{cc}
+		\footnotesize
 		\begin{tabular}{cc||r|r}
 			& & \multicolumn{2}{c}{\bf STM ({\tt -A -S})} \\
 			& & \cpu{\bf cpu (s)} & \ints{\bf SS size} \\
@@ -2035,6 +2020,7 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 			& 9,9 & \cpu{4.62} & \ints{1}	\\
 			\end{tabular}
 			&
+		\footnotesize
 			\begin{tabular}{cc||r|r}
 			& & \multicolumn{2}{c}{\bf Non-transactional} \\
 			& & \cpu{\bf cpu (s)} & \ints{\bf SS size} \\
@@ -2091,9 +2077,28 @@ whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex v
 		demonstrating abstraction reduction %\cite{dbug-phdthesis}
 		on the {\tt avl\_fixed} and {\tt map\_basic} tests
 		by verifying HTM mutex implementations separately.
-		Tested with STM semantics, as both lock implementations include a retry loop.}
+		Tested with STM semantics, as both lock implementations include a retry loop.
+		\\
+		% this above extra vspace necessary so that this table and fig6.9 get a page all to themselves,
+		% without latex trying to sneak two lines of body prose in at the bottom or between them
+		}
 	\label{tab:tm-verifs2}
 \end{table}
+
+\Cref{tab:tm-verifs2} shows the new resulting levels of verification
+Landslide reached before the same 10-hour timeout.
+Provided that one trusts the {\tt lock} tests correctly check the desired properties,
+and that open-coding hadn't introduced any new bugs (such as \Cref{fig:avlbug}'s),
+the benefit is clear:
+the data structure tests' state spaces become much more tractable,
+%the data structure tests suddenly reach unprecedented thread/iteration counts with ease,
+% 'so on' here includes free/re-malloc mem conflicts; see comment in avl_mutex.cpp
+their state space growth now defined only by internal conflicts from tree rebalancing, map resizing, and so on.
+In total,
+summing the testing times of {\tt lock}({\tt mutex})$(K,N)$ and {\tt avl\_mutex}$(K,N)$
+produces the same verification as {\tt avl\_fixed}$(K,N)$ far more cheaply.
+Furthermore, {\tt lock}'s verification can be reused,
+whereas {\tt avl\_fixed} and {\tt map\_basic} effectively duplicated the mutex verification between them.
 
 Note two curiosities:
 firstly,
