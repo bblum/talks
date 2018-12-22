@@ -552,7 +552,8 @@ In \Cref{fig:hb-example}, the pairs of lines marked with comments (A1 and A2, B1
 \label{fig:hb-example}
 \end{figure}
 
-A data race analysis may be either {\em static} (inspecting source code) \cite{racerx} or {\em dynamic} (tracking individual accesses arising at run-time) \cite{tsan}.
+A data-race analysis may be either {\em static} (inspecting source code) \cite{racerx}
+or {\em dynamic} (tracking individual accesses arising at run-time) \cite{tsan}.
 This paper focuses exclusively on dynamic analysis,
 so although our example refers to numbered source lines for ease of explanation,
 in practice we are actually classifying the individual memory access events corresponding to those lines during execution.
@@ -978,7 +979,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		A sequence of {\em transitions} of many threads representing the complete or partial execution
 		of a {\em test case}.
 	\item {\bf Iterative Deepening.}
-		The {\em heuristic} search ordering strategy and framework for incorporating {\em data race preemption points}
+		The {\em heuristic} search ordering strategy and framework for incorporating {\em data-race preemption points}
 		used by {\em Quicksand}.
 		One of this thesis's major contributions.
 		See \cref{sec:quicksand-id}.
@@ -1144,7 +1145,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		When said of a {\em reduction} strategy as applies to an existing search algorithm,
 		means that any bugs found by the original algorithm will still be found under the reduction,
 		even if there were false negatives
-		(e.g., applying {\em DPOR} without using {\em data race preemption points}).
+		(e.g., applying {\em DPOR} without using {\em data-race preemption points}).
 		Used by analogy with logic, in which said of an inference system,
 		means contradiction cannot be derived from the axioms.
 		See also {\em completeness}.

@@ -1019,7 +1019,7 @@ It includes one thread repeating once the lock, unlock cycle
 \revisionminor{(i.e., one contender calls {\tt critical\_section()} twice)}
 so as to check for unlock/lock races as well as lock/lock interactions,
 and, as mentioned previously (\cref{sec:education-pebbles-tests}),
-checks for data race access pairs inside the mutex implementation itself.
+checks for data-race access pairs inside the mutex implementation itself.
 As students have free rein to design their mutex internals,
 this
 %refers to
@@ -1274,7 +1274,7 @@ Reports from PSU students (Bochs version):
 \resume{enumerate}
 	\item Landslide kept crashing for one student while running {\tt paraguay}.
 		This is likely due to exceeding Linux's process limit and/or exhausting the class's official VM's memory,
-		which can arise when many data race candidates cause Quicksand to spawn many Landslide jobs,
+		which can arise when many data-race candidates cause Quicksand to spawn many Landslide jobs,
 		and (as on {\tt paraguay}) each with very large state spaces that must defer.
 		I had been working on mitigating this problem just before beginning the PSU study;
 		properly addressing it would involve improving Quicksand's memory-exhaustion detection code
@@ -1418,7 +1418,7 @@ all the way until it reaches that stack trace, then preempting it to run another
 They could also easily report more diagnostic information;
 for example, showing the sets of memory conflicts between each thread,
 annotating the type of each preemption point (yield, mutex, or data race),
-and/or indicating the adversarial memory access for each data race preemption point.
+and/or indicating the adversarial memory access for each data-race preemption point.
 
 \subsubsection{Other universities}
 
