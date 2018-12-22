@@ -237,13 +237,13 @@ with the sound reduction analyses listed above.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Data race analysis}
+\section{Data-race analysis}
 \label{sec:related-data-race}
 
-Data race analysis, originating with the lockset-only analysis of Eraser \cite{eraser},
+Data-race analysis, originating with the lockset-only analysis of Eraser \cite{eraser},
 has since grown into a mature field in its own right,
 which Landslide more borrows as building blocks for its own methods rather than contributing new techniques to.
-Data race detectors are largely distinguished by their particular flavour of the Happens-Before (HB) relation,
+Data-race detectors are largely distinguished by their particular flavour of the Happens-Before (HB) relation,
 as discussed in \cref{sec:background-hb}.
 Djit+ \cite{djit} and FastTrack \cite{fasttrack} are among those
 which soundly avoid false positives using ``Pure'' HB,
