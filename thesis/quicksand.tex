@@ -55,7 +55,8 @@ and optimizes the size of state spaces on the fly,
 guided by state space estimation
 (\cite{estimation}, \cref{sec:landslide-estimate}),
 to best match that budget.
-I will discuss the trade-off inherent in number of preemption points used (\cref{sec:quicksand-pps}),
+I will discuss the trade-off inherent in number of preemption points used
+(\cref{sec:quicksand-motivation}),
 introduce {\em Iterative Deepening},
 the algorithm that Quicksand uses to automatically navigate that trade-off
 (\cref{sec:quicksand-id}),
@@ -76,8 +77,8 @@ in OOPSLA 2016 \cite{quicksand}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Preemption points}
-\label{sec:quicksand-pps}
+\section{Motivation}
+\label{sec:quicksand-motivation}
 
 \qrevision{When configuring a model checker's preemption strategy,
 or indeed,
@@ -96,7 +97,8 @@ committing in advance to test all possible interleavings quickly becomes impract
 Accordingly, many existing model checkers opt for preempting on only a subset of execution events,
 such as synchronization API boundaries.
 
-\subsection{Types of preemption points} % TODO: find better name for sec'n
+\subsection{Preemption points}
+\label{sec:quicksand-pps}
 
 Consider the new example program in \Cref{fig:pps-example}(a),
 in which one thread protects its accesses to {\tt count} with a mutex,
@@ -230,6 +232,7 @@ data races require model checking to reliably detect.
 }
 
 \subsection{Terminology}
+\label{sec:quicksand-terminology}
 
 % TODO: add section refs to this para
 \qrevision{For the rest of this chapter, I will use the following terminology as shorthand for the concepts explained above.
