@@ -51,7 +51,7 @@ Given a fixed CPU budget,
 representing the user's patience for testing,
 Quicksand dynamically alters its preemption strategy based on data race analysis
 (\cite{tsan,fasttrack}, \cref{sec:landslide-datarace})
-and optimizes the size of state spaces on-the-fly,
+and optimizes the size of state spaces on the fly,
 guided by state space estimation
 (\cite{estimation}, \cref{sec:landslide-estimate}),
 to best match that budget.
@@ -85,7 +85,7 @@ choosing a model checker to begin with,
 the resulting state space is {\em parameterized} by the set of preemption points.
 %
 In the first example of \Cref{fig:tree}
-I constructed the state space by expanding both threads' {\tt x++;} operations into three pseudo-assembly instructions,
+I constructed the state space by expanding both threads' {\tt x++} operations into three pseudo-assembly instructions,
 then designating every instruction as a possible preemption point,
 yielding ${3+3 \choose 3} = 20$ total interleavings.
 Later, \cref{sec:landslide-dpor} showed DPOR prune 16 of those as equivalent,
@@ -182,7 +182,7 @@ a {\em data-race preemption point} is required to find this bug.
 	\caption[State space of \Cref{fig:pps-example} with synchronization preemption points only.]
 	{State space of \Cref{fig:pps-example} with synchronization preemption points only.
 	Note that none of these interleavings preempt Thread 1 at the necessary place
-	to trigger Thread 2's assertion failure..}
+	to trigger Thread 2's assertion failure.}
 	\label{fig:pps-statespace}
 \end{figure}
 }
@@ -294,12 +294,13 @@ I will also henceforth refer to each unique set of preemption points as a {\em j
 
 % TODO: put fig:id here, explain generally multiple state spaces
 
-Note that Iterative Deepening is a wrapper algorithm around stateless model checking.
+%Note that
+Iterative Deepening is a wrapper algorithm around stateless model checking.
 A model checker is still used to test each state space, and other reduction techniques such as DPOR
 are still applicable in each.
 Moreover, because Iterative Deepening treats the set of preemption points as mutable,
 it can add new preemption points reactively based on any runtime analysis.
-Here
+This chapter
 will focus on run-time data race analysis~\cite{tsan,fasttrack} as the mechanism for finding new preemption candidates.
 The next section (\cref{sec:quicksand-soundness})
 will prove that in fact,
@@ -371,6 +372,7 @@ based on their preemption points and ETAs.
 \subsection{Initial preemption points}
 \label{sec:quicksand-initial-pps}
 
+% TODO: fix this section, the way it lists the pps is fucked, figure reference prob dnagling
 Iterative Deepening must be seeded with a set of initial state spaces,
 which can be any number of subsets of the statically-available preemption points
 that prior work model checkers would use.
@@ -378,7 +380,10 @@ The upcoming soundness proof relies on the maximal state space being included am
 but to optimize for finding bugs faster,
 implementations may wish to simultaneously to try testing subsets thereof.
 
-For testing user-space code, Quicksand begins with the four jobs from \Cref{fig:id}:
+For testing user-space code, Quicksand begins with the four
+% TODO: decide
+jobs from \Cref{fig:id}:
+%possible combinations of preemption points from \Cref{fig:pps-statespace}:
 $\{yield\}$,
 $\{yield,lock\}$,
 $\{yield,unlock\}$,
@@ -448,7 +453,7 @@ for example, $AB$ is reachable by multiple paths through its different subsets $
 but should of course be tested only once.
 
 \newcommand\AllJobs{\ensuremath{\mathcal{J}}}
-\begin{algorithm}[t]
+\begin{algorithm}[h]
 	\SetKwInOut{Input}{Input}
 	\Input{$j_0$, the currently-running job}
 	\Input{\AllJobs, the set of all existing (or completed) jobs}
@@ -494,17 +499,17 @@ This phenomenon motivates Iterative Deepening to prioritize jobs at run-time.
 
 \begin{figure}[t]
 	\begin{center}
-        \includegraphics[width=0.8\textwidth]{dr-jobs-v2.pdf}
+        \includegraphics[width=0.9\textwidth]{dr-jobs-v2.pdf}
 	\end{center}
 	\caption[Quicksand incorporates data races as new preemption points at run-time.]
-		{Quicksand incorporates data races as new preemption points at run-time,
+		{Quicksand incorporates data races as new preemption points at run-time
 		by managing the exploration of multiple state spaces,
 		communicating with each Landslide instance to receive ETAs, data races, and bug reports.
                 %When an access pair is reported as a data race candidate,
                 When a data race is reported,
-                a new preemption point is added for each involved access,
+                a new preemption point is added for each involved memory access,
                 and new jobs are added for later testing,
-                corresponding to different combinations of those with the existing preemption points.}
+                corresponding to different combinations thereof with the existing preemption points.}
         \label{fig:new-dr-jobs}
 \end{figure}
 
@@ -781,7 +786,7 @@ This section presents a proof of this claim (\cref{sec:quicksand-convergence}),
 as well as a supplementary proof (\cref{sec:quicksand-realloc})
 of the soundness of pruning reallocation false positives discussed previously (\cref{sec:quicksand-id-realloc}).
 
-I am presenting these proofs as they appeared in the OOPSLA paper \cite{quicksand}:
+I present these proofs as they appeared in the OOPSLA paper \cite{quicksand}:
 written as sketches in informal prose,
 to optimize for rapidly conveying an intuition for why it works
 rather than to justify every internal step within the proof structure.%
@@ -1038,7 +1043,7 @@ of \cref{sec:quicksand-id}'s more abstract algorithm descriptions:
 		\footnote{I actually cheated by copy/pasting this job alone from a different run of Quicksand;
 		the other jobs come from a test with the bug already fixed,
 		in order that exploration progress far enough to defer some jobs for the sake of example.
-		In a real execution, jobs 3, 5, 7, 8, 9, and 11 would be cancelled.}
+		In a real execution, the superset jobs 3, 5, 7, 8, 9, and 11 would be cancelled.}
 	\item Jobs 4 and 6 are the ``small'' jobs added to test the two data races in isolation;
 		5 and 7 are the corresponding ``large'' jobs (\cref{sec:quicksand-dr-pps}).
 	\item Job 11 is the maximal state space, containing all synchronization preemption points

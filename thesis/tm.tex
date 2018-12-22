@@ -992,7 +992,7 @@ I pose the following evaluation questions.
 	%\item By the way, should MC research papers quantify variance in their CPU-time performance experiments?
 \end{enumerate}
 
-\subsubsection{Experimental setup}
+\subsection{Experimental setup}
 \label{sec:tm-eval-exp-setup}
 
 The evaluation suite comprises several unit tests hand-written by yours truly,
@@ -1260,7 +1260,7 @@ Landslide also found two bugs in the ``real-world'' transactional algorithms I t
 \begin{figure}[t]
 	\begin{center}
 		\begin{tabular}{l}
-		\texttt{\flow{while} (\_retry);} \\
+		\texttt{\flow{while} (\_retry) \flow{continue};} \\ % in the actual code it's "while (retry);"; i'm adding continue for clarity
 		\texttt{\flow{if} (\call{\_xbegin}() == \const{SUCCESS}) \{} \\
 		\texttt{~~~~\hilight{brickred}{tie}(\_root,inserted) = \call{\_insert}(\_root,n); } \\
 		\texttt{~~~~\call{\_xend}();} \\
@@ -1297,7 +1297,7 @@ Landslide also found two bugs in the ``real-world'' transactional algorithms I t
 	and
 	% landslide-trace-1533854371.201589.html
 	as a consistency-check assertion failure (for test parameters (2,3)).
-	The presence of {\tt while (\_retry);} makes the necessary preemption window extremely small
+	The presence of {\tt while (\_retry) continue} makes the necessary preemption window extremely small
 	(between it and {\tt \_xbegin()}),
 	making the bug extremely unlikely to manifest under stress testing,
 	but Landslide is blind to such matters of chance.
