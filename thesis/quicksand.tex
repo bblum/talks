@@ -1356,9 +1356,15 @@ to account for the increased orders of magnitude in preemptible events.
 \section{Evaluation}
 \label{sec:quicksand-eval}
 
-% TODO: introd this
-
-I pose the following evaluation questions.
+\qrevision{In Quicksand, Iterative Deepening and data race analysis are intimately connected:
+the former relies on the later to supply it with new preemption points, thereby refining its search for new concurrent behaviours,
+while the latter relies on the former to thoroughly check all possible interleavings around its reported memory accesses and classify them as buggy or benign.
+Despite this synergy, which is necessary for total verification soundness (\cref{sec:quicksand-soundness}),
+each of these two techniques is a contribution in its own right when it comes to bug-finding performance.
+Hence, this evaluation will measure not only the combined approach's full verification power,
+but also the bug-finding performance of each technique separately,
+as compared to state-of-the-art single-state-space ICB and DPOR.
+I pose the following evaluation questions.}
 
 \begin{enumerate}
 	\item Does integrating data-race preemption points improve the accuracy of model checking?
@@ -1382,8 +1388,8 @@ I pose the following evaluation questions.
 		\end{enumerate}
 \end{enumerate}
 
-\subsubsection{Test suite}
-\label{sec:quicksand-eval-suite}
+\subsection{Experimental setup}
+\label{sec:quicksand-expt-setup}
 
 The test suite consists of 79 P2 student thread libraries (\cref{sec:pebbles}),
 submitted in 15-410 during the Spring 2014, Fall 2014, and Spring 2015 semesters,%
@@ -1413,6 +1419,9 @@ and opt for this approach instead for better statistical significance.%
 that extending Landslide to support native Linux programs,
 complete with filesystem and network nondeterminism,
 would have been an engineering burden beyond my ability to do alone and still graduate on time.}
+
+\subsubsection{Test cases}
+\label{sec:quicksand-eval-suite}
 
 \newcommand\mxtest{\texttt{mutex\_test}\xspace}
 \newcommand\tej{\texttt{thr\_exit\_join}\xspace}
@@ -1450,8 +1459,8 @@ I also excluded preemption points on {\tt malloc()}'s internal lock using {\tt w
 In total, the evaluation comprises 629 unique tests (i.e., pairs of a test program and a Pintos or P2),
 at least 181 of which will be seen to expose bugs.
 
-\subsubsection{Experimental setup}
-\label{sec:quicksand-expt-setup}
+\subsubsection{Model checker configuration}
+\label{sec:quicksand-expt-trials}
 
 To evaluate the benefits of data-race preemption points and Iterative Deepening separately,
 I ran the test suite under Quicksand in three different experimental configurations,
@@ -1681,7 +1690,7 @@ whether combined with Iterative Deepening or ICB.
 	{Summary of bugs
 	%and data races
 	found by each test program.
-	QS-LHB and QS-PHB are Quicksand; ICB/DPOR/ShMem are the controls (\cref{sec:quicksand-expt-setup}).
+	QS-LHB and QS-PHB are Quicksand; ICB/DPOR/ShMem are the controls (\cref{sec:quicksand-expt-trials}).
 	}
 	\label{tab:drbugs}
 \end{table}
@@ -1724,7 +1733,14 @@ my test suite is even friendlier still to ICB than that of prior work.
 \subsection{Verification}
 \label{sec:quicksand-eval-verif}
 
-% TODO: put some txt here
+\qrevision{The previous section showed that Quicksand's suite of bug-finding heuristics,
+built around Iterative Deepening,
+outperform the best single-state-space approaches,
+even after correcting
+% in a way fair to the state of the art; indeed, {\em unfair} to landslide, by assuming perfect 10x speedup for control expts
+for its inherent parallelism.
+This section will hold Quicksand to its promise to uphold the other side of the trade-off as well:
+that it reach full verification on correct tests reasonably quickly.}
 
 \subsubsection{Full verification}
 
@@ -1787,6 +1803,15 @@ Even though SSS-MC-Shared-Mem tends to hang out in the same neighbourhood as the
 note that SSS-MC-Shared-Mem is still steadily increasing in verifications provided at the 10-hour cutoff
 (let alone the Quicksand ones),
 while the other three seem to reach a plateau of around 20-30 tests relatively soon.
+
+\qrevision{A single-state-space model checker could rely on the user
+to properly synchronize all reported data races,
+in accordance with the philosophy that even non-failing races should count as bugs
+\cite{miscompile-benign,data-races-are-evil},
+ultimately improving the number of tests it can verify with no data races.
+However, RacerX \cite{racerx} showed that overwhelming the user with warnings about non-failing behaviours
+jeopardizes their patience for the tool,
+which motivates Quicksand to follow in the footsteps of Portend \cite{portend} instead.}
 
 Overall, including data-race preemption points increases verification capacity by 4.25x.
 Assuming sequentially-consistent hardware,
@@ -2040,6 +2065,48 @@ and fall back to classifying them with DPOR.
 This section will list the current limitations of Quicksand and Iterative Deepening
 and discuss opportunities for future improvement.
 
+\subsection{Experimental bias}
+
+\qrevision{The evaluation design (\cref{sec:quicksand-expt-trials})
+contains two major shortcomings
+that, to my surprise, no conference reviewer, audience member, or colleague ever called me out on.
+Firstly, the single-state-space preempt-everywhere
+strategy was conducted only with ICB enabled (SSS-MC-ShMem).
+This resulted in reasonable bug-finding performance,
+ultimately reaching 80\% as many bugs found as Quicksand's best (QS-Limited-HB) in \Cref{fig:dowefindbugsfaster-cpu}.
+However, ICB tends to repeat work across multiple preemption bound iterations, %hurts its overall completion time,
+as evidenced between SSS-MC-ICB and SSS-MC-DPOR in \Cref{fig:totalverif}.
+Correspondingly, a version of SSS-MC-ShMem configured to use traditional DPOR without ICB would
+effectively begin with a preemption bound of infinity
+and perhaps be more competitive with Quicksand on verifications.
+%by avoiding ICB's tendency to repeat interleavings. %across iterations.
+Of course, this would trade off against its bug-finding performance,
+but an expert user could compensate by deciding between the two modes
+depending whether she thinks the test is more likely to be buggy or correct.
+Granting such user involvement,
+Quicksand's maximal state space mode (\cref{sec:quicksand-impl-modes})
+would correspondingly verify more tests than QS-Pure-HB, %within those 10 CPU-hours,
+especially if it were given 10 wall-clock hours on 1 CPU rather than 1 on 10.
+Future work could also improve both Quicksand's and ICB's ability to identify and skip redundant work
+across their respective iterations,
+as discussed below.
+
+Secondly, and more fundamentally, representing state-of-the-art approaches by reimplementing them in one's own tool is fraught.
+The comparison between Iterative Deepening and ICB in
+\cref{sec:quicksand-eval-bugs} and \cref{sec:quicksand-eval-verif}
+could possibly be conflated by Landslide's implementation of ICB and/or DPOR being slower
+on account of the simulated execution environment (\cref{sec:landslide-architecture}).
+A more rigorously scientific comparison would extend a prior work model checker, such as CHESS \cite{chess},
+to support dynamically-configured data-race preemption points,
+and evaluate Quicksand with it versus its own ICB implementation as well,
+to isolate any such conflating factors.
+Concurrently with these results' publication in OOPSLA \cite{quicksand},
+more advanced state space reduction algorithms were proposed, such as Maximal Causality Reduction (MCR) \cite{mcr}.
+It is not immediately obvious that MCR's benefit would be orthogonal with Iterative Deepening;
+i.e., the benefit of Quicksand with a MCR-enabled model checker might be reduced
+compared to the benefit shown in \cref{sec:quicksand-eval-bugs} and \cref{sec:quicksand-eval-verif}.
+Future comparisons of model-checking strategies should strive to reach these higher bars of scientific rigor.}
+
 \subsection{Avoiding redundant work}
 
 When Quicksand extends a small state space with more preemption points,
@@ -2181,4 +2248,48 @@ as discussed further in \cref{sec:warpzone-heuristics}.
 
 \section{Summary}
 
-quicksand is gr8
+\qrevision{In order to supplant conventional stress testing,
+which, despite its
+%tendency to overlook subtle and severe nondeterministic bugs,
+%lack of any formal coverage guarantees,
+inability to reliably expose, reproduce, or verify absent bugs in any finite amount of testing time,
+remains a popular choice for concurrency programmers of all skill levels,
+stateless model checking must meet users' needs regarding realistic testing budgets.
+This chapter has presented Quicksand, which automatically navigates the trade-off
+between fast bug-finding and formal verification depending on the size of the test.
+My contributions have been as follows.
+
+\begin{itemize}
+	\item Iterative Deepening (\cref{sec:quicksand-id}),
+		an algorithm for model checkers to simultaneously test multiple state spaces,
+		incorporating new preemption points identified with dynamic analysis on the fly.
+	\item A proof of convergence (\cref{sec:quicksand-convergence}),
+		showing that for any verification obtained under even the most extreme preemption strategy,
+		Iterative Deepening with data race analysis provides an equivalently strong one,
+		with far fewer preemption points necessary.
+	\item A technique for suppressing certain false positive data-race candidates
+		under Limited Happens-Before (\cref{sec:landslide-lhb})
+		by identifying intervening {\tt malloc()} and {\tt free()} calls
+		(\cref{sec:quicksand-id-realloc}),
+		and a corresponding soundness proof when this technique is used under Iterative Deepening
+		(\cref{sec:quicksand-realloc}).
+	\item Quicksand (\cref{sec:quicksand-implementation}),
+		an Iterative Deepening implementation which incorporates several heuristics for prioritizing
+		which state spaces are most likely to uncover bugs % this claim is not scientifically justified
+		or, should no bugs exist therein,
+		which ones are most likely to complete within a user-specified fixed CPU budget,
+		as informed by state space estimation (\cref{sec:landslide-estimate}).
+	\item A 629-test evaluation of Quicksand
+		against several prior state-of-the-art model checking approaches implemented in Landslide
+		(\cref{sec:quicksand-eval}),
+		which showed that Quicksand provides both faster bug-finding (\cref{sec:quicksand-eval-bugs})
+		and more full verifications (\cref{sec:quicksand-eval-verif}),
+		delivering ``the best of both worlds'' as promised,
+		and also demonstrated the need for a bidirectional feedback loop
+		between model checking and data race analysis
+		(\cref{sec:quicksand-eval-nondets}).
+\end{itemize}
+
+The next chapter will tell of my experience and results deploying Landslide in an educational setting,
+equipped with Quicksand to allow even inexperienced student users to benefit from stateless model checking
+with little to no manual configuration burden.}
