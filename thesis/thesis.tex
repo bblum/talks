@@ -70,6 +70,23 @@ urlcolor=urlc,
 %\newfontfamily\arabicfont{Droid Sans Arabic} % doesn't respond to Script = Arabic :(
 %\newfontfamily\arabicfont{LateefGR-Regular}[Path = ./fonts/] % doesn't respond to Script = Arabic :(
 \newfontfamily\arabicfont{Amiri-Regular}[Path = ./fonts/, Script = Arabic]
+\setmonofont{Inconsolata-Regular}[Path = ./fonts/]
+\newfontfamily\birbaslo{BirbasloText}[Path = ./fonts/]
+
+% https://tex.stackexchange.com/questions/99770/problem-with-digits-in-urls-when-using-mathspec-and-hyperref/99774#99774
+% make numbers render in monospace in urls, while render in main font in math mode
+\makeatletter
+     \DeclareMathSymbol{0}{\mathalpha}{\eu@DigitsArabic@symfont}{`0}
+     \DeclareMathSymbol{1}{\mathalpha}{\eu@DigitsArabic@symfont}{`1}
+     \DeclareMathSymbol{2}{\mathalpha}{\eu@DigitsArabic@symfont}{`2}
+     \DeclareMathSymbol{3}{\mathalpha}{\eu@DigitsArabic@symfont}{`3}
+     \DeclareMathSymbol{4}{\mathalpha}{\eu@DigitsArabic@symfont}{`4}
+     \DeclareMathSymbol{5}{\mathalpha}{\eu@DigitsArabic@symfont}{`5}
+     \DeclareMathSymbol{6}{\mathalpha}{\eu@DigitsArabic@symfont}{`6}
+     \DeclareMathSymbol{7}{\mathalpha}{\eu@DigitsArabic@symfont}{`7}
+     \DeclareMathSymbol{8}{\mathalpha}{\eu@DigitsArabic@symfont}{`8}
+     \DeclareMathSymbol{9}{\mathalpha}{\eu@DigitsArabic@symfont}{`9}
+\makeatother
 
 % Approximately 1" margins, more space on binding side
 %\usepackage[letterpaper,twoside,vscale=.8,hscale=.75,nomarginpar]{geometry}
