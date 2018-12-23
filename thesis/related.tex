@@ -237,13 +237,13 @@ with the sound reduction analyses listed above.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Data-race analysis}
+\section{Data race analysis}
 \label{sec:related-data-race}
 
-Data-race analysis, originating with the lockset-only analysis of Eraser \cite{eraser},
+Data race analysis, originating with the lockset-only analysis of Eraser \cite{eraser},
 has since grown into a mature field in its own right,
 which Landslide more borrows as building blocks for its own methods rather than contributing new techniques to.
-Data-race detectors are largely distinguished by their particular flavour of the Happens-Before (HB) relation,
+Data race detectors are largely distinguished by their particular flavour of the Happens-Before (HB) relation,
 as discussed in \cref{sec:background-hb}.
 Djit+ \cite{djit} and FastTrack \cite{fasttrack} are among those
 which soundly avoid false positives using ``Pure'' HB,
@@ -265,7 +265,7 @@ supplemented with straightforward lock-sets and heuristic treatment of lock hand
 (often common in kernels).
 
 Since these foundational algorithms,
-many more recent works have contributed to make data-race analysis more precise, more performant,
+many more recent works have contributed to make data race analysis more precise, more performant,
 and/or more domain-specific.
 The Causally-Precedes relation \cite{predictive-dr} is a refinement of Limited HB which avoids the most common cases of false positives,
 including \cref{sec:quicksand-realloc}'s reallocation false positives.
@@ -285,8 +285,8 @@ Although many MCs listed in the previous section are content to report any data 
 RacerX \cite{racerx} showed that tools must be careful not to overwhelm users with benign warnings
 they don't care about fixing.
 This has motivated replay analysis
-to classify data-race candidates by their impact on program behaviour
-by extending single-pass data-race analysis to many thread interleavings.
+to classify data race candidates by their impact on program behaviour
+by extending single-pass data race analysis to many thread interleavings.
 It was first introduced in \cite{recordreplaydrs},
 which compares the program states immediately after the access pair for differences,
 preferring still to err on the side of false positives (as different program states might not necessarily lead to a failure).
@@ -294,13 +294,13 @@ RaceFuzzer \cite{racefuzzer} avoids false positives by requiring an actual failu
 although it uses random schedule fuzzing rather than model checking for its concurrency coverage.
 %
 Portend \cite{portend} is closest in spirit to Quicksand:
-it tests alternate executions based on single-pass data-race candidates to classify them in a taxonomy of likely severity,
+it tests alternate executions based on single-pass data race candidates to classify them in a taxonomy of likely severity,
 including non-failing races which nevertheless cause nondeterministic output
 in addition to obvious failures.
 However, it does not
 test alternate interleavings in advance of knowing any specific data races,
 which \cref{sec:quicksand-eval-nondets} showed is necessary to find certain bugs.
-Quicksand builds on Portend's approach by introducing a feedback loop between the data-race analysis and model checking,
+Quicksand builds on Portend's approach by introducing a feedback loop between the data race analysis and model checking,
 which results in a stronger verification property
 when the test can be fully completed (\cref{sec:quicksand-soundness}).
 Portend also uses symbolic execution to test input nondeterminism as well as schedule nondeterminism,
@@ -345,7 +345,7 @@ To my knowledge, this is the first study of model checking in an educational set
 although teaching concurrency is not itself an unstudied problem.
 %% tf??
 % Eytani et al.~\cite{towards-a-framework} present a promising framework for testing concurrent programs,
-% which can incorporate model checking as well as static analysis, resource exhaustion, data-race analysis, and coverage analysis.
+% which can incorporate model checking as well as static analysis, resource exhaustion, data race analysis, and coverage analysis.
 % However, it lacks an evaluation, and makes mention of its educational value only in its future work remarks.
 %
 %One recent study~

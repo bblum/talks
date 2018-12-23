@@ -49,7 +49,7 @@ This chapter presents Quicksand,
 an execution framework for model checking to manage this trade-off at run-time.
 Given a fixed CPU budget,
 representing the user's patience for testing,
-Quicksand dynamically alters its preemption strategy based on data-race analysis
+Quicksand dynamically alters its preemption strategy based on data race analysis
 (\cite{tsan,fasttrack}, \cref{sec:landslide-datarace})
 and optimizes the size of state spaces on the fly,
 guided by state space estimation
@@ -200,8 +200,8 @@ which is not compatible with such an approach.
 Accordingly, stateless model checkers must find more efficient ways to be able to uncover bugs such as these.
 %
 In related work,
-Portend~\cite{portend} proposed to combine data-race analysis with preemption-driven artificial scheduling,
-although it obtains its data-race candidates from a stand-alone, single-pass analysis.
+Portend~\cite{portend} proposed to combine data race analysis with preemption-driven artificial scheduling,
+although it obtains its data race candidates from a stand-alone, single-pass analysis.
 In order to
 %make sure we
 identify every
@@ -225,7 +225,7 @@ and
 \cref{sec:quicksand-eval-nondets}
 %in particular
 will justify the need
-for such a feedback loop %between model checking and data-race analysis.
+for such a feedback loop %between model checking and data race analysis.
 by showing that many
 data races require model checking to reliably detect.
 %bugs require nondeterministic data races to expose.
@@ -250,12 +250,12 @@ data races require model checking to reliably detect.
 		will refer to a concrete failure, such as \Cref{fig:pps-example}'s assertion failure above, whereas
 	\item {\bf Data race} refers to the racing access pair itself (\cref{sec:landslide-datarace}).
 		% TODO: scan this chapter for consistency of dis
-	\item {\bf Data-race candidate} shall refer specifically to
+	\item {\bf Data race candidate} shall refer specifically to
 		potentially-racing accesses identified by Limited Happens-Before, %(\cref{sec:landslide-lhb}), % sub sub sec
 		when disambiguation with {\em data races} is necessary.
 	\item {\bf Benign data races} are those that, when reordered in an alternate interleaving,
 		do not lead to a {\em data-race bug}, while
-	\item {\bf False positives} are {\em data-race candidates} that,
+	\item {\bf False positives} are {\em data race candidates} that,
 		upon trying to reorder them,
 		turn out not to exist in the alternate interleaving at all,
 		such as in \Cref{fig:hb-example}(b).
@@ -289,7 +289,7 @@ test many different subsets of the available preemption points,
 For the remainder of the chapter, I will use Iterative Deepening to refer to the algorithm in the abstract,
 which could in principle apply to any stateless model checking domain,
 and Quicksand to refer to the specific implementation,
-which relies on data-race analysis and specific heuristics to optimize its testing approach
+which relies on data race analysis and specific heuristics to optimize its testing approach
 for kernels and thread libraries.
 I will also henceforth refer to each unique set of preemption points as a {\em job}.
 
@@ -304,7 +304,7 @@ are still applicable in each.
 Moreover, because Iterative Deepening treats the set of preemption points as mutable,
 it can add new preemption points reactively based on any runtime analysis.
 This chapter
-will focus on run-time data-race analysis~\cite{tsan,fasttrack} as the mechanism for finding new preemption candidates.
+will focus on run-time data race analysis~\cite{tsan,fasttrack} as the mechanism for finding new preemption candidates.
 The next section (\cref{sec:quicksand-soundness})
 will prove that in fact,
 in addition to statically-known synchronization preemption points,
@@ -323,7 +323,7 @@ The maximal state space is guaranteed to subsume all execution sequences reachab
 so considering any incomplete subset of the known preemption points would be redundant work.
 \Cref{alg:algorithm0} demonstrates this na\"ive approach.
 It is seeded with the set of all statically-known synchronization API preemption points,
-and invoked whenever a new data-race candidate is found.
+and invoked whenever a new data race candidate is found.
 %
 The upcoming proofs in \cref{sec:quicksand-soundness},
 being concerned with the verification guarantee provided when the search may complete within the CPU budget,
@@ -357,7 +357,7 @@ full verification is not feasible,
 and focusing on the maximal state space alone is likely to be fruitless.
 %
 Hence, Iterative Deepening also allows for prioritizing subset jobs
-based on number of preemption points, ETA, and whether data-race candidates are included among their preemption points.
+based on number of preemption points, ETA, and whether data race candidates are included among their preemption points.
 It relies on state-space estimation \cite{estimation}
 to predict which jobs are likely to complete within a reasonable time,
 before actually testing a large fraction of interleavings for each.
@@ -403,7 +403,7 @@ For kernel-level testing, interrupt-disabling is analogous to locking,
 so preemptions must also be introduced
 just before a disable-interrupt opcode (on x86, {\tt cli})
 and just after interrupts are re-enabled (on x86, {\tt sti}).
-During data-race analysis, {\tt cli} and {\tt sti} are treated as a single global lock
+During data race analysis, {\tt cli} and {\tt sti} are treated as a single global lock
 (note that {\tt cli}'d memory accesses can still race with others that have interrupts on).%
 \footnote{Some kernels disable preemption without disabling interrupts,
 which can be communicated to the model checker using manual annotations,
@@ -426,7 +426,7 @@ although this could potentially be improved in future work (\cref{sec:quicksand-
 \label{sec:quicksand-dr-pps}
 
 As discussed in \cref{sec:quicksand-pps},
-%runtime data-race detection (\cref{sec:background-datarace})
+%runtime data race detection (\cref{sec:background-datarace})
 %may find candidate unsynchronized memory conflicts that should be investigated further.
 data races may beget new interleavings not reachable by preempting on synchronization API boundaries alone.
 Because each data race indicates an access pair that can interleave at instruction granularity,
@@ -508,7 +508,7 @@ This phenomenon motivates Iterative Deepening to prioritize jobs at run-time.
 		{Quicksand incorporates data races as new preemption points at run-time
 		by managing the exploration of multiple state spaces,
 		communicating with each Landslide instance to receive ETAs, data races, and bug reports.
-                %When an access pair is reported as a data-race candidate,
+                %When an access pair is reported as a data race candidate,
                 When a data race is reported,
                 a new preemption point is added for each involved memory access,
                 and new jobs are added for later testing,
@@ -518,7 +518,7 @@ This phenomenon motivates Iterative Deepening to prioritize jobs at run-time.
 
 The new state spaces may expose a failure, in which case Iterative Deepening must stop and report a data-race bug,
 or complete successfully, indicating a {\em benign} (i.e., false-positive) data race.
-They may also uncover a new data-race candidate entirely in some alternate interleaving,
+They may also uncover a new data race candidate entirely in some alternate interleaving,
 in which case we may iteratively advance to a superset state space which will preempt at both racing access pairs.
 Being constrained by a CPU budget,
 Iterative Deepening may time out before completing a data race's associated state space,
@@ -658,7 +658,7 @@ not necessarily relative to the ultimate true size).%
 {\tt -e} and {\tt -E} command-line options, respectively,
 as discussed in \cref{sec:landslide-quicksand-options}.}
 
-Landslide classifies data-race candidates as {\em both-order} or {\em single-order},
+Landslide classifies data race candidates as {\em both-order} or {\em single-order},
 as defined in prior work \cite{portend},
 based on whether it observed the racing instructions ordered in both possible sequences or only one
 in the original state space, respectively.
@@ -679,14 +679,14 @@ these heuristics with more nuanced search strategies still.
 \subsection{Reallocation false positives}
 \label{sec:quicksand-id-realloc}
 
-Finally, I identified a particular class of false positive data-race candidates
+Finally, I identified a particular class of false positive data race candidates
 under the Limited Happens-Before analysis (\cref{sec:background-datarace})
 in which the associated memory was recycled by re-allocation between the two accesses,
 and claim that it is safe to completely disregard them when considering where to add new preemption points.
 Figure~\ref{fig:recycle} shows a common code pattern and interleaving which can expose such behaviour.
 If the {\tt malloc} on line~4 returns the same address passed to {\tt free} on line~2,
 then lines~1 and 7 will be flagged as a potential data race.
-I term this a {\em reallocation false-positive data-race candidiate}.
+I term this a {\em reallocation false-positive data race candidiate}.
 To the human eye, this is obviously a false positive:
 reordering lines~4-7 before lines~1-2 will cause {\tt malloc} to return a different region of allocated memory,
 in turn causing {\tt x} and {\tt y} to no longer collide.
@@ -714,7 +714,7 @@ but for generality I have added an arbitrary {\tt publish} action to the example
 	\end{tabular}
 	\end{center}
 	% TODO: short ver
-	\caption{A common execution pattern with {\tt malloc()} that produces false positive data-race candidates.}
+	\caption{A common execution pattern with {\tt malloc()} that produces false positive data race candidates.}
 	\label{fig:recycle}
 \end{figure}
 
@@ -726,13 +726,13 @@ However, the upcoming evaluation will show that Limited Happens-Before retains s
 (\cref{sec:quicksand-eval-bugs}),
 so it is useful to
 %be able to
-automatically suppress data-race candidates
+automatically suppress data race candidates
 that are certain to end up being false positives when reordered.
 Such collisions could instead be avoided with a hacked allocator which never recycles memory,
 but that could unacceptably impact performance in {\tt malloc()}-heavy tests.
 
 The ability to disregard reallocation false positives is unique to Iterative Deepening.
-When limited to a single test execution, suppressing any data-race candidate matching this pattern is unsound.
+When limited to a single test execution, suppressing any data race candidate matching this pattern is unsound.
 Consider the more unusual program in Figure~\ref{fig:recycle-bug},
 in which the memory is recycled the same way, but the racing access's address is not tied to {\tt malloc}'s return value.
 Here, reordering lines~6-7 before line~3 will allow {\tt x} and {\tt x2} to race.
@@ -742,7 +742,7 @@ but Iterative Deepening is guaranteed to explore the alternate interleaving,
 in which the true data race will show up without {\tt free()} and {\tt malloc()} interposing,
 so it is safe to suppress at first, as I will prove in \cref{sec:quicksand-realloc}.
 Moreover,
-in the context of Iterative Deepening, being able to discard certain data-race candidates
+in the context of Iterative Deepening, being able to discard certain data race candidates
 allows Quicksand to skip exploring some entire state spaces,
 and hence run fewer Landslides overall;
 this is analogous to DPOR's ability to skip equivalent interleavings within a single Landslide instance.
@@ -806,10 +806,10 @@ which fundamentally cannot account for memory reordering nondeterminism.
 %\cref{sec:quicksand-discussion} discusses this limitation further; % that's a lie..
 For existing work on combining DPOR with relaxed memory, I refer the reader to \cite{tsopso}.
 They also assume the Limited Happens-Before definition
-for the data-race analysis.
+for the data race analysis.
 I leave the case for Pure Happens-Before to future work,
 although if I may appeal to intuition,
-it requires only to show that for any data-race candidate
+it requires only to show that for any data race candidate
 Limited Happens-Before reports in a given execution,
 that Pure Happens-Before does not,
 either it will be a false positive,
@@ -869,7 +869,7 @@ all data-race preemption points involved must be {\em reachable} during the test
 
 % TODO: check spcaing between defs/lemmas/etc and surrounding text
 \begin{definition}[Reachability]
-	A data-race candidate, and its associated preemption point(s),
+	A data race candidate, and its associated preemption point(s),
 	are reachable if it will be identified by a model checker
 	configured to preempt only on already-reachable preemption points.
 \end{definition}
@@ -950,7 +950,7 @@ And thus Iterative Deepening is sound. % :)
 Next I prove that \cref{sec:quicksand-id-realloc}'s optimization
 of discarding reallocation false positives is sound under Iterative Deepening.
 
-\begin{theorem}[Soundness of eliminating reallocation data-race candidates]
+\begin{theorem}[Soundness of eliminating reallocation data race candidates]
         If a reallocation candidate is not a false positive,
 DPOR will reorder threads such that
 %DPOR will test an alternate thread interleaving in which
@@ -1167,7 +1167,7 @@ First, when starting each job, Quicksand creates a configuration file declaring 
 plus other test-case-specific options such as
 which preemption points to suppress (\cref{sec:landslide-pps}),
 especially those arising from the {\tt malloc} lock (\cref{sec:quicksand-realloc}),
-which functions DPOR and data-race analysis should treat as trusted code (\cref{sec:landslide-config-landslide}),
+which functions DPOR and data race analysis should treat as trusted code (\cref{sec:landslide-config-landslide}),
 whether to enable mutex-testing mode (\cref{sec:landslide-dynamicconfig}),
 transactional memory (\cref{sec:tm-implementation}),
 and so on.
@@ -1179,7 +1179,7 @@ communicates with the MC process via message-passing
 over a FIFO pipe % not gonna cite io.c c.c
 ({\tt talk\_to\_child()} in {\tt messaging.c}).
 Landslide messages after testing each interleaving to report updated progress and ETAs
-as well as whenever a new data-race candidate or bug is found.
+as well as whenever a new data race candidate or bug is found.
 Quicksand in turn replies whether to resume/suspend (due to too high ETA) or quit (due to timeout)
 ({\tt handle\_should\_continue()} in {\tt messaging.c}).
 It suspends jobs simply by making Landslide wait on a message-passing reply.
@@ -1312,8 +1312,8 @@ is implemented in {\tt messaging.c}.
 When Quicksand suspends Landslide,
 it detects how much time it spent asleep,
 and corrects for that amount during its next ETA computation ({\tt fudge\_time()} in {\tt estimate.c}).
-Landslide's data-race analysis also includes a heuristic to avoid reporting ``too suspicious''
-data-race candidates which it believes arise from the initialization pattern \cite{eraser}:
+Landslide's data race analysis also includes a heuristic to avoid reporting ``too suspicious''
+data race candidates which it believes arise from the initialization pattern \cite{eraser}:
 if a conflicting access pair is single-order (\cref{sec:quicksand-heuristics})
 and also arose during a known synchronization API's {\tt init()} or {\tt destroy()} function,
 Landslide will not message it to Quicksand,
@@ -1321,7 +1321,7 @@ at least not until it is reclassified as both-order.
 
 To recognize the reallocation pattern
 discussed in \cref{sec:quicksand-id-realloc}
-during data-race analysis,
+during data race analysis,
 Landslide includes a generation counter in its heap allocation tracking (\cref{sec:landslide-memory}).
 Each heap allocation is given a unique ID,
 and when evaluating whether two heap accesses can race,
@@ -1364,7 +1364,7 @@ to account for the increased orders of magnitude in preemptible events.
 \section{Evaluation}
 \label{sec:quicksand-eval}
 
-\qrevision{In Quicksand, Iterative Deepening and data-race analysis are intimately connected:
+\qrevision{In Quicksand, Iterative Deepening and data race analysis are intimately connected:
 the former relies on the later to supply it with new preemption points, thereby refining its search for new concurrent behaviours,
 while the latter relies on the former to thoroughly check all possible interleavings around its reported memory accesses and classify them as buggy or benign.
 Despite this synergy, which is necessary for total verification soundness (\cref{sec:quicksand-soundness}),
@@ -1389,7 +1389,7 @@ I pose the following evaluation questions.}
 			\item How does the choice between Pure and Limited Happens-Before
 				affect bug-finding and verification performance?
 		\end{enumerate}
-	\item Does testing alternate interleavings with model checking improve the accuracy of data-race analysis?
+	\item Does testing alternate interleavings with model checking improve the accuracy of data race analysis?
 		\begin{enumerate}
 			\item Does Quicksand avoid false positives compared to single-execution Limited Happens-Before?
 			\item Does Quicksand find data-race bugs that single-execution Pure Happens-Before or Limited Happens-Before alone would miss?
@@ -1475,7 +1475,7 @@ I ran the test suite under Quicksand in three different experimental configurati
 each of which was given a 1-hour budget and 10 CPUs for each test.
 
 \begin{itemize}
-	\item {\bf QS-Limited-HB}: Quicksand with Landslide configured to use Limited Happens-Before for its data-race analysis ({\tt -H}),
+	\item {\bf QS-Limited-HB}: Quicksand with Landslide configured to use Limited Happens-Before for its data race analysis ({\tt -H}),
 	\item {\bf QS-Pure-HB}: Quicksand using Pure Happens-Before instead ({\tt -V}), and
 	\item {\bf QS-Sync-Only}: Quicksand with initial preemption points only,
 		as described in \cref{sec:quicksand-initial-pps},
@@ -1611,14 +1611,14 @@ even for model checking domains without data races,
 such as distributed systems \cite{macemc,modist,samc,dbug-retreat,concuerror}
 and programming languages whose type systems statically reject concurrent mutable shared state
 \cite{erlang,haskell,rust-book}.
-When Quicksand ignores all data-race candidates,
+When Quicksand ignores all data race candidates,
 its results are competitive with SSS-MC-DPOR, although SSS-MC-ICB outperforms it slightly.
 This is unsurprising: the seed subsets of preemption points
 that QS-Sync-Only is limited to
 (\cref{sec:quicksand-initial-pps})
 are much less flexible than ICB's preemption strategy.
 This result suggests that in future work,
-Quicksand should consider using ICB in parallel with its default configuration when it finds no data-race candidates to test.
+Quicksand should consider using ICB in parallel with its default configuration when it finds no data race candidates to test.
 I discuss this possibility further in \cref{sec:warpzone-heuristics}.
 
 On the other hand,
@@ -1776,12 +1776,12 @@ The next best approach for verifications was SSS-MC-Shared-Mem, which completed 
 	\label{fig:totalverif}
 \end{figure}
 
-Ultimately, using Limited Happens-Before for finding data-race candidates allowed Quicksand to find more bugs,
+Ultimately, using Limited Happens-Before for finding data race candidates allowed Quicksand to find more bugs,
 while Pure Happens-Before allowed for reaching full verification faster.
 I attribute this trade-off to the fact that
 Limited Happens-Before need not wait to test many alternate thread interleavings before
-finding a data-race candidate to begin with;
-%a potential data-race candidate is confirmed;
+finding a data race candidate to begin with;
+%a potential data race candidate is confirmed;
 rather, it can add new jobs to start testing potential races immediately.%
 \footnote{Upcoming, \Cref{tab:drstatistix} will corroborate this conclusion:
 the difference is most dramatic in {\tt alarm-\allowbreak{}simultaneous},
@@ -1795,7 +1795,7 @@ by testing alternate interleavings in its original state spaces.
 %which suggests... I don't actually know!
 This suggests that
 %each approach has merit, and that
-model checkers which incorporate data-race analysis should implement both modes
+model checkers which incorporate data race analysis should implement both modes
 and offer the user to choose based on their desired and/or expected testing outcome.
 
 The only testing modes which are theoretically capable of verifying any test with data races
@@ -1900,11 +1900,11 @@ or be reachable only under a superset combination of preemption points not yet r
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Data-race analysis}
+\subsection{Data race analysis}
 \label{sec:quicksand-eval-nondets}
 
 Beyond finding new bugs and completing full verifications with data-race preemption points,
-I evaluated Quicksand's performance for classifying data-race candidates in two ways:
+I evaluated Quicksand's performance for classifying data race candidates in two ways:
 its ability to check nondeterministic data races not reachable under a single-pass analysis (\cref{sec:quicksand-pps})
 and its ability to suppress reallocation false positives (\cref{sec:quicksand-id-realloc}).
 \Cref{tab:drstatistix} presents the results for this section.
@@ -1967,7 +1967,7 @@ and its ability to suppress reallocation false positives (\cref{sec:quicksand-id
 
 Some memory accesses may be hidden in a control flow path that requires a nondeterministic preemption to be executed
 (\cref{sec:quicksand-pps}).
-In such cases, a single-pass dynamic data-race detector
+In such cases, a single-pass dynamic data race detector
 might not achieve the coverage necessary
 to identify a racing access pair as a candidate at all,
 let alone check the resulting behaviour with such as Landslide.
@@ -1985,21 +1985,21 @@ and the number among those that required such nondeterministic data races to exp
 To ensure a fair comparison, I disabled Quicksand's reallocation false positive suppression
 (\cref{sec:quicksand-id-realloc}, itself evaluated in the next section)
 for this experiment.
-This prevents Landslide from suppressing an observed reallocation data-race candidate on the first interleaving,
+This prevents Landslide from suppressing an observed reallocation data race candidate on the first interleaving,
 which would falsely classify it as nondeterministic,
 even though a single-pass would not (indeed, should not) suppress such candidates.
 
 \Cref{fig:dr-falsenegs}
-%compares the types of data-race candidates necessary to expose each data-race bug in the test suite.
-visualizes the difference between single-pass and model-checking-enabled data-race analysis.
-The first and third series represent the bugs found using preemption points from single-pass data-race candidates only,
-% not entirely true, as portend could be given data-race traces from an MC
+%compares the types of data race candidates necessary to expose each data-race bug in the test suite.
+visualizes the difference between single-pass and model-checking-enabled data race analysis.
+The first and third series represent the bugs found using preemption points from single-pass data race candidates only,
+% not entirely true, as portend could be given data race traces from an MC
 %but they don't do it in their paper, so i feel comfortable making this claim
 i.e., the state-of-the-art approach used by RaceFuzzer \cite{racefuzzer} and Portend \cite{portend}.
 The second and fourth series show all data-race bugs Quicksand found,
 which includes the former type as well as new bugs involving nondeterministic races.
 QS-Limited-HB found a nice 69 data-race bugs in total, % nice
-15 of which %could not be found with single-pass data-race candidates alone.
+15 of which %could not be found with single-pass data race candidates alone.
 required nondeterministic data-race preemption points to expose.
 QS-Pure-HB is even more dependent thereupon, %on nondeterministic data-race preemption points,
 %requiring nondeterministic data-race preemption points
@@ -2027,18 +2027,18 @@ meaning it is not just an issue of writing ``better'' test cases to avoid them.
 	\label{fig:dr-falsenegs}
 \end{figure}
 
-Note that I am not comparing how much testing time is required before identifying the data-race candidates involved in each bug.
+Note that I am not comparing how much testing time is required before identifying the data race candidates involved in each bug.
 Single-pass data races can all be found after a single program execution,
 while Quicksand may potentially take up to all 10 CPU-hours before identifying a nondeterministic data race.
-However, prior work data-race tools \cite{tsan,fasttrack},
+However, prior work data race tools \cite{tsan,fasttrack},
 being not integrated with a model checker,
 are not intended to discover new candidates under subsequent runs.
-Running a single-pass data-race tool repeatedly for 10 CPU-hours could potentially uncover some nondeterministic candidates,
+Running a single-pass data race tool repeatedly for 10 CPU-hours could potentially uncover some nondeterministic candidates,
 but stress testing's comparative problem with achieving reliable coverage is already well-understood
 \cite{chess-icb,gambit},
 so I hope the reader will consider this experiment enough evidence for model checking already.
 Likewise, replay-based tools such as RaceFuzzer \cite{racefuzzer} and Portend \cite{portend}
-depend upon the data-race detector to provide an execution trace leading to each candidate.
+depend upon the data race detector to provide an execution trace leading to each candidate.
 This result suggests that
 such tools could benefit from a similar feedback loop as is used in Iterative Deepening,
 for example, to discover new transitively-reachable data races while testing initial ones,
@@ -2048,7 +2048,7 @@ even if full verification not necessarily be their goal.
 
 In \cref{sec:quicksand-realloc} I showed the soundness of
 suppressing data race reports between two heap accesses when the surrounding memory was re-allocated in between.
-\Cref{tab:drstatistix}'s ``Realloc FPs'' column shows the total number of such data-race candidates for each test program,
+\Cref{tab:drstatistix}'s ``Realloc FPs'' column shows the total number of such data race candidates for each test program,
 totaling 965 across all tests.
 % NB. Calculated this by grepping QS-LHB id-logs for "for realsies" (see quicksand pp.c).
 Among these, only 64 were observed to avoid the reallocation in an alternate interleaving,
@@ -2057,7 +2057,7 @@ thereupon being promoted to real data-race preemption points.
 %
 Among the 64 true data races, %which initially fit the malloc-recycle pattern,
 none exposed a new bug when used as a preemption point.
-This suggests that for other data-race tools,
+This suggests that for other data race tools,
 suppressing reallocation candidates may be a productive heuristic,
 even if unsound without Iterative Deepening.
 However, Quicksand was able to correctly identify the 64 violations of that heuristic (among 26 distinct tests),
@@ -2173,7 +2173,7 @@ potentially even involving the user with interface options
 to enable and disable preemption points of her choosing at run-time.
 \cref{sec:warpzone-heuristics} discusses this possibility further.
 
-\subsubsection{Static data-race analysis}
+\subsubsection{Static data race analysis}
 
 In \cref{sec:quicksand-eval-bugs}, I evaluated the state-of-the-art approach's ability to find data-race-induced failures
 by configuring a static predicate to preempt on any non-stack memory access
@@ -2182,13 +2182,13 @@ This introduced hundreds of new preemption points on each new test execution,
 with a prohibitive performance impact.
 While this performance could be improved by
 relaxing the preemption strategy,
-instead using a static or single-pass analysis to find data-race candidates in advance \cite{portend},
+instead using a static or single-pass analysis to find data race candidates in advance \cite{portend},
 that would sacrifice soundness of the verification guarantee, as I showed in \cref{sec:quicksand-eval-nondets}.
-However, Quicksand itself could employ static data-race analysis such as RacerX \cite{racerx},
+However, Quicksand itself could employ static data race analysis such as RacerX \cite{racerx},
 or single-pass dynamic analysis such as ThreadSanitizer \cite{tsan} in future work.
 % These tools tend to err on the side of false positives,
 % but also include .....
-Any data-race candidates identified in advance could heuristically be included in Quicksand's initial seed preemption point sets
+Any data race candidates identified in advance could heuristically be included in Quicksand's initial seed preemption point sets
 (\cref{sec:quicksand-initial-pps}),
 enabling it to focus on the most suspicious races immediately,
 rather than waiting for them to be identified after potentially many iterations of model checking.
@@ -2273,9 +2273,9 @@ My contributions have been as follows.
 		incorporating new preemption points identified with dynamic analysis on the fly.
 	\item A proof of convergence (\cref{sec:quicksand-convergence}),
 		showing that for any verification obtained under even the most extreme preemption strategy,
-		Iterative Deepening with data-race analysis provides an equivalently strong one,
+		Iterative Deepening with data race analysis provides an equivalently strong one,
 		with far fewer preemption points necessary.
-	\item A technique for suppressing certain false positive data-race candidates
+	\item A technique for suppressing certain false positive data race candidates % TODO: hm, should false-positive be hyph?
 		under Limited Happens-Before (\cref{sec:landslide-lhb})
 		by identifying intervening {\tt malloc()} and {\tt free()} calls
 		(\cref{sec:quicksand-id-realloc}),
@@ -2294,7 +2294,7 @@ My contributions have been as follows.
 		and more full verifications (\cref{sec:quicksand-eval-verif}),
 		delivering ``the best of both worlds'' as promised,
 		and also demonstrated the need for a bidirectional feedback loop
-		between model checking and data-race analysis
+		between model checking and data race analysis
 		(\cref{sec:quicksand-eval-nondets}).
 \end{itemize}
 

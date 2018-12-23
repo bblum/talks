@@ -238,9 +238,9 @@ The following ``secret'' arguments also exist, primarily for my own use in runni
 		According to \cref{sec:quicksand-soundness}'s soundness proofs,
 		this is equivalent to {\tt -0}
 		(and according to my experience, \revisionminor{much} faster as well).
-	\item {\tt -H}: use Limited Happens-Before for data-race analysis (\cref{sec:background-hb})
+	\item {\tt -H}: use Limited Happens-Before for data race analysis (\cref{sec:background-hb})
 		(default for Pebbles kernelspace mode)
-	\item {\tt -V}: use vector-clock-based Pure Happens-Before for data-race analysis (\cref{sec:background-hb})
+	\item {\tt -V}: use vector-clock-based Pure Happens-Before for data race analysis (\cref{sec:background-hb})
 		(default for P2/PSU userspace and Pintos modes)
 	\item {\tt -X}: support transactional memory (\Cref{chap:tm})
 	\item {\tt -A}: support multiple abort codes during transaction failure (\cref{sec:tm-implementation});
@@ -346,7 +346,7 @@ Unless otherwise specified these are boolean flags (1 or 0) and the example valu
 	\item {\tt ALLOW\_REENTRANT\_MALLOC\_FREE=0} - allow two threads to be in {\tt malloc}, {\tt free}, or so on simultaneously without declaring it a bug.%
 		\footnote{Used in Pintos, where those functions lock/unlock the heap mutex themselves rather than relying on a wrapper function to do so before invoking them.}
 	\item {\tt TESTING\_MUTEXES=0} - configure ``mutex testing'' mode (1),
-		in which the data-race analysis will not consider a mutex's implementation to be protected by the mutex itself.
+		in which the data race analysis will not consider a mutex's implementation to be protected by the mutex itself.
 		In other words, the mutex's internal memory accesses will be flagged as data races,
 		thereby enabling Landslide to verify the mutual exclusion property.
 		Normally (0), Landslide assumes mutual exclusion is provided in order to efficiently find data races in the rest of the code.
@@ -605,9 +605,9 @@ which the annotation scripts define in advance of processing the configuration t
 	\item {\tt TIMER\_WRAPPER\_DISPATCH=NAME} - used to manually indicate a label before the end of the timer interrupt assembly wrapper, in case the {\tt iret} instruction couldn't be found automatically (see {\tt pebsim/definegen.sh}).
 	\item {\tt starting\_threads TID STARTS\_ON\_RQ} - specifies a system thread which already exists at the time {\tt tell\_landslide\_sched\_init\_done()} (see below) is called; {\tt TID} is the thread's ID and {\tt STARTS\_ON\_RQ} is 0 or 1 to indicate whether or not it starts on the system runqueue.
 		Typical threads to use this for are init and idle.
-	\item {\tt ignore\_sym NAME SIZE} - specifies a global variable {\tt NAME} of a given {\tt SIZE} in bytes whose memory accesses should be ignored for the purposes of DPOR and data-race analysis.
+	\item {\tt ignore\_sym NAME SIZE} - specifies a global variable {\tt NAME} of a given {\tt SIZE} in bytes whose memory accesses should be ignored for the purposes of DPOR and data race analysis.
 		Typical symbols to use this for are the console or heap mutex.
-	\item {\tt sched\_func NAME} - specifies a function whose memory accesses should all be ignored for the purposes of DPOR and data-race analysis.
+	\item {\tt sched\_func NAME} - specifies a function whose memory accesses should all be ignored for the purposes of DPOR and data race analysis.
 		Typical functions to use this for are the timer handler and context switcher.
 	\item {\tt disk\_io\_func NAME} - specifies a function which may block a thread waiting for disk I/O (or other external interrupt) rather than blocking on another thread.
 		If any threads are blocked in a disk I/O function during an apparent deadlock,
@@ -615,7 +615,7 @@ which the annotation scripts define in advance of processing the configuration t
 		rather than declaring a bug.
 	\item {\tt ignore\_dr\_function NAME USERSPACE} - specifies a function whose memory access should not be counted as data races (but still be considered memory conflicts for DPOR).
 		{\tt USERSPACE} should be 0 or 1 to denote a kernel-space or user-space function respectively.
-	\item {\tt thrlib\_function NAME} - specifies a function whose memory accesses should be ignored both by the data-race analysis and by DPOR.
+	\item {\tt thrlib\_function NAME} - specifies a function whose memory accesses should be ignored both by the data race analysis and by DPOR.
 		This is recommended for marking trusted-correct thread library code when testing multithreaded client code thereof,
 		in order to avoid unnecessarily checking, for example,
 		all the different ways {\tt thr\_exit()} and {\tt thr\_join()} could interleave.
@@ -694,7 +694,7 @@ while others serve to improve or otherwise manipulate the state space.
 
 \subsubsection{Optional but strongly recommended annotations}
 
-The following annotations enable Landslide to track locksets~\cite{eraser} for data-race analysis.
+The following annotations enable Landslide to track locksets~\cite{eraser} for data race analysis.
 If not provided, it will be as if Landslide assumes no guarantees about mutual exclusion or happens-before,
 and hence will identify all memory conflicts as data races.
 (Note that the corresponding instrumentation for P2s is achieved automatically,
@@ -702,7 +702,7 @@ as the names of the mutex interface are mandated by the project specification.)
 
 \begin{itemize}
 	\item {\tt tell\_landslide\_mutex\_locking(void *mutex\_addr)} - indicates the beginning of the lock routine for
-		whatever synchronization API Landslide should treat as the primitive for data-race detection.
+		whatever synchronization API Landslide should treat as the primitive for data race detection.
 		In Pintos this is the {\tt sema\_*()} function family; in Pebbles they may be called anything.
 	\item {\tt tell\_landslide\_mutex\_blocking(int owner\_tid)} - called ``immediately'' before a thread becomes blocked on the mutex.
 		Definition of ``immediately'' similar to the {\tt forking()} and friends annotations above.
@@ -843,7 +843,7 @@ It tracks heap allocations, checks reads and writes in the heap region against s
 tracks reads and writes (in any region) from each thread
 and checks them against each other
 for DPOR (\cref{sec:landslide-dpor})
-and data-race analysis (\cref{sec:landslide-datarace}).
+and data race analysis (\cref{sec:landslide-datarace}).
 For userspace tests, it also tracks which virtual address space ({\tt cr3}) belongs to the test program
 via a state machine of the test lifecycle,
 which lets it avoid false positive heap errors from other programs which have differently-addressed heaps
@@ -1289,7 +1289,7 @@ it compares each {\tt within} or {\tt without\_function} directive in the follow
 
 The same comparison is done for {\tt within\_user\_function} and {\tt without\_user\_function}.
 
-\subsubsection{Data-race predicates}
+\subsubsection{Data race predicates}
 
 The {\tt data\_race} command specifies an instruction pointer value to identify as a data-race preemption point.
 It can optionally be qualified by a thread ID, most recent system call number, et cetera,
@@ -1470,7 +1470,7 @@ then $t_i$ and $t_j$ are said to conflict,
 which I will denote $t_i \leftrightsquigarrow_S t_j$.
 
 Whenever a conflict is identified,
-\revisionminor{Landslide} also invokes the data-race analysis (\cref{sec:landslide-datarace}).
+\revisionminor{Landslide} also invokes the data race analysis (\cref{sec:landslide-datarace}).
 It checks for {\tt free()}/access conflicts as well as access pairs,
 effectively treating deallocation of a heap block as a ``poisoning'' write to its entire contents,
 which is considered to conflict with accesses to any address therein
@@ -2004,7 +2004,7 @@ beget unexpected state space structure in essentially arbitrary other ways.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Data-race analysis}
+\subsection{Data race analysis}
 \label{sec:landslide-datarace}
 
 Whenever a memory conflict is identified for DPOR as described above,
@@ -2439,7 +2439,7 @@ These include:
 	\item Uses Dynamic Partial Order Reduction (DPOR) \cite{dpor}
 		to prune equivalent interleavings while exploring the state space (\cref{sec:landslide-dpor}).
 	\item Uses its simulator's memory tracing integration \cite{simics,bochs}
-		to power data-race analysis \cite{djit,fasttrack} (\cref{sec:landslide-datarace}),
+		to power data race analysis \cite{djit,fasttrack} (\cref{sec:landslide-datarace}),
 		as well as DPOR.
 		%and DPOR \cite{dpor} (\cref{sec:landslide-dpor}).
 	\item Supports Preemption Sealing \cite{sealing} to configure the set of active preemption points
@@ -2458,14 +2458,14 @@ that could be considered contributions in their own right.
 	\item Extends Preemption Sealing for finer-grained control
 		over whether individual functions and/or global variables
 		should be considered for, or excluded from,
-		DPOR and/or data-race analysis
+		DPOR and/or data race analysis
 		(\cref{sec:landslide-config-landslide};
 		{\tt thrlib\_function} and {\tt ignore\_dr\_function}, respectively).
 		This allows a test case author to precisely target the exact subset of code
 		she is interested in testing,
 		avoiding unnecessary state space inflation from trusted code.
 	\item Adds a mutex testing mode to configure whether the
-		data-race analysis should consider locks' internal accesses
+		data race analysis should consider locks' internal accesses
 		(\cref{sec:landslide-dynamicconfig}; {\tt TESTING\_MUTEXES}).
 		This allows the user to verify that her lock implementation
 		correctly provides mutual exclusion

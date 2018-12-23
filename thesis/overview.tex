@@ -43,7 +43,7 @@ And from laughter, comes wisdom.
 (\cref{sec:overview-concurrency}),
 stateless model checking,
 (\cref{sec:overview-stateless}),
-data-race analysis
+data race analysis
 (\cref{sec:background-datarace}),
 and the relevant undergraduate operating systems classes
 (\cref{sec:overview-edu}).
@@ -231,7 +231,7 @@ When building a tool for testing concurrent programs,
 one may include some computational understanding of the behaviour of any, or all, of these abstractions.
 Annotating a certain abstraction's semantics treats it as a trusted concurrency primitive in its own right,
 and allows the testing tool to reduce the possible space of interleavings
-(or the set of false positive data-race candidates reported, et cetera;
+(or the set of false positive data race candidates reported, et cetera;
 \revisionminor{see \cref{sec:landslide-config-landslide}})
 at the cost of increasing the implementation and theoretical complexity of the analysis
 \revisionminor{(\cref{sec:tm-abstraction})}.
@@ -487,10 +487,10 @@ Iterative Deepening, presented in \Cref{chap:quicksand}, is another such search 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Data-race analysis}
+\section{Data race analysis}
 \label{sec:background-datarace}
 
-Data-race analysis \cite{eraser} identifies pairs of unsynchronized memory accesses between threads.
+Data race analysis \cite{eraser} identifies pairs of unsynchronized memory accesses between threads.
 
 \subsection{Definition}
 
@@ -545,14 +545,14 @@ In \Cref{fig:hb-example}, the pairs of lines marked with comments (A1 and A2, B1
 {\normalsize (b) No data race in any interleaving.}
 \end{tabular}
 	\end{center}
-	\caption[Data-race analyses may be prone to either {\em false negatives} or {\em false positives}.]
-		{{Data-race analyses may be prone to either {\em false negatives} or {\em false positives}.
+	\caption[Data race analyses may be prone to either {\em false negatives} or {\em false positives}.]
+		{{Data race analyses may be prone to either {\em false negatives} or {\em false positives}.
 	Applying Happens-Before to program (a) will miss the potential race possible between A1/A2 in an alternate interleaving,
 	while using Limited Happens-Before on (b) will produce a false alarm on B1/B2.}}
 \label{fig:hb-example}
 \end{figure}
 
-A data-race analysis may be either {\em static} (inspecting source code) \cite{racerx}
+A data race analysis may be either {\em static} (inspecting source code) \cite{racerx}
 or {\em dynamic} (tracking individual accesses arising at run-time) \cite{tsan}.
 This paper focuses exclusively on dynamic analysis,
 so although our example refers to numbered source lines for ease of explanation,
@@ -594,8 +594,8 @@ although it can still miss true potential races in other cases.
 Landslide implements both Happens-Before (henceforth referred to as {\em Pure Happens-Before} for clarity) and Limited Happens-Before.
 \Cref{chap:quicksand} includes a comparison of the two approaches for the purpose of finding new preemption points for model checking.
 %, we use the Limited Happens-Before relation for our analysis.
-%The justification for this is that, while stand-alone data-race analyses must avoid inundating the user with false alarms \cite{racerx},
-%my work incorporates data-race analysis in an internal feedback loop, and reports only directly observed failures to the user.
+%The justification for this is that, while stand-alone data race analyses must avoid inundating the user with false alarms \cite{racerx},
+%my work incorporates data race analysis in an internal feedback loop, and reports only directly observed failures to the user.
 %Hence, I accept some overhead from false positives for the sake of more thorough testing.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1103,7 +1103,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		Recently, many systems research papers have used the term to refer to {\em data races} in particular.%
 		\footnote{In the author's personal experience, many readers of their M.S. thesis \cite{landslide}
 		have misinterpreted its title to believe % oops
-		that Landslide be only a data-race detector,
+		that Landslide be only a data race detector,
 		rather than a model checker.}
 		To avoid confusion, this thesis will avoid the term entirely,
 		using the above two more precise terms instead.}

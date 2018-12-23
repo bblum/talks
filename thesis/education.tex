@@ -1274,7 +1274,7 @@ Reports from PSU students (Bochs version):
 \resume{enumerate}
 	\item Landslide kept crashing for one student while running {\tt paraguay}.
 		This is likely due to exceeding Linux's process limit and/or exhausting the class's official VM's memory,
-		which can arise when many data-race candidates cause Quicksand to spawn many Landslide jobs,
+		which can arise when many data race candidates cause Quicksand to spawn many Landslide jobs,
 		and (as on {\tt paraguay}) each with very large state spaces that must defer.
 		I had been working on mitigating this problem just before beginning the PSU study;
 		properly addressing it would involve improving Quicksand's memory-exhaustion detection code

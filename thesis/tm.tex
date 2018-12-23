@@ -189,7 +189,7 @@ in this section
 I develop a simpler concurrency model and offer a proof of equivalence to HTM execution semantics.
 I make two major simplifications:
 simulating transaction aborts as immediate failure injections,
-and treating transaction atomicity as a global mutex during data-race analysis;
+and treating transaction atomicity as a global mutex during data race analysis;
 and provide corresponding equivalence proofs.
 
 {\bf Notation.} Let $I = TN_1@L_1, TN_2@L_2, ... TN_n@L_n$,
@@ -454,12 +454,12 @@ The claim's second part follows naturally.
 \subsection{Memory access analysis}
 \label{sec:tm-design-locks}
 
-Next comes the issue of memory accesses within transactions with regard to data-race analysis (\cref{sec:background-datarace}).
+Next comes the issue of memory accesses within transactions with regard to data race analysis (\cref{sec:background-datarace}).
 \Cref{thm:atom} provides that the body of all transactions may be executed atomically within the MC environment.
 While they may interleave between other non-transactional sequences,
 no other operations (whether transactional or not) will interrupt them.
 I claim this level of atomicity is equivalent to that provided by a global lock,
-and hence abstracting it as such in Landslide's data-race analysis is sound.
+and hence abstracting it as such in Landslide's data race analysis is sound.
 
 Let $\tiiat{\mu},\tjjat{\nu}$ be a pair of memory accesses to the same address, at least one a write,
 in some transactional execution $I$ normalized under \Cref{lem:equiv}.
@@ -531,7 +531,7 @@ For each, I state below what it means to race in an execution with synchronizing
 		\end{itemize}
 		%In both cases $I$ and $I'$ otherwise have the same synchronizing instructions.
 \end{itemize}
-Hence, data-race analysis is sound when transaction boundaries are replaced by an abstract global lock.
+Hence, data race analysis is sound when transaction boundaries are replaced by an abstract global lock.
 \end{proof}
 
 \subsection{Weak atomicity}
@@ -662,7 +662,7 @@ Finally, Quicksand supports the following command-line options to enable various
 		failure injection on each of the former
 		(always returning {\tt \_XABORT\_RETRY} as the failure code)
 		(\revisionminor{\cref{sec:tm-design-failure}}, \cref{sec:txn-failure}),
-		and treatment of transactional regions during data-race analysis (\cref{sec:txn-datarace}).
+		and treatment of transactional regions during data race analysis (\cref{sec:txn-datarace}).
 	\item {\tt -A} (for ``xAbort codes'')
 		enables multiple xabort failure codes (\cref{sec:txn-failure}).
 		Requires {\tt -X}.
@@ -804,7 +804,7 @@ to {\tt cause\_transaction\_failure()},
 which edits the simulation state ({\tt \%eip} and {\tt \%eax})
 to force {\tt \_xbegin()} to return the provided code.
 
-\subsection{Data-race analysis}
+\subsection{Data race analysis}
 \label{sec:txn-datarace}
 
 When a thread returns {\tt \_XBEGIN\_STARTED} from {\tt \_xbegin()}
@@ -2315,7 +2315,7 @@ I have made the following contributions:
 		by treating transactions as globally-uninterruptible atomic sections
 		and injecting failure without simulating rollback
 		(\cref{sec:tm-design-failure})
-		and applying conventional data-race analysis with all transactions treated as a global lock
+		and applying conventional data race analysis with all transactions treated as a global lock
 		(\cref{sec:tm-design-locks}),
 		plus an extension to also emulate weakly-atomic STM systems
 		by relaxing the above atomicity to apply to other transactions only

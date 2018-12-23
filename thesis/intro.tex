@@ -255,7 +255,7 @@ which correspond to the three major contributions of this thesis, as follows:}
 		a new algorithm for navigating the trade-off in how many preemption points to test at once.
 		Iterative Deepening incorporates state space estimation \cite{estimation}
 		to decide on-the-fly whether each state space is worth pursuing,
-		and uses data-race analysis \cite{tsan,fasttrack}
+		and uses data race analysis \cite{tsan,fasttrack}
 		to find new preemption point candidates based on a program's dynamic behaviour.
 		\revision{This chapter will include a soundness proof,
 		showing that testing only synchronization and data-race preemption points
@@ -402,7 +402,7 @@ The rest of this dissertation is organized as follows.
 	\item {\bf Quicksand:} \Cref{chap:quicksand} introduces
 		\revisionminor{Quicksand,
 		a wrapper framework for Landslide
-		which incorporates data-race analysis at run-time to find new preemption points
+		which incorporates data race analysis at run-time to find new preemption points
 		and uses the new Iterative Deepening algorithm to}
 		more intelligently choose which state spaces to test, corresponding to contribution 1 above.
 	\item {\bf Education:} \Cref{chap:education} discusses my evaluation of Landslide
