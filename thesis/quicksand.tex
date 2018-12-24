@@ -334,25 +334,6 @@ The user may also wish to configure her testing tool to prefer this approach, at
 such as when she believes all bugs have been fixed and wants a verification as fast as possible;
 \cref{sec:quicksand-impl-modes} discusses this execution mode further.
 
-\newcommand\AllPPs{\ensuremath{\mathcal{A}}}
-\newcommand\PendingJobs{\ensuremath{\mathcal{P}}}
-\newcommand\SuspendedJobs{\ensuremath{\mathcal{S}}}
-\newcommand\GetETA[1]{ETA(#1)}
-\newcommand\GetPPSet[1]{PPSet(#1)}
-
-\begin{algorithm}[h]
-	\SetKwInOut{Input}{Input}
-	\Input{$j$, the currently-running job}
-	\Input{\AllPPs, the set of all known preemption points} %, sorted by decreasing heuristic priority}
-	\eIf{$\exists p \in \AllPPs . p \not\in \GetPPSet{j}$}{
-		return NewJob(\AllPPs) // New maximal state space
-	}{
-		return $j$ // $j$ is still maximal
-	}
-	\caption{Na\"ive Iterative Deepening method}
-	\label{alg:algorithm0}
-\end{algorithm}
-
 However, in many tests of even modestly-sized programs,
 full verification is not feasible,
 and focusing on the maximal state space alone is likely to be fruitless.
@@ -370,6 +351,24 @@ as each one serves as a guarantee that all possible interleavings therein were t
 \cref{sec:quicksand-discussion-partial} discusses some limitations of this approach.
 The next three subsections will show how to schedule these smaller jobs
 based on their preemption points and ETAs.
+
+\newcommand\AllPPs{\ensuremath{\mathcal{A}}}
+\newcommand\PendingJobs{\ensuremath{\mathcal{P}}}
+\newcommand\SuspendedJobs{\ensuremath{\mathcal{S}}}
+\newcommand\GetETA[1]{ETA(#1)}
+\newcommand\GetPPSet[1]{PPSet(#1)}
+
+\begin{algorithm}[t]
+	\KwIn{$j$, the currently-running job}
+	\KwIn{\AllPPs, the set of all known preemption points} %, sorted by decreasing heuristic priority}
+	\eIf{$\exists p \in \AllPPs . p \not\in \GetPPSet{j}$}{
+		return NewJob(\AllPPs) // New maximal state space; switch to it
+	}{
+		return $j$ // $j$ is still maximal
+	}
+	\caption{Na\"ive Iterative Deepening method}
+	\label{alg:algorithm0}
+\end{algorithm}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -458,10 +457,9 @@ but should of course be tested only once.
 
 \newcommand\AllJobs{\ensuremath{\mathcal{J}}}
 \begin{algorithm}[h]
-	\SetKwInOut{Input}{Input}
-	\Input{$j_0$, the currently-running job}
-	\Input{\AllJobs, the set of all existing (or completed) jobs}
-	\Input{$\alpha$, an instruction reported by the MC as part of a racing access pair}
+	\KwIn{$j_0$, the currently-running job}
+	\KwIn{\AllJobs, the set of all existing (or completed) jobs}
+	\KwIn{$\alpha$, an instruction reported by the model checker as part of a data race}
 	\If{$\forall j \in \AllJobs,$
 	\GetPPSet{$j_0$} $\cup$ $\alpha$
 	$\not\subseteq$
@@ -564,12 +562,11 @@ in practice the non-constant portion beyond line~4 runs very infrequently
 and is negligible compared to the exponentially-sized state spaces themselves.}
 
 \begin{algorithm}[t]
-	\SetKwInOut{Input}{Input}
 	%\textbf{Function} GetBestJob($j_0$, PendingJobs, SuspendedJobs): \\
-	\Input{$j_0$, the currently-running job}
-	\Input{\PendingJobs, the list of pending jobs, sorted by decreasing heuristic priority}
-	\Input{\SuspendedJobs, the list of already-suspended jobs, sorted by increasing ETA}
-	\Input{$T$, the remaining time in the CPU budget}
+	\KwIn{$j_0$, the currently-running job}
+	\KwIn{\PendingJobs, the list of pending jobs, sorted by decreasing heuristic priority}
+	\KwIn{\SuspendedJobs, the list of already-suspended jobs, sorted by increasing ETA}
+	\KwIn{$T$, the remaining time in the CPU budget}
 	\If{\GetETA{$j_0$} $<$ HeuristicETAFactor $\times$ $T$}{
 		return $j_0$ // Common case: job is expected to finish.
 	}
@@ -591,7 +588,7 @@ and is negligible compared to the exponentially-sized state spaces themselves.}
 		}
 	}
 	return $j_0$ // \GetETA{$j_0$} was bad, but no other $j$ was better.
-	\caption{Suspending exploration of a state space in favor of a potentially smaller one.}
+	\caption{Suspending exploration of a job in favor of a potentially smaller one.}
 	\label{alg:shouldworkblock}
 \end{algorithm}
 
