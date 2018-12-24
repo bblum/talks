@@ -481,14 +481,19 @@ and a ``big'' job to preempt on that instruction as well as each preemption poin
 %
 Hence,
 each {\em pair} of racing accesses will spawn four new jobs.
-\Cref{fig:new-dr-jobs} visualizes the resulting overall workflow in Quicksand,
+\Cref{fig:new-dr-jobs} depicts the resulting overall workflow in Quicksand,
 including the four such jobs resulting from one data race report.%
 \footnote{As an optimization,
 though the big jobs should be expected to uncover more data races and in turn
 produce even bigger jobs still,
 small jobs should be forbidden from ``reproducing'',
 as their purpose is only fast heuristic bug-finding rather than exhaustive coverage;
-see {\tt handle\_data\_race()} in {\tt messaging.c}.}
+see {\tt handle\_data\_race()} in {\tt messaging.c}.}%
+\footnote{\qrevision{For visual simplicity,
+fake state spaces are shown here %for each job
+to convey only relative size differences, %among them,
+but not the internal asymmetric structure inherent to interleavings of multiple threads
+(compare to \Cref{fig:pps-statespace}).}}
 %
 The rationale of spawning multiple jobs is that one cannot know in advance which will be most fruitful:
 while the big job risks not completing in time,
@@ -547,11 +552,12 @@ How to handle jobs whose ETAs are too high for the given CPU budget
 is the heart of Iterative Deepening,
 and is listed formally in \Cref{alg:shouldworkblock}.%
 \footnote{
-Though its worst-case performance is $O(mn)$ in the
-%number of pending and suspended jobs,
-sizes of $\mathcal{P}$ and $\mathcal{S}$,
+Though its worst-case performance is $O(|\mathcal{P}|\times|\mathcal{S}|)$,
+%in the
+%%number of pending and suspended jobs,
+%sizes of $\mathcal{P}$ and $\mathcal{S}$,
 in practice the non-constant portion beyond line~4 runs very infrequently
-and is negligible compared to the exponentially-sized state spaces.}.
+and is negligible compared to the exponentially-sized state spaces themselves.}
 
 \begin{algorithm}[t]
 	\SetKwInOut{Input}{Input}
@@ -628,7 +634,7 @@ before becoming suspended.
 In such scenarios,
 the algorithm heuristically assumes the smaller job's ETA is more accurate,
 in order to avoid repeatedly resuming larger jobs briefly only to find that their ETAs keep getting worse and worse.%
-\footnote{In other words, it lets us avoid thrashing in Quicksand.} % ¯\_(ツ)_/¯
+\footnote{In order to avoid thrashing in Quicksand.} % ¯\_(ツ)_/¯
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
