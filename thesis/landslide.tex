@@ -595,7 +595,7 @@ which the annotation scripts define in advance of processing the configuration t
 		For kernels wherein preemptability is corresponds directly by interrupts, leave this option unspecified.
 	\item {\tt PREEMPT\_ENABLE\_VALUE=VAL} - value of the above variable when preemption is enabled
 		(usually 0; note that many kernels use a nesting depth counter where any positive value corresponds to disabled).%
-		\footnote{These two options replace the deprecated {\tt kern\_ready\_for\_timer\_interrupt()} annotation from {\tt student.c} described in \cite{landslide} \sect{6.2.3}.}
+		\footnote{These two options replace the deprecated {\tt kern\_ready\_for\_timer\_interrupt()} annotation from {\tt student.c} described in \cite[\sect{6.2.3}]{landslide}.}
 	\item {\tt PATHOS\_SYSCALL\_IRET\_DISTANCE=VALUE} - indicate how much stack space is used by the reference kernel's system call wrappers.
 		Used for cross-kernel-to-userspace stack traces;
 		if unset, stack traces from kernel space will end at the system call boundary.
@@ -1017,11 +1017,11 @@ The symbol table logic lives in {\tt symtable.c} and is pretty much a lot of glu
 In the Simics version, Landslide relies on the {\tt deflsym} Simics object created by the 15-410 python scripts,
 and queries its attributes using Simics API calls.
 In the Bochs version, function names and line numbers are handled separately:
-Bochs is patched with a new API function named {\tt bx\_dbg\_symbolic\_address\_landslide}%
-\footnote{does the same thing as the existing {\tt bx\_dbg\_symbolic\_address}, but with a better type signature}
+Bochs is patched with a new API function named {\tt bx\_dbg\_symbolic\_address\_landslide()}%
+\footnote{Does the same thing as the existing {\tt bx\_dbg\_symbolic\_address()}, but with a better type signature.}
 which provides function names and hexadecimal offsets;
-while for line numbers, {\tt pebsim/pintos/build.sh}%
-\footnote{Line numbers in Bochs for Pebbles/P2s are not supported yet; see {\tt p2-setup.sh} for the work-in-progress.}
+while for line numbers, {\tt pebsim/build.sh} (and {\tt pebsim/pintos/\allowbreak{}build.sh} for Pintos)
+%\footnote{Line numbers in Bochs for Pebbles/P2s are not supported yet; see {\tt p2-setup.sh} for the work-in-progress.}
 generates a header file {\tt line\_numbers.h}
 using {\tt objdump} and {\tt addr2line},
 which the aforementioned hex offset then serves as an index into.
@@ -1029,12 +1029,12 @@ which the aforementioned hex offset then serves as an index into.
 \subsubsection{Stack traces}
 \label{sec:landslide-stacktrace}
 
-The stack tracer is implemented in {\tt stack.c}.
-It does the standard approach of following the base pointer chain
+The stack tracer is implemented in {\tt stack.c}
+using the standard approach of following the base pointer chain
 (not supporting code compiled with {\tt -fomit-frame-pointer} by doing anything clever
-like understanding how much stack frame is allocated for each function),
+like understanding how much stack frame each function allocates),
 and printing symbol table information for the pushed return addresses at the top of each frame.
-
+%
 However, it also offers several special-case features
 which even some students have sometimes noticed as being more clever than Simics's stack tracer.
 I document those features here.
@@ -1277,9 +1277,9 @@ or whether it should be rejected,
 it compares each {\tt within} or {\tt without\_function} directive in the following sequence-dependent manner:
 
 \begin{itemize}
-	\item If no {\tt within\_function} commands are given, operate in ``denylist mode'':
+	\item If no {\tt within\_function} commands are given, operate in ``denylist'' mode:
 		the preemption point is by default valid as long as no {\tt without\_function} calls reject it.
-		Otherwise, operate in ``allowlist mode'':
+		Otherwise, operate in ``allowlist'' mode:
 		the preemption point is by default rejected unless at least one {\tt within\_function} directive matches.
 	\item Subject to the above, find the sequentially-last {\tt *\_function} directive
 		(static preemption point commands considered before dynamic ones)
@@ -1911,7 +1911,7 @@ whose estimates must also incorporate the new $\mathsf{marked~children}$ value.
 This allows Landslide to update the global estimate after each branch in $O(n)$ time and memory,
 without recomputing past branch proportions individually.
 
-\subsubsection{Run-time (Recursive) estimation}
+\subsubsection{Runtime (Recursive) estimation}
 
 The RE, used to estimate total execution time,
 computes at each node the expected time to execute all subtrees rooted at children of that node,

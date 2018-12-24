@@ -89,7 +89,7 @@ In the first example of \Cref{fig:tree}
 I constructed the state space by expanding both threads' {\tt x++} operations into three pseudo-assembly instructions,
 then designating every instruction as a possible preemption point,
 yielding ${3+3 \choose 3} = 20$ total interleavings.
-Later, \cref{sec:landslide-dpor} showed DPOR prune 16 of those as equivalent,
+Later, \cref{sec:landslide-dpor} showed that DPOR prunes 16 of those as equivalent,
 although the reduced state space size is still combinatorial
 in the number of {\em conflicting} events, rather than the total number.
 For larger tests, %with hundreds or thousands of conflicting events in any given execution,
