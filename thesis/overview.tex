@@ -129,8 +129,8 @@ and infinite loops (which must be identified heuristically \cite{entscheidungspr
 
 \begin{figure}[t]
 	\begin{tabular}{cc}
-		\begin{tabular}{p{0.45\textwidth}p{0.5\textwidth}}
-			{\small
+		\begin{tabular}{p{0.44\textwidth}p{0.495\textwidth}}
+			{
 			\begin{tabular}{l}
 				\texttt{\ctype{int} x = \const{0};} \\
 				\texttt{\ctype{void} \call{count}() \{} \\
@@ -147,7 +147,7 @@ and infinite loops (which must be identified heuristically \cite{entscheidungspr
 			\end{tabular}
 			}
 			&
-			{\small \begin{tabular}{ll}
+			{\begin{tabular}{ll}
 				{\bf Thread 1} & {\bf Thread 2} \\
 				\hline
 				\texttt{load tmp <- x;} & \\
@@ -706,7 +706,8 @@ The thread lifecycle/management routines are as follows:
 		without risking any corruption as long as the exiting thread continues to run.
 	\item {\tt thr\_join(tid, statusp)} blocks the calling thread until the thread with the specified thread ID exits, then returns, collecting its exit status.
 \end{itemize}
-Other than {\tt thr\_init} (which is necessarily single-threaded), several concurrency errors between any two (or all three) of these functions are very common in student submissions.
+Other than {\tt thr\_init()} (which is necessarily single-threaded),
+concurrency errors between any two (or all three) of these functions are very common in student submissions.
 
 Finally, students also implement automatic stack growth using the {\tt swexn} system call, which is not relevant to this thesis.
 
@@ -784,13 +785,13 @@ Its basecode implements a rudimentary kernel, consisting of a context switcher, 
 upon which students add more features in several projects.
 Most relevant to this thesis, the basecode provides the following functions/libraries, among others:
 \begin{itemize}
-	\item Semaphores (the basic concurrency primitive, implemented using direct scheduler calls): {\tt sema\_up}, {\tt sema\_down}, {\tt sema\_try\_down};
-	\item Locks (which wrap a semaphore initialized to 1), {\tt lock\_acquire}, {\tt lock\_\allowbreak{}release}, {\tt lock\_try\_acquire};
-	\item Condition variables (also implemented using scheduler calls): {\tt cond\_wait}, {\tt cond\_\allowbreak{}signal}, {\tt cond\_broadcast}, with the same semantics as Pebbles P2 condvars;
-	\item Basic round-robin scheduling facilities: {\tt thread\_block} (a kernel-level analogue to Pebbles's {\tt deschedule}), {\tt thread\_yield}
-	\item Kernel thread lifecycle management, {\tt thread\_create} and {\tt thread\_exit}, including stack space memory management;
+	\item Semaphores (the basic concurrency primitive, implemented using direct scheduler calls): {\tt sema\_up()}, {\tt sema\_down()}, {\tt sema\_try\_down()};
+	\item Locks (which wrap a 1-initialized semaphore), {\tt lock\_acquire()}, {\tt lock\_\allowbreak{}release()}, {\tt lock\_try\_acquire()};
+	\item Condition variables (also implemented using scheduler calls): {\tt cond\_wait()}, {\tt cond\_\allowbreak{}signal()}, {\tt cond\_broadcast()}, with the same semantics as Pebbles P2 condvars;
+	\item Basic round-robin scheduling facilities: {\tt thread\_block()} (a kernel-level analogue to Pebbles's {\tt deschedule}), {\tt thread\_yield()}
+	\item Kernel thread lifecycle management, {\tt thread\_create()} and {\tt thread\_exit()}, including stack space memory management;
 	\item Interrupt and fault handlers;
-	\item A page allocator, {\tt palloc\_get\_page}, {\tt palloc\_get\_multiple}, {\tt palloc\_free\_page}, and {\tt palloc\_free\_multiple}
+	\item A page allocator, {\tt palloc\_get\_page()}, {\tt palloc\_get\_multiple()}, {\tt palloc\_free\_page()}, and {\tt palloc\_free\_multiple()}.
 \end{itemize}
 Both Pebbles and Pintos basecodes offer a standard C library including {\tt malloc}, string-formatting, printing, et cetera.
 
