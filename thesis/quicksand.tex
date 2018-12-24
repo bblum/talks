@@ -255,6 +255,11 @@ data races require model checking to reliably detect.
 	\item {\bf Data race candidate} shall refer specifically to
 		potentially-racing accesses identified by Limited Happens-Before, %(\cref{sec:landslide-lhb}), % sub sub sec
 		when disambiguation with {\em data races} is necessary.
+	\item {\bf Data-race preemption point}
+		denotes a custom model checker configuration,
+		issued after finding a {\em data race},
+		requesting it to preempt each involved thread just before its racing memory access
+		(\cref{sec:quicksand-dr-pps}).
 	\item {\bf Benign data races} are those that, when reordered in an alternate interleaving,
 		do not lead to a {\em data-race bug}, while
 	\item {\bf False positives} are {\em data race candidates} that,
@@ -319,8 +324,10 @@ this suffices to provide at least as strong verification guarantees as any other
 To introduce the Iterative Deepening algorithm,
 I will first show a simple approach for handling new preemption points in the absence of any CPU budget restriction.
 
-Given unlimited CPU time for testing,
-one would always want to switch to the new maximal state space whenever adding a new preemption point.
+Given unlimited CPU time, %for testing,
+%one would always want to
+switching to the new maximal state space whenever adding a new preemption point
+\qrevisionminor{would be the quickest way to reach full verification}.
 The maximal state space is guaranteed to subsume all execution sequences reachable in any subset state space,
 so considering any incomplete subset of the known preemption points would be redundant work.
 \Cref{alg:algorithm0} demonstrates this na\"ive approach.
@@ -384,13 +391,12 @@ but to optimize for finding bugs faster,
 implementations may wish to simultaneously to try testing subsets thereof.
 
 For testing user-space code, Quicksand begins with the four
-% TODO: decide
-jobs from \Cref{fig:id}:
-%possible combinations of preemption points from \Cref{fig:pps-statespace}:
+%jobs from \Cref{fig:id}:
+\qrevisionminor{possible combinations of preemption points from \Cref{fig:pps-statespace}:}
 $\{yield\}$,
 $\{yield,lock\}$,
 $\{yield,unlock\}$,
-and $\{yield,lock,unlock\}$,
+and $\{yield,lock,$ $unlock\}$, % FIXME argh
 By extension, these also induce preemptions on any other primitives
 which use
 internal locks,
@@ -440,8 +446,9 @@ With Iterative Deepening,
 this is a simple matter of creating a new state space
 with an additional preemption point enabled on the racing instructions by each thread,
 as shown in \Cref{alg:handledatarace}.
-I will term these {\em data-race preemption points},
-and they will form the foundation of Quicksand's contribution.
+%I will term these {\em data-race preemption points},
+%and they will
+These {\em data-race preemption points} form the foundation of Quicksand's contribution.
 Note that even though a data race may involve two different instructions,
 $\alpha$ and $\beta$, Quicksand's strategy is to add new state spaces with only one new racing instruction at a time.
 Rather than adding a single large state space,
@@ -701,7 +708,7 @@ but for generality I have added an arbitrary {\tt publish} action to the example
 % TODO: fix syntax hilight
 % TODO check figure placement
 % TODO check figure camption
-\begin{figure}[t]
+\begin{figure}[h]
 	\begin{center}
 	\begin{tabular}{rll}
 		& \multicolumn{2}{c}{\texttt{struct x \{ int foo; int baz; \} *x;}} \\
@@ -717,8 +724,9 @@ but for generality I have added an arbitrary {\tt publish} action to the example
 		7 & & \texttt{\hilight{brickred}{y->bar = ...;}} \\
 	\end{tabular}
 	\end{center}
-	% TODO: short ver
-	\caption{A common execution pattern with {\tt malloc()} that produces false positive data race candidates.}
+	\caption[Reallocation false positive pattern.]
+	{Reallocation false positive pattern arising from
+	{\tt malloc()} returning the same memory that was just {\tt free()}d.}
 	\label{fig:recycle}
 \end{figure}
 
@@ -754,7 +762,7 @@ Upcoming in the evaluation, \cref{sec:quicksand-eval-verif}'s \Cref{tab:drstatis
 will show how many redundant state spaces Quicksand is able to prune with this technique.
 
 % TODO smae as above
-\begin{figure}[t]
+\begin{figure}[h]
 	\begin{center}
 	\begin{tabular}{rll}
 		& {\bf Thread 1} & {\bf Thread 2} \\
@@ -767,9 +775,11 @@ will show how many redundant state spaces Quicksand is able to prune with this t
 		7 & & \texttt{\hilight{brickred}{x2->foo = ...;}} \\
 	\end{tabular}
 	\end{center}
-	% TODO: shortver
-	\caption{If a single-pass Limited HB analysis discarded candidates matching the malloc-recycle pattern,
-it would miss the bug in this adversarial program.}
+	\caption[Reallocation-pattern data race that hides a true bug.]
+	{Reallocation-pattern data race that hides a true bug.
+	If a single-pass Limited Happens-Before analysis discarded all data race candidates
+	with intervening reallocations,
+	it would miss the bug in this adversarial program.}
 	\label{fig:recycle-bug}
 \end{figure}
 
