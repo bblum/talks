@@ -132,15 +132,19 @@ a {\em data-race preemption point} is required to find this bug.
 	\begin{center}
 		\begin{tabular}{p{0.8\textwidth}}
 			\begin{center}
-			\begin{tabular}{ll}
-				\multicolumn{2}{c}{Initially {\tt int count = \const{0}; mutex\_t m;}} \\
+			\begin{tabular}{rlcrl}
+				\multicolumn{5}{c}{Initially {\tt int count = \const{0}; mutex\_t m;}} \\
 				\\
-				{\bf Thread 1} & {\bf Thread 2} \\
+				& {\bf Thread 1} & & & {\bf Thread 2} \\
 				\hline
-				\texttt{\hilight{darkorange}{mutex\_lock}(\&m);} & \texttt{atomic\_xadd(\&count, \const{1});} \\
-				\texttt{count++;}                                & \texttt{\hilight{olivegreen}{yield}();} \\
-				\texttt{\hilight{darkblue}{mutex\_unlock}(\&m);} & \texttt{atomic\_xadd(\&count, \const{1});} \\
-				\texttt{assert(count >= \const{1});}      & \texttt{assert(count >= \const{2});} \\
+				11 & \texttt{\hilight{darkorange}{mutex\_lock}(\&m);} & &
+						21 & \texttt{atomic\_xadd(\&count, \const{1});} \\
+				12 & \texttt{count++;}                                & &
+						22 & \texttt{\hilight{olivegreen}{yield}();} \\
+				13 & \texttt{\hilight{darkblue}{mutex\_unlock}(\&m);} & &
+						23 & \texttt{atomic\_xadd(\&count, \const{1});} \\
+				14 & \texttt{assert(count >= \const{1});}             & &
+						24 & \texttt{assert(count >= \const{2});} \\
 			\end{tabular}
 			\end{center}
 			\\
