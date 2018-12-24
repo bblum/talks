@@ -234,7 +234,6 @@ data races require model checking to reliably detect.
 \subsection{Terminology}
 \label{sec:quicksand-terminology}
 
-% TODO: add section refs to this para
 \qrevision{For the rest of this chapter, I will use the following terminology as shorthand for the concepts explained above.
 
 \begin{itemize}
@@ -249,7 +248,6 @@ data races require model checking to reliably detect.
 	\item {\bf Data-race bug}
 		will refer to a concrete failure, such as \Cref{fig:pps-example}'s assertion failure above, whereas
 	\item {\bf Data race} refers to the racing access pair itself (\cref{sec:landslide-datarace}).
-		% TODO: scan this chapter for consistency of dis
 	\item {\bf Data race candidate} shall refer specifically to
 		potentially-racing accesses identified by Limited Happens-Before, %(\cref{sec:landslide-lhb}), % sub sub sec
 		when disambiguation with {\em data races} is necessary.
@@ -330,8 +328,7 @@ being concerned with the verification guarantee provided when the search may com
 are based on this simple version of Iterative Deepening.
 The user may also wish to configure her testing tool to prefer this approach, at her discretion,
 such as when she believes all bugs have been fixed and wants a verification as fast as possible;
-% TODO: clarify sec reference to -M flag
-\cref{sec:quicksand-implementation} discusses this execution mode further.
+\cref{sec:quicksand-impl-modes} discusses this execution mode further.
 
 \newcommand\AllPPs{\ensuremath{\mathcal{A}}}
 \newcommand\PendingJobs{\ensuremath{\mathcal{P}}}
@@ -683,7 +680,7 @@ Finally, I identified a particular class of false positive data race candidates
 under the Limited Happens-Before analysis (\cref{sec:background-datarace})
 in which the associated memory was recycled by re-allocation between the two accesses,
 and claim that it is safe to completely disregard them when considering where to add new preemption points.
-Figure~\ref{fig:recycle} shows a common code pattern and interleaving which can expose such behaviour.
+\Cref{fig:recycle} shows a common code pattern and interleaving which can expose such behaviour.
 If the {\tt malloc} on line~4 returns the same address passed to {\tt free} on line~2,
 then lines~1 and 7 will be flagged as a potential data race.
 I term this a {\em reallocation false-positive data race candidiate}.
@@ -733,7 +730,7 @@ but that could unacceptably impact performance in {\tt malloc()}-heavy tests.
 
 The ability to disregard reallocation false positives is unique to Iterative Deepening.
 When limited to a single test execution, suppressing any data race candidate matching this pattern is unsound.
-Consider the more unusual program in Figure~\ref{fig:recycle-bug},
+Consider the more unusual program in \Cref{fig:recycle-bug},
 in which the memory is recycled the same way, but the racing access's address is not tied to {\tt malloc}'s return value.
 Here, reordering lines~6-7 before line~3 will allow {\tt x} and {\tt x2} to race.
 Discarding the data race report as a false positive after checking just this one execution
@@ -828,6 +825,8 @@ In the second, I prove that starting from synchronization preemption points only
 Iterative Deepening must eventually reach a state space containing such an interleaving,
 no matter how many data races are involved.
 
+\subsubsection{Equivalence}
+
 \newcommand\ppnext[1]{\ensuremath{\mathsf{next}(#1)}}
 \newcommand\ppinstr[1]{\ensuremath{\mathsf{instr}(#1)}}
 \newcommand\ppothers[1]{\ensuremath{\mathsf{others}(#1)}}
@@ -837,9 +836,7 @@ let $\ppnext{p}$ denote the next transition after $p$ executed by the thread whi
 let $\ppinstr{p}$ denote the first instruction of $\ppnext{p}$,
 and let $\ppothers{p}$ denote the transitions by other threads between $p$ and $\ppnext{p}$.
 
-% TODO: decide if these subsection headers are good, or, not
-\subsubsection{Equivalence}
-
+\vspace{0.5em}
 \begin{lemma}[Equivalence of non-data-race preemption points]
 	For any thread interleaving possible by preempting on any instruction,
 	there exists an equivalent interleaving which uses only data-race and synchronization API preemption points.
@@ -855,8 +852,7 @@ Hence, because $\ppinstr{p}$ is not a data race, it cannot be a shared memory co
 Let $i$ be the first instruction among $\ppnext{p}$ which is such a conflict, or a synchronization boundary.
 If $i$ is a shared memory conflict, it must be a data race, for the same reasoning as above.
 Modify the input interleaving by reordering $\ppinstr{p}$ until $i$, not including $i$, to before $\ppothers{p}$.
-% TODO: fix this handwavey citation to at least point to something that says what soundness of dpor means
-By the soundness of DPOR \cite{dpor}, this is equivalent to the input interleaving.
+By the soundness of DPOR (\cref{sec:landslide-dpor}; \cite{dpor}), this is equivalent to the input interleaving.
 In other words, $p$ has been transformed into $p'$ such that $\ppnext{p'} = i$,
 which is a data race or synchronization boundary.
 All other preemption points in the input trace can be inductively converted in the same manner.
@@ -867,17 +863,19 @@ All other preemption points in the input trace can be inductively converted in t
 For Iterative Deepening to ``eventually'' reach a certain state space,
 all data-race preemption points involved must be {\em reachable} during the test.
 
-% TODO: check spcaing between defs/lemmas/etc and surrounding text
+\vspace{0.5em}
 \begin{definition}[Reachability]
 	A data race candidate, and its associated preemption point(s),
 	are reachable if it will be identified by a model checker
 	configured to preempt only on already-reachable preemption points.
 \end{definition}
+\vspace{0.5em}
 
 Initially, the statically-available synchronization API preemption points (\cref{sec:quicksand-initial-pps})
 are reachable.
 Reachability of data-race preemption points is transitive.
 
+\vspace{0.5em}
 \begin{lemma}[Saturation of data races]
         Given any interleaving comprising only data-race and synchronization API preemption points,
         all involved preemption points are reachable.
@@ -928,6 +926,7 @@ in reference to the way it must eventually arrive,
 after potentially many iterated state spaces,
 at full verification strength.
 
+\vspace{0.5em}
 \begin{theorem}[Convergence]
 	If a bug can be exposed by any thread interleaving possible
 	by preempting on all instructions during a specific test,
@@ -950,6 +949,7 @@ And thus Iterative Deepening is sound. % :)
 Next I prove that \cref{sec:quicksand-id-realloc}'s optimization
 of discarding reallocation false positives is sound under Iterative Deepening.
 
+\vspace{0.5em}
 \begin{theorem}[Soundness of eliminating reallocation data race candidates]
         If a reallocation candidate is not a false positive,
 DPOR will reorder threads such that
@@ -1175,9 +1175,9 @@ This is done by {\tt run\_job()} in {\tt job.c}.
 
 Then, a dedicated Quicksand thread
 ({\tt start\_job()} in {\tt job.c})
-communicates with the MC process via message-passing
+communicates with its corresponding model checker process via message-passing
 over a FIFO pipe % not gonna cite io.c c.c
-({\tt talk\_to\_child()} in {\tt messaging.c}).
+({\tt talk\_to\_\allowbreak{}child()} in {\tt messaging.c}).
 Landslide messages after testing each interleaving to report updated progress and ETAs
 as well as whenever a new data race candidate or bug is found.
 Quicksand in turn replies whether to resume/suspend (due to too high ETA) or quit (due to timeout)
@@ -1205,7 +1205,7 @@ Following is a brief description of each of Quicksand's major modules.
 		generation of Landslide configuration files,
 		and Linux process management code to launch child Landslide instances ({\tt run\_job()}).
 	\item {\bf Messaging} ({\tt messaging.c}):
-		Manages communication with child Landslides ({\tt talk\_to\_child()},
+		Manages communication with child Landslides ({\tt talk\_\allowbreak{}to\_child()},
 		implementing certain aspects of Iterative Deepening,
 		creating new jobs in response to data race reports ({\tt handle\_data\_race()})
 		and deferring too-big jobs in reponse to ETA updates  ({\tt handle\_estimate()}).
@@ -1217,7 +1217,7 @@ Following is a brief description of each of Quicksand's major modules.
 	\item {\bf Workqueue} ({\tt work.c}):
 		Implements the per-CPU worker threads,
 		including the check for whether to switch priority from one job to another
-		(\Cref{alg:shouldworkblock}, {\tt should\_work\_block()} and {\tt get\_job()}),
+		(\Cref{alg:shouldworkblock}, {\tt should\_work\_\allowbreak{}block()} and {\tt get\_job()}),
 		as well as managing the shared workqueue of jobs overall ({\tt workqueue\_thread()}).
 		Also implements the fixed-interval progress reporting ({\tt progress\_report\_thread()}).
 	\item {\bf Bugs} ({\tt bug.c}):
@@ -1227,7 +1227,8 @@ Following is a brief description of each of Quicksand's major modules.
 	\item {\bf Options} ({\tt option.c}):
 		Processes command-line options,
 		checking for legality of various combinations of exploration modes.
-		New options may be added with the convenient, if scarily-implemented,
+		New options may be added with the convenient
+		%, if scarily-implemented,
 		macros {\tt DEF\_CMDLINE\_FLAG()} and {\tt DEF\_CMDLINE\_OPTION()}.
 	\item {\bf Main} ({\tt main.c}):
 		Initializes the default state spaces,
@@ -1291,13 +1292,13 @@ Quicksand also supports several alternate exploration strategies, as follows.
 		(\cref{sec:tm-eval}) rather than in this chapter.
 \end{itemize}
 
-Note that Quicksand restricts ICB to be usable only in modes when it is running only one Landslide at a time.
+Quicksand restricts ICB to be usable only in modes when it runs only one Landslide at a time.
 ICB is itself a heuristic search ordering strategy to uncover bugs faster,
 so while technically easy to run Iterative Deepening with all jobs thereunder running ICB,
 that would suffer both approaches' repeated work compounded.
 \cref{sec:warpzone-heuristics} discusses integrating the two approaches to hopefully reap the benefits of both.
 However, maximal state space mode does support ICB,
-as the former focuses on verification only,
+as it focuses on verification only,
 but if the result is a time-out,
 the user may find an ICB-style preemption-bounded partial verification useful.
 
@@ -1412,14 +1413,19 @@ and the Pintoses average 718 lines (by {\tt diff} to the provided basecode),
 for a total of 198,772 lines of code tested for this evaluation.
 
 I chose P2s and Pintoses for this test suite because of the relative ease of generating hundreds of unique state spaces,
-varied in size and correctness, and with a diverse set of bug types.
-In addition to concurrency bugs,
+varied in size and correctness, and with a diverse set of bug types.%
+\footnote{In addition to concurrency bugs,
 many of the codebases exhibited {\em deterministic} bugs (i.e., encountered on the first interleaving tested),
-which I fixed by hand before running these tests to ensure that every bug in this study required meaningful work by the model checker.
+which I fixed by hand before running these tests
+to ensure that every bug in this study required meaningful work by the model checker.}
 While many prior work stateless model checking papers
-% TODO: cite some
+% TODO: find one that tests like... apache. to back up your claim of realest of the real world
+\cite{chess-icb,optimal-dpor,mcr,rcmc}
+% bpor could go here but it's already known bugs benchmarks, less the 'real worl' approach
+% wow, ZKW15 is 121 programs! nice job!!
 publish studies of single-digit or low-double-digit numbers of
-bugs found in ``real-world'' programs, often confirmed by the upstream developers as severe,
+bugs found in ``real-world'' programs,
+sometimes reported to and confirmed by the upstream developers, %as severe,
 to motivate stateless model checking to be used in production settings,
 I believe this approach to be too anecdotal for comparing several model checking strategies {\em against each other},
 and opt for this approach instead for better statistical significance.%
@@ -1706,7 +1712,7 @@ whether combined with Iterative Deepening or ICB.
 To ensure that the corpus of P2 and Pintos bugs gives an unbiased comparison between Quicksand and ICB,
 I also counted the preemption bounds at which ICB found each of its bugs,
 i.e., the minimum number of involuntary thread switches each bug required to expose.
-Table~\ref{tab:icb-bounds} shows the distribution of these bounds,
+\Cref{tab:icb-bounds} shows the distribution of these bounds,
 which is consistent with the results of \cite[Table 2]{chess-icb},
 reproduced in the rightmost column
 (obtained under a different test suite, of course, of only 5 programs).
@@ -1715,7 +1721,8 @@ In fact, this evaluation's preemption bound distribution is {\em more} heavily b
 suggesting that if anything,
 my test suite is even friendlier still to ICB than that of prior work.
 
-\begin{table}[h]
+% TODO: check placement
+\begin{table}[t]
 	\begin{center}
 		\small
 	\begin{tabular}{r||c|c||c}
@@ -1892,7 +1899,7 @@ Nevertheless, mutual timeouts among all six testing approaches constituted rough
 For these 192,
 I show the number of state spaces Quicksand was able to complete in the
 ``Average tested subset SSes'' column.
-% of Table~\ref{tab:drbugs}. % thesis - now split into sep table
+% of \Cref{tab:drbugs}. % thesis - now split into sep table
 %While obviously not as strong as full verification,
 These completions guarantee that, if the test program could expose a bug,
 it would depend on a data race not discovered yet,
@@ -2027,9 +2034,10 @@ meaning it is not just an issue of writing ``better'' test cases to avoid them.
 	\label{fig:dr-falsenegs}
 \end{figure}
 
-Note that I am not comparing how much testing time is required before identifying the data race candidates involved in each bug.
-Single-pass data races can all be found after a single program execution,
-while Quicksand may potentially take up to all 10 CPU-hours before identifying a nondeterministic data race.
+Note that I do not compare how much testing time is required before identifying the data races %candidates
+involved in each bug.
+While single-pass data races are all found after a single test execution,
+Quicksand may potentially take up to all 10 CPU-hours before identifying a nondeterministic data race.
 However, prior work data race tools \cite{tsan,fasttrack},
 being not integrated with a model checker,
 are not intended to discover new candidates under subsequent runs.
@@ -2060,7 +2068,7 @@ none exposed a new bug when used as a preemption point.
 This suggests that for other data race tools,
 suppressing reallocation candidates may be a productive heuristic,
 even if unsound without Iterative Deepening.
-However, Quicksand was able to correctly identify the 64 violations of that heuristic (among 26 distinct tests),
+However, Quicksand was able to correctly identify the 64 violations of that heuristic, among 26 distinct tests,
 and fall back to classifying them with DPOR.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
