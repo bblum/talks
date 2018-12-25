@@ -130,7 +130,7 @@ a {\em data-race preemption point} is required to find this bug.
 
 \begin{figure}[t]
 	\begin{center}
-		\begin{tabular}{p{0.8\textwidth}}
+		\begin{tabular}{p{0.9\textwidth}}
 			\begin{center}
 			\begin{tabular}{rlcrl}
 				\multicolumn{5}{c}{Initially {\tt int count = \const{0}; mutex\_t m;}} \\
@@ -148,27 +148,31 @@ a {\em data-race preemption point} is required to find this bug.
 			\end{tabular}
 			\end{center}
 			\\
+			\begin{center}
 			(a) Example program with synchronization API calls highlighted.
-			\\
+			\end{center}
 			\\
 			\begin{center}
-			\begin{tabular}{llc}
-				{\bf Thread 1} & {\bf Thread 2} & {\bf Value of {\tt count}} \\
+			\begin{tabular}{llllc}
+				& {\bf Thread 1} & & {\bf Thread 2} & {\bf Value of {\tt count}} \\
 				\hline
-				\texttt{\hilight{darkorange}{mutex\_lock}(\&m);} & & 0 \\
-				\texttt{int tmp = count;} & & 0 \\
-							& \texttt{atomic\_xadd(\&count, \const{1});} & 1 \\
-							& \texttt{\hilight{olivegreen}{yield}();} & 1 \\
-							& \texttt{atomic\_xadd(\&count, \const{1});} & 2 \\
-				\texttt{count = tmp + 1;} & & 1 \\
-							& \texttt{\hilight{assertfail}{assert(count >= 2);}} & 1 \\
-				\texttt{\hilight{darkblue}{mutex\_unlock}(\&m);} & & 1 \\
-				\texttt{assert(count >= \const{1});} & & 1 \\
+				11 & \texttt{\hilight{darkorange}{mutex\_lock}(\&m);} & & & 0 \\
+				12a & \texttt{int tmp = count;} & & & 0 \\
+							& & 21 & \texttt{atomic\_xadd(\&count, \const{1});} & 1 \\
+							& & 22 & \texttt{\hilight{olivegreen}{yield}();} & 1 \\
+							& & 23 & \texttt{atomic\_xadd(\&count, \const{1});} & 2 \\
+				12b & \texttt{count = tmp + 1;} & & & 1 \\
+				13 & \texttt{\hilight{darkblue}{mutex\_unlock}(\&m);} & & & 1 \\
+				14 & \texttt{assert(count >= \const{1});} & & & 1 \\
+							& & 24 & \texttt{\hilight{assertfail}{assert(count >= 2);}} & 1 \\
 			\end{tabular}
 			\end{center}
 			\\
-			(b) Interleaving of (a) in which Thread 2's assertion fails,
-			as the single increment of Thread 1 overwrites both those of Thread 2.
+			%(b) Interleaving of (a) in which Thread 2's assertion fails,
+			%as the single increment of Thread 1 overwrites both those of Thread 2.
+			(b) Buggy interleaving of (a) in which
+			the single increment of Thread 1 overwrites both those of Thread 2.
+			Note the data-race preemption at 12a-12b.
 		\end{tabular}
 	\end{center}
 	\caption[Example bug requiring data-race preemption points to expose.]
@@ -182,12 +186,11 @@ a {\em data-race preemption point} is required to find this bug.
 
 \begin{figure}[ht!] % TODO: check placement
 	\begin{center}
-		% FIXME: fix it to be a real tree
-		\includegraphics[width=0.9\textwidth]{../oopsla/tree-maximal-only.pdf}
+		\includegraphics[width=0.98\textwidth]{dr-statespace.pdf}
 	\end{center}
 	\caption[State space of \Cref{fig:pps-example} with synchronization preemption points only.]
 	{State space of \Cref{fig:pps-example} with synchronization preemption points only.
-	Note that none of these interleavings preempt Thread 1 at the necessary place
+	Note that none of these interleavings preempt Thread 1 at the necessary place (between 12a and 12b)
 	to trigger Thread 2's assertion failure.}
 	\label{fig:pps-statespace}
 \end{figure}
@@ -300,13 +303,10 @@ which relies on data race analysis and specific heuristics to optimize its testi
 for kernels and thread libraries.
 I will also henceforth refer to each unique set of preemption points as a {\em job}.
 
-%\subsection{Design}
-
-% TODO: put fig:id here, explain generally multiple state spaces
-
 %Note that
 Iterative Deepening is a wrapper algorithm around stateless model checking.
 A model checker is still used to test each state space, and other reduction techniques such as DPOR
+(\cref{sec:landslide-dpor})
 are still applicable in each.
 Moreover, because Iterative Deepening treats the set of preemption points as mutable,
 it can add new preemption points reactively based on any runtime analysis.
@@ -382,7 +382,6 @@ based on their preemption points and ETAs.
 \subsection{Initial preemption points}
 \label{sec:quicksand-initial-pps}
 
-% TODO: fix this section, the way it lists the pps is fucked, figure reference prob dnagling
 Iterative Deepening must be seeded with a set of initial state spaces,
 which can be any number of subsets of the statically-available preemption points
 that prior work model checkers would use.
@@ -404,7 +403,7 @@ such as condition variables or semaphores.
 Preempting on voluntary switches such as {\tt yield} is always necessary to maintain
 Landslide's invariant that only one thread runs between consecutive preemption points,
 so the {\tt yield} preemption point is always implicitly enabled.
-
+%
 For kernel-level testing, interrupt-disabling is analogous to locking,
 so preemptions must also be introduced
 just before a disable-interrupt opcode (on x86, {\tt cli})
@@ -423,7 +422,7 @@ $\{yield,cli\}$,
 $\{yield,sti\}$,
 and $\{yield,lock,$ $unlock,cli,sti\}$.
 As a heuristic, it doesn't test every intermediate subset such as $\{lock,sti\}$,
-which would result in $2^p$ jobs right off the bat,
+which would result in $2^p$ jobs, %right off the bat,
 although this could potentially be improved in future work (\cref{sec:quicksand-discussion-subsets}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -513,7 +512,7 @@ This phenomenon motivates Iterative Deepening to prioritize jobs at run-time.
 
 \begin{figure}[t]
 	\begin{center}
-        \includegraphics[width=0.9\textwidth]{dr-jobs-v2.pdf}
+        \includegraphics[width=0.9\textwidth]{dr-jobs-v3.pdf}
 	\end{center}
 	\caption[Quicksand incorporates data races as new preemption points at run-time.]
 		{Quicksand incorporates data races as new preemption points at run-time
@@ -705,23 +704,20 @@ In studying a similar pattern, the Eraser tool from prior work \cite{eraser}
 found that Thread 2's logic usually corresponds to an initialization pattern,
 but for generality I have added an arbitrary {\tt publish} action to the example on line~6.
 
-% TODO: fix syntax hilight
-% TODO check figure placement
-% TODO check figure camption
 \begin{figure}[h]
 	\begin{center}
 	\begin{tabular}{rll}
-		& \multicolumn{2}{c}{\texttt{struct x \{ int foo; int baz; \} *x;}} \\
-		& \multicolumn{2}{c}{\texttt{struct y \{ int bar; \} *y;~~~~~~~~~~}} \\
+		& \multicolumn{2}{c}{\texttt{\ctype{struct x} \{ \ctype{int} foo; \ctype{int} baz; \} *x;}} \\
+		& \multicolumn{2}{c}{\texttt{\ctype{struct y} \{ \ctype{int} bar; \} *y;~~~~~~~~~}} \\
 		\\
 		& {\bf Thread 1} & {\bf Thread 2} \\
-		1 & \texttt{\hilight{brickred}{x->foo = ...;}} & \\
-		2 & \texttt{\hilight{olivegreen}{free}(x);} \\
-		3 & & \texttt{\hilight{commentblue}{// x's memory reallocated}} \\
-		4 & & \texttt{y~=~\hilight{olivegreen}{malloc}(sizeof *y);} \\
-		5 & & \texttt{\hilight{commentblue}{// ...initialize...}}\\
-		6 & & \texttt{publish(y);} \\
-		7 & & \texttt{\hilight{brickred}{y->bar = ...;}} \\
+		1 & \texttt{\hilight{assertfail}{x->foo = ...;}} & \\
+		2 & \texttt{\call{free}(x);} \\
+		3 & & \texttt{\ccomment{// x's memory reallocated}} \\
+		4 & & \texttt{y~=~\call{malloc}(\flow{sizeof} *y);} \\
+		5 & & \texttt{\ccomment{// ...initialize...}}\\
+		6 & & \texttt{\call{publish}(y);} \\
+		7 & & \texttt{\hilight{assertfail}{y->bar = ...;}} \\
 	\end{tabular}
 	\end{center}
 	\caption[Reallocation false positive pattern.]
@@ -761,18 +757,17 @@ this is analogous to DPOR's ability to skip equivalent interleavings within a si
 Upcoming in the evaluation, \cref{sec:quicksand-eval-verif}'s \Cref{tab:drstatistix}
 will show how many redundant state spaces Quicksand is able to prune with this technique.
 
-% TODO smae as above
 \begin{figure}[h]
 	\begin{center}
 	\begin{tabular}{rll}
 		& {\bf Thread 1} & {\bf Thread 2} \\
-		1 & \texttt{publish(x);} & \\
-		2 & \texttt{\hilight{brickred}{x->foo = ...;}} & \\
-		3 & \texttt{\hilight{olivegreen}{free}(x);} \\
-		4 & & \texttt{x2 = get\_published\_x();} \\
-		5 & & \texttt{\hilight{commentblue}{// x's memory recycled}} \\
-		6 & & \texttt{y~=~\hilight{olivegreen}{malloc}(sizeof *y);} \\
-		7 & & \texttt{\hilight{brickred}{x2->foo = ...;}} \\
+		1 & \texttt{\call{publish}(x);} & \\
+		2 & \texttt{\hilight{assertfail}{x->foo = ...;}} & \\
+		3 & \texttt{\call{free}(x);} \\
+		4 & & \texttt{x2 = \call{get\_published\_x}();} \\
+		5 & & \texttt{\ccomment{// x's memory recycled}} \\
+		6 & & \texttt{y~=~\call{malloc}(\flow{sizeof} *y);} \\
+		7 & & \texttt{\hilight{assertfail}{x2->foo = ...;}} \\
 	\end{tabular}
 	\end{center}
 	\caption[Reallocation-pattern data race that hides a true bug.]
@@ -807,7 +802,7 @@ I present these proofs as they appeared in the OOPSLA paper \cite{quicksand}:
 written as sketches in informal prose,
 to optimize for rapidly conveying an intuition for why it works
 rather than to justify every internal step within the proof structure.%
-\footnote{Also because I am already over 200 pages in this thesis, all told.}
+\footnote{Also because this thesis is long enough already.}
 % footnote yeah, i'm writing this last
 % footnote of footnote yeah, the committee never read this part
 A more rigorous treatment
@@ -978,16 +973,16 @@ or a use-after-free bug will be reported immediately.
 
 \begin{proof}
 Any such program must contain an access $a_1$ by one thread T1,
-followed by a {\tt free} and a {\tt malloc} possibly by either thread,
+followed by a {\tt free()} and a {\tt malloc()} possibly by either thread,
 followed by an access $a_2$ by the other thread T2,
 not depending on the result of the middle malloc.
-Without loss of generality, fix T1 to perform the {\tt free} and T2 the subsequent {\tt malloc},
+Without loss of generality, fix T1 to perform the {\tt free()} and T2 the subsequent {\tt malloc()},
 as shown in \Cref{fig:recycle-bug}.
 The other cases are similar,
-although note that if T2 performs the {\tt free},
-and the {\tt malloc} is reordered before it,
+although note that if T2 performs the {\tt free()},
+and the {\tt malloc()} is reordered before it,
 T2's final access will be a use-after-free immediately.
-Let us also assume the only way for the program to get pointers to heap memory is through {\tt malloc};
+Let us also assume the only way for the program to get pointers to heap memory is through {\tt malloc()};
 hence, there must also be some ``publish'' action $p$ by T1 which communicates the address to T2.
 Because this is a true potential data race,
 $p$ must occur before $a_1$, as $a_2$ cannot be reordered before $p$.
@@ -1012,14 +1007,14 @@ Hence there will be a preemption point between $p$ and $a_1$ no matter the mode 
 
 With this preemption point,
 DPOR will reorder $a_2$ before $a_1$, while not changing $a_2$'s location.
-As T2's {\tt malloc} now occurs before T1's {\tt free}, it will allocate different memory.
+As T2's {\tt malloc()} now occurs before T1's {\tt free()}, it will allocate different memory.
 Hence $a_1$ and $a_2$ %will be in the same allocation;
 can race without appearing to fall under the reallocation pattern.
 \end{proof}
 
 This spells QED so we are done \cite{vargomax}. % even more :)))
 Note that this proof does not rely on the existence of preemption points on
-the internal lock of {\tt malloc} or {\tt free},
+the internal lock of {\tt malloc()} or {\tt free()},
 which is an ideal candidate to ignore via {\tt without\_function} (\cref{sec:landslide-pps})
 to reduce state space size.
 Future work may generalize this proof structure to not rely on specific knowledge
@@ -1055,33 +1050,7 @@ at fixed intervals to inform the user on the completion, bug-finding, and/or est
 I highlight a few notable features of the jobs therein
 to serve as a concrete example that may cement the reader's intuition
 of \cref{sec:quicksand-id}'s more abstract algorithm descriptions:
-\begin{itemize}
-	\item Jobs 0, 1, 2, and 3 are the initially-seeded state spaces (\cref{sec:quicksand-initial-pps}).
-	\item Job 2 reports a bug found, and shows the filename of the HTML preemption trace
-		(\cref{sec:landslide-bugreport}, \Cref{fig:bugreport})
-		which the user should examine to diagnose it.%
-		\footnote{I actually cheated by copy/pasting this job alone from a different run of Quicksand;
-		the other jobs come from a test with the bug already fixed,
-		in order that exploration progress far enough to defer some jobs for the sake of example.
-		In a real execution, the superset jobs 3, 5, 7, 8, 9, and 11 would be cancelled.}
-	\item Jobs 4 and 6 are the ``small'' jobs added to test the two data races in isolation;
-		5 and 7 are the corresponding ``large'' jobs (\cref{sec:quicksand-dr-pps}).
-	\item Job 11 is the maximal state space, containing all synchronization preemption points
-		and both currently-known data races.
-	\item The intermediate jobs 8, 9, and 10 have been suspended for having ETAs
-		at least twice as large as the provided CPU budget (1 hour),
-		according to the ETA scaling factor heuristic (\cref{sec:quicksand-heuristics}).
-	\item Note that job 11's ETA is currently lower than 8's, 9's, and 10's, despite being a strict superset of each.
-		This corresponds to the surprising ETA inversion situation discussed in \cref{sec:quicksand-choosing}:
-		Quicksand simply hasn't made as much progress into job 11 (compare their percentage estimates rather than ETAs)
-		for its ETA to be accurate enough yet.
-\end{itemize}
-Future work could extend these progress reports to be more interactive,
-allowing the user to reprioritize state spaces at her whim
-or to disable certain data-race preemption points after checking them by hand,
-as discussed in \cref{sec:future-friendly}.
 
-% TODO: syn hi
 \begin{figure}[t]
 	\begin{center}
 		\footnotesize
@@ -1106,44 +1075,70 @@ as discussed in \cref{sec:future-friendly}.
 		%\texttt{       PPs: \{ 'mutex\_unlock' 'data race 6@ 0x1000ec5' \}} \\
 		%\texttt{=========================} \\
 
-		\texttt{==== PROGRESS REPORT ====} \\
-		\texttt{total time elapsed: 2m 52s} \\
-		\texttt{[JOB 0] COMPLETE (4 interleavings tested; 7s elapsed)} \\
-		\texttt{~~~~PPs: \{ \}} \\
-		\texttt{[JOB 1] Running (21.932870\%; ETA 8m 14s)} \\
-		\texttt{~~~~ PPs: \{ 'mutex\_lock' \}} \\
+		\texttt{\ccomment{==================================== PROGRESS REPORT ====================================}} \\
+		\texttt{\flow{total time elapsed: 2m 52s}} \\
+		\texttt{\ccomment{[JOB 0]} \ctype{COMPLETE (4 interleavings tested; 7s elapsed)}} \\
+		\texttt{~~~~\ccomment{PPs: \{ \}}} \\
+		\texttt{\ccomment{[JOB 1]} \flow{Running (21.932870\%; ETA 8m 14s)}} \\
+		\texttt{~~~~ \ccomment{PPs: \{ 'mutex\_lock' \}}} \\
 		% version that came from the actual test
-		%\texttt{[JOB 2] Running (46.373457\%; ETA 4m 35s)} \\
-		%\texttt{~~~~ PPs: \{ 'mutex\_unlock' \}} \\
-		\texttt{[JOB 2] BUG FOUND: landslide-trace-1544661430.29.html (51 interleavings tested)} \\
+		%\texttt{\ccomment{[JOB 2]} Running (46.373457\%; ETA 4m 35s)} \\
+		%\texttt{~~~~ \ccomment{PPs: \{ 'mutex\_unlock' \}}} \\
+		\texttt{\ccomment{[JOB 2]} \hilight{assertfail}{BUG FOUND: landslide-trace-1544661430.29.html (51 interleavings tested)}} \\
 		%\texttt{~~~~Log of lprintf()s: id/ls-setup.log.7UMGLr} \\
-		\texttt{~~~~ PPs: \{ 'mutex\_unlock' \}} \\
-		\texttt{[JOB 3] Running (9.852431\%; ETA 24m 32s)} \\
-		\texttt{~~~~ PPs: \{ 'mutex\_lock' 'mutex\_unlock' \}} \\
-		\texttt{[JOB 4] COMPLETE (6 interleavings tested; 9s elapsed)} \\
-		\texttt{~~~~PPs: \{ 'data race @ 0x102917' \}} \\
-		\texttt{[JOB 5] Running (3.710938\%; ETA 1h 2m 14s)} \\
-		\texttt{~~~~ PPs: \{ 'mutex\_lock' 'mutex\_unlock' 'data race @ 0x102917' \}} \\
-		\texttt{[JOB 6] COMPLETE (4 interleavings tested; 8s elapsed)} \\
-		\texttt{~~~~PPs: \{ 'data race @ 0x1000ecf' \}} \\
-		\texttt{[JOB 7] Running (6.119792\%; ETA 33m 14s)} \\
-		\texttt{~~~~ PPs: \{ 'mutex\_lock' 'mutex\_unlock' 'data race @ 0x1000ecf' \}} \\
-		\texttt{[JOB 11] Running (3.670247\%; ETA 50m 16s)} \\
-		\texttt{~~~~ PPs: \{ 'mutex\_lock' 'mutex\_unlock' 'data race @ 0x102917' 'data race @ 0x1000ecf' \}} \\
-		\texttt{[JOB 8] Deferred... (33.340567\%; ETA 2h 6m 3s)} \\
-		\texttt{~~~~ PPs: \{ 'mutex\_unlock' 'data race @ 0x102917' \}} \\
-		\texttt{[JOB 9] Deferred... (34.466226\%; ETA 2h 35m 37s)} \\
-		\texttt{~~~~ PPs: \{ 'mutex\_unlock' 'data race @ 0x1000ecf' \}} \\
-		\texttt{[JOB 10] Deferred... (11.113790\%; ETA 4h 20m 31s)} \\
-		\texttt{~~~~ PPs: \{ 'mutex\_lock' 'data race @ 0x102917' \}} \\
+		\texttt{~~~~ \ccomment{PPs: \{ 'mutex\_unlock' \}}} \\
+		\texttt{\ccomment{[JOB 3]} \flow{Running (9.852431\%; ETA 24m 32s)}} \\
+		\texttt{~~~~ \ccomment{PPs: \{ 'mutex\_lock' 'mutex\_unlock' \}}} \\
+		\texttt{\ccomment{[JOB 4]} \ctype{COMPLETE (6 interleavings tested; 9s elapsed)}} \\
+		\texttt{~~~~\ccomment{PPs: \{ 'data race @ 0x102917' \}}} \\
+		\texttt{\ccomment{[JOB 5]} \flow{Running (3.710938\%; ETA 1h 2m 14s)}} \\
+		\texttt{~~~~ \ccomment{PPs: \{ 'mutex\_lock' 'mutex\_unlock' 'data race @ 0x102917' \}}} \\
+		\texttt{\ccomment{[JOB 6]} \ctype{COMPLETE (4 interleavings tested; 8s elapsed)}} \\
+		\texttt{~~~~\ccomment{PPs: \{ 'data race @ 0x1000ecf' \}}} \\
+		\texttt{\ccomment{[JOB 7]} \flow{Running (6.119792\%; ETA 33m 14s)}} \\
+		\texttt{~~~~ \ccomment{PPs: \{ 'mutex\_lock' 'mutex\_unlock' 'data race @ 0x1000ecf' \}}} \\
+		\texttt{\ccomment{[JOB 11]} \flow{Running (3.670247\%; ETA 50m 16s)}} \\
+		\texttt{~~~~ \ccomment{PPs: \{ 'mutex\_lock' 'mutex\_unlock' 'data race @ 0x102917' 'data race @ 0x1000ecf' \}}} \\
+		\texttt{\ccomment{[JOB 8]} \call{Deferred... (33.340567\%; ETA 2h 6m 3s)}} \\
+		\texttt{~~~~ \ccomment{PPs: \{ 'mutex\_unlock' 'data race @ 0x102917' \}}} \\
+		\texttt{\ccomment{[JOB 9]} \call{Deferred... (34.466226\%; ETA 2h 35m 37s)}} \\
+		\texttt{~~~~ \ccomment{PPs: \{ 'mutex\_unlock' 'data race @ 0x1000ecf' \}}} \\
+		\texttt{\ccomment{[JOB 10]} \call{Deferred... (11.113790\%; ETA 4h 20m 31s)}} \\
+		\texttt{~~~~ \ccomment{PPs: \{ 'mutex\_lock' 'data race @ 0x102917' \}}} \\
 		% no, i deleted all of them pretending the other data races dont exist
 		%\texttt{And 63 more pending jobs should time allow.} \\
-		\texttt{=========================} \\
+		\texttt{\ccomment{=========================================================================================}} \\
 	\end{tabular}
 	\end{center}
 	\caption{Example Quicksand progress report showing the various possible job states.}
 	\label{fig:quicksand-progress}
 \end{figure}
+
+\begin{itemize}
+	\item Jobs 0, 1, 2, and 3 are the initially-seeded state spaces (\cref{sec:quicksand-initial-pps}).
+	\item Job 2 reports a bug found, and shows the filename of the HTML preemption trace
+		(\cref{sec:landslide-bugreport}, \Cref{fig:bugreport})
+		which the user should examine to diagnose it.%
+		\footnote{I actually cheated by copy/pasting this job alone from a different run of Quicksand;
+		the other jobs come from a test with the bug already fixed,
+		in order that exploration progress far enough to defer some jobs for the sake of example.
+		In a real execution, the superset jobs 3, 5, 7, 8, 9, and 11 would be cancelled.}
+	\item Jobs 4 and 6 are the ``small'' jobs added to test the two data races in isolation;
+		5 and 7 are the corresponding ``large'' jobs (\cref{sec:quicksand-dr-pps}).
+	\item Job 11 is the maximal state space, containing all synchronization preemption points
+		and both currently-known data races.
+	\item The intermediate jobs 8, 9, and 10 have been suspended for having ETAs
+		at least twice as large as the provided CPU budget (1 hour),
+		according to the ETA scaling factor heuristic (\cref{sec:quicksand-heuristics}).
+	\item Note that job 11's ETA is currently lower than 8's, 9's, and 10's, despite being a strict superset of each.
+		This corresponds to the ETA inversion situation discussed in \cref{sec:quicksand-choosing}:
+		Quicksand simply hasn't made as much progress into job 11 (compare their percentage estimates rather than ETAs)
+		for its ETA to be accurate enough yet.
+\end{itemize}
+Future work could extend these progress reports to be more interactive,
+allowing the user to reprioritize state spaces at her whim
+or to disable certain data-race preemption points after checking them by hand,
+as discussed in \cref{sec:future-friendly}.
 
 Besides the progress reports, Quicksand also prints a notice for each new data race that Landslide detects,
 like so, corresponding to the above progress report, for example:
@@ -1554,7 +1549,7 @@ the same experiments, measured by wall-clock time until each bug was found inste
 
 \begin{figure}[h]
 	\begin{center}
-        \includegraphics[width=0.9\textwidth]{../proposal/dowefindbugsfaster-v2.pdf} \\
+        \includegraphics[width=0.96\textwidth]{../proposal/dowefindbugsfaster-v2.pdf} \\
 	\end{center}
 	\caption[Quicksand's bug-finding performance measured in CPU time.]
 		{Quicksand's bug-finding performance measured in CPU time.
@@ -1566,7 +1561,7 @@ the same experiments, measured by wall-clock time until each bug was found inste
 % TODO: fix placement of the legend in this graph so that it's not awful page back and forthing
 \begin{figure}[h]
 	\begin{center}
-        \includegraphics[width=0.9\textwidth]{../proposal/dowefindbugsfaster-wallclock-v2.pdf} \\
+        \includegraphics[width=0.96\textwidth]{../proposal/dowefindbugsfaster-wallclock-v2.pdf} \\
 	\end{center}
 	\caption[Quicksand's bug-finding performance measured in wall-clock time.]
 		{Quicksand's bug-finding performance measured in wall-clock time.
@@ -1788,7 +1783,7 @@ The next best approach for verifications was SSS-MC-Shared-Mem, which completed 
 
 \begin{figure}[t]
 	\begin{center}
-	\includegraphics[width=0.9\textwidth]{../proposal/totalverifs-v2.pdf}
+	\includegraphics[width=0.96\textwidth]{../proposal/totalverifs-v2.pdf}
 	\end{center}
 	\caption[Verification performance comparison
 	between Quicksand and prior work.]
@@ -1910,8 +1905,11 @@ On 229 tests, SSS-MC-ICB timed out after 10 hours with no bugs found. % thesis n
 Among these tests, QS-Limited-HB % thesis note -- i think that's what past-me meant. they just wrote, 'quicksand' but.
 found bugs in 37.
 The other 192 represent cases where neither Quicksand nor ICB were able to provide a conclusive result either way.
-\footnote{Thesis note: SSS-MC-Shared-Mem was added in a subsequent revision to \cite{quicksand}
-from when this analysis was conducted, at which time SSS-MC-ICB was the best-performing approach among control experiments.
+\footnote{Thesis note: SSS-MC-Shared-Mem was added
+%in a subsequent revision to \cite{quicksand}
+%from when this analysis was conducted
+subsequently to this analysis's publication in \cite{quicksand},
+at which time SSS-MC-ICB was the best-performing approach among control experiments.
 Nevertheless, mutual timeouts among all six testing approaches constituted roughly one third of the test suite.}
 For these 192,
 I show the number of state spaces Quicksand was able to complete in the
@@ -2036,7 +2034,7 @@ meaning it is not just an issue of writing ``better'' test cases to avoid them.
 
 \begin{figure}[t]
 	\begin{center}
-	\includegraphics[width=0.9\textwidth]{../proposal/nondets.pdf} % TODO: get some gf colors on here
+		\includegraphics[width=0.88\textwidth]{nondets.pdf}
 	\end{center}
 	\caption[Nondeterministic data-race preemption points are required to find some bugs.]
 	{Nondeterministic data-race preemption points are required to find some bugs.
@@ -2127,18 +2125,22 @@ as discussed below.
 Secondly, and more fundamentally, representing state-of-the-art approaches by reimplementing them in one's own tool is fraught.
 The comparison between Iterative Deepening and ICB in
 \cref{sec:quicksand-eval-bugs} and \cref{sec:quicksand-eval-verif}
-could possibly be conflated by Landslide's implementation of ICB and/or DPOR being slower
+could possibly have been conflated by Landslide's implementation of ICB and/or DPOR being slower
 on account of the simulated execution environment (\cref{sec:landslide-architecture}).
 A more rigorously scientific comparison would extend a prior work model checker, such as CHESS \cite{chess},
 to support dynamically-configured data-race preemption points,
 and evaluate Quicksand with it versus its own ICB implementation as well,
 to isolate any such conflating factors.
 Concurrently with these results' publication in OOPSLA \cite{quicksand},
-more advanced state space reduction algorithms were proposed, such as Maximal Causality Reduction (MCR) \cite{mcr}.
-It is not immediately obvious that MCR's benefit would be orthogonal with Iterative Deepening;
-i.e., the benefit of Quicksand with a MCR-enabled model checker might be reduced
+more advanced state space reduction algorithms were proposed,
+such as
+%Maximal Causality Reduction (MCR)
+MCR \cite{mcr} and RCMC \cite{rcmc} (\cref{sec:related-smc}).
+It is not immediately obvious that these techniques' benefits would be orthogonal with Iterative Deepening;
+in other words, the benefit of Quicksand with a MCR- or RCMC-enabled model checker might be reduced
 compared to the benefit shown in \cref{sec:quicksand-eval-bugs} and \cref{sec:quicksand-eval-verif}.
-Future comparisons of model-checking strategies should strive to reach these higher bars of scientific rigor.}
+Future model checkers' evaluations should strive to fairly represent these and other latest algorithms in their comparisons.}
+%Future comparisons of model-checking strategies should strive to reach these higher bars of scientific rigor.}
 
 \subsection{Avoiding redundant work}
 
@@ -2300,7 +2302,7 @@ My contributions have been as follows.
 		showing that for any verification obtained under even the most extreme preemption strategy,
 		Iterative Deepening with data race analysis provides an equivalently strong one,
 		with far fewer preemption points necessary.
-	\item A technique for suppressing certain false positive data race candidates % TODO: hm, should false-positive be hyph?
+	\item A technique for suppressing certain false positive data race candidates
 		under Limited Happens-Before (\cref{sec:landslide-lhb})
 		by identifying intervening {\tt malloc()} and {\tt free()} calls
 		(\cref{sec:quicksand-id-realloc}),
