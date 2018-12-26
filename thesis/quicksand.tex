@@ -2036,10 +2036,12 @@ meaning it is not just an issue of writing ``better'' test cases to avoid them.
 	\begin{center}
 		\includegraphics[width=0.87\textwidth]{nondets.pdf}
 	\end{center}
-	\caption[Nondeterministic data-race preemption points are required to find some bugs.]
-	{Nondeterministic data-race preemption points are required to find some bugs.
-	Requiring stateless model checking integration to identify to begin with,
-	incorporating these races as new preemption points
+	\caption[Some bugs require nondeterministic data-race preemption points to expose.]
+	{Some bugs require nondeterministic data-race preemption points to expose.
+	Incorporating these data races,
+	which are not observed under single-pass analysis,
+	%which stateless model checking integration to identify to begin with,
+	as new preemption points
 	allowed Quicksand to find
 	% lhb: 127.77%
 	% phb: 191.30%
