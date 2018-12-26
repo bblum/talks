@@ -343,7 +343,7 @@ Unless otherwise specified these are boolean flags (1 or 0) and the example valu
 			as Landslide cannot infer what prior event abstractly represented the lock's ownership changing,
 			leading to spurious data race reports.
 			This could be solved in future work with a new annotation.}
-	\item {\tt ALLOW\_REENTRANT\_MALLOC\_FREE=0} - allow two threads to be in {\tt malloc}, {\tt free}, or so on simultaneously without declaring it a bug.%
+	\item {\tt ALLOW\_REENTRANT\_MALLOC\_FREE=0} - allow two threads to be in {\tt malloc()}, {\tt free()}, or so on simultaneously without declaring it a bug.%
 		\footnote{Used in Pintos, where those functions lock/unlock the heap mutex themselves rather than relying on a wrapper function to do so before invoking them.}
 	\item {\tt TESTING\_MUTEXES=0} - configure ``mutex testing'' mode (1),
 		in which the data race analysis will not consider a mutex's implementation to be protected by the mutex itself.
@@ -853,7 +853,7 @@ which lets it avoid false positive heap errors from other programs which have di
 \label{sec:landslide-valgrind-mode}
 
 {\tt mem\_update()} serves as the main entrypoint for tracking heap allocations.
-It's called every instruction to check for the boundaries of the {\tt malloc} library,
+It's called every instruction to check for the boundaries of the {\tt malloc()} library,
 and behaves in a similar way to the scheduler state machine described above.
 Then, {\tt mem\_check\_shared\_access()} checks
 (after some elaborate manoeuvres to figure out whether to use the kernel- or userspace heap)
@@ -1174,8 +1174,8 @@ This section lists special cases of instrumentation specific to the Pintos kerne
 		will handle ``lock handoff'' of the abstract disable-interrupts lock
 		during a context switch for happens-before analysis.
 	\item {\tt memory.c} (various functions)
-		will handle page allocations from the {\tt palloc} family of functions in a separate memory heap,
-		allowing the usual allocator {\tt malloc} to allocate and free from {\tt palloc}'ed memory,
+		will handle page allocations from the {\tt palloc()} family of functions in a separate memory heap,
+		allowing the usual allocator {\tt malloc()} to allocate and free from {\tt palloc()}ed memory,
 		and checking both allocation heaps when checking for use-after-frees.
 	\item {\tt kern\_address\_in\_heap()} ({\tt kernel\_specifics.c})
 		will ignore DMA accesses to the VGA console,
@@ -1198,7 +1198,7 @@ are handled by a family of \revisionminor{distasteful} shell scripts that live i
 		ensures the instrumentation is up-to-date,
 		and launches the simulator.
 	\item {\tt getfunc.sh} defines several functions commonly used by {\tt build.sh} and {\tt definegen.sh} to extract function or global variable addresses from the program binary.
-	\item {\tt symbols.sh} defines the names of kernel functions that can be instrumented automatically without a corresponding manual annotation (e.g., {\tt malloc} and friends, the names of the {\tt tell\_landslide} family, various library helpers such as {\tt panic}).
+	\item {\tt symbols.sh} defines the names of kernel functions that can be instrumented automatically without a corresponding manual annotation (e.g., {\tt malloc()} and friends, the names of the {\tt tell\_landslide} family, various library helpers such as {\tt panic()}).
 	\item {\tt build.sh} ensures the build of Landslide is up-to-date,
 		and processes any dynamic configuration options which don't require updating the build (\cref{sec:landslide-dynamicconfig})
 		It verifies all required {\tt tell\_landslide} annotations are present,
@@ -1351,8 +1351,8 @@ and the following {\tt within}/{\tt without\_user\_function} combinations:
 		{\tt within\_user\_function mutex\_lock},
 		{\tt without\_user\_function malloc}
 
-		Rejects stack trace 1 (last matching directive is to exclude {\tt malloc}),
-		accepts stack trace 2 (last matching directive is to include {\tt mutex\_lock})
+		Rejects stack trace 1 (last matching directive is to exclude {\tt malloc()}),
+		accepts stack trace 2 (last matching directive is to include {\tt mutex\_lock()}).
 	\item
 		{\tt within\_user\_function thr\_join}
 
@@ -1370,7 +1370,7 @@ and the following {\tt within}/{\tt without\_user\_function} combinations:
 		{\tt within\_user\_function mutex\_lock}
 
 		Accepts both (last matching directive is to accept {\tt mutex\_lock()},
-		regardless of {\tt main()})
+		regardless of {\tt main()}).
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

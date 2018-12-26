@@ -1287,7 +1287,7 @@ Reports from PSU students (Bochs version):
 		Commits 0573e34 (Bochs repository) and 654f459 (Simics repository) fixed this bug.
 		(\revisionminor{As} above, not actually a false positive bug report.)
 	\item Landslide issued false invalid heap access reports to one student
-		who had been using {\tt new\_pages} to allocate thread stacks ``very close'' to the {\tt malloc} heap.
+		who had been using {\tt new\_pages} to allocate thread stacks ``very close'' to the {\tt malloc()} heap.
 		They reported this during the study and I fixed it promptly for them in commit 4a26da7 (Bochs repository only),
 		then reminded me of it again in the survey.
 	\item Finally, one student reported simply, ``Race condition''.

@@ -694,11 +694,11 @@ under the Limited Happens-Before analysis (\cref{sec:background-datarace})
 in which the associated memory was recycled by re-allocation between the two accesses,
 and claim that it is safe to completely disregard them when considering where to add new preemption points.
 \Cref{fig:recycle} shows a common code pattern and interleaving which can expose such behaviour.
-If the {\tt malloc} on line~4 returns the same address passed to {\tt free} on line~2,
+If the {\tt malloc()} on line~4 returns the same address passed to {\tt free()} on line~2,
 then lines~1 and 7 will be flagged as a potential data race.
 I term this a {\em reallocation false-positive data race candidiate}.
 To the human eye, this is obviously a false positive:
-reordering lines~4-7 before lines~1-2 will cause {\tt malloc} to return a different region of allocated memory,
+reordering lines~4-7 before lines~1-2 will cause {\tt malloc()} to return a different region of allocated memory,
 in turn causing {\tt x} and {\tt y} to no longer collide.
 In studying a similar pattern, the Eraser tool from prior work \cite{eraser}
 found that Thread 2's logic usually corresponds to an initialization pattern,
@@ -742,7 +742,7 @@ but that could unacceptably impact performance in {\tt malloc()}-heavy tests.
 The ability to disregard reallocation false positives is unique to Iterative Deepening.
 When limited to a single test execution, suppressing any data race candidate matching this pattern is unsound.
 Consider the more unusual program in \Cref{fig:recycle-bug},
-in which the memory is recycled the same way, but the racing access's address is not tied to {\tt malloc}'s return value.
+in which the memory is recycled the same way, but the racing access's address is not tied to {\tt malloc()}'s return value.
 Here, reordering lines~6-7 before line~3 will allow {\tt x} and {\tt x2} to race.
 Discarding the data race report as a false positive after checking just this one execution
 would overlook such a bug,
@@ -1178,7 +1178,7 @@ The interface with the model checker has two parts.
 First, when starting each job, Quicksand creates a configuration file declaring which preemption points to use,
 plus other test-case-specific options such as
 which preemption points to suppress (\cref{sec:landslide-pps}),
-especially those arising from the {\tt malloc} lock (\cref{sec:quicksand-realloc}),
+especially those arising from the {\tt malloc()} lock (\cref{sec:quicksand-realloc}),
 which functions DPOR and data race analysis should treat as trusted code (\cref{sec:landslide-config-landslide}),
 whether to enable mutex-testing mode (\cref{sec:landslide-dynamicconfig}),
 transactional memory (\cref{sec:tm-implementation}),
