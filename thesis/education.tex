@@ -394,7 +394,7 @@ The following tests are approved to be Landslide-friendly:
 		(originally chosen to produce deterministic output which the test checked for)
 		with threads of the same priority.
 	\item {\tt alarm-simultaneous}:
-		Modified to be Landslide-friendly from the basecode, for {\em threads}.
+		Modified to be Landslide-friendly from the basecode, also for {\em threads}.
 		Creates two child threads which each invoke {\tt timer\_sleep()} for a different amount of time.
 		Number of (threads,iterations) reduced from (3,5) to (2,1).
 	\item {\tt wait-simple}:
@@ -858,8 +858,8 @@ were significant,
 while the cross-semester comparisons,
 which attempted to do so,
 failed to confidently reject even the null hypothesis.}
-However, the distribution difference being smaller in P3 than in P2
-further suggests, albeit informally,
+However, the difference being smaller in P3 than in P2
+suggests, albeit informally,
 that the larger impact in P2 is not attributable {\em only} to selection bias,
 or else a similar difference should have been observed in the P3 distributions.
 Another possible explanation could simply be that the P3 grading critera result in less grade variance overall,
@@ -889,7 +889,7 @@ but this pattern is at least consistent with the ``Landslide helps students subm
 % version 1: 1.552 0.7322           0.1633
 % version 2: 1.640 0.8473           0.1454
 
-\begin{figure}[h]
+\begin{figure}[t]
 	\begin{center}
 		\small
 	\begin{tabular}{cr|r||r|r|r|r||cc}

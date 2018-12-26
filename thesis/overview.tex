@@ -682,14 +682,14 @@ The required concurrency primitives \revisionminor{for P2} are as follows:
 		{\tt cond\_signal()} and {\tt cond\_broadcast()} wake one or all waiting threads.
 		Students must use the {\tt deschedule} and {\tt make\_runnable} system calls to implement blocking (busy-waiting is forbidden), and typically include an internal mutex to protect the condition variable's state as well.
 		The primary challenge of this exercise is ensuring the aforementioned atomicity between {\tt cond\_wait}'s unlock and deschedule, with respect to the rest of the interface.
-	\item Semaphores, with the interface {\tt sem\_wait(sp)} and {\tt sem\_signal(sp)}
-		(sometimes called \revisionminor{$P$ and $V$ in other literature,
+	\item Semaphores, with the interface {\tt sem\_wait(sp)} and {\tt sem\_\allowbreak{}signal(sp)}
+		(sometimes also called \revisionminor{$P$ and $V$ in other literature,
 		from Dutch,
 		originally {\em passering} and {\em vrijgave} \cite{ewd35},
 		later often explained as {\em proberen} and {\em verhogen}}).
 		The semaphore can be initialized to any integer value; if initialized to 1, it behaves like a mutex.
 		Students typically implement semaphores using mutexes and condition variables, not using atomic instructions or system calls directly.
-	\item Reader-writer locks (also R/W-locks or rwlocks), with the interface {\tt rwlock\_lock(rwp, mode)} and {\tt rwlock\_unlock(rwp)}. {\tt mode} may be either {\tt RWLOCK\_READ} or {\tt RWLOCK\_\allowbreak{}WRITE}.
+	\item Reader-writer locks (also called R/W-locks or rwlocks), with the interface {\tt rwlock\_\allowbreak{}lock(rwp, mode)} and {\tt rwlock\_unlock(rwp)}. {\tt mode} may be either {\tt RWLOCK\_READ} or {\tt RWLOCK\_\allowbreak{}WRITE}.
 		Behaves as mutexes, but multiple readers may access the critical section simultaneously.
 		Students typically implement rwlocks using mutexes and condition variables, not using atomic instructions or system calls directly.
 \end{itemize}
