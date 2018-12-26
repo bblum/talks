@@ -992,7 +992,7 @@ resulting undoubtedly in state corruption bugs which to diagnose would be a thes
 so I enlisted help from my compiler via the oft-ridiculed {\tt const}.
 Every preemption point node in the execution tree ({\tt tree.h}),
 each of whose state is kept generally read-only,
-and all modifications must go through {\tt modify\_nobe()} ({\tt timetravel.h}) using a modification callback,
+and all modifications must go through {\tt modify\_pp()} ({\tt timetravel.h}) using a modification callback,
 which internally casts away the {\tt const}, performs the requested modification,
 and also messages all relevant child processes to perform the same ({\tt timetravel\_set()} in {\tt timetravel.c}).
 The {\tt const} is absolutely, inviolably, not to be casted away, at the sacred cost of what little type safety C offers.%
