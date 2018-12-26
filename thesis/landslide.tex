@@ -2356,7 +2356,12 @@ and hardware transactions.
 In order to detect when a thread should be unblocked from its yield loop,
 Landslide simply leverages DPOR's existing computation of memory conflicts:
 whatever condition the blocked thread was waiting for
-will show up in the conflicts between it and whichever thread fulfills it.
+will show up in the conflicts between it and whichever thread fulfills it.%
+\footnote{A yield-blocking loop may depend on another thread's execution with no memory conflicts at all
+simply by checking the return value to observe whether the yield was successful.
+In principle, Landslide should check for such loops whenever the yielded-to thread's runnability changes;
+at present, this is not implemented,
+and instead leans on the false positive deadlock detector to wake the blocking thread up.}
 Hence, every memory conflict detected during DPOR is also checked against any
 currently yield-loop-blocked threads, unblocking them in the case of a match
 ({\tt check\_unblock\_yield\_loop()} in {\tt user\_sync.c}).
