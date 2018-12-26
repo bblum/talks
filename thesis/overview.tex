@@ -1117,7 +1117,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		A family of multiprocessor execution semantics
 		that allows reads and/or writes of shared memory to become visible to different CPUs in different sequences.
 		Under {\em total store order} (TSO),
-		implemented for example on x86,
+		which x86 implements,
 		one CPU's writes may appear reordered after its subsequent loads, from the perspective of another CPU.
 		Under {\em partial store order} (PSO),
 		either writes and/or reads may appear reordered after other subsequent writes and/or reads.
@@ -1126,8 +1126,7 @@ Use of {\em italics} within definitions will indicate terms also defined elsewhe
 		of acquire and/or release memory barriers
 		\cite{sully-thesis}.
 		By contrast, {\em sequential consistency} (SC) permits no such reorderings.
-		% TODO: check that quicksand discussion shouldn't perhaps get a more subsection'ed sect reference
-		For further discussion see \cref{sec:quicksand-discussion} and \cref{sec:tm-warpzone-relaxed}.}
+		For further discussion see \cref{sec:quicksand-soundness}, \cref{sec:tm-warpzone-relaxed}, and \cref{sec:related-other-verif}.}
 	\item {\bf Schedule.}
 		Another term for {\em interleaving} with a more theoretical nuance.
 	\item {\bf Scheduler.}

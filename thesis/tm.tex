@@ -841,7 +841,7 @@ and allowing system calls during transactions to proceed rather than forcing a {
 Landslide requires the other STM options ({\tt -A -S}) also to be enabled to emulate weak atomicity,
 partly because I know of no existing HTM system which implements it,
 but mostly to keep the implementation simple.
-As one might expect, it inflates state spaces considerably, % TODO: measure it with htm2 or some such?
+As one might expect, it inflates state spaces considerably,
 and moreover,
 every single HTM benchmark in the upcoming evaluation,
 implemented to rely on strong atomicity,
