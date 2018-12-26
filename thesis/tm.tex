@@ -1054,7 +1054,7 @@ as follows.
 The notation {\tt testname}$(K,N)$ %will denote
 denotes a test configuration of $K$ threads, each running $N$ iterations of the test logic.
 All tests were run on an 8-core 2.7GHz Core i7 with 32 GB RAM.
-Reported CPU-times include time spent on all state spaces
+Reported CPU times include time spent on all state spaces
 Quicksand saw fit to run,
 not just the maximal or the buggy state space;
 for verification tests (run with {\tt -M}),
@@ -1227,7 +1227,7 @@ but the previously-published verification results should be considered outdated.
 		Iterative Deepening (\cref{sec:quicksand-id}), optimized for fast bug-finding,
 		is compared against Maximal State Space mode (\cref{sec:landslide-quicksand-options}),
 		optimized for fast verification.
-		For each, I list the CPU-time and wall-clock time elapsed,
+		For each, I list the CPU time and wall-clock time elapsed,
 		plus the number of interleavings tested in the ultimately buggy state space
 		until the bug was found.
 		* marks the winning measurements between each series.
@@ -1429,7 +1429,7 @@ but with a hybrid approach between model checking and what other technique is no
 \subsubsection{Performance}
 
 Quicksand's ability to find bugs in fewer distinct interleavings (i.e., overall smaller state spaces)
-does not necessarily correlate with better performance in terms of CPU-time.
+does not necessarily correlate with better performance in terms of CPU time.
 Comparing \Cref{tab:tm-buges}'s trends
 to the break-even point in Quicksand's evaluation (\cref{sec:quicksand-eval}),
 most of these tests are too small for its approach to pay off,

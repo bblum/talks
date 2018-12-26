@@ -324,7 +324,7 @@ this suffices to provide at least as strong verification guarantees as any other
 To introduce the Iterative Deepening algorithm,
 I will first show a simple approach for handling new preemption points in the absence of any CPU budget restriction.
 
-Given unlimited CPU time, %for testing,
+Given unlimited testing time, %for testing,
 %one would always want to
 switching to the new maximal state space whenever adding a new preemption point
 \qrevisionminor{would be the quickest way to reach full verification}.
@@ -1527,8 +1527,8 @@ but it remains an open research problem how to extend the algorithm to ICB.
 Hence, I optimistically gave all control experiments a linear speedup of 10 hours per test with 1 CPU;
 i.e., assuming it could parallelize with 100\% efficiency.
 To match this,
-Quicksand reports both the CPU-time and wall-clock time spent during its execution.
-Comparing CPU-time leads to a more fair comparison,
+Quicksand reports both the CPU time and wall-clock time spent during its execution.
+Comparing CPU time leads to a more fair comparison,
 although Quicksand's inherent parallelism, which only a wall-clock time comparison would show,
 is also a convenient benefit unto itself.
 All tests ran on 12-core 3.2 GHz Xeon W3670 machines with 12GB of RAM.
@@ -1541,7 +1541,7 @@ All tests ran on 12-core 3.2 GHz Xeon W3670 machines with 12GB of RAM.
 \Cref{fig:dowefindbugsfaster-cpu}
 plots the bug-finding performance of Quicksand's three experimental trials
 against the three control approaches
-in a cumulative distribution of total bugs found against elapsed CPU-time.
+in a cumulative distribution of total bugs found against elapsed CPU time.
 The farthest-right point on each series indicates in how many total test cases that trial found a bug
 after the 10 CPU-hour timeout.
 \Cref{fig:dowefindbugsfaster-wall} shows
