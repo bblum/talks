@@ -633,9 +633,9 @@ plus a bonus optimization for pruning equivalent interleavings under the new con
 
 Landslide provides its own ``implementation'' of the TSX interface,
 which matches GCC's interface exactly,
-located in {\tt 410user/inc/htm.h}
-under {\tt pebsim/p2-basecode/}.
-The interface is implemented in {\tt 410user/libhtm/htm.c},
+located in {\tt landslide-friendly-tests/inc/htm.h}
+under the subdirectory {\tt pebsim/p2-basecode/}.
+The interface is implemented in {\tt landslide-friendly-tests/\allowbreak{}libhtm/htm.c},
 perhaps surprisingly, as totally empty functions;
 Landslide hooks these functions' addresses during instrumentation
 and inserts preemption points, failure injections,
@@ -652,7 +652,7 @@ and the {\tt 410TESTS} or {\tt STUDENTTESTS} line (respectively) of {\tt config-
 before running {\tt p2-setup.sh} (\cref{sec:landslide-setup})
 % TODO(implementation): Provide an obfuscated refp2?
 on a (hopefully) correct P2 as usual.
-Several example HTM tests are provided as {\tt 410user/progs/htm*.c}.
+Several example HTM tests are provided as {\tt landslide-friendly-tests/htm*.c}.
 
 Finally, Quicksand supports the following command-line options to enable various sets of HTM features within Landslide.
 %Each option requires each of the previously-listed options to also be present.
@@ -728,7 +728,7 @@ in which case not added to {\tt xabort\_codes\_todo} to avoid duplicate work.
 		Note that a transaction should suffer a conflict abort
 		only when executed {\em after} a conflicting memory access
 		to avoid circular causality
-		(see {\tt 410user/progs/htm\_causality.c} for rationale).
+		(see {\tt landslide-friendly-tests/htm\_causality.c} for rationale).
 		Should the transaction happen to be executed first,
 		DPOR will first try to reorder it as normal,
 		and then abort it as described if the conflict persists.
@@ -2167,7 +2167,7 @@ However, {\tt xbegin} results other than {\tt \_XABORT\_RETRY}
 may depend on the execution logic
 (explicit aborts may be conditional on some change by a conflicting thread,
 and conflict aborts cannot occur before their conflicting transaction to begin with%
-\footnote{See {\tt 410user/progs/htm\_causality.c}; that was a fun realization to have
+\footnote{See {\tt landslide-friendly-tests/htm\_causality.c}; that was a fun realization to have
 already halfway into implementing retry sets the wrong way at first.}%
 ),
 so \revisionminor{it remains an open problem}
@@ -2298,7 +2298,7 @@ it could find or verify the absence of such bugs.
 Visual inspection of the transactional AVL tree and hashmap
 \cite{tm-benchmark-cmu} found no barriers used in this implementation pattern;
 I would urge any reader interested in using those to add them in by hand first.
-The test case {\tt lock}({\tt mutex}) ({\tt 410user/progs/htm\_mutex.c} in the repository)
+The test case {\tt lock}({\tt mutex}) ({\tt landslide-friendly-tests/htm\_mutex.c} in the repository)
 provides an example of how to use compiler intrinsics to emit the necessary barriers.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
