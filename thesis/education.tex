@@ -338,10 +338,11 @@ to (almost) all variations of commonly-submitted code.
 		with a different name and/or data structure.}
 		If so,
 		%defines the length of that array in a macro to be used by {\tt is\_runqueue()}
-		\revisionminor{emits macros to configure {\tt is\_runqueue()}'s behaviour to handle
+		\revisionminor{emits macros to configure {\tt is\_runqueue()} to handle
 		certain common alternate approaches}
 		(part of the patch described below).
-		Either way defines a function {\tt get\_rq\_addr()} to return the address of the %(first)
+		Either way,
+		defines a function {\tt get\_rq\_addr()} to return the address of the %(first)
 		list.
 	\item Changes the basecode's definition of {\tt TIME\_SLICE} from 4 to 1 (units of timer ticks)
 		so Landslide's timer injection will properly drive the context switcher.
@@ -396,7 +397,7 @@ The following tests are approved to be Landslide-friendly:
 		Number of (threads,iterations) reduced from (3,5) to (2,1).
 	\item {\tt wait-simple}:
 		Unmodified from the basecode's version, for {\em userprog}.
-		Userspace process {\tt exec()}s a child process, which immediately exits, and {\tt wait()}s on it.
+		Userspace process {\tt exec}s a child process, which immediately exits, and {\tt wait}s on it.
 	\item {\tt wait-twice}:
 		Unmodified from the basecode's version, for {\em userprog}.
 		Slightly more complicated version of {\tt wait-simple},
@@ -692,7 +693,7 @@ three among these were deterministic; four were concurrency bugs.}
 		This test also found several use-after-frees for one of those two groups,
 		whose {\tt process\_exit()} didn't guard against a parent process exiting and deallocating its memory first;
 		this root cause manifested in heap errors in \revisionminor{three} separate locations.
-		Lastly, the heap checking alone found a deterministic use-after-free in a third group's {\tt exec()}.
+		Lastly, the heap checking alone found a deterministic use-after-free in a third group's {\tt process\_execute()}.
 \end{enumerate}
 
 In cases where Landslide emitted multiple preemption traces for the same bug,
@@ -838,12 +839,12 @@ I choose Anderson-Darling over the simpler Kolmogorov-Smirnov,
 which computes only the maximum instantaneous distance between EDFs,
 for its better sensitivity both to repeated deviations and to tail differences \cite{beware-kolmogorov-smirnov}.
 }
-I deem the difference in grade distributions significant when $p < 0.05$%
+I deem the difference in grade distributions significant when $p < 0.05$,%
 % FIXME: is this legit?
 % should you be using the combined/grouped AD test instead?
 \footnote{I choose not to correct for multiplicity among these four comparsons \revisionminor{as} I do in the next section
 because each tests a different hypothesis.
-},
+}
 although as in all $p$-value calculations,
 this rejects only the null hypothesis,
 not alternative hypotheses,
@@ -1394,9 +1395,9 @@ Lastly, I asked the PSU students for any feedback they might have on making Land
 	\item Preemption traces should explicitly indicate where in the interleaving the bug occurred.
 		[Root cause identification is its own research area, but more detail is certainly possible.]
 	\item Improve explanation of data races [in the user guide, perhaps].
-	\item Happy with it as-is [\revisionminor{reported by three} students]
+	\item Happy with it as-is [\revisionminor{reported by three} students].
 		% wow, latex -- if you put [] outside of the revision, everything is awful forever
-	\item \revisionminor{[Seven non-respondents]}
+	\item \revisionminor{[Seven non-respondents.]}
 \end{enumerate}
 
 Though I did not ask this question on the CMU survey,

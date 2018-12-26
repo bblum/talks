@@ -213,13 +213,13 @@ become multiple memory accesses which can be interleaved with other threads,
 			1 & \texttt{\flow{if} ((status = \call{\_xbegin}()) == \const{\_XBEGIN\_STARTED}) \{} \\
 			%2 & \texttt{~~~~x++;} \\
 			$2a$ & \texttt{~~~~temp <- x;} \\
-			$2b$ & \texttt{~~~~temp <- temp + 1;} \\
+			$2b$ & \texttt{~~~~temp <- temp + \const{1};} \\
 			$2c$ & \texttt{~~~~x <- temp;} \\
 			3 & \texttt{~~~~\call{\_xend}();} \\
 			4 & \texttt{\} \flow{else} \{} \\
 			5 & \texttt{~~~~\call{mutex\_lock}(\&m);} \\
 			$6a$ & \texttt{~~~~temp <- x;} \\
-			$6b$ & \texttt{~~~~temp <- temp + 1;} \\
+			$6b$ & \texttt{~~~~temp <- temp + \const{1};} \\
 			$6c$ & \texttt{~~~~x <- temp;} \\
 			7 & \texttt{~~~~\call{mutex\_unlock}(\&m);} \\
 			8 & \texttt{\}} \\
@@ -246,7 +246,7 @@ become multiple memory accesses which can be interleaved with other threads,
 			\hline
 			\texttt{status = \call{\_xbegin}()} & \\
 			\texttt{temp <- x;} & \\
-			\texttt{temp <- temp + 1;} & \\
+			\texttt{temp <- temp + \const{1};} & \\
 			& \texttt{status = \call{\_xbegin}()} \\
 			& \texttt{x++;} \\
 			& \texttt{\call{\_xend}();} \\
@@ -1933,7 +1933,7 @@ and {\tt mutex}, using Landslide-annotated P2 mutexes (as the AVL and map implem
 	\begin{center}
 	\begin{tabular}{p{0.47\textwidth}p{0.5\textwidth}}
 		\begin{tabular}{l}
-			\texttt{\ctype{static int} num\_in\_section = 0;} \\
+			\texttt{\ctype{static int} num\_in\_section = \const{0};} \\
 			\texttt{\flow{for} (\ctype{int} i = \const{0}; i < \const{NITERS}; i++) \{} \\
 			\texttt{~~~~\call{rtm\_spinlock\_acquire}(\&lock);} \\
 			\texttt{~~~~num\_in\_section++;} \\

@@ -130,7 +130,7 @@ a {\em data-race preemption point} is required to find this bug.
 
 \begin{figure}[t]
 	\begin{center}
-		\begin{tabular}{p{0.9\textwidth}}
+		\begin{tabular}{p{0.91\textwidth}} % dont hyphenate 'overwrite'
 			\begin{center}
 			\begin{tabular}{rlcrl}
 				\multicolumn{5}{c}{Initially {\tt int count = \const{0}; mutex\_t m;}} \\
@@ -1904,7 +1904,7 @@ deferring to the user's expertise to judge the value of each subset of preemptio
 On 229 tests, SSS-MC-ICB timed out after 10 hours with no bugs found. % thesis note - pretty sure this *isn't* preempt-everywhere
 Among these tests, QS-Limited-HB % thesis note -- i think that's what past-me meant. they just wrote, 'quicksand' but.
 found bugs in 37.
-The other 192 represent cases where neither Quicksand nor ICB were able to provide a conclusive result either way.
+The other 192 represent cases where neither Quicksand nor ICB were able to provide a conclusive result either way.%
 \footnote{Thesis note: SSS-MC-Shared-Mem was added
 %in a subsequent revision to \cite{quicksand}
 %from when this analysis was conducted
@@ -2034,7 +2034,7 @@ meaning it is not just an issue of writing ``better'' test cases to avoid them.
 
 \begin{figure}[t]
 	\begin{center}
-		\includegraphics[width=0.88\textwidth]{nondets.pdf}
+		\includegraphics[width=0.87\textwidth]{nondets.pdf}
 	\end{center}
 	\caption[Nondeterministic data-race preemption points are required to find some bugs.]
 	{Nondeterministic data-race preemption points are required to find some bugs.
@@ -2043,7 +2043,7 @@ meaning it is not just an issue of writing ``better'' test cases to avoid them.
 	allowed Quicksand to find
 	% lhb: 127.77%
 	% phb: 191.30%
-	128\% (Limited HB) to 191\% (Pure HB) as many data-race bugs
+	128\% (Limited Happens-Before) to 191\% (Pure Happens-Before) as many data-race bugs
 	compared to using single-pass candidates alone.
 	}
 	\label{fig:dr-falsenegs}
