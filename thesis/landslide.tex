@@ -742,13 +742,13 @@ which then dispatches to various other modules' respective analyses, described a
 
 The execution tree
 %(or state space, or preemption point log, however calling it suits you)
-is stored as a chain of preemption point nodes named {\tt struct hax} defined in {\tt tree.h}.
+is stored as a chain of preemption point nodes named {\tt struct nobe} defined in {\tt tree.h}.
 Although the state space of possible interleavings is exponentially-sized,
 Landslide does not actually need to store any nodes for execution sequences outside the current variation
 (see \cref{sec:landslide-estimate} and \cref{sec:landslide-dpor} for why),
 so the total memory consumption is only $O(n)$ in the number of preemption points in a single program run
 (for the test cases used in this thesis, typically 20-1000).
-Each {\tt hax} stores the following information:
+Each {\tt nobe} stores the following information:
 
 \begin{itemize}
 	\item Basic statistics such as the current instruction pointer, thread ID,
@@ -992,7 +992,7 @@ resulting undoubtedly in state corruption bugs which to diagnose would be a thes
 so I enlisted help from my compiler via the oft-ridiculed {\tt const}.
 Every preemption point node in the execution tree ({\tt tree.h}),
 each of whose state is kept generally read-only,
-and all modifications must go through {\tt modify\_hax()} ({\tt timetravel.h}) using a modification callback,
+and all modifications must go through {\tt modify\_nobe()} ({\tt timetravel.h}) using a modification callback,
 which internally casts away the {\tt const}, performs the requested modification,
 and also messages all relevant child processes to perform the same ({\tt timetravel\_set()} in {\tt timetravel.c}).
 The {\tt const} is absolutely, inviolably, not to be casted away, at the sacred cost of what little type safety C offers.%
@@ -1326,7 +1326,7 @@ The following predicates ignore any {\tt within\_function} settings
 \end{itemize}
 
 Whenever {\tt arbiter\_interested()} returns true,
-Landslide creates a new {\tt struct hax} in the execution tree (\cref{sec:landslide-save}),
+Landslide creates a new {\tt struct nobe} in the execution tree (\cref{sec:landslide-save}),
 creates a checkpoint (\cref{sec:landslide-timetravel}),
 and queries {\tt arbiter\_choose()} to decide which thread to run next (\cref{sec:landslide-arbiter}).
 
@@ -1491,7 +1491,7 @@ and $T_j$ is the thread ID to be scheduled after $t_{i-1}$, $T_j \ne T(t_i)$.
 \footnote{I describe $T_j$ as a thread ID here, rather than as a thread transition,
 because the nature of the transition (its memory accesses, the subsequent state, et cetera)
 is unknown until actually executed.}
-Landslide's implementation represents $S$ as a list of {\tt struct hax}es, defined in {\tt tree.h},
+Landslide's implementation represents $S$ as a list of {\tt struct nobe}s, defined in {\tt tree.h},
 each one representing a preemption point, or intermediate state between two transitions.
 
 {\bf Identifying new interleavings.}
@@ -1543,10 +1543,10 @@ Landslide orders its search depth-first,
 so for any such $U$ outside the current interleaving,
 either all or none of its $S'$s will have been tested already.
 Therefore, to avoid repeating interleavings,
-Landslide need only store at each {\tt struct hax} a list of threads
+Landslide need only store at each {\tt struct nobe} a list of threads
 such that their corresponding subtree $U$ is fully explored,
 and can omit any non-constant-size information about the contents of that $U$
-({\tt struct hax\_child}).
+({\tt struct nobe\_child}).
 Hence the memory cost of Landslide's DPOR implementation is $O(nk)$,
 $k$ being the maximum runnable threads at any preemption point
 (which in turn is always single digits for model checking tests).
@@ -1556,7 +1556,7 @@ Among all interleavings chosen by DPOR not already marked as explored,
 Landslide chooses the one with the longest execution prefix matching the current $S$,
 to maintain the depth-first search invariant.
 (In the case of a tie, differing only by which thread to run, it chooses arbitrarily.)
-All other new interleavings are marked to explore later, %in their corresponding {\tt struct hax},
+All other new interleavings are marked to explore later, %in their corresponding {\tt struct nobe},
 and automatically included in the result of any future iterations of DPOR until they are tested.
 Because the one with the longest execution prefix was chosen to test next,
 all others must share their execution prefixes with it,

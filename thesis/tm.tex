@@ -685,7 +685,7 @@ Finally, Quicksand supports the following command-line options to enable various
 \subsection{Failure injection}
 \label{sec:txn-failure}
 
-Each preemption point ({\tt struct hax} as defined in {\tt tree.h})
+Each preemption point ({\tt struct nobe} as defined in {\tt tree.h})
 includes three new fields.
 The boolean {\tt h->xbegin} is set if the preemption point occurred at an {\tt \_xbegin()} call.
 Then if set (as the tag of an option type),
@@ -2156,8 +2156,8 @@ when three or more threads must be reorderd around one transactional preemption 
 or when a second pair of partially-independent transactions interleaves while an existing retry set is already active.
 Accordingly, I implemented the optimization as conservatively as possible in these cases,
 ``saturating'' the retry sets to fall back to no pruning
-({\tt update\_hax\_abort\_set()} and
-{\tt update\_hax\_abandon\_abort\_set()}, respectively).
+({\tt update\_nobe\_abort\_set()} and
+{\tt update\_nobe\_abandon\_abort\_set()}, respectively).
 
 Likewise, the cases of {\tt htm2}(2,3), (2,4), and (4,1),
 in which retry sets achieved better reduction than STM mode,
