@@ -229,9 +229,9 @@ The following ``secret'' arguments also exist, primarily for my own use in runni
 	\item {\tt -I}: enable Iterative Context Bounding (requires {\tt -C}, although future work may relax this restriction);
 		this generally causes bugs to be found faster should they exist, but degrades completion time
 		(\cref{sec:landslide-icb})
-	\item {\tt -0}: enable Preempt-Everywhere mode
+	\item {\tt -0}: enable preempt-everywhere mode
 		(\cref{sec:quicksand-impl-modes}, \cref{sec:quicksand-impl-landslide}, requires {\tt -C})
-	\item {\tt -M}: enable Maximal State Space mode,
+	\item {\tt -M}: enable maximal state space mode,
 		which prioritizes the maximal state space to optimize for fast verification,
 		abandoning all subset jobs even if they might find bugs faster
 		(\cref{sec:tm-eval}, incompatible with {\tt -C}).
@@ -323,7 +323,7 @@ Unless otherwise specified these are boolean flags (1 or 0) and the example valu
 \begin{itemize}
 	\item {\tt ICB=0} - enable Iterative Context Bounding (\cref{sec:landslide-icb});
 		corresponds to {\tt -I} in \cref{sec:landslide-quicksand-options}.
-	\item {\tt PREEMPT\_EVERYWHERE=0} - enable Preempt-Everywhere mode (\cref{sec:quicksand-eval});
+	\item {\tt PREEMPT\_EVERYWHERE=0} - enable preempt-everywhere mode (\cref{sec:quicksand-eval});
 		corresponds to {\tt -0} in \cref{sec:landslide-quicksand-options}.
 	\item {\tt EXPLORE\_BACKWARDS=0} - configure whether, at each newly encountered preemption point,
 		to allow the current thread to run first then later upon backtracking to preempt (0),
@@ -1296,7 +1296,7 @@ It can optionally be qualified by a thread ID, most recent system call number, e
 as described in \cref{sec:landslide-dynamicconfig},
 and is queried through {\tt suspected\_data\_race()}.
 
-In Preempt-Everywhere mode, Landslide instead marks all shared memory accesses
+In preempt-everywhere mode, Landslide instead marks all shared memory accesses
 as long as they are not part of either the mutex implementation or the running thread's stack frame.
 The {\tt data\_race} command is ignored and {\tt suspected\_data\_race()}
 instead checks whether the instruction pointer is associated with any such shared memory access.
